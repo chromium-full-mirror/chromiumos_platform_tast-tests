@@ -16,19 +16,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/galleryapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-)
-
-const (
-	makeAStickerExpectedResult = "make_a_sticker_result_20250327.png"
-	makeAStickerDiffThreshold  = float64(5)
 )
 
 func init() {
@@ -43,7 +36,7 @@ func init() {
 		Timeout:      constant.DefaultTestTimeout,
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
-		Data:         []string{constant.ImageTestFileName, makeAStickerExpectedResult},
+		Data:         []string{constant.ImageTestFileName},
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 	})
@@ -109,21 +102,14 @@ func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Error while waiting for spinner: ", err)
 	}
 
-	canvasBounds, err := ui.ImmediateLocation(ctx, util.ImageCanvas)
-	if err != nil {
-		s.Fatal("Failed to get canvas location: ", err)
-	}
-
-	if err := mouse.Click(tconn, coords.NewPoint(
-		canvasBounds.CenterX(),
-		canvasBounds.CenterY(),
-	), mouse.LeftButton)(ctx); err != nil {
-		s.Fatal("Failed to click the mouse: ", err)
-	}
-
 	doneButton := nodewith.Role(role.Button).Name("Done").Ancestor(galleryapp.RootFinder)
 	if err := ui.DoDefault(doneButton)(ctx); err != nil {
 		s.Fatal("Failed to click the done button: ", err)
+	}
+
+	imageAfter, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot after reimagine: ", err)
 	}
 
 	// Save the result image and close Gallery app.
@@ -136,18 +122,22 @@ func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save image: ", err)
 	}
 
-	gotResult, err := util.FetchImage(downloadsPath + "/" + constant.ImageTestFileName)
-	if err != nil {
-		s.Fatal("Failed to get image result: ", err)
+	if err := util.CloseGallery(ctx, tconn); err != nil {
+		s.Fatal("Failed to close Gallery: ", err)
 	}
 
-	expectedResult, err := util.FetchImage(s.DataPath(makeAStickerExpectedResult))
-	if err != nil {
-		s.Fatal("Failed to get expected result: ", err)
+	// Reopen the result image in Gallery app.
+	if err := util.OpenGalleryFromDownload(ctx, ui, tconn, constant.ImageTestFileName); err != nil {
+		s.Fatal("Failed to reopen Gallery: ", err)
 	}
 
-	diffPercentage := util.ImageDiffPercentage(gotResult, expectedResult)
-	if diffPercentage > makeAStickerDiffThreshold {
-		s.Fatal("The image difference exceeds the threshold: ", diffPercentage)
+	// Take a screenshot of the saved image.
+	savedImage, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot of saved image: ", err)
+	}
+
+	if util.ImageDiff(imageAfter, savedImage) > 0 {
+		s.Fatal("The result image and the saved image should be identical")
 	}
 }
