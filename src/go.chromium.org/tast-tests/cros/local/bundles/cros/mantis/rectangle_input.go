@@ -64,9 +64,9 @@ func RectangleInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
-	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
-		s.Fatal("Failed to click the reimagine button: ", err)
+	eraseButton := nodewith.Role(role.Button).Name("Erase").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(eraseButton)(ctx); err != nil {
+		s.Fatal("Failed to click the erase button: ", err)
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {

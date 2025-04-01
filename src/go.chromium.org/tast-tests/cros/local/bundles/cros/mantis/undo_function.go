@@ -62,9 +62,9 @@ func UndoFunction(ctx context.Context, s *testing.State) {
 		s.Log("Error while waiting for DLC preparation: ", err)
 	}
 
-	reimagineButton := nodewith.Role(role.Button).Name("Reimagine").Ancestor(galleryapp.RootFinder).First()
-	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
-		s.Fatal("Failed to click the reimagine button: ", err)
+	eraseButton := nodewith.Role(role.Button).Name("Erase").Ancestor(galleryapp.RootFinder).First()
+	if err := ui.DoDefault(eraseButton)(ctx); err != nil {
+		s.Fatal("Failed to click the erase button: ", err)
 	}
 
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
@@ -76,11 +76,11 @@ func UndoFunction(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot draw on the image")
 	}
 
-	if err := ui.DoDefault(reimagineButton)(ctx); err != nil {
+	if err := ui.DoDefault(eraseButton)(ctx); err != nil {
 		s.Fatal("Failed to click the reimagine button: ", err)
 	}
 
-	s.Log("Reimagine on process")
+	s.Log("Erase on process")
 	if err := util.WaitForSpinner(ctx, tconn, ui); err != nil {
 		s.Log("Error while waiting for spinner: ", err)
 	}
@@ -90,13 +90,13 @@ func UndoFunction(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click the done button: ", err)
 	}
 
-	imageAfterReimagine, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
+	imageAfter, err := util.GrabCanvasArea(ctx, cr, tconn, ui)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	if util.ImageDiff(imageBefore, imageAfterReimagine) == 0 {
-		s.Fatal("The image before and after reimagine should not be identical")
+	if util.ImageDiff(imageBefore, imageAfter) == 0 {
+		s.Fatal("The image before and after erase should not be identical")
 	}
 
 	undoButton := nodewith.Role(role.Button).Name("Undo").Ancestor(galleryapp.RootFinder)

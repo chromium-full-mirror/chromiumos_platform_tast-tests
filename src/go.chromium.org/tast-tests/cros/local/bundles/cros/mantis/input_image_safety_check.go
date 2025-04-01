@@ -6,6 +6,7 @@ package mantis
 
 import (
 	"context"
+
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/constant"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/mantis/util"
@@ -90,7 +91,7 @@ func InputImageSafetyCheck(ctx context.Context, s *testing.State) {
 			s.Fatal("Unexpected error message on a safe image")
 		}
 
-		tools := []string{"Expand Background", "Remove Background", "Make a Sticker", "Reimagine", "Erase"}
+		tools := []string{"Expand Background", "Remove Background", "Make a Sticker", "Erase"}
 		for _, tool := range tools {
 			toolButton := nodewith.Role(role.Button).Name(tool).Ancestor(galleryapp.RootFinder).First()
 			if err := ui.WithTimeout(constant.DefaultUITimeout).WaitUntilExists(toolButton)(ctx); err != nil {
