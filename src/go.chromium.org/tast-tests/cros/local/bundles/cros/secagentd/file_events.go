@@ -48,7 +48,7 @@ func init() {
 		}, {
 			Name:      "tpm_key",
 			Val:       pb.TestCase_TPM_KEY,
-			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name:      "auth_factors",
 			Val:       pb.TestCase_AUTH_FACTORS,
