@@ -1019,8 +1019,7 @@ func (tf *TestFixture) CleanCrashDir(ctx context.Context, dutIdx DutIdx) error {
 // CollectCrashLogs downloads related crash log files to OutDir.
 func (tf *TestFixture) CollectCrashLogs(ctx context.Context, outDir string, crashTime time.Time) error {
 	crashDirs := []string{"/var/spool/crash"}
-	crashTimeUTC := crashTime.UTC()
-	formattedCrashTime := crashTimeUTC.Format("20060102.150405")
+	formattedCrashTime := crashTime.Format("20060102.150405")
 	formattedCrashTime = formattedCrashTime[:len(formattedCrashTime)-2]
 	firmwareDumpPattern := "devcoredump_iwlwifi." + formattedCrashTime + ".*"
 	requiredCrashMeta := []string{

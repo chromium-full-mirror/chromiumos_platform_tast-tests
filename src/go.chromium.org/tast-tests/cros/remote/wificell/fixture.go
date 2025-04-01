@@ -828,7 +828,9 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 				s.Error("Failed to trigger firmware dump: ", err)
 			}
 			if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime); err != nil {
-				s.Error("Error collecting crash logs, err: ", err)
+				if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime.UTC()); err != nil {
+					s.Error("Error collecting crash logs, err: ", err)
+				}
 			}
 		}
 	}
