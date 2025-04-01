@@ -35,7 +35,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
-		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 	})
 }

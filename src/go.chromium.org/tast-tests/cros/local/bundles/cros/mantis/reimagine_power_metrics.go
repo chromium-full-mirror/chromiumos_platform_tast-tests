@@ -41,7 +41,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
-		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Fixture:      fixture.PowerAshGaiaWithUpdateEngine,
 		Params: []testing.Param{
 			{
