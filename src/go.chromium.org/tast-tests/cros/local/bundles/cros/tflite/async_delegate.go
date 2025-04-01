@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Runs the TFLite async delegate test",
 		Contacts:     []string{"cros-odml-foundations-eng@google.com", "ototot@chromium.org", "shik@chromium.org"},
 		BugComponent: "b:1445284", // ChromeOS > Platform > Technologies > Machine Learning > On-Device ML
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"ml_service"},
 		Params: []testing.Param{{
 			Name: "sample",
