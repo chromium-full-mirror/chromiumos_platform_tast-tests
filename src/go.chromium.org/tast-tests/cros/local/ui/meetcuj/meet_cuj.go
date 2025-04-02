@@ -590,12 +590,15 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	ui := uiauto.New(tconn)
 	uiLongWait := ui.WithTimeout(longUITimeout)
+	gotItButton := nodewith.NameContaining("Got it").Role(role.Button)
 	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
 	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
-	if err := uiauto.NamedAction("wait for the number of participants to be loaded",
+	if err := uiauto.NamedCombine("wait for the number of participants to be loaded",
 		// Some DUT models have poor performance. When joining a large conference
 		// (over 15 participants), it would take much time to render DOM elements.
 		// Set a longer timer here.
+		uiLongWait.WaitUntilAnyExists(gotItButton, participantText),
+		uiauto.IfSuccessThen(ui.Exists(gotItButton), ui.DoDefault(gotItButton)),
 		uiLongWait.WaitUntilExists(participantText),
 	)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for participant info")
