@@ -5,16 +5,13 @@
 package tracing
 
 import (
-	"bytes"
 	"context"
-	"encoding/csv"
 	"os"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	pb "go.chromium.org/tast-tests/cros/services/cros/tracing"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -47,6 +44,21 @@ func (s *RemoteSession) Finalize(ctx context.Context) error {
 	}
 	s.service = nil
 	return nil
+}
+
+// RunQuery runs a query string on the trace session. User should stop the
+// tracing session if you need a stable result.
+func (s *RemoteSession) RunQuery(ctx context.Context, query string) ([][]string, error) {
+	res, err := s.service.RunQuery(ctx, &pb.PerfettoQueryRequest{Query: query})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run query in remote session")
+	}
+	// Convert PerfettoQueryResponse to [][]string.
+	var result [][]string
+	for _, line := range res.Lines {
+		result = append(result, line.Items)
+	}
+	return result, nil
 }
 
 // Token gets a session token from a background perfetto session.
@@ -219,44 +231,31 @@ func (q *PerfettoQueryValue) StartAndDetach(ctx context.Context, cl *rpc.Client)
 // if you run PerfettoQueryValue::StartAndDetach() and
 // PerfettoQueryValue::StopAndQuery() repeatedly, it appends the results.
 func (q *PerfettoQueryValue) StopAndQuery(ctx context.Context, dut *dut.DUT, cl *rpc.Client) error {
-	const traceProcessorPath = "/usr/bin/trace_processor_shell"
 	if q.token == nil {
 		return errors.New("perfetto session is not started")
 	}
-	tempFile, err := os.CreateTemp("/tmp", "perfetto-trace-*.pb")
+	querydata, err := os.ReadFile(q.QueryFile)
 	if err != nil {
-		return errors.Wrap(err, "failed to create temp file")
+		return errors.Wrap(err, "failed to read query file")
 	}
-	tempFile.Close()
-	defer func() {
-		os.Remove(tempFile.Name())
-	}()
 
-	// Reconnect to remote session and get the result file.
-	if err := SaveRemoteSessionTraceData(ctx, cl, q.token,
-		func(src string) error {
-			return dut.GetFile(ctx, src, tempFile.Name())
-		}); err != nil {
-		return err
+	// Reconnect to remote session, stop it then run query.
+	sess, err := ReconnectRemoteSession(ctx, cl, q.token)
+	if err != nil {
+		return errors.Wrap(err, "failed to reconnect to perfetto session")
 	}
+	defer sess.Finalize(ctx)
 	q.token = nil
+	// Ignore the error because the perfetto command may already stop.
+	sess.Stop(ctx)
 
-	cmd := testexec.CommandContext(ctx, traceProcessorPath, tempFile.Name(), "-q", q.QueryFile)
-	out, err := cmd.Output(testexec.DumpLogOnError)
+	res, err := sess.RunQuery(ctx, string(querydata))
 	if err != nil {
-		return errors.Wrap(err, "failed to run query with trace_processor_shell")
-	}
-	reader := csv.NewReader(bytes.NewReader(out))
-	data, err := reader.ReadAll()
-	if err != nil {
-		return errors.Wrap(err, "failed to parse query result")
-	}
-	if len(data) <= 1 {
-		return errors.New("failed to decord CSV or there is no data")
+		return errors.Wrap(err, "failed to run query on perfetto session data")
 	}
 	idx := -1
 	// Find appropriate column.
-	for i, n := range data[0] {
+	for i, n := range res[0] {
 		if q.Name == n {
 			idx = i
 			break
@@ -266,8 +265,8 @@ func (q *PerfettoQueryValue) StopAndQuery(ctx context.Context, dut *dut.DUT, cl 
 		return errors.New("failed to find corresponding column in the query result")
 	}
 	// Append corresponding results to Values.
-	for _, d := range data[1:] {
-		fv, err := strconv.ParseFloat(d[idx], 64)
+	for _, line := range res[1:] {
+		fv, err := strconv.ParseFloat(line[idx], 64)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse query result value")
 		}

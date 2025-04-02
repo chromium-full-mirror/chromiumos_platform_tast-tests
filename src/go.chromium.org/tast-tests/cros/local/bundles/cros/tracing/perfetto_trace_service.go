@@ -132,3 +132,18 @@ func (s *PerfettoTraceService) Reconnect(ctx context.Context, req *pb.PerfettoSe
 	s.sess = sess
 	return &emptypb.Empty{}, nil
 }
+
+func (s *PerfettoTraceService) RunQuery(ctx context.Context, req *pb.PerfettoQueryRequest) (*pb.PerfettoQueryResponse, error) {
+	if s.sess == nil {
+		return nil, errors.New("this service is disconnected. Reconnect the session first")
+	}
+	result, err := s.sess.RunQueryString(ctx, req.Query)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run query")
+	}
+	res := &pb.PerfettoQueryResponse{}
+	for _, d := range result {
+		res.Lines = append(res.Lines, &pb.PerfettoQueryResponseLine{Items: d})
+	}
+	return res, nil
+}

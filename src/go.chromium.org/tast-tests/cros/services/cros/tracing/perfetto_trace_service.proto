@@ -12,17 +12,17 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/tracing";
 
 service PerfettoTraceService {
 
-  // Basic usage is Start() -> run workload -> Stop() -> get result file ->
-  // Finalize().
+  // Basic usage is Start() -> run workload -> Stop()
+  // -> RunQuery() or get result file -> Finalize().
   rpc Start(PerfettoOption) returns (PerfettoResponse) {}
 
   rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  rpc RunQuery(PerfettoQueryRequest) returns (PerfettoQueryResponse) {}
+
   rpc Finalize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc Reconnect(PerfettoSessionToken) returns (google.protobuf.Empty) {}
-
-  // TODO: Add RunQuery etc.
 }
 
 // The commandline options which needs to be passed to perfetto.
@@ -54,4 +54,16 @@ message PerfettoSessionToken {
   bool use_temp_file = 2;
   bool compress_trace_data = 3;
   string trace_data_path = 4;
+}
+
+message PerfettoQueryRequest {
+  // Query string
+  string query = 1;
+}
+
+message PerfettoQueryResponseLine { repeated string items = 1; }
+
+message PerfettoQueryResponse {
+  // Query result
+  repeated PerfettoQueryResponseLine lines = 1;
 }
