@@ -145,28 +145,39 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 		return nil
 	}
 
+	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
+	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
+
+	if err := ui.WaitUntilExists(focusedButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for a focused button to show up on the consolidated consent screen")
+	}
+
 	isReadMoreButtonShown := false
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()", &isReadMoreButtonShown); err != nil {
 		return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
-	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
-	if isReadMoreButtonShown {
+	for isReadMoreButtonShown {
 		if err := uiauto.Combine("click the consolidated consent screen read more button",
 			ui.WaitUntilExists(focusedButton),
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click the consolidated consent screen read more button")
 		}
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()"); err != nil {
-			return errors.Wrap(err, "failed to wait for the consolidated consent read more to be hidden")
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()", &isReadMoreButtonShown); err != nil {
+			return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
 		}
 	}
 
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "!OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the consolidated consent read more to be hidden")
+	}
+
+	continueButton := nodewith.Name("Accept and continue").Role(role.Button)
+
 	if err := uiauto.Combine("Click the consolidated consent screen accept button",
-		ui.WaitUntilExists(focusedButton),
-		ui.LeftClick(focusedButton),
+		ui.WaitUntilExists(continueButton),
+		ui.LeftClick(continueButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the consolidated consent screen accept button")
 	}
