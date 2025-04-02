@@ -29,7 +29,7 @@ import (
 // List of extension IDs and URLs.
 const (
 	AccessibilityCommonExtensionURL = "chrome-extension://egfdjlfmgnehecnclamagfafdccgfndp/accessibility_common/background.html"
-	ChromeVoxExtensionURL           = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/background/background.html"
+	ChromeVoxExtensionURL           = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/mv2/background/background.html"
 	SelectToSpeakExtensionURL       = "chrome-extension://klbcgckkldhdhonijdbnhhaiedfkllef/select_to_speak/background.html"
 )
 
@@ -105,7 +105,7 @@ func MouseActionToKeyboardKey(button MouseAction) string {
 }
 
 // ChangeMouseButton cycles the current mouse button to the target button.
-func ChangeMouseButton(ctx context.Context, kb *input.KeyboardEventWriter, current MouseButton, target MouseButton) (MouseButton, error) {
+func ChangeMouseButton(ctx context.Context, kb *input.KeyboardEventWriter, current, target MouseButton) (MouseButton, error) {
 	for current != target {
 		if err := kb.Type(ctx, MouseActionToKeyboardKey(MouseActionSwitchMouseButton)); err != nil {
 			return current, err

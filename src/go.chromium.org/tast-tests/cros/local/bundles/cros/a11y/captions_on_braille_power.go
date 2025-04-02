@@ -79,7 +79,7 @@ func CaptionsOnBraillePower(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	// Enable ChromeVox and open the test page.
 	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr,
@@ -126,7 +126,7 @@ func CaptionsOnBraillePower(ctx context.Context, s *testing.State) {
 	pageRootWebArea := nodewith.Role(role.RootWebArea).Name(pageTitle)
 	audioPlayButton := nodewith.Name("play").Role(role.Button).Ancestor(pageRootWebArea)
 	audioPauseButton := nodewith.Name("pause").Role(role.Button).Ancestor(pageRootWebArea)
-	liveCaptionBubble := nodewith.ClassName("CaptionBubbleFrameView")
+	liveCaptionBubble := nodewith.ClassName("CaptionBubbleLabel")
 
 	if err := ui.DoDefaultUntil(audioPlayButton, ui.WithTimeout(3*time.Second).WaitUntilExists(audioPauseButton))(ctx); err != nil {
 		s.Fatal("Failed to play the audio: ", err)
@@ -139,16 +139,8 @@ func CaptionsOnBraillePower(ctx context.Context, s *testing.State) {
 
 	if captionsOnBraille {
 		// Verify that CaptionsHandler is in live caption bubble.
-		inCaptions := false
-		if err := cvData.CVConn.Eval(ctx, `(async () => {
-				let captionsHandler = (await import('/chromevox/background/captions_handler.js')).CaptionsHandler;
-				return captionsHandler.inCaptions();
-			})()`, &inCaptions); err != nil {
-			s.Fatal("Failed to check CaptionsHandler state: ", err)
-		}
-
-		if !inCaptions {
-			s.Fatal("CaptionsHandler is not in live caption bubble")
+		if err := cvData.CVConn.WaitForFocusedNode(ctx, tconn, liveCaptionBubble); err != nil {
+			s.Fatal("Focus is not on live caption bubble: ", err)
 		}
 	}
 
