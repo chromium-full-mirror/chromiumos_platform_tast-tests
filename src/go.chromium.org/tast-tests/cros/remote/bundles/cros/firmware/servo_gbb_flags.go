@@ -70,6 +70,9 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("Servo does not have CCD: ", err)
 	}
 
+	// Reenable the main servo device when the test ends
+	defer h.Servo.PreferDebugHeader(ctx)
+
 	if val, err := h.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
 		s.Fatal("Failed to get gsc_ccd_level")
 	} else if val != servo.Open {
