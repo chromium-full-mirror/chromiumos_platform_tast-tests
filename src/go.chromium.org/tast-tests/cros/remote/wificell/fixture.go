@@ -807,18 +807,32 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		} else if devInfo.Vendor == IntelVendorNum {
 			// Record the current time so only crashes after this time is collected.
 			currentTime := time.Now()
+			currentTimeUTC := currentTime.UTC()
+			layout := "Mon Jan 2 15:04:05 MST 2006" // This is the reference time layout
 			out, err := f.tf.DUTConn(DefaultDUT).CommandContext(ctx, "date").Output()
 			if err != nil {
 				s.Log("Failed to get the DUT current time, using runner current time instead: ", err)
 			} else {
 				dutCurrentTime := string(out)
 				dutCurrentTime = strings.TrimSpace(dutCurrentTime)
-				layout := "Mon Jan 2 15:04:05 MST 2006" // This is the reference time layout
 				t, err := time.Parse(layout, dutCurrentTime)
 				if err != nil {
 					s.Log("Error parsing time: ", err)
 				} else {
 					currentTime = t
+				}
+			}
+			outUTC, err := f.tf.DUTConn(DefaultDUT).CommandContext(ctx, "date", "-u").Output()
+			if err != nil {
+				s.Log("Failed to get the DUT current UTC time, using runner current UTC time instead: ", err)
+			} else {
+				dutCurrentTimeUTC := string(outUTC)
+				dutCurrentTimeUTC = strings.TrimSpace(dutCurrentTimeUTC)
+				t, err := time.Parse(layout, dutCurrentTimeUTC)
+				if err != nil {
+					s.Log("Error parsing UTC time: ", err)
+				} else {
+					currentTimeUTC = t
 				}
 			}
 
@@ -827,8 +841,8 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 			if err := f.tf.WifiClient().TriggerIntelFirmwareDump(ctx); err != nil {
 				s.Error("Failed to trigger firmware dump: ", err)
 			}
-			if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime); err != nil {
-				if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime.UTC()); err != nil {
+			if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTimeUTC); err != nil {
+				if err := f.tf.CollectCrashLogs(ctx, s.OutDir(), currentTime); err != nil {
 					s.Error("Error collecting crash logs, err: ", err)
 				}
 			}
