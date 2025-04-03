@@ -10,6 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/flex/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/osinstall"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -22,11 +24,13 @@ func init() {
 		Contacts: []string{
 			"chromeos-flex-eng+oncall@google.com",
 			"nicholasbishop@google.com",
+			"josephsussman@google.com",
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "flex_device"},
 		ServiceDeps:  []string{"tast.cros.osinstall.OsInstallService"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FlexWithServo,
 		// Allow up to 20 minutes for install, plus some extra time for the DUT
 		// to be started back up.
 		Timeout: 25 * time.Minute,
@@ -76,11 +80,52 @@ func runOsInstallAndRestart(ctx context.Context, s *testing.State) *osinstall.Ge
 	return preInstallInfo
 }
 
+func prepareUsbAndRestart(ctx context.Context, s *testing.State) {
+	h := s.FixtValue().(*fixture.FixtData).Helper
+
+	if err := h.RequireServo(ctx); err != nil {
+		s.Fatal("Failed to init servo: ", err)
+	}
+
+	cs := s.CloudStorage()
+	if err := h.SetupUSBKey(ctx, cs); err != nil {
+		s.Fatal("Failed to setup USB key: ", err)
+	}
+
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+		s.Fatal("Failed to set dut_sees_usbkey: ", err)
+	}
+
+	// Use SSH to reboot the DUT because we don't know what state it is in.
+	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil {
+		s.Fatal("Failed to run reboot command: ", err)
+	}
+
+	// Wait for the DUT to shut down, then wait for it to come back up
+	s.Log("Waiting for the DUT to shut down and then become reachable again")
+	h.DUT.WaitUnreachable(ctx)
+	h.DUT.WaitConnect(ctx)
+}
+
 func OsInstall(ctx context.Context, s *testing.State) {
+	// Prepare the USB storage and restart, to get into a known state.
+	prepareUsbAndRestart(ctx, s)
+
+	// Get pre install info, run the OS install, then restart.
 	preInstallInfo := runOsInstallAndRestart(ctx, s)
 
-	// Wait for the DUT to come back up, hopefully with the newly installed system.
-	s.Log("Waiting for the DUT to become reachable again")
+	// Once the installation is complete we need to remove the USB storage
+	// as quickly as possible so the BIOS does not recognize it and attempt
+	// to boot from it.
+	h := s.FixtValue().(*fixture.FixtData).Helper
+	// Remove the USB so the DUT does not boot to it.
+	// GoBigSleepLint: Wait an arbitrary, small amount of time.
+	testing.Sleep(ctx, 1*time.Second)
+	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
+		s.Fatal("Failed to set servo_sees_usbkey: ", err)
+	}
+
+	s.Log("Waiting for the DUT to shut down and then become reachable again")
 	s.DUT().WaitUnreachable(ctx)
 	s.DUT().WaitConnect(ctx)
 
