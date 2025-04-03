@@ -73,10 +73,7 @@ func (s *UsbTester) Close(ctx context.Context) error {
 		return nil
 	}
 
-	delctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	if _, err := s.client.CloseTester(delctx, &passport.CloseTesterRequest{Id: s.tester}); err != nil {
+	if _, err := s.client.CloseTester(ctx, &passport.CloseTesterRequest{Id: s.tester}); err != nil {
 		return errors.Errorf("failed to close unigraf tester serial=%s, uri=%s", s.tester, s.uri)
 	}
 
@@ -350,7 +347,7 @@ func (s *UsbTester) HardReset(ctx context.Context) error {
 }
 
 // SetTestPort will set the active test port.
-func (s *UsbTester) SetTestPort(ctx context.Context, portID int64) error {
+func (s *UsbTester) SetTestPort(ctx context.Context, portID int) error {
 	reply, err := s.client.SetActivePort(
 		ctx,
 		&passport.SetActivePortRequest{
@@ -371,7 +368,7 @@ func (s *UsbTester) SetTestPort(ctx context.Context, portID int64) error {
 }
 
 // TestPort will get the active test port.
-func (s *UsbTester) TestPort(ctx context.Context) (int64, error) {
+func (s *UsbTester) TestPort(ctx context.Context) (int, error) {
 	reply, err := s.client.GetActivePort(
 		ctx,
 		&passport.GetActivePortRequest{
@@ -387,5 +384,22 @@ func (s *UsbTester) TestPort(ctx context.Context) (int64, error) {
 		)
 	}
 
-	return int64(reply.GetPortId()), nil
+	return int(reply.GetPortId()), nil
+}
+
+// USB switch interface implementation
+
+// DisablePorts disables the device testing ports.
+func (s *UsbTester) DisablePorts(ctx context.Context) error {
+	return s.SetTestPort(ctx, 1)
+}
+
+// EnablePort enables the used port.
+func (s *UsbTester) EnablePort(ctx context.Context) error {
+	return s.SetTestPort(ctx, 0)
+}
+
+// DevicePort returns the port connected to the device used in the test.
+func (s *UsbTester) DevicePort(_ context.Context) (int, error) {
+	return 0, nil
 }

@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,7 +26,7 @@ func init() {
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_dp_bringup"},
 			Val:       10,
@@ -62,32 +63,32 @@ func DpSuspend(ctx context.Context, s *testing.State) {
 
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
 
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := typecswitch.GetSwitch(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(cleanupCtx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performDpSuspendIteration(ctx, d, sw, portUsed); err != nil {
+		if err := performDpSuspendIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
 // performDpSuspendIteration runs 1 iteration of the DP suspend test.
-func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
 	const suspendDurationS = 10
 
 	// Disconnect the dock/display.
-	sw.DisablePorts()
+	if err := sw.DisablePorts(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch off the port")
+	}
 
 	// Verify that there is no DP display.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -103,7 +104,9 @@ func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch,
 	}
 
 	// Reconnect the dock/display.
-	sw.EnablePort(mcciPort)
+	if err := sw.EnablePort(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch on the port")
+	}
 
 	// Verify that there is a DP display.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

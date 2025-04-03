@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +27,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_dp_bringup"},
 			Val:       10,
@@ -61,32 +62,32 @@ func DpHotplugSuspend(ctx context.Context, s *testing.State) {
 
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
 
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := typecswitch.GetSwitch(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(cleanupCtx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performDpHotplugSuspendIteration(ctx, d, sw, portUsed); err != nil {
+		if err := performDpHotplugSuspendIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
 // performDpHotplugSuspendIteration runs 1 iteration of the hotplug in suspend test.
-func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
 	const suspendDurationS = 10
 
 	// Disconnect the dock.
-	sw.DisablePorts()
+	if err := sw.DisablePorts(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch off the port")
+	}
 
 	// Verify that there is no DP display.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -99,6 +100,12 @@ func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.
 		return nil
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed DP absence check")
+	}
+
+	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug,
+	// otherwise the system won't sleep.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for display unplug modeset")
 	}
 
 	// Suspend DUT. Run in a separate thread since this function blocks until resume.
@@ -122,7 +129,9 @@ func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.
 	}
 
 	// Reconnect the dock/display.
-	sw.EnablePort(mcciPort)
+	if err := sw.EnablePort(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch on the port")
+	}
 
 	// Verify DUT reconnected.
 	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 2 * suspendDurationS * time.Second}); err != nil {

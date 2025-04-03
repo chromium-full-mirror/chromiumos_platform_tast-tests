@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package typecutils contains constants & helper functions used by the tests in the typec directory for thunderbolt testing.
-// See "go.chromium.org/tast-tests/cros/common/typecutils" for genertic typec helper functions
-package typecutils
+// Package typectest contains constants & helper functions used by the tests in the typec directory.
+// See "go.chromium.org/tast-tests/cros/common/typecutils" for generic typec helper functions
+package typectest
 
 import (
 	"context"

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -69,19 +69,19 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 	}
 
 	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
-	if err := typecutils.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
+	if err := typectest.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
 		s.Fatal("Failed to log in to Chrome: ", err)
 	}
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performHotplugIteration(ctx, d, sw, portUsed); err != nil {
+		if err := performHotplugIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 		// GoBigSleepLint: Give enough time between iterations.
@@ -92,13 +92,13 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performHotplugIteration runs 1 iteration of the hotplug test.
-func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch) error {
 	// Disconnect the dock.
-	sw.DisablePorts()
+	sw.DisablePorts(ctx)
 
 	// Verify that there is no TBT device.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, false, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT absence check")
 	}
@@ -109,11 +109,11 @@ func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, m
 	}
 
 	// Reconnect the dock.
-	sw.EnablePort(mcciPort)
+	sw.EnablePort(ctx)
 
 	// Verify that there is a TBT device present.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, true, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT presence check")
 	}

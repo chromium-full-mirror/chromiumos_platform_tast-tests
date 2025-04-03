@@ -8,6 +8,7 @@
 package mcci
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -21,12 +22,17 @@ import (
 
 // Switch is the external facing struct that represents an MCCI switch.
 type Switch struct {
-	sPort serial.Port
+	sPort    serial.Port
+	testPort int
 }
 
 // GetSwitch returns a handle to the MCCI switch with serial number `serialNum`.
 // If a non-empty path is provided, the function will check it in addition to the serial ports list.
-func GetSwitch(serialNum, path string) (*Switch, error) {
+func GetSwitch(serialNum, path string, testPort int) (*Switch, error) {
+	if testPort != 1 && testPort != 2 {
+		return nil, errors.New("invalid port number provided")
+	}
+
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to retrieve serial ports list")
@@ -34,10 +40,8 @@ func GetSwitch(serialNum, path string) (*Switch, error) {
 
 	if path != "" {
 		ports = append(ports, path)
-	}
-
-	if len(ports) == 0 {
-		return nil, errors.Wrap(err, "no serial ports found")
+	} else if len(ports) == 0 {
+		return nil, errors.New("no serial ports found")
 	}
 
 	for _, portPath := range ports {
@@ -49,7 +53,7 @@ func GetSwitch(serialNum, path string) (*Switch, error) {
 		}
 
 		if match := checkPort(port, serialNum); match {
-			return &Switch{sPort: port}, nil
+			return &Switch{sPort: port, testPort: testPort}, nil
 		}
 
 		port.Close()
@@ -59,22 +63,18 @@ func GetSwitch(serialNum, path string) (*Switch, error) {
 }
 
 // DisablePorts disables all ports.
-func (sw Switch) DisablePorts() error {
+func (sw Switch) DisablePorts(_ context.Context) error {
 	return writeSerial("port 0\r", sw.sPort)
 }
 
 // EnablePort enables the port `portNum`.
-func (sw Switch) EnablePort(portNum int) error {
-	if portNum != 1 && portNum != 2 {
-		return errors.New("invalid port number provided")
-	}
-
-	serialStr := fmt.Sprintf("port %d\r", portNum)
+func (sw Switch) EnablePort(_ context.Context) error {
+	serialStr := fmt.Sprintf("port %d\r", sw.testPort)
 	return writeSerial(serialStr, sw.sPort)
 }
 
-// GetActivePort gets currently active port
-func (sw Switch) GetActivePort() (int, error) {
+// TestPort gets currently active port.
+func (sw Switch) TestPort(_ context.Context) (int, error) {
 	writeSerial("port\r", sw.sPort)
 	resultStr, err := readSerial(sw.sPort)
 	if err != nil {
@@ -90,9 +90,14 @@ func (sw Switch) GetActivePort() (int, error) {
 	return portInt, nil
 }
 
+// DevicePort returns the port connected to the device used in the test.
+func (sw Switch) DevicePort(_ context.Context) (int, error) {
+	return sw.testPort, nil
+}
+
 // Close closes the serial port interface for the MCCI switch.
-func (sw Switch) Close() {
-	sw.sPort.Close()
+func (sw Switch) Close(_ context.Context) error {
+	return sw.sPort.Close()
 }
 
 // checkPort is a helper function that checks if the MCCI switch (represented by its serial port `port` matches the supplied serial number.

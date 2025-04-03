@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -60,13 +60,13 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("No TBT device connected to DUT")
 	}
 
-	if err := typecutils.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
+	if err := typectest.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
 		s.Fatal("Failed to log in to Chrome: ", err)
 	}
 
 	s.Log("Verifying that a TBT device is enumerated")
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, true, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("Failed TBT enumeration after login: ", err)
 	}
@@ -81,7 +81,7 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 	}
 
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, false, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed TBT non-enumeration after reboot: ", err)
 	}

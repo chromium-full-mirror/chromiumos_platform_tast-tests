@@ -6,12 +6,12 @@ package typec
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -26,7 +26,7 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_usb_bringup"},
@@ -63,17 +63,15 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
 
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := typecswitch.GetSwitch(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(cleanupCtx)
 
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
@@ -87,14 +85,19 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 	}
 
 	// Make sure the device is disconnected before testing
-	if port, err := sw.GetActivePort(); err != nil {
+	testPort, err := sw.TestPort(ctx)
+	if err != nil {
+		s.Fatal("Could not get active port before testing")
+	}
+
+	if devicePort, err := sw.DevicePort(ctx); err != nil {
 		s.Fatal("Could not get used port before testing: ", err)
-	} else if port == portUsed {
+	} else if devicePort == testPort {
 		devicesWhenOn, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 		if err != nil {
 			s.Fatal("Could not get storage device list before testing: ", err)
 		}
-		if err := sw.DisablePorts(); err != nil {
+		if err := sw.DisablePorts(ctx); err != nil {
 			s.Fatal("Could not disable the port before testing: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -108,20 +111,20 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disconnect the device before the test: ", err)
 		}
 
-	} else if err := sw.DisablePorts(); err != nil {
+	} else if err := sw.DisablePorts(ctx); err != nil {
 		s.Fatal("Could not disable the port before testing: ", err)
 	}
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performUsb3StorageHotplugIteration(ctx, d, usbClient, sw, portUsed); err != nil {
+		if err := performUsb3StorageHotplugIteration(ctx, d, usbClient, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
 // performUsb3StorageHotplugIteration runs 1 iteration of the USB 3.2 storage hotplug test.
-func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw *mcci.Switch, mcciPort int) error {
+func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw typecswitch.Switch) error {
 
 	// Get the devices when switch is off
 	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
@@ -130,7 +133,7 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 	}
 
 	// Enable the switch.
-	if err := sw.EnablePort(mcciPort); err != nil {
+	if err := sw.EnablePort(ctx); err != nil {
 		return errors.Wrap(err, "failed to enable the port")
 	}
 
@@ -153,7 +156,7 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 	}
 
 	// Disable the switch.
-	if err := sw.DisablePorts(); err != nil {
+	if err := sw.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch off the port")
 	}
 

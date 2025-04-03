@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -67,15 +67,15 @@ func Tbt4Reboot(ctx context.Context, s *testing.State) {
 	}
 
 	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performTbt4RebootIteration(ctx, d, sw, portUsed); err != nil {
+		if err := performTbt4RebootIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 
@@ -87,13 +87,13 @@ func Tbt4Reboot(ctx context.Context, s *testing.State) {
 }
 
 // performTbt4RebootIteration runs 1 iteration of the Thunderbolt 4 reboot test.
-func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch) error {
 	// Disconnect the dock.
-	sw.DisablePorts()
+	sw.DisablePorts(ctx)
 
 	// Verify that there is no TBT device.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, false, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT4 absence check")
 	}
@@ -104,7 +104,7 @@ func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch
 	}
 
 	// Reconnect the dock.
-	sw.EnablePort(mcciPort)
+	sw.EnablePort(ctx)
 
 	if err := d.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT")
@@ -117,7 +117,7 @@ func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch
 
 	// Verify that there is a TBT device present.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGen4)
+		return typectest.CheckTBTDevice(ctx, d, true, typectest.TbtGen4)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT4 presence check")
 	}

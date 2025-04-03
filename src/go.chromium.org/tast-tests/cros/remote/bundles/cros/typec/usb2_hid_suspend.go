@@ -70,11 +70,11 @@ func Usb2HidSuspend(ctx context.Context, s *testing.State) {
 	}
 
 	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
 	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
@@ -84,14 +84,14 @@ func Usb2HidSuspend(ctx context.Context, s *testing.State) {
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Make sure the device is disconnected before testing
-	if port, err := sw.GetActivePort(); err != nil {
+	if port, err := sw.TestPort(ctx); err != nil {
 		s.Fatal("Could not get used port before testing: ", err)
 	} else if port == portUsed {
 		hidDevicesWhenOn, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
 		if err != nil {
 			s.Fatal("Could not get HID device list before testing: ", err)
 		}
-		if err := sw.DisablePorts(); err != nil {
+		if err := sw.DisablePorts(ctx); err != nil {
 			s.Fatal("Could not disable the port before testing: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -105,7 +105,7 @@ func Usb2HidSuspend(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disconnect the device before the test: ", err)
 		}
 
-	} else if err := sw.DisablePorts(); err != nil {
+	} else if err := sw.DisablePorts(ctx); err != nil {
 		s.Fatal("Could not disable the port before testing: ", err)
 	}
 
@@ -113,14 +113,14 @@ func Usb2HidSuspend(ctx context.Context, s *testing.State) {
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performUsb2HidSuspendIteration(ctx, s, d, sw, portUsed); err != nil {
+		if err := performUsb2HidSuspendIteration(ctx, s, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
 // performUsb2HidSuspendIteration runs 1 iteration of the USB 2.0 HID suspend test.
-func performUsb2HidSuspendIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performUsb2HidSuspendIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw *mcci.Switch) error {
 	const suspendDurationS = 10
 
 	// Dial rpc
@@ -138,7 +138,7 @@ func performUsb2HidSuspendIteration(ctx context.Context, s *testing.State, d *du
 	}
 
 	// Enable the switch.
-	if err := sw.EnablePort(mcciPort); err != nil {
+	if err := sw.EnablePort(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch on the port")
 	}
 
@@ -214,7 +214,7 @@ func performUsb2HidSuspendIteration(ctx context.Context, s *testing.State, d *du
 	}
 
 	// Disable the switch.
-	if err := sw.DisablePorts(); err != nil {
+	if err := sw.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch off the port")
 	}
 

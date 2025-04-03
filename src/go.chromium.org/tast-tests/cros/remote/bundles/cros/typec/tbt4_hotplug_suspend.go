@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -68,15 +68,15 @@ func Tbt4HotplugSuspend(ctx context.Context, s *testing.State) {
 	}
 
 	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performHotplugSuspendIteration(ctx, d, sw, portUsed); err != nil {
+		if err := performHotplugSuspendIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 
@@ -88,13 +88,13 @@ func Tbt4HotplugSuspend(ctx context.Context, s *testing.State) {
 }
 
 // performHotplugSuspendIteration runs 1 iteration of the hotplug in suspend test.
-func performHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+func performHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch) error {
 	// Disconnect the dock.
-	sw.DisablePorts()
+	sw.DisablePorts(ctx)
 
 	// Verify that there is no TBT device.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
+		return typectest.CheckTBTDevice(ctx, d, false, typectest.TbtGenAny)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT4 absence check")
 	}
@@ -120,7 +120,7 @@ func performHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Sw
 	}
 
 	// Reconnect the dock.
-	sw.EnablePort(mcciPort)
+	sw.EnablePort(ctx)
 
 	// Verify DUT reconnected.
 	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
@@ -129,7 +129,7 @@ func performHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Sw
 
 	// Verify that there is a TBT device present.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGen4)
+		return typectest.CheckTBTDevice(ctx, d, true, typectest.TbtGen4)
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed TBT4 presence check")
 	}

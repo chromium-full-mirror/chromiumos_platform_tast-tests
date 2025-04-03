@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
-
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -49,15 +48,14 @@ func init() {
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := typecswitch.GetSwitch(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
 	// Disconnect the monitor.
-	sw.DisablePorts()
+	sw.DisablePorts(ctx)
 
 	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
@@ -84,7 +82,7 @@ func HpdWake(ctx context.Context, s *testing.State) {
 	}
 
 	// Reconnect the monitor.
-	sw.EnablePort(portUsed)
+	sw.EnablePort(ctx)
 
 	// Verify DUT reconnected.
 	if err := testing.Poll(ctx, d.Connect, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {

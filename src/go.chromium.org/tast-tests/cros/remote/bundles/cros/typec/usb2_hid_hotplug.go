@@ -68,11 +68,11 @@ func Usb2HidHotplug(ctx context.Context, s *testing.State) {
 	}
 
 	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path)
+	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
 	if err != nil {
 		s.Fatal("Failed to get MCCI switch handle: ", err)
 	}
-	defer sw.Close()
+	defer sw.Close(ctx)
 
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
@@ -82,14 +82,14 @@ func Usb2HidHotplug(ctx context.Context, s *testing.State) {
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Make sure the device is disconnected before testing
-	if port, err := sw.GetActivePort(); err != nil {
+	if port, err := sw.TestPort(ctx); err != nil {
 		s.Fatal("Could not get used port before testing: ", err)
 	} else if port == portUsed {
 		hidDevicesWhenOn, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
 		if err != nil {
 			s.Fatal("Could not get HID device list before hotplug: ", err)
 		}
-		if err := sw.DisablePorts(); err != nil {
+		if err := sw.DisablePorts(ctx); err != nil {
 			s.Fatal("Could not disable the port before testing: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -103,20 +103,20 @@ func Usb2HidHotplug(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to disconnect the device before the test: ", err)
 		}
 
-	} else if err := sw.DisablePorts(); err != nil {
+	} else if err := sw.DisablePorts(ctx); err != nil {
 		s.Fatal("Could not disable the port before testing: ", err)
 	}
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performUsb2HidHotplugIteration(ctx, d, usbClient, sw, portUsed); err != nil {
+		if err := performUsb2HidHotplugIteration(ctx, d, usbClient, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
 // performUsb2HidHotplugIteration runs 1 iteration of the USB 2.0 HID hotplug test.
-func performUsb2HidHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw *mcci.Switch, mcciPort int) error {
+func performUsb2HidHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw *mcci.Switch) error {
 
 	// Get the device count when switch is off
 	hidDevicesWhenOff, err := typecutils.Usb2GetHidDeviceList(ctx, cl)
@@ -125,7 +125,7 @@ func performUsb2HidHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.Sysf
 	}
 
 	// Enable the switch.
-	if err := sw.EnablePort(mcciPort); err != nil {
+	if err := sw.EnablePort(ctx); err != nil {
 		return errors.Wrap(err, "failed to enable the port")
 	}
 
@@ -142,7 +142,7 @@ func performUsb2HidHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.Sysf
 	}
 
 	// Disable the switch.
-	if err := sw.DisablePorts(); err != nil {
+	if err := sw.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable the port")
 	}
 
