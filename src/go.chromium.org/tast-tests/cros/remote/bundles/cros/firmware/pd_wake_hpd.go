@@ -31,7 +31,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.MKBPEvent()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.MKBPEvent(), hwdep.SkipOnPlatform("corsola")),
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
