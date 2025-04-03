@@ -8,6 +8,9 @@ package firmware
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -66,7 +69,7 @@ type PDTestParams struct {
 //  5. Ensure a UDB-PD charger brick is attached and sourcing power
 //  6. Disable CCD Watchdogs
 //  7. Shutdown or suspend if needed
-func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) error {
+func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outDir string) error {
 	if testParams.Suspend && testParams.Shutdown {
 		return errors.New("suspend and shutdown can't both be enabled at the same time")
 	}
@@ -136,6 +139,11 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 
 	if testParams.RequiredPort != nil && h.Servo.DUTPDPort() != *testParams.RequiredPort {
 		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *testParams.RequiredPort, h.Servo.DUTPDPort())
+	}
+
+	// Write out the connected port and number of ports.
+	if err := writePDInfo(h.Servo, outDir); err != nil {
+		return errors.Wrap(err, "failed to writePDInfo")
 	}
 
 	// If a battery is present, ensure it is charged to at least minBattLevel percent
@@ -274,6 +282,26 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) erro
 		}
 	}
 	testing.ContextLog(ctx, "SetupPDTester succeeded. Proceeding with test")
+	return nil
+}
+
+type pdInfo struct {
+	DUTPDPort      int `json:"dut_pd_port"`
+	DUTPDPortCount int `json:"dut_pd_port_count"`
+}
+
+func writePDInfo(servo *servo.Servo, outDir string) error {
+	var pdi pdInfo
+	pdi.DUTPDPort = servo.DUTPDPort()
+	pdi.DUTPDPortCount = servo.DUTPDPortCount()
+	jsonData, err := json.Marshal(pdi)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal json")
+	}
+	err = os.WriteFile(filepath.Join(outDir, "pd_info.json"), jsonData, 0666)
+	if err != nil {
+		return errors.Wrap(err, "failed to write file")
+	}
 	return nil
 }
 

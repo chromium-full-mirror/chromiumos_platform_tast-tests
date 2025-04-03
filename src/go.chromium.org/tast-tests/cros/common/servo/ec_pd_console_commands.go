@@ -175,6 +175,11 @@ func (s *Servo) DUTPDPort() int {
 	return s.dutPDInfo.activePort
 }
 
+// DUTPDPortCount returns number of PD ports on the DUT.
+func (s *Servo) DUTPDPortCount() int {
+	return s.dutPDInfo.portCount
+}
+
 const (
 	pdStatePollTimeout  time.Duration = 20 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond

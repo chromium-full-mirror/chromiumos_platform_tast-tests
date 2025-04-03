@@ -175,7 +175,7 @@ func configurePDTesting(ctx context.Context, s *testing.State, h *firmware.Helpe
 
 	testParams := s.Param().(firmware.PDTestParams)
 
-	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams, s.OutDir()); err != nil {
 		return errors.Wrap(err, "failed to configure servo for PD testing")
 	}
 	return nil

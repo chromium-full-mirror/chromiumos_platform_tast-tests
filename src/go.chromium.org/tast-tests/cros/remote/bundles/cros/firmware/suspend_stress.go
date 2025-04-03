@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -95,6 +96,21 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 	// Number of iterations to run stress test for.
 	numIters := s.Param().(int)
+
+	type stressInfo struct {
+		Iterations int `json:"iterations"`
+	}
+
+	var si stressInfo
+	si.Iterations = numIters
+	jsonData, err := json.Marshal(si)
+	if err != nil {
+		s.Fatal("Failed to marshal json: ", err)
+	}
+	err = os.WriteFile(filepath.Join(s.OutDir(), "stress_info.json"), jsonData, 0666)
+	if err != nil {
+		s.Fatal("Failed to write file: ", err)
+	}
 
 	// If fail fast is set to true, fails immediately at first error, otherwise collects errors over all iterations.
 	failFast := false

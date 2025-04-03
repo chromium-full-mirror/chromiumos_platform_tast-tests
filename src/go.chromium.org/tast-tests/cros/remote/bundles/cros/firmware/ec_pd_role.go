@@ -61,7 +61,7 @@ func ECPDRole(ctx context.Context, s *testing.State) {
 		DTS: firmware.DTSModeOff,
 	}
 
-	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams, s.OutDir()); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 

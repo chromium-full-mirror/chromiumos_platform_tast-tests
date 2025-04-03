@@ -121,7 +121,7 @@ func ECPDConnect(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
-	if err := firmware.SetupPDTester(ctx, h, p); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, p, s.OutDir()); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 	defer cleanup(ctx, s)

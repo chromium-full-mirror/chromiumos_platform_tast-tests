@@ -51,7 +51,7 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on WP: ", err)
 	}
 
-	if err := firmware.SetupPDTester(ctx, h, p); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, p, s.OutDir()); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 

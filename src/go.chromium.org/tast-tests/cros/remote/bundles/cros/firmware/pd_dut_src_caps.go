@@ -109,7 +109,7 @@ func PDDUTSrcCaps(ctx context.Context, s *testing.State) {
 
 	testParams := s.Param().(firmware.PDTestParams)
 
-	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams, s.OutDir()); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 

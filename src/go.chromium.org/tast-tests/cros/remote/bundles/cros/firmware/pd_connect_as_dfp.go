@@ -75,7 +75,7 @@ func PDConnectAsDFP(ctx context.Context, s *testing.State) {
 	testParams := firmware.PDTestParams{}
 
 	// Connect servo as source
-	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams, s.OutDir()); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 

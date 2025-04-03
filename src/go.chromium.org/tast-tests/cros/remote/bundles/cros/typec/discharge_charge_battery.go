@@ -61,7 +61,7 @@ func DischargeChargeBattery(ctx context.Context, s *testing.State) {
 	batteryProxy.SetOutdir(s.OutDir())
 
 	// set up PD testing, here we start with at least 10% battery level
-	if err := configurePDTesting(ctx, s.Param().(firmware.PDTestParams), h); err != nil {
+	if err := configurePDTesting(ctx, s.Param().(firmware.PDTestParams), h, s.OutDir()); err != nil {
 		s.Fatalf("%s: Failed to configure servod PD testing", err)
 	}
 
@@ -83,12 +83,12 @@ func DischargeChargeBattery(ctx context.Context, s *testing.State) {
 	}
 }
 
-func configurePDTesting(ctx context.Context, testParams firmware.PDTestParams, h *firmware.Helper) error {
+func configurePDTesting(ctx context.Context, testParams firmware.PDTestParams, h *firmware.Helper, outdir string) error {
 	if err := h.RequireConfig(ctx); err != nil {
 		return errors.Wrap(err, "failed to create config")
 	}
 
-	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams, outdir); err != nil {
 		return errors.Wrap(err, "failed to configure servo for PD testing")
 	}
 	return nil

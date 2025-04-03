@@ -6,8 +6,11 @@ package firmware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -103,6 +106,21 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 		} else {
 			numIters = numItersInt
 		}
+	}
+
+	type stressInfo struct {
+		Iterations int `json:"iterations"`
+	}
+
+	var si stressInfo
+	si.Iterations = numIters
+	jsonData, err := json.Marshal(si)
+	if err != nil {
+		s.Fatal("Failed to marshal json: ", err)
+	}
+	err = os.WriteFile(filepath.Join(s.OutDir(), "stress_info.json"), jsonData, 0666)
+	if err != nil {
+		s.Fatal("Failed to write file: ", err)
 	}
 
 	verifyBootMode := func(mode fwCommon.BootMode) error {
