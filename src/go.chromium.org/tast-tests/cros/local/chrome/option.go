@@ -603,16 +603,6 @@ func DisableOOBETestAPI() Option {
 	}
 }
 
-// EnableExtensionManifestV2Disabled returns an Option to enable
-// `ExtensionManifestV2Deprecation`.
-// TODO(b/354048099): Remove after test extension is migrated to manifest V3.
-func EnableExtensionManifestV2Disabled() Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.DisableExtensionManifestV2Disabled = false
-		return nil
-	}
-}
-
 // ProxyServer returns an Option that can be passed to New to specify the proxy server.
 func ProxyServer(addr string) Option {
 	return func(cfg *config.MutableConfig) error {

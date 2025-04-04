@@ -275,12 +275,6 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 		disabledFeatures = append(disabledFeatures, "WelcomeTour")
 	}
 
-	// TODO(b/354048099): Remove after test extension is migrated to manifest V3.
-	if cfg.DisableExtensionManifestV2Disabled() {
-		disabledFeatures = append(disabledFeatures, "ExtensionManifestV2Disabled")
-		disabledFeatures = append(disabledFeatures, "ExtensionManifestV2Unsupported")
-	}
-
 	if cfg.DisableAccessibilityManifestV3GoogleTts() {
 		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3GoogleTts")
 	}

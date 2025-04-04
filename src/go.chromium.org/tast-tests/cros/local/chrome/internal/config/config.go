@@ -237,13 +237,6 @@ func (c *Config) ForceManualEnrollment() bool { return c.m.ForceManualEnrollment
 // EnableOOBETestAPI returns true if OOBE helper functions for authentication are needed.
 func (c *Config) EnableOOBETestAPI() bool { return c.m.EnableOOBETestAPI }
 
-// DisableExtensionManifestV2Disabled returns true if
-// `ExtensionManifestV2Deprecation` feature should be disabled.
-// TODO(b/354048099): Remove after test extension is migrated to manifest V3.
-func (c *Config) DisableExtensionManifestV2Disabled() bool {
-	return c.m.DisableExtensionManifestV2Disabled
-}
-
 // ProxyServer returns the proxy address if it is set.
 func (c *Config) ProxyServer() string { return c.m.ProxyServer }
 
@@ -326,7 +319,6 @@ type MutableConfig struct {
 	EnableHDR                                         bool             `reuse_match:"false"`
 	ForceManualEnrollment                             bool             `reuse_match:"true"`
 	EnableOOBETestAPI                                 bool             `reuse_match:"true"`
-	DisableExtensionManifestV2Disabled                bool             `reuse_match:"true"`
 	ProxyServer                                       string           `reuse_match:"true"`
 	DisableAccessibilityManifestV3GoogleTts           bool             `reuse_match:"true"`
 	DisableAccessibilityManifestV3EspeakNGTts         bool             `reuse_match:"true"`
@@ -369,7 +361,6 @@ func NewConfig(opts []Option) (*Config, error) {
 			EnableHIDScreenOnOOBE:                   false,
 			EnableStackSampledMetrics:               false,
 			EnableOOBETestAPI:                       true,
-			DisableExtensionManifestV2Disabled:      true,
 			DisableAccessibilityManifestV3GoogleTts: true,
 			DisableAccessibilityManifestV3EspeakNGTts:         true,
 			DisableAccessibilityManifestV3AccessibilityCommon: true,
