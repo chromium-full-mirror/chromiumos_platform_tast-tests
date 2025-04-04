@@ -39,6 +39,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
+		Timeout:      5 * time.Minute,
 	})
 }
 func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
@@ -56,7 +57,7 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 	*/
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
 	defer cancel()
 
 	// Set up the servo attached to the DUT.
