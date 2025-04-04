@@ -53,7 +53,7 @@ func SuspendDUT(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
 // until it does so with a timeout.
 func PowerOnDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 	testing.ContextLog(ctx, "Performing power on DUT")
-	return testing.Poll(ctx, func(ctx context.Context) error {
+	err := testing.Poll(ctx, func(ctx context.Context) error {
 		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 		if err := pxy.Servo().SetPowerState(ctx, servo.PowerStateOn); err != nil {
@@ -64,4 +64,8 @@ func PowerOnDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 3 * time.Minute})
+	if err != nil {
+		testing.ContextLog(ctx, "Error powering on DUT: ", err)
+	}
+	return err
 }

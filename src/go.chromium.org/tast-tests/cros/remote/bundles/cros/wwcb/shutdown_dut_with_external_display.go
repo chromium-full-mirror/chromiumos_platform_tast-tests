@@ -56,12 +56,13 @@ func init() {
 				Name:      "full",
 				ExtraAttr: []string{"pasit_full"},
 			}},
+		Timeout: 6 * time.Minute,
 	})
 }
 
 func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 60*time.Second)
 	defer cancel()
 
 	// Set up the servo attached to the DUT.
@@ -89,7 +90,9 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
 	// Dump the UI tree and screenshot on any failure
-	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
+	// ensure this is called with ctx to leave time for cleanup in case this
+	// hangs
+	utils.AttachErrorHandlersForUITreeDump(ctx, s, cl.Conn)
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
@@ -154,6 +157,10 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to shutdown DUT: ", err)
 	}
 	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
+	testing.ContextLog(ctx, "DUT is shutdown, waiting 60 s for external display screen to turn off")
+	// GoBigSleepLint: Wait for external display screen to turn off, shorter timeouts
+	// still yielded failures need enough time to for monitor to go into sleep mode.
+	testing.Sleep(ctx, 60*time.Second)
 
 	extScreenOff, err := tf.CameraHelper.GAMLightingValue(ctx, s.OutDir(), extDispCamera)
 	if err != nil {
