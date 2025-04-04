@@ -6,6 +6,7 @@ package ti50
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,8 +36,8 @@ var (
 	accessDeniedRE = regexp.MustCompile(`(?i)access denied`)
 	// Regex to extract CCD states and resolve `Default` states to their true states.
 	capDefaultRE = regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y\-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y\-]\s[0-3]=([A-Za-z]+))`)
-	// Regex to extract CCD State flags
-	consoleCCDStateRE = regexp.MustCompile("State: ([A-Za-z]+)")
+	// Regex to extract CCD level from the ccd ouutput
+	consoleCCDLevelRE = regexp.MustCompile("State: ([A-Za-z]+)")
 	// Regex to extract commands from help output
 	knownCommandRE = regexp.MustCompile(`(?s)Known commands:\s*(.*)HELP LIST`)
 	// Regex to wait for a power button prompt
@@ -171,6 +172,12 @@ var (
 	cr50APROSupportedRE = regexp.MustCompile(`supported\s*:\s*(yes|no)\s*\((\d*)\)`)
 	// match 1 is the value of the saved digest
 	cr50APROHashRE = regexp.MustCompile(`sha256 hash ([a-f0-9]*)`)
+	// Regex to extract all of the ccdstate key value pairs
+	ccdStateRE = regexp.MustCompile(`([\S ]*)\s*: *([\S ]*)\s*`)
+	// Regex to match all of the "on" states
+	ccdStateOnRE = regexp.MustCompile(`\b(on|asserted|enabled|connected)\b`)
+	// Regex to match all of the "off" states
+	ccdStateOffRE = regexp.MustCompile(`\b(off|deasserted|disabled|disconnected)\b`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -604,7 +611,7 @@ func (i *CrOSImage) CCDLevel(ctx context.Context) (CCDLevel, error) {
 		return Lock, errors.Wrap(err, "failed get CCD command output")
 	}
 
-	matches := consoleCCDStateRE.FindStringSubmatch(output)
+	matches := consoleCCDLevelRE.FindStringSubmatch(output)
 	if len(matches) != 2 {
 		return Lock, errors.Wrap(err, "regex failed to extract CCD state from: "+output)
 	}
@@ -1651,4 +1658,147 @@ func (i *CrOSImage) Cr50APROInfo(ctx context.Context) (Cr50APROInfo, error) {
 		return Cr50APROInfo{}, errors.Wrap(err, "failed to parse ap_ro_info output")
 	}
 	return parseCr50APROInfo(output)
+}
+
+// CCDStateStandardVal is a standard value to compare against
+type CCDStateStandardVal string
+
+// CCDStateVal contains the converted state and the original string from the ccdstate output
+type CCDStateVal struct {
+	State CCDStateStandardVal
+	Raw   string
+}
+
+// String creates a string with the converted state information and the raw value
+func (v CCDStateVal) String() string {
+	return fmt.Sprintf("%s (%s)", v.State, v.Raw)
+}
+
+// Standard ccdstate strings, so tests don't need to know the difference between
+// the different types of on/off values
+const (
+	// CCDStateOn is used for on, enabled, asserted, and connected states
+	CCDStateOn CCDStateStandardVal = "on"
+	// CCDStateOff is used for off, disabled, deasserted, and disconnected states
+	CCDStateOff CCDStateStandardVal = "off"
+	// CCDStateNA used if GSC doesn't print the field in the ccdstate output
+	CCDStateNA CCDStateStandardVal = "n/a"
+	// CCDStateUndetectable means GSC can't detect the servo state
+	CCDStateUndetectable CCDStateStandardVal = "undetectable"
+	// CCDStateDebouncing GSC prints this value for a field when it's still debouncing the sate
+	CCDStateDebouncing CCDStateStandardVal = "debouncing"
+)
+
+// CCDStateInfo contains ccdstate command information
+type CCDStateInfo struct {
+	DeepSleepDisabled CCDStateVal
+	AP                CCDStateVal
+	APUART            CCDStateVal
+	PCR0              string
+	EC                CCDStateVal
+	Servo             CCDStateVal
+	Rdd               CCDStateVal
+	KeepAlive         CCDStateVal
+	CCDModeSignal     CCDStateVal
+	StateFlags        string
+	CCDBlocked        string
+	IsDebouncing      bool
+}
+
+// findCCDStateMap finds all of the field value pairs in the ccdstate output and makes it into a map
+func findCCDStateMap(s string) (map[string]string, error) {
+	var out map[string]string
+
+	matches := ccdStateRE.FindAllStringSubmatch(s, -1)
+	if matches == nil {
+		return nil, errors.New("failed to parse ccdstate output")
+	}
+
+	// Map regex result to typed result
+	out = make(map[string]string)
+	for i := 0; i < len(matches); i++ {
+		field := matches[i][1]
+		val := matches[i][2]
+		out[field] = val
+	}
+
+	return out, nil
+}
+
+// parseCCDStateVal converts the ccdstate field string into a CCDStateVal
+func parseCCDStateVal(output string) CCDStateVal {
+	val := CCDStateVal{}
+	val.Raw = output
+	if output == "" {
+		val.State = CCDStateNA
+		return val
+	}
+
+	if ccdStateOffRE.MatchString(output) {
+		val.State = CCDStateOff
+		return val
+	}
+	if ccdStateOnRE.MatchString(output) {
+		val.State = CCDStateOn
+		return val
+	}
+	if strings.Contains(output, "debouncing") {
+		val.State = CCDStateDebouncing
+		return val
+	}
+	if strings.Contains(output, "undetectable") {
+		val.State = CCDStateUndetectable
+		return val
+	}
+	return val
+}
+
+// parseCCDStateInfo converts the ccdstate output into a CCDStateInfo struct
+func parseCCDStateInfo(output string) (CCDStateInfo, error) {
+	ccdstateMap, err := findCCDStateMap(output)
+	if err != nil {
+		return CCDStateInfo{}, errors.Errorf("could not generate ccdstate map from %s", output)
+	}
+	ccdstate := CCDStateInfo{}
+	ccdstate.DeepSleepDisabled = parseCCDStateVal(ccdstateMap["DS Dis"])
+	ccdstate.AP = parseCCDStateVal(ccdstateMap["AP"])
+	ccdstate.APUART = parseCCDStateVal(ccdstateMap["AP UART"])
+	ccdstate.PCR0 = ccdstateMap["pcr0"]
+	ccdstate.EC = parseCCDStateVal(ccdstateMap["EC"])
+	ccdstate.Servo = parseCCDStateVal(ccdstateMap["Servo"])
+	ccdstate.Rdd = parseCCDStateVal(ccdstateMap["Rdd"])
+	ccdstate.KeepAlive = parseCCDStateVal(ccdstateMap["KeepAlive"])
+	ccdstate.CCDModeSignal = parseCCDStateVal(ccdstateMap["CCD_MODE"])
+	ccdstate.StateFlags = ccdstateMap["State flags"]
+	ccdstate.CCDBlocked = ccdstateMap["CCD ports blocked"]
+	ccdstate.IsDebouncing = strings.Contains(output, "debouncing")
+	if ccdstate.CCDBlocked == "" {
+		ccdstate.CCDBlocked = ccdstateMap["CCD Ports blocked"]
+	}
+	return ccdstate, nil
+}
+
+// CCDStateInfo gets the GSC ccdstate info
+func (i *CrOSImage) CCDStateInfo(ctx context.Context) (CCDStateInfo, error) {
+	output, err := i.Command(ctx, "ccdstate")
+	if err != nil {
+		return CCDStateInfo{}, errors.Wrap(err, "failed to parse ccdstate output")
+	}
+	return parseCCDStateInfo(output)
+}
+
+// WaitForStableCCDState waits until GSC isn't debouncing any of the ccdstate output
+func (i *CrOSImage) WaitForStableCCDState(ctx context.Context) error {
+	ccdstate := CCDStateInfo{}
+	for j := 0; j < 5; j++ {
+		testing.Sleep(ctx, 3*time.Second) // GoBigSleepLint: wait for GSC to poll device state signals
+		ccdstate, err := i.CCDStateInfo(ctx)
+		if err != nil {
+			return err
+		}
+		if !ccdstate.IsDebouncing {
+			return nil
+		}
+	}
+	return errors.Errorf("GSC is still debouncing ccdstate: %+v", ccdstate)
 }

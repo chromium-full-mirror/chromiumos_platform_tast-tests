@@ -1851,3 +1851,197 @@ func testParseCr50APROInfo(t *testing.T, input string, expected Cr50APROInfo, ex
 		t.Fatalf("chip mismatch:\ngot      %+v\nexpected %+v", apROInfo, expected)
 	}
 }
+
+func TestParseTi50CCDState1(t *testing.T) {
+	input := `
+> ccdstate
+ccdstate
+pcr0:          89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7
+AP:            on
+Servo:         connected
+Rdd:           connected
+KeepAlive:     disabled
+CCD_MODE:      asserted
+State flags:   UARTAP UARTEC UARTFPMCU
+CCD Ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateNA, Raw: ""},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		APUART:            CCDStateVal{State: CCDStateNA, Raw: ""},
+		PCR0:              "89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7",
+		EC:                CCDStateVal{State: CCDStateNA, Raw: ""},
+		Servo:             CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		Rdd:               CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOff, Raw: "disabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOn, Raw: "asserted"},
+		StateFlags:        "UARTAP UARTEC UARTFPMCU",
+		CCDBlocked:        "(none)",
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func TestParseTi50CCDState2(t *testing.T) {
+	input := `
+ccdstate
+pcr0:          89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7
+AP:            on
+Servo:         undetectable
+Rdd:           connected
+KeepAlive:     disabled
+CCD_MODE:      asserted
+State flags:   UARTAP+TX UARTEC+TX UARTFPMCU+TX
+CCD Ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateNA, Raw: ""},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		APUART:            CCDStateVal{State: CCDStateNA, Raw: ""},
+		PCR0:              "89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7",
+		EC:                CCDStateVal{State: CCDStateNA, Raw: ""},
+		Servo:             CCDStateVal{State: CCDStateUndetectable, Raw: "undetectable"},
+		Rdd:               CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOff, Raw: "disabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOn, Raw: "asserted"},
+		StateFlags:        "UARTAP+TX UARTEC+TX UARTFPMCU+TX",
+		CCDBlocked:        "(none)",
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func TestParseTi50CCDState3(t *testing.T) {
+	input := `
+ccdstate
+pcr0:          0000000000000000000000000000000000000000000000000000000000000000
+AP:            on
+Servo:         connected
+Rdd:           disconnected
+KeepAlive:     disabled
+CCD_MODE:      deasserted
+State flags:
+CCD ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateNA, Raw: ""},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		APUART:            CCDStateVal{State: CCDStateNA, Raw: ""},
+		PCR0:              "0000000000000000000000000000000000000000000000000000000000000000",
+		EC:                CCDStateVal{State: CCDStateNA, Raw: ""},
+		Servo:             CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		Rdd:               CCDStateVal{State: CCDStateOff, Raw: "disconnected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOff, Raw: "disabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOff, Raw: "deasserted"},
+		StateFlags:        "",
+		CCDBlocked:        "(none)",
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func TestParseTi50CCDState4(t *testing.T) {
+	input := `
+pcr0:          0000000000000000000000000000000000000000000000000000000000000000
+AP:            on
+Servo:         debouncing
+Rdd:           disconnected
+KeepAlive:     disabled
+CCD_MODE:      deasserted
+State flags:
+CCD ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateNA, Raw: ""},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		APUART:            CCDStateVal{State: CCDStateNA, Raw: ""},
+		PCR0:              "0000000000000000000000000000000000000000000000000000000000000000",
+		EC:                CCDStateVal{State: CCDStateNA, Raw: ""},
+		Servo:             CCDStateVal{State: CCDStateDebouncing, Raw: "debouncing"},
+		Rdd:               CCDStateVal{State: CCDStateOff, Raw: "disconnected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOff, Raw: "disabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOff, Raw: "deasserted"},
+		StateFlags:        "",
+		CCDBlocked:        "(none)",
+		IsDebouncing:      true,
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func TestParseCr50CCDState1(t *testing.T) {
+	input := `
+DS Dis:  off
+AP:      on (K)
+AP UART: on
+pcr0:    89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7
+EC:      on
+Servo:   connected
+Rdd:       connected
+KeepAlive: enabled
+CCD_MODE:  asserted
+State flags: UARTAP UARTEC USBEC+TX
+CCD ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateOff, Raw: "off"},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on (K)"},
+		APUART:            CCDStateVal{State: CCDStateOn, Raw: "on"},
+		PCR0:              "89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7",
+		EC:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		Servo:             CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		Rdd:               CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOn, Raw: "enabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOn, Raw: "asserted"},
+		StateFlags:        "UARTAP UARTEC USBEC+TX",
+		CCDBlocked:        "(none)",
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func TestParseCr50CCDState2(t *testing.T) {
+	input := `
+> ccdstate
+DS Dis:  off
+AP:      on (K)
+AP UART: on
+pcr0:    89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7
+EC:      on
+Servo:   undetectable
+Rdd:       connected
+KeepAlive: disabled
+CCD_MODE:  asserted
+State flags: UARTAP+TX UARTEC+TX I2C SPI USBEC+TX
+CCD ports blocked: (none)
+`
+	expected := CCDStateInfo{
+		DeepSleepDisabled: CCDStateVal{State: CCDStateOff, Raw: "off"},
+		AP:                CCDStateVal{State: CCDStateOn, Raw: "on (K)"},
+		APUART:            CCDStateVal{State: CCDStateOn, Raw: "on"},
+		PCR0:              "89eaf35134b4b3c649f44c0c765b96aeab8bb34ee83cc7a683c4e53d1581c8c7",
+		EC:                CCDStateVal{State: CCDStateOn, Raw: "on"},
+		Servo:             CCDStateVal{State: CCDStateUndetectable, Raw: "undetectable"},
+		Rdd:               CCDStateVal{State: CCDStateOn, Raw: "connected"},
+		KeepAlive:         CCDStateVal{State: CCDStateOff, Raw: "disabled"},
+		CCDModeSignal:     CCDStateVal{State: CCDStateOn, Raw: "asserted"},
+		StateFlags:        "UARTAP+TX UARTEC+TX I2C SPI USBEC+TX",
+		CCDBlocked:        "(none)",
+	}
+	testParseCCDStateInfo(t, input, expected, false)
+}
+
+func testParseCCDStateInfo(t *testing.T, input string, expected CCDStateInfo, expectError bool) {
+	ccdState, err := parseCCDStateInfo(input)
+	if expectError {
+		if err == nil {
+			t.Fatalf("%s did not trigger an error", input)
+		}
+		return
+	}
+	if err != nil {
+		t.Fatal("error processing brdprop ccdstate input:", err)
+	}
+
+	if expected != ccdState {
+		t.Fatalf("ccdstate mismatch:\ngot %+v\nexpected %+v", ccdState, expected)
+	}
+	if !cmp.Equal(expected, ccdState) {
+		t.Fatalf("ccdState mismatch:\ngot %+v\nexpected %+v", ccdState, expected)
+	}
+}
