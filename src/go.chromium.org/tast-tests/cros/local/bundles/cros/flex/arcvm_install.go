@@ -34,9 +34,8 @@ func init() {
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		Attr:         []string{"group:flex_arcvm", "group:mainline"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"),
-			hwdep.Model("reven")),
-		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"), hwdep.Model("reven")),
+		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Timeout:      30 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceFlexArcPreloadEnabled{}, pci.VerifiedFunctionalityOS),
