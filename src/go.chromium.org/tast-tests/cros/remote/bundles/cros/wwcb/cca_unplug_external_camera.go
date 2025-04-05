@@ -6,7 +6,6 @@ package wwcb
 
 import (
 	"context"
-	"image/color"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,10 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
-	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -34,7 +31,7 @@ func init() {
 		Desc:         "Check the CCA app can return to the front camera preview screen after removing the external camera",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_camera",
@@ -47,7 +44,6 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
-			"tast.cros.wwcb.DisplayService",
 			"tast.cros.ui.ChromeUIService",
 		},
 	})
@@ -85,31 +81,12 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	fs := dutfs.NewClient(cl.Conn)
 
 	// Dump the UI tree and screenshot on any failure
 	utils.AttachErrorHandlersForUITreeDump(cleanupCtx, s, cl.Conn)
 
-	// Open the red image on the external display.
-	testImageFilename := "test_image_red_color.jpg"
-	testImageFilepath := filepath.Join(utils.MyFilesPath, testImageFilename)
-	testImage := utils.GenerateImage(3840, 2160, color.RGBA{255, 0, 0, 255})
-	if err := utils.WriteImageOnDUT(ctx, fs, testImage, testImageFilepath); err != nil {
-		s.Fatal("Failed to write test image on DUT: ", err)
-	}
-	defer fs.Remove(ctx, testImageFilepath)
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify display count: ", err)
-	}
-
-	if _, err := utils.OpenGalleryOnDisplay(ctx, appsSvc, uiautoSvc, displaySvc, 1, testImageFilename); err != nil {
-		s.Fatal("Failed to open file in Gallery on expected display: ", err)
-	}
-	defer appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 	defer func(ctx context.Context) {
 		if s.HasError() {
 			uiTreeResponse, err := uiautoSvc.GetUITree(ctx, &ui.GetUITreeRequest{})
