@@ -278,6 +278,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 	// TODO(b/354048099): Remove after test extension is migrated to manifest V3.
 	if cfg.DisableExtensionManifestV2Disabled() {
 		disabledFeatures = append(disabledFeatures, "ExtensionManifestV2Disabled")
+		disabledFeatures = append(disabledFeatures, "ExtensionManifestV2Unsupported")
 	}
 
 	if len(enabledFeatures) != 0 {
