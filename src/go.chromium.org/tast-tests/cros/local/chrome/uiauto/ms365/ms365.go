@@ -118,7 +118,7 @@ func (ms *Ms365) UsePasswordInsteadOfCode(msSignInWindow *nodewith.Finder) uiaut
 
 // InputPassword waits for the Microsoft "input password" screen and input the password.
 func (ms *Ms365) InputPassword(password string) uiauto.Action {
-	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("Sign in to your( Microsoft)? account")).First()
+	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(Sign in to your( Microsoft)? account)|(Enter your password)")).First()
 	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(p|P)assword.*"))
 
 	return uiauto.Combine("MS SignIn Password",
