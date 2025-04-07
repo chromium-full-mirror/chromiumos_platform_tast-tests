@@ -93,7 +93,7 @@ func MakeAStickerFeature(ctx context.Context, s *testing.State) {
 	}
 
 	// Click on the make a sticker button
-	if err := ui.LeftClickUntil(makeAStickerButton, ui.Exists(nodewith.NameContaining("Mark the area").Role(role.StaticText)))(ctx); err != nil {
+	if err := ui.LeftClickUntil(makeAStickerButton, ui.Exists(nodewith.NameContaining("Fill in the area").Role(role.StaticText)))(ctx); err != nil {
 		s.Fatal("Unable to click 'Make a Sticker' button: ", err)
 	}
 
