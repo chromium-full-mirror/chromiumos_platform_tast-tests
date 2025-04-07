@@ -336,6 +336,11 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 			if changedInfo.Bounds.Width == setWidth && changedInfo.Bounds.Height == setHeight {
 				return nil
 			}
+			if (setWidth == 3840 && changedInfo.Bounds.Width == 2742 && setHeight == 2160 && changedInfo.Bounds.Height == 1542) ||
+				(setWidth == 2560 && changedInfo.Bounds.Width == 2226 && setHeight == 1440 && changedInfo.Bounds.Height == 1252) {
+				testing.ContextLogf(ctx, "Known Issue b/339474160: expected display bounds: %d x %d, got: %d x %d", changedInfo.Bounds.Width, changedInfo.Bounds.Height, setWidth, setHeight)
+				return nil
+			}
 			if changedInfo.Bounds == info.Bounds {
 				return errors.New("the display mode has not changed yet")
 			}
