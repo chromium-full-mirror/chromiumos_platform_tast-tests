@@ -30,7 +30,10 @@ func init() {
 			"bhartmire@google.com",
 		},
 		BugComponent: "b:1155263",
-		Attr:         []string{"group:cross-device"},
+		Attr:         []string{
+			// TODO(b/409063229): Temporarily disabled due to failures.
+			// "group:cross-device",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceNoSignIn",
 		VarDeps: []string{
