@@ -728,8 +728,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	testing.ContextLog(ctx, "Resetting browser zoom to 100%")
 	zoomNode := nodewith.HasClass("ZoomView")
-	if err := uiauto.Combine(
+	if err := uiauto.NamedCombine(
 		"reset zoom and wait for zoom indicator to be absent",
+		ui.LeftClick(meetRootWebArea),
 		kw.AccelAction("Ctrl+0"),
 		ui.WaitUntilGone(zoomNode),
 	)(ctx); err != nil {
