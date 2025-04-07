@@ -51,7 +51,6 @@ func init() {
 		Desc: "Cursive smoke test app launching and basic function",
 		Contacts: []string{
 			"a4@google.com",
-			"gabpalado@google.com",
 			"jinrongwu@google.com",
 		},
 		BugComponent: "b:660747",
