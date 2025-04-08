@@ -3089,6 +3089,7 @@ const (
 	AccountTypeKioskAndroidApp                      // 2
 	AccountTypeSAMLPublicSession                    // 3
 	AccountTypeWebKioskApp                          // 4
+	AccountTypeKioskIWA                             // 5
 )
 
 type EphemeralMode int
@@ -3117,13 +3118,20 @@ type WebKioskAppInfo struct {
 	Title   *string `json:"title,omitempty"`
 	IconUrl *string `json:"icon_url,omitempty"`
 }
+
+type IsolatedWebAppKioskInfo struct {
+	WebBundleId *string `json:"web_bundle_id,omitempty"`
+	ManifestUrl *string `json:"update_manifest_url,omitempty"`
+}
+
 type DeviceLocalAccountInfo struct {
-	AccountID           *string              `json:"account_id,omitempty"`
-	AccountType         *AccountType         `json:"type,omitempty"`
-	AndroidKioskAppInfo *AndroidKioskAppInfo `json:"android_kiosk_app,omitempty"`
-	KioskAppInfo        *KioskAppInfo        `json:"kiosk_app,omitempty"`
-	WebKioskAppInfo     *WebKioskAppInfo     `json:"web_kiosk_app,omitempty"`
-	EphemeralMode       *EphemeralMode       `json:"ephemeral_mode,omitempty"`
+	AccountID               *string                  `json:"account_id,omitempty"`
+	AccountType             *AccountType             `json:"type,omitempty"`
+	AndroidKioskAppInfo     *AndroidKioskAppInfo     `json:"android_kiosk_app,omitempty"`
+	KioskAppInfo            *KioskAppInfo            `json:"kiosk_app,omitempty"`
+	WebKioskAppInfo         *WebKioskAppInfo         `json:"web_kiosk_app,omitempty"`
+	EphemeralMode           *EphemeralMode           `json:"ephemeral_mode,omitempty"`
+	IsolatedWebAppKioskInfo *IsolatedWebAppKioskInfo `json:"isolated_kiosk_app,omitempty"`
 }
 
 func (p *DeviceLocalAccounts) Name() string          { return "DeviceLocalAccounts" }

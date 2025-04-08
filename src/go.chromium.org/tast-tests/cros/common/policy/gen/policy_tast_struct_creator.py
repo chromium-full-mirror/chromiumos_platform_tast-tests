@@ -637,6 +637,7 @@ const (
 \tAccountTypeKioskAndroidApp // 2
 \tAccountTypeSAMLPublicSession // 3
 \tAccountTypeWebKioskApp // 4
+\tAccountTypeKioskIWA // 5
 )
 
 type EphemeralMode int
@@ -665,6 +666,12 @@ type WebKioskAppInfo struct {
 \tTitle\t*string\t`json:"title,omitempty"`
 \tIconUrl\t*string\t`json:"icon_url,omitempty"`
 }
+
+type IsolatedWebAppKioskInfo struct {
+\tWebBundleId\t*string\t`json:"web_bundle_id,omitempty"`
+\tManifestUrl\t*string\t`json:"update_manifest_url,omitempty"`
+}
+
 type DeviceLocalAccountInfo struct {
 \tAccountID\t*string\t`json:"account_id,omitempty"`
 \tAccountType\t*AccountType\t`json:"type,omitempty"`
@@ -672,6 +679,7 @@ type DeviceLocalAccountInfo struct {
 \tKioskAppInfo\t*KioskAppInfo\t`json:"kiosk_app,omitempty"`
 \tWebKioskAppInfo\t*WebKioskAppInfo\t`json:"web_kiosk_app,omitempty"`
 \tEphemeralMode\t*EphemeralMode\t`json:"ephemeral_mode,omitempty"`
+\tIsolatedWebAppKioskInfo\t*IsolatedWebAppKioskInfo\t`json:"isolated_kiosk_app,omitempty"`
 }
 """
   return attr_type, attr_structs
