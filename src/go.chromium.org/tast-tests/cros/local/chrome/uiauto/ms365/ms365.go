@@ -107,7 +107,7 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 
 // UsePasswordInsteadOfCode proceeds when Microsoft tries to send a code during login.
 func (ms *Ms365) UsePasswordInsteadOfCode(msSignInWindow *nodewith.Finder) uiauto.Action {
-	useYourPasswordInsteadButton := nodewith.Ancestor(msSignInWindow).Role(role.Button).Name("Use your password instead")
+	useYourPasswordInsteadButton := nodewith.Ancestor(msSignInWindow).Role(role.Button).NameRegex(regexp.MustCompile("Use your password.*"))
 	return func(ctx context.Context) error {
 		if err := ms.ui.EnsureGoneFor(useYourPasswordInsteadButton, 5*time.Second)(ctx); err != nil {
 			return ms.ui.LeftClickUntil(useYourPasswordInsteadButton, ms.ui.Gone(useYourPasswordInsteadButton))(ctx)
@@ -118,7 +118,7 @@ func (ms *Ms365) UsePasswordInsteadOfCode(msSignInWindow *nodewith.Finder) uiaut
 
 // InputPassword waits for the Microsoft "input password" screen and input the password.
 func (ms *Ms365) InputPassword(password string) uiauto.Action {
-	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(Sign in to your( Microsoft)? account)|(Enter your password)")).First()
+	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(Sign in to your( Microsoft)? account)|(Enter your password)|(Get a code to sign in)")).First()
 	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(p|P)assword.*"))
 
 	return uiauto.Combine("MS SignIn Password",
