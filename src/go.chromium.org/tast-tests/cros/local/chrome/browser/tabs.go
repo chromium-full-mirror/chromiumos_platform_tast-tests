@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast-tests/cros/local/chrome/internal/extension"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -109,8 +110,8 @@ func ReloadActiveTab(ctx context.Context, tconn *driver.TestConn) error {
 	if err := tconn.Eval(ctx, "chrome.tabs.reload()", nil); err != nil {
 		return errors.Wrap(err, "failed to reload tab")
 	}
-	if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return errors.Wrap(err, "failed to wait for the ready state")
+	if err := tconn.WaitForExpr(ctx, extension.TastLibraryLoadedExpr); err != nil {
+		return errors.Wrap(err, "tast API is unavailable")
 	}
 	return nil
 }
