@@ -26273,37 +26273,6 @@ func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1186. TabOrganizerSettings
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type TabOrganizerSettings struct {
-	Stat Status
-	Val  int
-}
-
-func (p *TabOrganizerSettings) Name() string          { return "TabOrganizerSettings" }
-func (p *TabOrganizerSettings) Scope() Scope          { return ScopeUser }
-func (p *TabOrganizerSettings) Status() Status        { return p.Stat }
-func (p *TabOrganizerSettings) UntypedV() interface{} { return p.Val }
-func (p *TabOrganizerSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *TabOrganizerSettings) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *TabOrganizerSettings) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1187. HelpMeWriteSettings
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -27260,37 +27229,6 @@ func (p *AutomaticFullscreenBlockedForUrls) SetProto(m *protoreflect.Message) {
 }
 func (p *AutomaticFullscreenBlockedForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1227. MutationEventsEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type MutationEventsEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *MutationEventsEnabled) Name() string          { return "MutationEventsEnabled" }
-func (p *MutationEventsEnabled) Scope() Scope          { return ScopeUser }
-func (p *MutationEventsEnabled) Status() Status        { return p.Stat }
-func (p *MutationEventsEnabled) UntypedV() interface{} { return p.Val }
-func (p *MutationEventsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *MutationEventsEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *MutationEventsEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -29842,7 +29780,6 @@ func (p *ExternalStorageAllowlist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1332. WebAuthenticationRemoteDesktopAllowedOrigins
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type WebAuthenticationRemoteDesktopAllowedOrigins struct {
 	Stat Status
@@ -30034,7 +29971,6 @@ func (p *RelaunchSupersededReleaseAge) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1339. ClassManagementCaptionsEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementCaptionsEnabled struct {
 	Stat Status
@@ -30066,7 +30002,6 @@ func (p *ClassManagementCaptionsEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1340. ClassManagementClassroomIntegrationEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementClassroomIntegrationEnabled struct {
 	Stat Status
@@ -30100,7 +30035,6 @@ func (p *ClassManagementClassroomIntegrationEnabled) Equal(iface interface{}) bo
 // ****************************************************************************
 // 1341. ClassManagementNetworkRestrictionEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementNetworkRestrictionEnabled struct {
 	Stat Status
@@ -30134,7 +30068,6 @@ func (p *ClassManagementNetworkRestrictionEnabled) Equal(iface interface{}) bool
 // ****************************************************************************
 // 1342. ClassManagementSendingContentEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementSendingContentEnabled struct {
 	Stat Status
@@ -30168,7 +30101,6 @@ func (p *ClassManagementSendingContentEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1343. ClassManagementViewScreenEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClassManagementViewScreenEnabled struct {
 	Stat Status
@@ -30285,6 +30217,69 @@ func (p *GenAIInlineImageSettings) SetProto(m *protoreflect.Message) {
 }
 func (p *GenAIInlineImageSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1349. HappyEyeballsV3Enabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type HappyEyeballsV3Enabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *HappyEyeballsV3Enabled) Name() string          { return "HappyEyeballsV3Enabled" }
+func (p *HappyEyeballsV3Enabled) Scope() Scope          { return ScopeUser }
+func (p *HappyEyeballsV3Enabled) Status() Status        { return p.Stat }
+func (p *HappyEyeballsV3Enabled) UntypedV() interface{} { return p.Val }
+func (p *HappyEyeballsV3Enabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *HappyEyeballsV3Enabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *HappyEyeballsV3Enabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1350. FaceGazeEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type FaceGazeEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *FaceGazeEnabled) Name() string          { return "FaceGazeEnabled" }
+func (p *FaceGazeEnabled) Scope() Scope          { return ScopeUser }
+func (p *FaceGazeEnabled) Status() Status        { return p.Stat }
+func (p *FaceGazeEnabled) UntypedV() interface{} { return p.Val }
+func (p *FaceGazeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *FaceGazeEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FaceGazeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -31906,8 +31901,6 @@ func newByName(name string) (Policy, error) {
 		return &OopPrintDriversAllowed{}, nil
 	case "DeviceHardwareVideoDecodingEnabled":
 		return &DeviceHardwareVideoDecodingEnabled{}, nil
-	case "TabOrganizerSettings":
-		return &TabOrganizerSettings{}, nil
 	case "HelpMeWriteSettings":
 		return &HelpMeWriteSettings{}, nil
 	case "CreateThemesSettings":
@@ -31968,8 +31961,6 @@ func newByName(name string) (Policy, error) {
 		return &AutomaticFullscreenAllowedForUrls{}, nil
 	case "AutomaticFullscreenBlockedForUrls":
 		return &AutomaticFullscreenBlockedForUrls{}, nil
-	case "MutationEventsEnabled":
-		return &MutationEventsEnabled{}, nil
 	case "DevToolsGenAiSettings":
 		return &DevToolsGenAiSettings{}, nil
 	case "CACertificatesWithConstraints":
@@ -32156,6 +32147,10 @@ func newByName(name string) (Policy, error) {
 		return &ReduceAcceptLanguageEnabled{}, nil
 	case "GenAIInlineImageSettings":
 		return &GenAIInlineImageSettings{}, nil
+	case "HappyEyeballsV3Enabled":
+		return &HappyEyeballsV3Enabled{}, nil
+	case "FaceGazeEnabled":
+		return &FaceGazeEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
