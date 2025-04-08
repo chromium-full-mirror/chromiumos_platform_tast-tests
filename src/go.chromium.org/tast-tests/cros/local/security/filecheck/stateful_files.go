@@ -34,6 +34,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Path("dev_image_old"), SkipPermCheck(), SkipChildren()),
 		NewPattern(Path("dev_image_new"), SkipPermCheck(), SkipChildren()),
 		NewPattern(Path("var_overlay"), SkipPermCheck(), SkipChildren()),
+		NewPattern(Path("developer_tools"), SkipPermCheck(), SkipChildren()),
 
 		// These files/directories do not currently pass the general Unix permissions check.
 		// TODO(b/306477467) Figure out why these files have relaxed permissions.
