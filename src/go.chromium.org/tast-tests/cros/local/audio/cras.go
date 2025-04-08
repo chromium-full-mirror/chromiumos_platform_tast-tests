@@ -411,6 +411,11 @@ func (c *Cras) SetEwmaPowerReportEnabled(ctx context.Context, enabled bool) erro
 	return c.call(ctx, "SetEwmaPowerReportEnabled", enabled).Err
 }
 
+// SetSpatialAudio enables or disables spatial audio effects.
+func (c *Cras) SetSpatialAudio(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetSpatialAudio", enabled).Err
+}
+
 // GetFeatureFlagForTest returns the enabled status of the given feature as seen by CRAS.
 func (c *Cras) GetFeatureFlagForTest(ctx context.Context, flagName string) (enabled bool, err error) {
 	err = c.call(ctx, "GetFeatureFlagForTest", flagName).Store(&enabled)

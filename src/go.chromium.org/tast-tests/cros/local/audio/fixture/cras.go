@@ -49,6 +49,9 @@ type CrasSetUp struct {
 	InputDevice nodematch.Matcher
 	// The output device to select.
 	OutputDevice nodematch.Matcher
+
+	// Set the spatial audio D-Bus control.
+	SpatialAudio bool
 }
 
 var _ ParameterizedFixture = CrasSetUp{}
@@ -132,6 +135,9 @@ func (pf CrasSetUp) DoCras(ctx context.Context) (*audio.Cras, error) {
 	}
 	if err := cras.SetVoiceIsolationUIEnabled(ctx, pf.VoiceIsolationUIEnabled); err != nil {
 		return nil, errors.Wrap(err, "failed to set voice isolation enabled/disabled")
+	}
+	if err := cras.SetSpatialAudio(ctx, pf.SpatialAudio); err != nil {
+		return nil, errors.Wrap(err, "failed to set spatial audio enabled/disabled")
 	}
 	return cras, nil
 }
