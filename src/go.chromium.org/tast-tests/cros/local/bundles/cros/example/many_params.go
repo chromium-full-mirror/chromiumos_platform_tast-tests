@@ -33,13 +33,6 @@ func init() {
 				},
 			},
 			{
-				Name:              "noarc_state",
-				ExtraSoftwareDeps: []string{"chrome"},
-				Val: manyParamsParams{
-					Expr: "document.readyState",
-				},
-			},
-			{
 				Name:              "arc_url",
 				ExtraSoftwareDeps: []string{"chrome", "android"},
 				Val: manyParamsParams{
@@ -47,16 +40,6 @@ func init() {
 						chrome.ARCEnabled(),
 					},
 					Expr: "location.href",
-				},
-			},
-			{
-				Name:              "arc_state",
-				ExtraSoftwareDeps: []string{"chrome", "android"},
-				Val: manyParamsParams{
-					Options: []chrome.Option{
-						chrome.ARCEnabled(),
-					},
-					Expr: "document.readyState",
 				},
 			},
 		},

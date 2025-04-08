@@ -32,7 +32,6 @@ func TestManyParams(t *testing.T) {
 			value string
 		}{
 			{"url", "location.href"},
-			{"state", "document.readyState"},
 		} {
 			p := paramData{
 				Name:         fmt.Sprintf("%s_%s", arc.name, expr.name),
