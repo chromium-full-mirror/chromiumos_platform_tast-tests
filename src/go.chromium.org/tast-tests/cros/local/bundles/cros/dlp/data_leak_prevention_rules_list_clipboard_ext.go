@@ -90,7 +90,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 	}
 	defer cr.Close(ctx)
 
-	bgURL := chrome.ExtensionBackgroundPageURL(extID)
+	bgURL := chrome.ExtensionServiceWorkerURL(extID, "background.js")
 	targetConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)
