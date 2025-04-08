@@ -130,7 +130,7 @@ func ExtensionPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	// Connect to the extension and read the set values.
-	bgURL := chrome.ExtensionBackgroundPageURL(extID)
+	bgURL := chrome.ExtensionServiceWorkerURL(extID, "background.js")
 	if err := checkExtension(ctx, cr, bgURL, providedPolicy); err != nil {
 		s.Error("Failed to check extension: ", err)
 	}
