@@ -121,6 +121,8 @@ func init() {
 				"gana",
 				"glassway",
 				"gothrax",
+				"guren",
+				"guren360",
 				"joxer",
 				"nirwen",
 				"pujjoga",
