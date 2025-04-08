@@ -124,6 +124,11 @@
     "format_arg": "-s 2592x1944 -f SGRBG10",
     "out_entity": "Intel IPU6 ISYS Capture 16"
   },
+  "redrix-TCd3f1": {
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 2592x1944 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
+  },
   "riven-TC0003": {
     "bus_info": "PCI:0000:00:05.0",
     "format_arg": "-s 2592x1944 -f SGRBG10",

@@ -58,6 +58,7 @@ func configFiles() []string {
 		"kernel_smoke_mipi/nautiluslte.yaml",
 		"kernel_smoke_mipi/nocturne.yaml",
 		"kernel_smoke_mipi/redrix-PLcf06.yaml",
+		"kernel_smoke_mipi/redrix-TCd3f1.yaml",
 		"kernel_smoke_mipi/riven-TC0003.yaml",
 		"kernel_smoke_mipi/rudriks-TC0002.yaml",
 		"kernel_smoke_mipi/screebo-ST0d2c.yaml",
