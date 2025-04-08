@@ -32,7 +32,7 @@ func init() {
 
 const (
 	statefulPartition          string = "/mnt/stateful_partition"
-	statefulPartitionEncrypted string = "/mnt/stateful_partition/encrypted"
+	statefulPartitionEncrypted string = "/var/cache"
 )
 
 // InternalStorage runs the internal storage checks like
