@@ -121,8 +121,8 @@ func (sv *CertService) ImportCert(ctx context.Context, req *pb.ImportRequest) (*
 		}
 		importFunc = sv.manager.ImportClientCert(certFileName, password, name, org, importType)
 	case *pb.ImportRequest_Ca:
-		org, trustSettings := parseCaCertImportRequest(req.GetCertificate(), val.Ca)
-		importFunc = sv.manager.ImportCACert(certFileName, org, trustSettings)
+		certName, trustSettings := parseCaCertImportRequest(req.GetCertificate(), val.Ca)
+		importFunc = sv.manager.ImportCACert(certFileName, certName, trustSettings)
 	default:
 		return &emptypb.Empty{}, errors.Errorf("unsupported certificate type %v", val)
 	}
@@ -176,7 +176,7 @@ func parseClientCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest
 }
 
 // parseCaCertImportRequest parses the import request of ca certificate.
-func parseCaCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest_CaImportDetail) (org certificate.Organization, trustSettings certificate.CATrustSettings) {
+func parseCaCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest_CaImportDetail) (certName string, trustSettings certificate.CATrustSettings) {
 	if detail.GetTrustWebsite() {
 		trustSettings |= certificate.TrustForWebsites
 	}
@@ -186,7 +186,7 @@ func parseCaCertImportRequest(cert *pb.Certificate, detail *pb.ImportRequest_CaI
 	if detail.GetTrustSoftwareMaker() {
 		trustSettings |= certificate.TrustForSoftwareMakers
 	}
-	return certificate.Organization{Name: cert.GetOrganization()}, trustSettings
+	return cert.GetName(), trustSettings
 }
 
 // parseCertType parses and returns the type of the certificate.

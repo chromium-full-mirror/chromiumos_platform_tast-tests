@@ -192,7 +192,7 @@ func (c *testCert) importClientCert(manager *certManager.Manager, importType cer
 }
 
 func (c *testCert) importCaCert(manager *certManager.Manager) uiauto.Action {
-	return manager.ImportCACert(c.ca.fileName, c.ca.org, 0 /* No trust settings needed */)
+	return manager.ImportCACert(c.ca.fileName, c.ca.certName, 0 /* No trust settings needed */)
 }
 
 type certInfo struct {
