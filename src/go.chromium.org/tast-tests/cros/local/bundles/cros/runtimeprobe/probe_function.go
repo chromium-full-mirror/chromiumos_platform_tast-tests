@@ -304,7 +304,7 @@ func init() {
 			}, {
 				Name:              "battery_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("wyrdeer")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
@@ -329,7 +329,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "edid",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("domilly")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
@@ -338,7 +338,7 @@ func init() {
 			}, {
 				Name:              "edid_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("domilly")),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
