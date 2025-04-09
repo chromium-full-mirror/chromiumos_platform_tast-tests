@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/testing"
 )
@@ -177,6 +178,11 @@ func (f *personalizationBaseFixtureImpl) SetUp(ctx context.Context, s *testing.F
 }
 
 func (f *personalizationBaseFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
+		s.Log("Failed to close all windows: ", err)
+		return
+	}
+
 	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn, f.cr)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
