@@ -223,10 +223,10 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		if !params.IsUserEvent {
 			// Look up device events using client id.
 			c, err := policyClient.ClientID(ctx, &empty.Empty{})
-			clientID = c.ClientId
 			if err != nil {
 				s.Fatalf("Failed to grab client ID from device: %v:", err)
 			}
+			clientID = c.ClientId
 			// If the test uses the autopush server then query the autopush server for the events.
 			// Otherwise query the prod server.
 			if params.Autopush {
