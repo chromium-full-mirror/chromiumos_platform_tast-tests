@@ -519,6 +519,8 @@ func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
 			prefix = "saml-public-accounts"
 		case policy.AccountTypeWebKioskApp:
 			prefix = "web-kiosk-apps"
+		case policy.AccountTypeKioskIWA:
+			prefix = "isolated-kiosk-apps"
 		}
 	}
 	return user + "@" + prefix + ".device-local.localhost"
