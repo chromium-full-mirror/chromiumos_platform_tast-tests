@@ -142,6 +142,12 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 		}()
 	}
 
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+		s.Fatal("Failed preserving dev image: ", err)
+	}
+
 	s.Log("Rebooting DUT to developer screen")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to cold reset dut: ", err)
