@@ -20,10 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var (
-	tpmVersion string
-)
-
 const (
 	keyblockUnknown = 0
 	keyblockNormal  = 1
@@ -143,15 +139,17 @@ func tpm2CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.H
 	}
 }
 
-func checkPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
+func checkPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash, tpmVersion string) {
 	if strings.Contains(tpmVersion, "1.") {
 		tpm1CheckPCR(ctx, s, num, hashObj)
-	} else {
+	} else if strings.Contains(tpmVersion, "2.") {
 		tpm2CheckPCR(ctx, s, num, hashObj)
+	} else {
+		s.Fatal("Invalid TPM version:", tpmVersion)
 	}
 }
 
-func hwIDCheck(ctx context.Context, s *testing.State) {
+func hwIDCheck(ctx context.Context, s *testing.State, tpmVersion string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	// Get the hardware version using 'crossystem hwid'
@@ -165,7 +163,7 @@ func hwIDCheck(ctx context.Context, s *testing.State) {
 	hashObj := sha256.New()
 	hashObj.Write([]byte(hwVersion))
 
-	checkPCR(ctx, s, 1, hashObj)
+	checkPCR(ctx, s, 1, hashObj, tpmVersion)
 }
 
 func bootModeVerify(ctx context.Context, s *testing.State, devsw, mainfw string) {
@@ -194,7 +192,7 @@ func TPMExtend(ctx context.Context, s *testing.State) {
 	s.Log("TPM version is:", tpmVersion)
 
 	// Verify hardware id digest
-	hwIDCheck(ctx, s)
+	hwIDCheck(ctx, s, tpmVersion)
 
 	// Verify bootmode
 	bootModeVerify(ctx, s, arguments.devsw, arguments.mainfw)
@@ -203,5 +201,5 @@ func TPMExtend(ctx context.Context, s *testing.State) {
 	hashObj := sha1.New()
 	hashObj.Write([]byte{arguments.devMode, arguments.recMode, arguments.keyBlockFlags})
 	s.Log("bootmode:", []byte{arguments.devMode, arguments.recMode, arguments.keyBlockFlags})
-	checkPCR(ctx, s, 0, hashObj)
+	checkPCR(ctx, s, 0, hashObj, tpmVersion)
 }
