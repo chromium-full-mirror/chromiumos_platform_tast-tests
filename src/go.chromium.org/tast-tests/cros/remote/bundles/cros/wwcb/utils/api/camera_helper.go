@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
@@ -30,6 +31,8 @@ var (
 	// to be considered the same.
 	webcamMappingLimitScore int32 = 160
 
+	expectedColorThreshold = 100
+
 	mappingColors    = [3]*pixel{redColor, greenColor, blueColor}
 	detectVideoColor = [3]string{"red", "green", "blue"}
 )
@@ -37,7 +40,7 @@ var (
 // Enable Webcam Save Img if value is "on".
 var enableWebcamSaveImg = testing.RegisterVarString(
 	"api.enableWebcamSaveImg",
-	"off",
+	"on",
 	"WWCB enable webcam save image",
 )
 
@@ -184,36 +187,64 @@ func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string
 		expectedColor := mappingColors[dispIndex]
 		testing.ContextLogf(ctx, "==== Display %d: %s ====", dispIndex, dispID)
 
-		// Get the camera that is the closest i.e. has the highest score.
-		var maxScore int32 = -1
-		mappingPort := ""
-		for cam, pxl := range camPxl {
-			rgbScore := []int32{pxl.R, pxl.G, pxl.B}
-			imgScore := rgbScore[dispIndex]
-			testing.ContextLogf(ctx, "Webcam: %s, Pixel: %v, Score: %d", cam, pxl, imgScore)
-			if imgScore > maxScore {
-				mappingPort = cam
-				maxScore = imgScore
-			}
+		maxScore, cameraDev := getMaxScoreAndCamera(ctx,camPxl, dispIndex)
+		testing.ContextLogf(ctx, "Max score: %d, cameraDev: %s", maxScore, cameraDev)
+		if cameraDev == "" {
+			return nil, errors.Errorf("No camera detected a display with dominant color %v for display %d, %s", expectedColor, dispIndex, dispID)
 		}
 
-		// Check the color image showing on the display is good enough.
-		if maxScore < webcamMappingLimitScore {
-			p := camPxl[mappingPort]
-			grayScore := scalarScore(p, grayColor)
-			expectColorScore := scalarScore(p, expectedColor)
-
-			if int32(expectColorScore) < webcamMappingLimitScore && grayScore > expectColorScore {
-				return nil, errors.Errorf("'Display: %d, %s' is abnormal. Please check if the display is on. (GrayScore (%f) is higher than ColorScore (%f))", dispIndex, dispID, grayScore, expectColorScore)
-			}
+		p := camPxl[cameraDev]
+		grayScore := scalarScore(p, grayColor)
+		expectColorScore := scalarScore(p, expectedColor)
+		// if gray score is higher than expected color score, then the display is
+		// most likely off, or camera is misaligned so return an error, but only
+		// check the gray score if we are below one of the color thresholds as
+		// always checking would cause false negatives dut to limitations of this
+		// method.
+		if ((int32(expectColorScore) < webcamMappingLimitScore ||
+				maxScore < expectedColorThreshold) &&
+				grayScore > expectColorScore) {
+			return nil, errors.Errorf("'Display: %d, %s' is abnormal. Please check if the display is on. (Color scores lower than thresholds and GrayScore (%f) is higher than ColorScore (%f))", dispIndex, dispID, grayScore, expectColorScore)
 		}
 
-		// Delete this camera so we don't use it again.
-		delete(camPxl, mappingPort)
-		testing.ContextLogf(ctx, "Mapping %s to Display %d, %s within the score is %d", mappingPort, dispIndex, dispID, maxScore)
-		displayMappings[dispID] = mappingPort
+		// Delete this camera so we don't assign it to another display.
+		delete(camPxl, cameraDev)
+		testing.ContextLogf(ctx, "Mapping %s to Display %d, %s with score %d and color scores color:%d, grey: %d", cameraDev, dispIndex, dispID, maxScore, int(expectColorScore), int(grayScore))
+		displayMappings[dispID] = cameraDev
 	}
 	return displayMappings, nil
+}
+
+// getMaxScoreAndCamera gets the max score for the expected color and the camera device that has the max score.
+//
+// The score is the pixel value of the color expected for the display or -1 if
+// the expected color is not the highest scoring color.
+func getMaxScoreAndCamera(ctx context.Context, camPxl map[string]*passport.Pixel, dispIndex int) (int, string) {
+	// Get the camera that is the closest i.e. has the highest score.
+	// The score is the value of the Red, Green, or Blue channel in the color
+	// (passport.Pixel), based on the dispIndex (0 for Red, 1 for Green, 2 for
+	// Blue), or -1 if the score is not higher than other channel values in the
+	// pixel color.
+	var maxScore int32 = -1
+	mappingPort := ""
+	for cam, pxl := range camPxl {
+		rgbScore := []int32{pxl.R, pxl.G, pxl.B}
+		imgScore := rgbScore[dispIndex]
+		for i := 1; i < len(rgbScore); i++ {
+			// discard score if the imgScore (expected color) is not the highest
+			// scoring color for the camera
+			if i != dispIndex && rgbScore[i] >= rgbScore[dispIndex] {
+				imgScore = -1
+				break
+			}
+		}
+		testing.ContextLogf(ctx, "Webcam: %s, Pixel: %v, Score: %d", cam, pxl, imgScore)
+		if imgScore > maxScore {
+			mappingPort = cam
+			maxScore = imgScore
+		}
+	}
+	return int(maxScore), mappingPort
 }
 
 func saveImageIfRequested(ctx context.Context, outDir, camera, annotation string, image []byte) error {
@@ -221,7 +252,8 @@ func saveImageIfRequested(ctx context.Context, outDir, camera, annotation string
 		return nil
 	}
 
-	imgFileName := fmt.Sprintf("%s_%s_%s.jpeg", "a", annotation, time.Now().Format("15:04:05"))
+	cameraID := filepath.Base(camera)
+	imgFileName := fmt.Sprintf("%s_%s_%s_%s.jpeg", "a", annotation, cameraID, time.Now().Format("15:04:05"))
 	imgFileName = path.Join(outDir, imgFileName)
 	return os.WriteFile(imgFileName, image, 0644)
 }
