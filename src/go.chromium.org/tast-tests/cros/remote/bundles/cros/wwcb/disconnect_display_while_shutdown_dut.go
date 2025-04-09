@@ -62,7 +62,7 @@ func init() {
 
 func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 
 	// Set up the servo attached to the DUT.
@@ -149,6 +149,10 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to shutdown DUT: ", err)
 	}
 	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
+
+	// this should be the last error handler added so that it is executed first,
+	// before collecting any additional information from the DUT
+	utils.AttachErrorHandlersForDUTPowerOn(cleanupCtx, s, pxy, dut)
 
 	if err := tf.Helper.DeactivateDeviceByID(ctx, extDispID); err != nil {
 		s.Fatal("Failed to disconnect the external display: ", err)

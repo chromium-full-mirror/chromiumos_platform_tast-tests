@@ -69,3 +69,15 @@ func PowerOnDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 	}
 	return err
 }
+
+// AttachErrorHandlersForDUTPowerOn attaches the error handlers to the testing.State that will power on the DUT
+func AttachErrorHandlersForDUTPowerOn(cleanupCtx context.Context, s *testing.State, pxy *servo.Proxy, dut *dut.DUT) {
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			PowerOnDUT(cleanupCtx, pxy, dut)
+		},
+		func(errMsg string) {
+			PowerOnDUT(cleanupCtx, pxy, dut)
+		},
+	)
+}
