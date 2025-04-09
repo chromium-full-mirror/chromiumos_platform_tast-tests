@@ -159,6 +159,13 @@ func setDeviceLocalAccountsProto(m *protoreflect.Message, policyName, fieldName 
 			deviceLocalAccountProto.EphemeralMode = &[]empb.DeviceLocalAccountInfoProto_EphemeralMode{empb.DeviceLocalAccountInfoProto_EphemeralMode(*v.EphemeralMode)}[0]
 		}
 
+		if v.IsolatedWebAppKioskInfo != nil {
+			isolatedWebAppKioskProto := empb.IsolatedWebAppKioskInfoProto{}
+			isolatedWebAppKioskProto.WebBundleId = v.IsolatedWebAppKioskInfo.WebBundleId
+			isolatedWebAppKioskProto.UpdateManifestUrl = v.IsolatedWebAppKioskInfo.ManifestUrl
+			deviceLocalAccountProto.IsolatedKioskApp = &isolatedWebAppKioskProto
+		}
+
 		accounts.Append(protoreflect.ValueOfMessage(deviceLocalAccountProto.ProtoReflect()))
 	}
 
