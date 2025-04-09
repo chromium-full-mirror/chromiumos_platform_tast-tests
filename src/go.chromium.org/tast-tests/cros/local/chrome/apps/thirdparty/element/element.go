@@ -8,6 +8,7 @@ package element
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -112,12 +113,12 @@ func (e *Element) Close(ctx context.Context) error {
 // It will create an account if the account has not been created.
 func (e *Element) Login(ctx context.Context, username string) error {
 	haveAccountButton := e.d.Object(ui.Text("SIGN IN"), ui.ResourceID(elementIDPrefix+"loginSplashAlreadyHaveAccount"))
-	googleContinueButton := e.d.Object(ui.Text("Continue with Google"), ui.ClassName(buttonClass))
+	continueButton := e.d.Object(ui.Text("Continue"), ui.ClassName(buttonClass))
 	if err := uiauto.NamedCombine("login to Element app",
 		apputil.FindAndClick(haveAccountButton, defaultUITimeout),
 		// It might take long time to show the login screen.
-		// Use longUITimeout to click the googleContinueButton.
-		apputil.FindAndClick(googleContinueButton, longUITimeout),
+		// Use longUITimeout to click the continueButton.
+		apputil.FindAndClick(continueButton, longUITimeout),
 	)(ctx); err != nil {
 		return err
 	}
@@ -146,48 +147,80 @@ func (e *Element) Login(ctx context.Context, username string) error {
 
 // loginWithGoogle completes the login flow with Google account.
 func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
-	userLink := nodewith.NameContaining(username).Role(role.Link)
-	if err := uiauto.NamedCombine("select user "+username,
+	continueWithGoogleLink := nodewith.Name("Continue with Google").Role(role.Link)
+	if err := uiauto.NamedCombine("continue with google",
 		e.waitForLoginWindowMaximized,
-		e.ui.WithTimeout(loadTimeout).DoDefaultUntil(userLink,
-			e.ui.WithTimeout(longUITimeout).WaitUntilGone(userLink),
+		e.ui.WithTimeout(loadTimeout).DoDefaultUntil(continueWithGoogleLink,
+			e.ui.WithTimeout(longUITimeout).WaitUntilGone(continueWithGoogleLink),
 		),
 	)(ctx); err != nil {
 		return err
 	}
 
+	userLinkRegexp := regexp.MustCompile(fmt.Sprintf("%s@gmail.com$", username))
+	userLink := nodewith.NameRegex(userLinkRegexp).Role(role.Link)
+
 	continueButton := nodewith.Name("Continue").Role(role.Button)
-	createAccountRootWebArea := nodewith.Name("Create your account").Role(role.RootWebArea)
-	continueLink := nodewith.Name("Continue").Role(role.Link)
-	foundNode, err := e.ui.FindAnyExists(ctx, continueButton, createAccountRootWebArea, continueLink)
+	createAccountButton := nodewith.Name("Create Account").Role(role.Button)
+
+	// These two UI nodes are not directly interacted with by the script (e.g., via clicks);
+	// instead, they are used to indicate the current state of the login flow.
+	signInHeading := nodewith.Name("Sign in to matrix.org").Role(role.Heading)
+	allowAccessHeading := nodewith.Name("Allow access to your account?").Role(role.Heading)
+
+	// It may have different subsequent UI operations depending on whether the
+	// account has been authorized, so check all possible UIs first and then
+	// decide on the next UI operation.
+	foundNode, err := e.ui.FindAnyExists(ctx, userLink, signInHeading, allowAccessHeading, createAccountButton)
 	if err != nil {
-		return errors.Wrap(err, "failed to find node on login window")
+		return errors.Wrap(err, "failed to find any UI related to an unauthorized account")
 	}
-	if foundNode == continueButton {
+
+	// Sometimes it requires to select the google account.
+	if foundNode == userLink {
+		if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
+			userLink,
+			e.ui.WithTimeout(longUITimeout).WaitUntilAnyExists(signInHeading, createAccountButton, allowAccessHeading),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the user link to select an user")
+		}
+
+		// Update the `foundNode` to confirm further UI operations.
+		foundNode, err = e.ui.FindAnyExists(ctx, signInHeading, createAccountButton, allowAccessHeading)
+		if err != nil {
+			return errors.Wrap(err, "failed to find any UI related to an unauthorized account")
+		}
+	}
+
+	if foundNode == signInHeading {
 		// Sometimes the account would forget the permission of the element app.
 		// Re-grant the permission for the app by clicking the continue button.
 		if err := e.ui.DoDefault(continueButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click continue button")
 		}
-		foundNode, err = e.ui.FindAnyExists(ctx, createAccountRootWebArea, continueLink)
+		// Update the `foundNode` to confirm further UI operations.
+		foundNode, err = e.ui.FindAnyExists(ctx, createAccountButton, allowAccessHeading)
 		if err != nil {
-			return errors.Wrap(err, "failed to find node on login window")
+			return errors.Wrap(err, "failed to find any nodes on login window")
 		}
 	}
-	if foundNode == createAccountRootWebArea {
+
+	if foundNode == createAccountButton {
 		if err := e.createAccount(username)(ctx); err != nil {
 			return errors.Wrap(err, "failed to create account")
 		}
 	}
-	return e.ui.DoDefault(continueLink)(ctx)
+
+	return e.ui.DoDefault(continueButton)(ctx)
 }
 
 // waitForLoginWindowMaximized activates and maximizes the login window.
 func (e *Element) waitForLoginWindowMaximized(ctx context.Context) error {
+	const windowTitle = "Chrome"
 	// The window title might be displayed in different languages,
-	// and "Google" is the only common text in the title.
-	// Wait for any window with "Google" in the title to find the login window.
-	loginWindow, err := ash.WaitForAnyWindowWithTitle(ctx, e.tconn, "Google")
+	// and "Chrome" is the only common text in the title.
+	// Wait for any window with "Chrome" in the title to find the login window.
+	loginWindow, err := ash.WaitForAnyWindowWithTitle(ctx, e.tconn, windowTitle)
 	if err != nil {
 		return errors.Wrap(err, "failed to find the login window")
 	}
@@ -204,7 +237,7 @@ func (e *Element) waitForLoginWindowMaximized(ctx context.Context) error {
 // createAccount creates a new Element account with Google account.
 // It assumes the create account page is already opened.
 func (e *Element) createAccount(username string) uiauto.Action {
-	usernameField := nodewith.Name("Username (required)").Role(role.TextField)
+	usernameField := nodewith.Name("Username").Role(role.TextField)
 	usernameText := nodewith.Name(username).Role(role.StaticText).Ancestor(usernameField)
 	checkingText := nodewith.NameContaining("Checking").Role(role.StaticText)
 	setUsername := uiauto.NamedCombine("set username as "+username,
@@ -219,22 +252,19 @@ func (e *Element) createAccount(username string) uiauto.Action {
 		e.ui.WaitUntilGone(checkingText),
 	)
 
-	agreeTermsCheckBox := nodewith.Name("I have read and agree to the terms and conditions.").Role(role.CheckBox)
+	agreeTermsCheckBox := nodewith.Name("I agree to the Terms and Conditions").Role(role.CheckBox)
 	agreeTerms := uiauto.NamedAction("agree terms",
 		e.ui.DoDefaultUntil(agreeTermsCheckBox,
 			e.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(agreeTermsCheckBox, true),
 		),
 	)
+	createAccountButton := nodewith.Name("Create Account").Role(role.Button)
 	continueButton := nodewith.Name("Continue").Role(role.Button)
-	continueLink := nodewith.Name("Continue").Role(role.Link)
 	return uiauto.NamedCombine("create account",
 		setUsername,
-		e.ui.DoDefaultUntil(continueButton,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(agreeTermsCheckBox),
-		),
 		agreeTerms,
-		e.ui.DoDefaultUntil(continueButton,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(continueLink),
+		e.ui.DoDefaultUntil(createAccountButton,
+			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(continueButton),
 		),
 	)
 }
