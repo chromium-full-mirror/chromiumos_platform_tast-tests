@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_collate_epson_software_collate_golden_20201209.bin",
-  "size": 19346,
-  "sha256sum": "6e16a2597d714f8914b74edb77688b18210a1baead21827a40176dab9eb30f47"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_collate_epson_software_collate_golden_20250410.bin",
+  "size": 19373,
+  "sha256sum": "1975a5eaf9552b812b5eb9a718e7f6d43123becfe0566760dc691ac3ae6e3132"
 }

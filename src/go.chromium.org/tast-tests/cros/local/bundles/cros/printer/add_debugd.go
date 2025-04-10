@@ -190,9 +190,9 @@ func init() {
 				Val: &ippprint.Params{
 					PPDFile:      "printer_EpsonWF3620.ppd",
 					PrintFile:    "to_print.pdf",
-					ExpectedFile: "printer_add_epson_printer_golden.ps",
+					ExpectedFile: "printer_add_epson_printer_golden.bin",
 				},
-				ExtraData: []string{"to_print.pdf", "printer_EpsonWF3620.ppd", "printer_add_epson_printer_golden.ps"},
+				ExtraData: []string{"to_print.pdf", "printer_EpsonWF3620.ppd", "printer_add_epson_printer_golden.bin"},
 			}, {
 				Name: "epson_color",
 				Val: &ippprint.Params{
