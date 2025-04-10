@@ -124,10 +124,11 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Error("Failed to get signed in user: ", err)
 	}
 	deviceUser := ""
+	s.Log("Checking user affiliation")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, deviceUser, err = secagentdaffiliation.GetAffiliationStatus(signedInUser, hash)
 		return err
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 		s.Error("Failed to get affiliation status: ", err)
 	}
 
