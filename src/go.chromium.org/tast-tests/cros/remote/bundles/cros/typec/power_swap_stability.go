@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
 	"go.chromium.org/tast/core/ctxutil"
@@ -63,14 +62,14 @@ func PowerSwapStability(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get power role: ", err)
 		}
 
-		newRole := passport.PowerRole_SNK
-		if prevRole == passport.PowerRole_SNK {
-			newRole = passport.PowerRole_SRC
+		newRole := unigraf.PowerRole_SNK
+		if prevRole == unigraf.PowerRole_SNK {
+			newRole = unigraf.PowerRole_SRC
 		}
 		s.Logf("Unigraf power role is %s, switch to %s", prevRole.String(), newRole.String())
 
 		if err := unigrafctl.SetPowerRole(ctx, newRole); err != nil {
-			s.Fatalf("Failed to set power role to %s, err=%v", newRole.String(), err)
+			s.Fatalf("Failed to set power role to %s, err=%v", newRole, err)
 		}
 
 		// Verify the new power state on the dut.

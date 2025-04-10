@@ -15,6 +15,65 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
+// PowerRole is a wrapper around passport.PowerRole
+type PowerRole passport.PowerRole
+
+// DataRole is a wrapper around passport.DataRole
+type DataRole passport.DataRole
+
+// UsbChannel is a wrapper around passport.UsbChannel
+type UsbChannel passport.UsbChannel
+
+// PinAssignment is a wrapper around passport.PinAassignment
+type PinAssignment passport.PinAassignment
+
+// InitPdState is a wrapper around passport.InitPdState
+type InitPdState passport.InitPdState
+
+// Constants for PowerRole
+const (
+	PowerRole_POWER_ROLE_NOT_SET PowerRole = PowerRole(passport.PowerRole_POWER_ROLE_NOT_SET)
+	PowerRole_SNK                PowerRole = PowerRole(passport.PowerRole_SNK)
+	PowerRole_SRC                PowerRole = PowerRole(passport.PowerRole_SRC)
+)
+
+func (x PowerRole) String() string {
+	return passport.PowerRole(x).String()
+}
+
+// Constants for DataRole
+const (
+	DataRole_DATA_ROLE_NOT_SET DataRole = DataRole(passport.DataRole_DATA_ROLE_NOT_SET)
+	DataRole_DATA_UFP          DataRole = DataRole(passport.DataRole_DATA_UFP)
+	DataRole_DATA_DFP          DataRole = DataRole(passport.DataRole_DATA_DFP)
+)
+
+func (x DataRole) String() string {
+	return passport.DataRole(x).String()
+}
+
+// Constants for UsbChannel
+const (
+	UsbChannel_USB_CHANNEL_NOT_SET UsbChannel = UsbChannel(passport.UsbChannel_USB_CHANNEL_NOT_SET)
+	UsbChannel_USB_2_HS            UsbChannel = UsbChannel(passport.UsbChannel_USB_2_HS)
+	UsbChannel_USB_3_AND_2_HS      UsbChannel = UsbChannel(passport.UsbChannel_USB_3_AND_2_HS)
+)
+
+// Constants for PinAssignment
+const (
+	PinAssignment_PIN_AASSIGNMENT_NOT_SET PinAssignment = PinAssignment(passport.PinAassignment_PIN_AASSIGNMENT_NOT_SET)
+	PinAssignment_C                       PinAssignment = PinAssignment(passport.PinAassignment_C)
+	PinAssignment_D                       PinAssignment = PinAssignment(passport.PinAassignment_D)
+)
+
+// Constants for InitPdState
+const (
+	InitPdState_INIT_PD_STATE_NOT_SET InitPdState = InitPdState(passport.InitPdState_INIT_PD_STATE_NOT_SET)
+	InitPdState_PD_UFP                InitPdState = InitPdState(passport.InitPdState_PD_UFP)
+	InitPdState_PD_DFP                InitPdState = InitPdState(passport.InitPdState_PD_DFP)
+	InitPdState_PD_DRP                InitPdState = InitPdState(passport.InitPdState_PD_DRP)
+)
+
 // UsbTester is data type to model a unigraf utc274 usb tester.
 type UsbTester struct {
 	conn   *grpc.ClientConn
@@ -109,66 +168,66 @@ func (s *UsbTester) doCapabilitySetRequest(
 }
 
 // SetPowerRole will set the data role to the role passed in the argument.
-func (s *UsbTester) SetPowerRole(ctx context.Context, role passport.PowerRole) error {
+func (s *UsbTester) SetPowerRole(ctx context.Context, role PowerRole) error {
 	return s.doCapabilitySetRequest(
 		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Id:         s.tester,
 			Capability: passport.Capability_POWER_ROLE,
 			Value: &passport.SetUsbTesterCapabilityRequest_PowerRole{
-				PowerRole: role,
+				PowerRole: passport.PowerRole(role),
 			},
 		},
 	)
 }
 
 // SetDataRole will set the data role to ufp.
-func (s *UsbTester) SetDataRole(ctx context.Context, role passport.DataRole) error {
+func (s *UsbTester) SetDataRole(ctx context.Context, role DataRole) error {
 	return s.doCapabilitySetRequest(
 		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Capability: passport.Capability_DATA_ROLE,
 			Value: &passport.SetUsbTesterCapabilityRequest_DataRole{
-				DataRole: role,
+				DataRole: passport.DataRole(role),
 			},
 		},
 	)
 }
 
 // SetUsbChannel will set the usb channel, either 2.0 or 3.0.
-func (s *UsbTester) SetUsbChannel(ctx context.Context, channel passport.UsbChannel) error {
+func (s *UsbTester) SetUsbChannel(ctx context.Context, channel UsbChannel) error {
 	return s.doCapabilitySetRequest(
 		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Capability: passport.Capability_USB_CHANNEL,
 			Value: &passport.SetUsbTesterCapabilityRequest_UsbChannel{
-				UsbChannel: channel,
+				UsbChannel: passport.UsbChannel(channel),
 			},
 		},
 	)
 }
 
 // SetPinAssignment will set the display port alternate mode pin assignment.
-func (s *UsbTester) SetPinAssignment(ctx context.Context, pinMode passport.PinAassignment) error {
+func (s *UsbTester) SetPinAssignment(ctx context.Context, pinMode PinAssignment) error {
 	return s.doCapabilitySetRequest(
 		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Capability: passport.Capability_PIN_ASSIGMENT,
 			Value: &passport.SetUsbTesterCapabilityRequest_PinMode{
-				PinMode: pinMode,
+				PinMode: passport.PinAassignment(pinMode),
 			},
 		},
 	)
 }
 
 // SetInitPdState will set the initial PD state.
-func (s *UsbTester) SetInitPdState(ctx context.Context, state passport.InitPdState) error {
+func (s *UsbTester) SetInitPdState(ctx context.Context, state InitPdState) error {
 	return s.doCapabilitySetRequest(
 		ctx,
 		&passport.SetUsbTesterCapabilityRequest{
 			Capability: passport.Capability_INIT_PD_STATE,
 			Value: &passport.SetUsbTesterCapabilityRequest_InitPdState{
-				InitPdState: state,
+				InitPdState: passport.InitPdState(state),
 			},
 		},
 	)
@@ -220,53 +279,53 @@ func (s *UsbTester) doCapabilityGetRequest(
 }
 
 // DataRole will return the current data role on the testers.
-func (s *UsbTester) DataRole(ctx context.Context) (passport.DataRole, error) {
+func (s *UsbTester) DataRole(ctx context.Context) (DataRole, error) {
 	reply, err := s.doCapabilityGetRequest(
 		ctx,
 		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_DATA_ROLE},
 	)
 
-	return reply.GetDataRole(), err
+	return DataRole(reply.GetDataRole()), err
 }
 
 // PowerRole will return the current power role on the testers.
-func (s *UsbTester) PowerRole(ctx context.Context) (passport.PowerRole, error) {
+func (s *UsbTester) PowerRole(ctx context.Context) (PowerRole, error) {
 	reply, err := s.doCapabilityGetRequest(
 		ctx,
 		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_POWER_ROLE},
 	)
 
-	return reply.GetPowerRole(), err
+	return PowerRole(reply.GetPowerRole()), err
 }
 
 // UsbChannel will return the usb channel, either 2.0 or 3.0.
-func (s *UsbTester) UsbChannel(ctx context.Context) (passport.UsbChannel, error) {
+func (s *UsbTester) UsbChannel(ctx context.Context) (UsbChannel, error) {
 	reply, err := s.doCapabilityGetRequest(
 		ctx,
 		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_USB_CHANNEL},
 	)
 
-	return reply.GetUsbChannel(), err
+	return UsbChannel(reply.GetUsbChannel()), err
 }
 
 // PinAssignment will return the display port alternate mode pin assignment.
-func (s *UsbTester) PinAssignment(ctx context.Context) (passport.PinAassignment, error) {
+func (s *UsbTester) PinAssignment(ctx context.Context) (PinAssignment, error) {
 	reply, err := s.doCapabilityGetRequest(
 		ctx,
 		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_PIN_ASSIGMENT},
 	)
 
-	return reply.GetPinMode(), err
+	return PinAssignment(reply.GetPinMode()), err
 }
 
 // InitPdState will return the starting state of power delivery.
-func (s *UsbTester) InitPdState(ctx context.Context) (passport.InitPdState, error) {
+func (s *UsbTester) InitPdState(ctx context.Context) (InitPdState, error) {
 	reply, err := s.doCapabilityGetRequest(
 		ctx,
 		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_DATA_ROLE},
 	)
 
-	return reply.GetInitPdState(), err
+	return InitPdState(reply.GetInitPdState()), err
 }
 
 // SnkPdoCount will return get the number of snk pdos.
