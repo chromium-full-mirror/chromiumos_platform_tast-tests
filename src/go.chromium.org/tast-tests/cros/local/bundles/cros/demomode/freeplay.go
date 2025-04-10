@@ -14,6 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/demomode"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
@@ -157,7 +159,7 @@ func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 		// "StardewValley": "ljibeljdcmpldadfgijmbaocjibloonn",
 	}
 
-	if err := verifyAppsPinned(ctx, tconn, AndroidAppsToIDs); err != nil {
+	if err := verifyAppsPinnedByID(ctx, tconn, AndroidAppsToIDs); err != nil {
 		return errors.Wrap(err, "failed to verify Android apps")
 	}
 
@@ -198,29 +200,35 @@ func verifyAndroidApps(ctx context.Context, tconn *chrome.TestConn) error {
 }
 
 func verifyWebApps(ctx context.Context, tconn *chrome.TestConn) error {
-	// Maps app names to Shelf Item IDs. These "names" are arbitrary, only having
-	// relevance for the context of this test; they are not the actual Shelf Item titles,
-	// as the app publisher could change the title at will. So one should only rely on the
-	// ID, as this is unchanging (derived from the URL for PWAs or the package name for
-	// Android Apps).
-	var webAppsToIDs = map[string]string{
-		"Zoom":       "ddamjdmghnhnicfnliimfobemngigiom",
-		"Youtube":    "agimnkijcaahngcdmfeangaknmldooml",
-		"GoogleDocs": "cepkndkdlbllfhpfhledabdcdbidehkd",
-		"BeFunky":    "fjoomcalbeohjbnlcneddljemclcekeg",
-		"SumoPaint":  "genadphlobhbpdnafiphnppelkagmghm",
-		"Spotify":    "pjibgclleladliembfgfagdaldikeohf",
+	// A list of web app names that we need to verify on the shelf. The custom names we
+	// give them in the Admin Console need to be consistent with the name list here.
+	var webApps = []string{
+		"Zoom", "YouTube", "Docs", "BeFunky", "Sumo Paint", "Spotify",
 	}
-	if err := verifyAppsPinned(ctx, tconn, webAppsToIDs); err != nil {
+
+	if err := verifyAppsPinnedByName(ctx, tconn, webApps); err != nil {
 		return errors.Wrap(err, "failed to verify web apps")
 	}
 	return nil
 }
 
-func verifyAppsPinned(ctx context.Context, tconn *chrome.TestConn,
+func verifyAppsPinnedByName(ctx context.Context, tconn *chrome.TestConn, apps []string) error {
+	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
+
+	for _, appName := range apps {
+		pinnedApp := nodewith.Role(role.Button).Name(appName)
+		if err := ui.WaitUntilExists(pinnedApp)(ctx); err != nil {
+			return errors.Wrap(err, "Time out waiting for "+appName+
+				" app to appear in the shelf.")
+		}
+	}
+	return nil
+}
+
+func verifyAppsPinnedByID(ctx context.Context, tconn *chrome.TestConn,
 	freeplayAppsToIDs map[string]string) error {
 	for appName, appID := range freeplayAppsToIDs {
-		if err := waitForAppPinned(ctx, tconn, appID); err != nil {
+		if err := waitForAppPinnedByID(ctx, tconn, appID); err != nil {
 			return errors.Wrap(err, "Timed out waiting for "+appName+
 				" app to appear in the shelf")
 		}
@@ -228,9 +236,9 @@ func verifyAppsPinned(ctx context.Context, tconn *chrome.TestConn,
 	return nil
 }
 
-func waitForAppPinned(ctx context.Context, tconn *chrome.TestConn, targetAppID string) error {
+func waitForAppPinnedByID(ctx context.Context, tconn *chrome.TestConn, targetAppID string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if pinned, err := appIsPinned(ctx, tconn, targetAppID); err != nil {
+		if pinned, err := appIsPinnedByID(ctx, tconn, targetAppID); err != nil {
 			return testing.PollBreak(err)
 		} else if !pinned {
 			return errors.New("Failed to wait for app to be pinned - ID: " + targetAppID)
@@ -239,7 +247,7 @@ func waitForAppPinned(ctx context.Context, tconn *chrome.TestConn, targetAppID s
 	}, &testing.PollOptions{Timeout: 3 * time.Minute})
 }
 
-func appIsPinned(ctx context.Context, tconn *chrome.TestConn, targetAppID string) (bool, error) {
+func appIsPinnedByID(ctx context.Context, tconn *chrome.TestConn, targetAppID string) (bool, error) {
 	pinnedAppIDs, err := ash.GetPinnedAppIds(ctx, tconn)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get pinned App IDs")
