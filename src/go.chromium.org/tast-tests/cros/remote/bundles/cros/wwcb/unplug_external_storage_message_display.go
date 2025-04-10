@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Verify if a warning message is displayed after unplugging the external storage, and ensure that Files app does not crash",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_storage",
@@ -168,11 +168,9 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 	}
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	// Unplug the USB devices.
-	go func() {
-		if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
-			s.Fatal("Failed to unplug the external storage after copy file: ", err)
-		}
-	}()
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
+		s.Fatal("Failed to unplug the external storage after copy file: ", err)
+	}
 	// Waiting for the system to display the "Whoa, there. Be careful." message.
 	notificationMessage := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
@@ -181,7 +179,7 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 		},
 	}
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: notificationMessage}); err != nil {
-		s.Fatal("Failed to Wait Whoa, there. Be careful. message after unplug external storage: ", err)
+		s.Fatal("Failed to Wait 'Whoa, there. Be careful.' message after unplug external storage: ", err)
 	}
 	// Close the Files app.
 	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
