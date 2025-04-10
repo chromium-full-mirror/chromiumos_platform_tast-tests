@@ -1028,8 +1028,8 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		return ms.Helper.DUT.WaitUnreachable(offCtx)
 	}
 	if h.DUT.Connected(ctx) {
-		// Since the DUT will power off, deadline exceeded is expected here.
-		if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		// Since the DUT will power off, deadline exceeded or exit signal missing is expected here.
+		if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, &ssh.ExitMissingError{}) {
 			return errors.Wrap(err, "DUT poweroff")
 		}
 		h.DUT.Disconnect(ctx)
