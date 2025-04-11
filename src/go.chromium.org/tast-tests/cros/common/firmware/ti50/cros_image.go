@@ -1802,3 +1802,24 @@ func (i *CrOSImage) WaitForStableCCDState(ctx context.Context) error {
 	}
 	return errors.Errorf("GSC is still debouncing ccdstate: %+v", ccdstate)
 }
+
+// WipeTpmWithCCDOpen uses ccd open to wipe the TPM
+func (i *CrOSImage) WipeTpmWithCCDOpen(ctx context.Context) error {
+	err := i.CCDOpen(ctx)
+	if err != nil {
+		return err
+	}
+	err = i.SetCCDCapability(ctx, OpenNoTPMWipe, CapIfOpened)
+	if err != nil {
+		return err
+	}
+	err = i.CCDLock(ctx)
+	if err != nil {
+		return err
+	}
+	err = i.CCDOpen(ctx)
+	if err != nil {
+		return err
+	}
+	return i.CCDResetFactory(ctx)
+}
