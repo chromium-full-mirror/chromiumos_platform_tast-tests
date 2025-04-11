@@ -352,9 +352,6 @@ func MaybeUninstallPwa(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error {
 	testing.ContextLog(ctx, "Clearing cookies for Office website")
 
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	interval := 200 * time.Millisecond
 
 	return action.Retry(3, func(ctx context.Context) error {
