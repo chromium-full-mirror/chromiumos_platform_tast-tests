@@ -5,7 +5,6 @@ chromeos-competitive-analysis@google.com
 williskung@google.com
 
 # Add only if none of the members above are available
-skbhasin@google.com
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
