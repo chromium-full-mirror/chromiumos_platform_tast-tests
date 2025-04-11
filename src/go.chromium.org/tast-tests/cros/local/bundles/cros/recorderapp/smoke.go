@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Verify basic functionality of Recorder app",
 		Contacts:     []string{"chromeos-recorder-app@google.com", "hsuanling@google.com"},
 		BugComponent: "b:1522466", // ChromeOS > Platform > Technologies > Audio > Recorder App
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Fixture:      "recorderAppPrepared",
