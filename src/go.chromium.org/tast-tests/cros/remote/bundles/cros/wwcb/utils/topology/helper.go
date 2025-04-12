@@ -187,6 +187,21 @@ func (t *Helper) ActivateDeviceByTypeVia(ctx context.Context, deviceType, viaTyp
 	return deviceID, viaID, nil
 }
 
+// DocklessPathToDeviceByType gets the dockless connection path between the DUT and the first device of the requested type.
+func (t *Helper) DocklessPathToDeviceByType(deviceType labapi.PasitHost_Device_Type) (string, ConnectionPath, error) {
+	predicate := func(device *labapi.PasitHost_Device) bool {
+		return device.GetType() == deviceType
+	}
+	ignore := func(device *labapi.PasitHost_Device) bool {
+		return device.GetType() == DeviceTypeDockingStation
+	}
+	devices, err := t.path(predicate, ignore)
+	if err != nil {
+		return "", nil, errors.Wrapf(err, "failed to find dockless path to device with type: %v", deviceType)
+	}
+	return devices[len(devices)-1], t.connectionsInPath(devices), nil
+}
+
 // PathToDeviceByType gets the connection path between the DUT and the first device of the requested type.
 func (t *Helper) PathToDeviceByType(deviceType labapi.PasitHost_Device_Type) (string, ConnectionPath, error) {
 	// To make the function deterministic -
@@ -202,11 +217,25 @@ func (t *Helper) PathToDeviceByType(deviceType labapi.PasitHost_Device_Type) (st
 	predicate := func(device *labapi.PasitHost_Device) bool {
 		return device.GetId() == deviceIds[0]
 	}
-	devices, err := t.path(predicate)
+	devices, err := t.path(predicate, nil)
 	if err != nil {
 		return "", nil, errors.Wrapf(err, "failed to find path to device with type: %v", deviceType)
 	}
 	return devices[len(devices)-1], t.connectionsInPath(devices), nil
+}
+
+// DocklessActivateDeviceByType activates the device via dockless path
+func (t *Helper) DocklessActivateDeviceByType(ctx context.Context, deviceType labapi.PasitHost_Device_Type) (string, error) {
+	device, path, err := t.DocklessPathToDeviceByType(deviceType)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get path to device")
+	}
+	testing.ContextLogf(ctx, "Found path to device: %v: %v", deviceType, path)
+
+	if err := path.Activate(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to activate device path")
+	}
+	return device, nil
 }
 
 // ActivateDeviceByType enables the first found component of the specified type and returns the device.
@@ -235,7 +264,7 @@ func (t *Helper) pathToDeviceVia(deviceType labapi.PasitHost_Device_Type, viaPre
 		return device.GetId() == deviceID
 	}
 
-	path, err := t.path(idPredicate)
+	path, err := t.path(idPredicate, nil)
 	if err != nil {
 		return nil, "", "", errors.Wrapf(err, "failed to get path to device with ID: %q", deviceID)
 	}
@@ -259,7 +288,7 @@ func (t *Helper) devicesByTypeVia(deviceType labapi.PasitHost_Device_Type, viaPr
 
 		// Get the path to the device.
 		// Note: We assume that there is only one valid path from the DUT to the device.
-		path, err := t.path(idPredicate)
+		path, err := t.path(idPredicate, nil)
 		if err != nil {
 			// No path to this device, just ignore it.
 			continue
@@ -298,7 +327,7 @@ func (t *Helper) PathToDeviceByID(id string) (ConnectionPath, error) {
 	predicate := func(device *labapi.PasitHost_Device) bool {
 		return device.GetId() == id
 	}
-	devices, err := t.path(predicate)
+	devices, err := t.path(predicate, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find path to device with id: %q", id)
 	}
@@ -361,7 +390,7 @@ func (s *stack) pop() string {
 
 // path traverses the topology graph using a simple DFS to find the devices (nodes) between the
 // host and the first device that matches devicePredicate.
-func (t *Helper) path(predicate devicePredicate) ([]string, error) {
+func (t *Helper) path(destination, ignore devicePredicate) ([]string, error) {
 	// create a queue to traverse our graph
 	currentPath := stack{}
 	stack := stack{t.hostname}
@@ -370,9 +399,15 @@ func (t *Helper) path(predicate devicePredicate) ([]string, error) {
 
 	for len(stack) > 0 {
 		current := stack.pop()
+		device := t.devices[current]
+
+		if ignore != nil && ignore(device) {
+			continue
+		}
+
 		currentPath = append(currentPath, current)
 
-		if predicate(t.devices[current]) {
+		if destination(device) {
 			return currentPath, nil
 		}
 
