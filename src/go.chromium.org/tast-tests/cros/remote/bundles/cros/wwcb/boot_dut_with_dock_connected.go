@@ -26,7 +26,7 @@ func init() {
 		Desc:         "In clamshell and tablet modes, verify connection of peripherals after cold-boot DUT with the dock station connected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -132,7 +132,7 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	if err := utils.VerifyEthernetState(ctx, dut, true); err != nil {
 		s.Fatal("Failed to verify Ethernet is connected: ", err)
 	}
-	if err := utils.VerifyDisplayCount(ctx, dut, 2); err != nil {
+	if err := utils.VerifyDisplayCountEquals(ctx, dut, 2); err != nil {
 		s.Fatal("Failed to verify external display is connected: ", err)
 	}
 	afterConnectPeripherals, err := utils.GetUSBDevice(ctx, s.DUT())

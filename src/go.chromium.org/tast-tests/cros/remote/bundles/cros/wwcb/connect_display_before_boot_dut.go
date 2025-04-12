@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Boot DUT with external display already connected, then verify that the DUT can detect the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -83,7 +83,7 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait connect to the DUT: ", err)
 	}
 
-	if err := utils.VerifyDisplayCount(ctx, dut, 2); err != nil {
+	if err := utils.VerifyDisplayCountEquals(ctx, dut, 2); err != nil {
 		s.Fatal("Failed to verify that the external display is connected: ", err)
 	}
 

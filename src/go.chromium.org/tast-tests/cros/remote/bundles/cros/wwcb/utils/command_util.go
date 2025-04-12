@@ -72,8 +72,19 @@ func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected boo
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
-// VerifyDisplayCount verifies the number of dislpays is as expected.
-func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
+// VerifyDisplayCountEquals verifies the number of displays is equal to the expected value.
+func VerifyDisplayCountEquals(ctx context.Context, dut *dut.DUT, want int) error {
+	return VerifyDisplayCount(ctx, dut, func(got int) error {
+		if got != want {
+			return errors.Errorf("unexpected number of displays, got: %d, want: %d", got, want)
+		}
+		return nil
+	})
+}
+
+// VerifyDisplayCount verifies the number of displays is as expected.
+// `verify` is a predicate to test whether the display count satisfies the expectation.
+func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, verify func(int) error) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		cmd := "ls /sys/class/drm | grep card'[0-9]'-"
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
@@ -92,10 +103,7 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, want int) error {
 			}
 		}
 
-		if displayCount != want {
-			return errors.Errorf("unexpected number of displays, got: %d, want: %d", displayCount, want)
-		}
-		return nil
+		return verify(displayCount)
 	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
 }
 
@@ -139,7 +147,7 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 	} else {
 		displayCount = 1
 	}
-	if err := VerifyDisplayCount(testingCtx, dut, displayCount); err != nil {
+	if err := VerifyDisplayCountEquals(testingCtx, dut, displayCount); err != nil {
 		return errors.Wrap(err, "verify connection of external display")
 	}
 

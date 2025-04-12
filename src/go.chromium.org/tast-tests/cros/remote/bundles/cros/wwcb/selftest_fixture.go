@@ -190,7 +190,7 @@ func SelftestFixture(ctx context.Context, s *testing.State) {
 				capabilitiesUSBA[fmt.Sprint("Port", usbCount)] = map[string]interface{}{"Speed": "", "USBTypeAIDArray": key}
 			}
 			if category == "docking" {
-				if err := utils.VerifyDisplayCount(ctx, dut, 2); err == nil {
+				if err := utils.VerifyDisplayCountEquals(ctx, dut, 2); err == nil {
 					displayCount++
 					capabilitiesDis := capabilitiesMap["Downstream"].(map[string]interface{})["Display"].(map[string]interface{})
 					capabilitiesDis[fmt.Sprint("Port", displayCount)] = map[string]interface{}{"Type": fixtureType, fmt.Sprint("ExtDispID", displayCount): key}
@@ -198,7 +198,7 @@ func SelftestFixture(ctx context.Context, s *testing.State) {
 			}
 		case "monitor", "monitor_daisychain":
 			// Obtain display fixture ID.
-			if err := utils.VerifyDisplayCount(ctx, dut, 2); err == nil {
+			if err := utils.VerifyDisplayCountEquals(ctx, dut, 2); err == nil {
 				displayCount++
 				capabilitiesDis := capabilitiesMap["Downstream"].(map[string]interface{})["Display"].(map[string]interface{})
 				capabilitiesDis[fmt.Sprint("Port", displayCount)] = map[string]interface{}{"Type": fixtureType, fmt.Sprint("ExtDispID", displayCount): key}
@@ -223,7 +223,7 @@ func SelftestFixture(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to open fixture: %s before connect docking station", fixID)
 			}
 		}
-		if err := utils.VerifyDisplayCount(ctx, dut, 3); err == nil {
+		if err := utils.VerifyDisplayCountEquals(ctx, dut, 3); err == nil {
 			for _, fixID := range dpFixtureIDs {
 				displayCount++
 				if category == "docking_daisychain" {
