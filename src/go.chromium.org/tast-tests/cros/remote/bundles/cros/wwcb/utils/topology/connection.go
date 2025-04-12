@@ -63,6 +63,7 @@ func (c ConnectionPath) Activate(ctx context.Context) error {
 		req := &passport.ConfigureSwitchPortRequest{
 			State:    passport.SwitchPortState_SWITCH_PORT_ENABLED,
 			SwitchId: con.connection.GetParentId(),
+			PortId:   con.connection.GetParentPort(),
 		}
 		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
