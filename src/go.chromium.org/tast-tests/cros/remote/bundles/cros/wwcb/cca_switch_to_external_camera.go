@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Launch camera app and check external webcam could be detected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_camera",
@@ -89,6 +89,20 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	defer fs.Remove(ctx, testImageFilepath)
 
+	tf := s.FixtValue().(*topology.TestFixture)
+
+	// Check if external monitor already connected, for backward compatibility
+	// In existing testbeds the display is directly connected to the DUT for camera testing
+	if err := utils.VerifyDisplayCountAtLeast(ctx, dut, 5*time.Second, 2); err != nil {
+		if _, err := tf.Helper.DocklessActivateDeviceByType(ctx, topology.DeviceTypeMonitor); err != nil {
+			s.Fatal("Failed to connect to the external display: ", err)
+		}
+
+		if err := utils.VerifyDisplayCountAtLeast(ctx, dut, 30*time.Second, 2); err != nil {
+			s.Fatal("Failed to verify display count: ", err)
+		}
+	}
+
 	if _, err := utils.OpenGalleryOnDisplay(ctx, appsSvc, uiautoSvc, displaySvc, 1, testImageFilename); err != nil {
 		s.Fatal("Failed to open file in Gallery on expected display: ", err)
 	}
@@ -122,7 +136,6 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	tf := s.FixtValue().(*topology.TestFixture)
 	enable := func(ctx context.Context) error {
 		_, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeCamera)
 		return err

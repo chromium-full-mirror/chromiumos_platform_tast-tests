@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Connect an external camera and use the CCA app to test the photo-taking and video-recording functionalities to ensure they are working properly",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_camera",
@@ -55,7 +55,7 @@ func init() {
 // CCARecordFromExternalCamera since this function is verify big, need to refactor into more functions and utils.
 func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 	/*
-		1. Boot and loging to ChromeOS.
+		1. Boot and login to ChromeOS.
 		2. Plug the USB webcam to the Chromebook. (turn on USB Test Fixture)
 		3. Launch ""Camera"" app.
 		4. Press the camera switch button.
@@ -102,8 +102,18 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	defer fs.Remove(cleanupCtx, testImageFilepath)
 
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify display count: ", err)
+	tf := s.FixtValue().(*topology.TestFixture)
+
+	// Check if external monitor already connected, for backward compatibility
+	// In existing testbeds the display is directly connected to the DUT for camera testing
+	if err := utils.VerifyDisplayCountAtLeast(ctx, dut, 5*time.Second, 2); err != nil {
+		if _, err := tf.Helper.DocklessActivateDeviceByType(ctx, topology.DeviceTypeMonitor); err != nil {
+			s.Fatal("Failed to connect to the external display: ", err)
+		}
+
+		if err := utils.VerifyDisplayCountAtLeast(ctx, dut, 30*time.Second, 2); err != nil {
+			s.Fatal("Failed to verify display count: ", err)
+		}
 	}
 
 	if _, err := utils.OpenGalleryOnDisplay(ctx, appsSvc, uiautoSvc, displaySvc, 1, testImageFilename); err != nil {
@@ -139,7 +149,6 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	tf := s.FixtValue().(*topology.TestFixture)
 	enable := func(ctx context.Context) error {
 		_, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeCamera)
 		return err

@@ -74,7 +74,7 @@ func VerifyUSBAudioConnection(ctx context.Context, dut *dut.DUT, isConnected boo
 
 // VerifyDisplayCountEquals verifies the number of displays is equal to the expected value.
 func VerifyDisplayCountEquals(ctx context.Context, dut *dut.DUT, want int) error {
-	return VerifyDisplayCount(ctx, dut, func(got int) error {
+	return VerifyDisplayCount(ctx, dut, pollTimeout, func(got int) error {
 		if got != want {
 			return errors.Errorf("unexpected number of displays, got: %d, want: %d", got, want)
 		}
@@ -82,9 +82,19 @@ func VerifyDisplayCountEquals(ctx context.Context, dut *dut.DUT, want int) error
 	})
 }
 
+// VerifyDisplayCountAtLeast verifies the number of displays is greater or equal to the expected value.
+func VerifyDisplayCountAtLeast(ctx context.Context, dut *dut.DUT, timeout time.Duration, want int) error {
+	return VerifyDisplayCount(ctx, dut, timeout, func(got int) error {
+		if got < want {
+			return errors.Errorf("unexpected number of displays, got: %d, want at least: %d", got, want)
+		}
+		return nil
+	})
+}
+
 // VerifyDisplayCount verifies the number of displays is as expected.
 // `verify` is a predicate to test whether the display count satisfies the expectation.
-func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, verify func(int) error) error {
+func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, timeout time.Duration, verify func(int) error) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		cmd := "ls /sys/class/drm | grep card'[0-9]'-"
 		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
@@ -104,7 +114,7 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, verify func(int) erro
 		}
 
 		return verify(displayCount)
-	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
+	}, &testing.PollOptions{Timeout: timeout, Interval: pollInterval})
 }
 
 // GetUSBDevice retrieves USB devices info from lsusb command.
