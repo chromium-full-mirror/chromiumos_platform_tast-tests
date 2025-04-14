@@ -145,6 +145,7 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("Manually refresh and minimize wallpaper picker",
+		wallpaper.CloseWallpaperPicker(),
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
 		ui.DoDefault(constants.GooglePhotosWallpaperAlbumsButton),
