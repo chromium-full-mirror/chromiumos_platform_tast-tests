@@ -35,7 +35,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "dataoffline_noone_jpg11kb",
-				Fixture: "nearbyShareDataUsageOfflineNoOne",
+				Fixture: "nearbyShareDataUsageOfflineNoOnePhoneVisibilityEveryone",
 				Val: nearbycommon.TestData{
 					Filename:        "small_jpg.zip",
 					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
@@ -49,7 +49,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_noone_txt30mb",
-				Fixture: "nearbyShareDataUsageOnlineNoOne",
+				Fixture: "nearbyShareDataUsageOnlineNoOnePhoneVisibilityEveryone",
 				Val: nearbycommon.TestData{
 					Filename:        "big_txt.zip",
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
@@ -62,7 +62,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCAndWLAN",
+				Fixture: "nearbyShareDataUsageOnlineNoOnePhoneVisibilityEveryoneWebRTCAndWLAN",
 				Val: nearbycommon.TestData{
 					Filename:        "big_txt.zip",
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
@@ -75,7 +75,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_webrtc",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCOnly",
+				Fixture: "nearbyShareDataUsageOnlineNoOnePhoneVisibilityEveryoneWebRTCOnly",
 				Val: nearbycommon.TestData{
 					Filename:        "big_txt.zip",
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
@@ -89,7 +89,7 @@ func init() {
 			},
 			{
 				Name:    "dataonline_noone_txt30mb_wlan",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWLANOnly",
+				Fixture: "nearbyShareDataUsageOnlineNoOnePhoneVisibilityEveryoneWLANOnly",
 				Val: nearbycommon.TestData{
 					Filename:        "big_txt.zip",
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,

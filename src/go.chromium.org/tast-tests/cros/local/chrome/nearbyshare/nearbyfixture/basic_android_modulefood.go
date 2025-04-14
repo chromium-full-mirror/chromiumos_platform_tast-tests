@@ -67,7 +67,6 @@ func addModulefoodAndroidFixtures() {
 		PostTestTimeout: postTestTimeout,
 	})
 
-	// Fixtures for high-visibility sharing tests.
 	testing.AddFixture(&testing.Fixture{
 		Name:   "nearbyShareDataUsageOnlineNoOne",
 		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'",
@@ -100,6 +99,55 @@ func addModulefoodAndroidFixtures() {
 			crosVisibility:             nearbycommon.VisibilityNoOne,
 			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
 			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_HIDDEN,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
+		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		Parent:          "nearbyShareGAIALogin",
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	// Fixtures for PhoneToCrosHighVis tests where the phone must be configured with 'Visibility' set to 'Everyone'.
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareDataUsageOnlineNoOnePhoneVisibilityEveryone",
+		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online'. 'Visibility' set to 'No One' on CrOS and 'Everyone' on Android.",
+		Parent: "nearbyShareGAIALogin",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOnline,
+			crosVisibility:             nearbycommon.VisibilityNoOne,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_ONLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_EVERYONE,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-cross-device-eng@google.com",
+			"hansenmichael@google.com",
+			"joaquinmarquez@google.com",
+		},
+		BugComponent:    "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareDataUsageOfflineNoOnePhoneVisibilityEveryone",
+		Desc: "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Offline'. 'Visibility' set to 'No One' on CrOS and 'Everyone' on Android.",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOffline,
+			crosVisibility:             nearbycommon.VisibilityNoOne,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_EVERYONE,
 			crosSelectAndroidAsContact: false,
 		}),
 		Contacts: []string{
