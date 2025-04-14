@@ -298,7 +298,7 @@ func writePDInfo(servo *servo.Servo, outDir string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal json")
 	}
-	err = os.WriteFile(filepath.Join(outDir, "pd_info.json"), jsonData, 0666)
+	err = os.WriteFile(filepath.Join(outDir, "usb_info.json"), jsonData, 0666)
 	if err != nil {
 		return errors.Wrap(err, "failed to write file")
 	}
