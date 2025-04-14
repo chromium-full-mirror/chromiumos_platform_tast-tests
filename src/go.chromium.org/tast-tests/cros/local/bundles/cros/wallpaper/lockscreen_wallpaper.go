@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
@@ -189,6 +190,19 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 		return st.Locked && st.ReadyForPassword && !st.WallpaperAnimating
 	}, 30*time.Second); err != nil {
 		s.Fatalf("Waiting for the screen to be locked failed: %v (last status %+v)", err, st)
+	}
+
+	// Hide the virtual keyboard if present.
+	vkbCtx := vkb.NewContext(cr, tconn)
+	shouldHideVkb, err := vkbCtx.IsShown(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if virtual keyboard is shown: ", err)
+	}
+	if shouldHideVkb {
+		testing.ContextLog(ctx, "Closing virtual keyboard")
+		if err := vkbCtx.HideVirtualKeyboard()(ctx); err != nil {
+			s.Fatal("Failed to close virtual keyboard: ", err)
+		}
 	}
 
 	// Take a screenshot of the lock screen.
