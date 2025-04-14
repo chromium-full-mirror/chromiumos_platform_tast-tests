@@ -626,8 +626,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		)(ctx)
 	}
 
-	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
-	effectsHeading := nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
+	effectsItem := nodewith.Name("Backgrounds and effects").Role(role.MenuItem)
+	effectsHeading := nodewith.Name("Backgrounds and effects").Role(role.Heading).Ancestor(meetRootWebArea)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffEffects := nodewith.Name("Turn off visual effects").Focusable()
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
@@ -637,7 +637,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			// "Apply visual effects".
 			doDefaultMoreOptions,
 			// Open the visual effects panel.
-			ui.WithTimeout(30*time.Second).DoDefault(applyEffects),
+			ui.WithTimeout(30*time.Second).DoDefault(effectsItem),
 			ui.WithTimeout(30*time.Second).WaitUntilExists(effectsHeading),
 		)
 		toggleEffect := func(ctx context.Context) error {
