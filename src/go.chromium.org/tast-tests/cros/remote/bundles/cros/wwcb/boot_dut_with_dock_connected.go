@@ -90,15 +90,16 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	if err := utils.ShutdownDUT(ctx, pxy, dut); err != nil {
 		s.Fatal("Failed to shut down DUT: ", err)
 	}
-	defer func(context.Context) {
+
+	defer func(ctx context.Context) {
+		// power on dut should precede any logs collection from the DUT
 		if !dut.Connected(ctx) {
 			if err := utils.PowerOnDUT(ctx, pxy, dut); err != nil {
 				s.Error("Failed to power on DUT at clean-up: ", err)
+				return
 			}
 		}
-	}(cleanupCtx)
 
-	defer func(ctx context.Context) {
 		if s.HasError() {
 			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
 		}
