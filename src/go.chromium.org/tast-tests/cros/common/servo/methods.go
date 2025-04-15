@@ -1529,6 +1529,15 @@ func (s *Servo) EnableUARTCapture(ctx context.Context, uart OnOffControl) (close
 	if on, err := s.GetOnOff(ctx, uart); err != nil {
 		return closeUART, errors.Wrapf(err, "failed to query capture %s", uart)
 	} else if !on {
+		testing.ContextLogf(ctx, "Clearing %s buffer before capturing", uart)
+		lines := "placeholder"
+		var err error
+		for lines != "" {
+			if lines, err = s.GetQuotedString(ctx, ECUARTStream); err != nil {
+				return closeUART, errors.Wrapf(err, "failed to clear buffer before capturing %s", uart)
+			}
+		}
+
 		testing.ContextLogf(ctx, "Capturing %s", uart)
 		if err := s.SetOnOff(ctx, uart, On); err != nil {
 			return closeUART, errors.Wrapf(err, "failed to capture %s", uart)
