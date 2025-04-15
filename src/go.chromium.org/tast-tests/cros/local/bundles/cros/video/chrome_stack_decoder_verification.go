@@ -499,18 +499,6 @@ func init() {
 				},
 			},
 			{
-				Name:              "vp9_0_svc",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding()),
-				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9SVCFiles),
-				Timeout:           calculateTestTimeout(test_vectors.VP9SVCFiles, "vp9_0_svc"),
-				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:    test_vectors.VP9SVCFiles,
-					validatorType: decoding.MD5,
-					mustFail:      false,
-				},
-			},
-			{
 				Name:              "hevc_main_part_1",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC},

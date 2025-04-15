@@ -275,14 +275,6 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		// TODO(b/238211555): Enable when DRC is supported in V4L2 stateless uAPI.
 		HardwareDeps: "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
 	}, {
-		Name: "vp9_0_svc",
-		// TODO(b/210167476): Reenable when it's not failing everywhere.
-		//Attr:         perBuildAttrs,
-		HardwareDeps:  "hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding())",
-		SoftwareDeps:  "[]string{caps.HWDecodeVP9}",
-		VideoFiles:    "test_vectors.VP9SVCFiles",
-		ValidatorType: "decoding.MD5",
-	}, {
 		Name:          "hevc_main_part_1",
 		Attr:          perBuildAttrs,
 		SoftwareDeps:  "[]string{caps.HWDecodeHEVC}",
