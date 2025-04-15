@@ -172,7 +172,7 @@ func CheckSpecialKeys(ctx context.Context, s *testing.State, cl *rpc.Client, app
 			messageFinder := &ui.Finder{
 				NodeWiths: []*ui.NodeWith{
 					{Value: &ui.NodeWith_HasClass{HasClass: "Label"}},
-					{Value: &ui.NodeWith_Name{Name: "Drag to select an area to capture"}},
+					{Value: &ui.NodeWith_NameContaining{NameContaining: "capture"}},
 				},
 			}
 			closeButtonFinder := &ui.Finder{
