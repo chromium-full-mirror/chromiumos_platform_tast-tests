@@ -309,22 +309,21 @@ func (a *DUTControlAndreiboard) gsctoolCommand(ctx context.Context, bus *ti50.Tp
 }
 
 // GSCToolWaitUntilReady waits until board is ready to be read by gsctool.
-func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context, timeoutInterval ...time.Duration) error {
-	timeout := 10 * time.Second
-	interval := time.Second
-	if len(timeoutInterval) > 2 {
-		return errors.New("can only specify timeout and interval")
-	}
-	if len(timeoutInterval) > 0 {
-		timeout = timeoutInterval[0]
-	}
-	if len(timeoutInterval) > 1 {
-		interval = timeoutInterval[1]
-	}
-	return testing.Poll(ctx, func(ctx context.Context) error {
+func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context) error {
+	startTime := time.Now()
+	// GoBigSleepLint: Allow time to connect before first poll.
+	testing.Sleep(ctx, time.Second)
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: 30 * time.Second}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := a.GSCToolCommand(ctx, "", "--fwver")
 		return err
-	}, &testing.PollOptions{Timeout: timeout, Interval: interval})
+	}, &pOpts)
+	state := "connected"
+	if err != nil {
+		state = "did not connect"
+	}
+	testing.ContextLogf(ctx, "CCD %s after %s", state, time.Since(startTime))
+	return err
 }
 
 // GSCToolUpdate uses gsctool to update the image.

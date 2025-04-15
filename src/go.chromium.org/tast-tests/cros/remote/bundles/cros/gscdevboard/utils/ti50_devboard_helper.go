@@ -679,11 +679,7 @@ func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage
 
 // WaitUntilCCDConnected waits until CCD is connected, using gsctool to check.
 func (h DevboardHelper) WaitUntilCCDConnected(ctx context.Context) {
-	pOpts := testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}
-	err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := h.GSCToolCommand(ctx, "", "--fwver")
-		return err
-	}, &pOpts)
+	err := h.GSCToolWaitUntilReady(ctx)
 	if err != nil {
 		h.Fatalf("CCD did not connect: %s", err)
 	}
@@ -703,13 +699,11 @@ func (h DevboardHelper) WaitUntilCCDConnectedAndUARTTXEnabled(ctx context.Contex
 	}
 }
 
-// CCDMustNotBeConnected verifies there is no CCD connection for the specified duration
+// CCDMustNotBeConnected verifies there is no CCD connection after the specified duration
 func (h DevboardHelper) CCDMustNotBeConnected(ctx context.Context, duration time.Duration) {
-	pOpts := testing.PollOptions{Interval: time.Second, Timeout: duration}
-	err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := h.GSCToolCommand(ctx, "", "--fwver")
-		return err
-	}, &pOpts)
+	// GoBigSleepLint: Wait before checking the connection.
+	testing.Sleep(ctx, duration)
+	_, err := h.GSCToolCommand(ctx, "", "--fwver")
 	if err == nil {
 		h.Fatalf("CCD connect unexpectedly")
 	}

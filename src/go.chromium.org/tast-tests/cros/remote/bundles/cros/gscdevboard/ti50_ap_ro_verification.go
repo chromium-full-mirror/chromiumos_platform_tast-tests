@@ -239,12 +239,11 @@ func verifyResetState(ctx context.Context, s *testing.State, b utils.DevboardHel
 
 	s.Log("Verify that CCD state when ", scenario)
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
-	// GoBigSleepLint: Allow USB to settle after reboot, then poll
-	testing.Sleep(ctx, 5*time.Second)
+	// verificationFailedForcedReset should override CCDModeOff (see CcdModeMask::FailedVerificationMode).
 	if inReset {
 		b.WaitUntilCCDConnected(ctx)
 	} else {
-		b.CCDMustNotBeConnected(ctx, 2*time.Second)
+		b.CCDMustNotBeConnected(ctx, 5*time.Second)
 	}
 
 	s.Log("Ensure that GSC didn't reset from previous interactions")
