@@ -12,7 +12,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/apps"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/appsplatform"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/arc"
-	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/assistant"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/audio"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/autoupdate"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/baserpc"
