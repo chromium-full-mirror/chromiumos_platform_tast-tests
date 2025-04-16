@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/ui/cuj_au_payload_20250415.bin.json",
+  "size": 239,
+  "sha256sum": "9b3d126d9470a4136b15fc02162e4ade1645735f930a226ad4657212099acb3f"
+}
