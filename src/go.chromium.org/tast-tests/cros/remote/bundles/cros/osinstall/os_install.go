@@ -27,6 +27,7 @@ func init() {
 			"josephsussman@google.com",
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "flex_device"},
 		ServiceDeps:  []string{"tast.cros.osinstall.OsInstallService"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
