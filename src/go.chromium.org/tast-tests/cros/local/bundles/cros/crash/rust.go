@@ -26,11 +26,42 @@ func init() {
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{
+			{
+				Val: crashRustParam{
+					executable:    "/usr/local/libexec/tast/helpers/local/cros/crash.Rust.panic",
+					crashFileName: "crash_Rust_panic",
+					metaSig:       "sig=panicked at 'See you later, alligator!', crash.Rust.panic.rs:",
+				},
+			},
+			{
+				// cras conditionally compiles the panic hook through cbindgen.
+				// This extra test verifies the integration.
+				Name: "cras",
+				Val: crashRustParam{
+					executable:    "/usr/bin/cras",
+					username:      "cras",
+					extraEnv:      []string{"CRAS_RUST_PANIC_FOR_TESTING=1"},
+					crashFileName: "cras",
+					metaSig:       "sig=panicked at 'panicing due to CRAS_RUST_PANIC_FOR_TESTING'",
+				},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
+			},
+		},
 	})
 }
 
+type crashRustParam struct {
+	executable    string   // name of the executable to run.
+	username      string   // User to run the command as. Empty to not change.
+	extraEnv      []string // extra environment variables to set for the command.
+	crashFileName string   // name for the crash file.
+	metaSig       string   // The string that should be found in the meta file.
+}
+
 func Rust(ctx context.Context, s *testing.State) {
-	const executable = "/usr/local/libexec/tast/helpers/local/cros/crash.Rust.panic"
+	param := s.Param().(crashRustParam)
+
 	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
 		s.Fatal("Failed to set up crash test: ", err)
 	}
@@ -40,18 +71,28 @@ func Rust(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	cmd := testexec.CommandContext(ctx, executable)
+	var cmd *testexec.Cmd
+	if param.username == "" {
+		cmd = testexec.CommandContext(ctx, param.executable)
+	} else {
+		var err error
+		cmd, err = testexec.CommandContextUser(ctx, param.username, param.executable)
+		if err != nil {
+			s.Fatalf("Cannot run %s as %s", param.executable, param.username)
+		}
+	}
+	cmd.Env = append(os.Environ(), param.extraEnv...)
 	err := cmd.Run()
 	if err == nil {
 		s.Fatal("Expected crash, but command exited normally")
 	} else if exitError, ok := err.(*exec.ExitError); ok {
-		s.Log("Rust crasher exit code: ", exitError.ProcessState.ExitCode())
+		s.Logf("%v exit code: %v", param.executable, exitError.ProcessState.ExitCode())
 	} else {
-		s.Fatal("Could not start rust crasher: ", err)
+		s.Fatalf("Could not start %v: %v", param.executable, err)
 	}
 	pid := cmd.Cmd.Process.Pid
 
-	pattern := fmt.Sprintf("crash_Rust_panic.*.%d.*", pid)
+	pattern := fmt.Sprintf("%s.*.%d.*", param.crashFileName, pid)
 	crashDirs, err := crash.GetDaemonStoreCrashDirs(ctx)
 	if err != nil {
 		s.Fatal("Couldn't get daemon store dirs: ", err)
@@ -73,7 +114,7 @@ func Rust(ctx context.Context, s *testing.State) {
 				continue
 			}
 			found = true
-			if !strings.Contains(string(contents), "sig=panicked at 'See you later, alligator!', crash.Rust.panic.rs:") {
+			if !strings.Contains(string(contents), param.metaSig) {
 				s.Error("Failed to find crash signature")
 				if err := crash.MoveFilesToOut(ctx, s.OutDir(), match); err != nil {
 					s.Error("Failed to save the meta file: ", err)
