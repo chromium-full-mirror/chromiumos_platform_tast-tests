@@ -20,8 +20,6 @@ var hotspotTests = []string{
 	"hotspot_disabled_when_no_upstream_network.go",
 	"hotspot_enable_disable_in_lock_screen.go",
 	"hotspot_policy.go",
-	"hotspot_update_configuration.go",
-	"hotspot_update_configuration_when_hotspot_on.go",
 }
 
 func TestFixTestParams(t *testing.T) {
