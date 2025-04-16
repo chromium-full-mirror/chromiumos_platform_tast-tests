@@ -20,6 +20,8 @@ import (
 	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -66,6 +68,18 @@ func init() {
 			},
 		},
 	})
+}
+
+func isPanicLogEnabled(dutFeatures *protocol.DUTFeatures) (bool, error) {
+	satisfied, _, err := hwdep.ECBuildConfigOptions("PANIC_LOG", "PLATFORM_EC_PANIC_LOG").Satisfied(dutFeatures.GetHardware())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check PANIC_LOG")
+	}
+	if !satisfied {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // ECCrash verifies that crash files are generated when the EC crashes.
@@ -168,11 +182,22 @@ func ECCrash(ctx context.Context, s *testing.State) {
 	fs = crash_service.NewFixtureServiceClient(cl.Conn)
 
 	const base = `embedded_controller\.\d{8}\.\d{6}\.\d+\.0`
+	suffixes := []string{"eccrash", "meta", "log"}
+	panicLogEnabled, err := isPanicLogEnabled(s.Features(""))
+	if err != nil {
+		s.Fatal("Failed to check if panic log is enabled: ", err)
+	}
+	if panicLogEnabled {
+		s.Log("Panic log is enabled")
+		suffixes = append(suffixes, ".panic.log")
+	} else {
+		s.Log("Panic log is disabled")
+	}
 	waitReq := &crash_service.WaitForCrashFilesRequest{
 		Dirs:    []string{systemCrashDir},
-		Regexes: []string{base + `\.eccrash`, base + `\.meta`, base + `\.log`},
+		Regexes: []string{base + `\.(` + strings.Join(suffixes, "|") + `)`},
 	}
-	s.Log("Waiting for files to become present")
+	s.Log("Waiting for crash files to become present")
 	res, err := fs.WaitForCrashFiles(ctx, waitReq)
 	if err != nil {
 		if err := linuxssh.GetFile(cleanupCtx, d.Conn(), "/var/log/messages", filepath.Join(s.OutDir(), "messages"), linuxssh.PreserveSymlinks); err != nil {
@@ -184,32 +209,35 @@ func ECCrash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update EC crash file cache after test: ", err)
 	}
 
-	// Verify that parsed EC crash does not contain WARNING/ERROR
-	failureRegexp := regexp.MustCompile(`^(ERROR|WARNING):.*$`)
 	for _, match := range res.Matches {
-		if !strings.HasSuffix(match.Regex, ".eccrash") {
-			continue
-		}
-
 		b, err := linuxssh.ReadFile(ctx, d.Conn(), match.Files[0])
 		if err != nil {
-			s.Error("Failed to read eccrash file: ", match.Files[0])
+			s.Error("Failed to read crash file: ", match.Files[0])
 			continue
 		}
 
-		hasError := false
-		lines := strings.Split(string(b), "\n")
-		for _, line := range lines {
-			if err := failureRegexp.FindString(line); err != "" {
-				hasError = true
-				s.Error("EC crash contains ", string(err))
-			}
+		// Verify crash files are not empty
+		if len(b) == 0 {
+			s.Errorf("Crash file %s is empty", match.Files[0])
 		}
 
-		if hasError {
-			localFile := filepath.Join(s.OutDir(), path.Base(match.Files[0]))
-			if err := os.WriteFile(localFile, b, 0644); err != nil {
-				s.Log("Error writing local copy of the crash: ", err)
+		// Verify that parsed EC crash does not contain WARNING/ERROR
+		failureRegexp := regexp.MustCompile(`^(ERROR|WARNING):.*$`)
+		if strings.HasSuffix(match.Regex, ".eccrash") {
+			hasError := false
+			lines := strings.Split(string(b), "\n")
+			for _, line := range lines {
+				if err := failureRegexp.FindString(line); err != "" {
+					hasError = true
+					s.Error("EC crash contains ", string(err))
+				}
+			}
+
+			if hasError {
+				localFile := filepath.Join(s.OutDir(), path.Base(match.Files[0]))
+				if err := os.WriteFile(localFile, b, 0644); err != nil {
+					s.Log("Error writing local copy of the crash: ", err)
+				}
 			}
 		}
 	}
