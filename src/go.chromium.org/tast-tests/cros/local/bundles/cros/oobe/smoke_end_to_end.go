@@ -487,8 +487,16 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	}
 
 	shouldSkipSplitModifier := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.SplitModifierKeyboardInfoScreen.requestShouldSkip()", nil); err != nil {
+		s.Fatal("Failed to request the evaluation of the `shouldSkip()` method of SplitModifierKeyboardInfo screen: ", err)
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.SplitModifierKeyboardInfoScreen.isShouldSkipReceived()"); err != nil {
+		s.Fatal("Failed to wait for the reception of `ShouldSkip` value of SplitModifierKeyboardInfo screen: ", err)
+	}
+
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.SplitModifierKeyboardInfoScreen.shouldSkip()", &shouldSkipSplitModifier); err != nil {
-		s.Fatal("Failed to evaluate whether to skip SplitModifierKeyboardInfoScreen screen: ", err)
+		s.Fatal("Failed to evaluate whether to skip SplitModifierKeyboardInfo screen: ", err)
 	}
 
 	if shouldSkipSplitModifier {
