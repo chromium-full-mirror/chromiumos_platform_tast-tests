@@ -626,6 +626,17 @@ func (s *Servo) ServoCcSnk(ctx context.Context) error {
 	return err
 }
 
+// ServoCcDrp runs the `cc drp` console command on the Servo.
+func (s *Servo) ServoCcDrp(ctx context.Context) error {
+	output, err := s.RunServoCommandGetOutput(ctx, "cc drp", []string{`drp enabled: (\w+)[\r\n]`})
+
+	if err == nil && output[0][1] != "on" {
+		return errors.New("CC state did not change to 'drp': " + output[0][1])
+	}
+
+	return err
+}
+
 // ServoCcDac runs the `cc_dac` console command on the Servo.
 func (s *Servo) ServoCcDac(ctx context.Context, cc int, param string) error {
 	cmd := fmt.Sprintf("cc_dac %d %s", cc, param)

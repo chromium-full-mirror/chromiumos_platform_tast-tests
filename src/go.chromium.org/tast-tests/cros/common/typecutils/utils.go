@@ -52,6 +52,19 @@ const (
 	ClassMassStorage = 0x8
 )
 
+// PowerSupplyInfo represents the parsed output of the power_supply_info command.
+type PowerSupplyInfo struct {
+	Online           bool
+	Type             string
+	Voltage          string
+	Current          string
+	MaxVoltage       string
+	MaxCurrent       string
+	ActiveSource     string
+	AvailableSources string
+	SupportsDualRole bool
+}
+
 // CcOffAndWait performs a CC Off command, followed by a sleep to ensure VBus discharges safely before any further modification.
 func CcOffAndWait(ctx context.Context, svo *servo.Servo) error {
 	if err := svo.SetCC(ctx, servo.Off); err != nil {
@@ -149,6 +162,55 @@ func CheckUSBPdMuxinfo(ctx context.Context, dut *dut.DUT, deviceStr string) erro
 		return errors.Wrapf(err, "failed to find %s in usbpdmuxinfo", deviceStr)
 	}
 	return nil
+}
+
+// powerSupplyInfo executes the "power_supply_info" command on the DUT and returns the parsed output.
+func powerSupplyInfo(ctx context.Context, d *dut.DUT) (*PowerSupplyInfo, error) {
+	out, err := d.Conn().CommandContext(ctx, "power_supply_info").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute power_supply_info command")
+	}
+
+	lines := strings.Split(string(out), "\n")
+	info := &PowerSupplyInfo{}
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "online:") {
+			value := strings.TrimSpace(strings.TrimPrefix(line, "online:"))
+			info.Online = value == "yes"
+		} else if strings.HasPrefix(line, "type:") {
+			info.Type = strings.TrimSpace(strings.TrimPrefix(line, "type:"))
+		} else if strings.HasPrefix(line, "voltage (V):") {
+			info.Voltage = strings.TrimSpace(strings.TrimPrefix(line, "voltage (V):"))
+		} else if strings.HasPrefix(line, "current (A):") {
+			info.Current = strings.TrimSpace(strings.TrimPrefix(line, "current (A):"))
+		} else if strings.HasPrefix(line, "max voltage (V):") {
+			info.MaxVoltage = strings.TrimSpace(strings.TrimPrefix(line, "max voltage (V):"))
+		} else if strings.HasPrefix(line, "max current (A):") {
+			info.MaxCurrent = strings.TrimSpace(strings.TrimPrefix(line, "max current (A):"))
+		} else if strings.HasPrefix(line, "active source:") {
+			info.ActiveSource = strings.TrimSpace(strings.TrimPrefix(line, "active source:"))
+		} else if strings.HasPrefix(line, "available sources:") {
+			info.AvailableSources = strings.TrimSpace(strings.TrimPrefix(line, "available sources:"))
+		} else if strings.HasPrefix(line, "supports dual-role:") {
+			value := strings.TrimSpace(strings.TrimPrefix(line, "supports dual-role:"))
+			info.SupportsDualRole = value == "yes"
+		}
+	}
+
+	return info, nil
+}
+
+// VerifyChargerConnected verifies if the charger is connected by checking the output of "power_supply_info".
+// It returns true if the charger is connected, false otherwise, or an error if the command fails.
+func VerifyChargerConnected(ctx context.Context, d *dut.DUT) (bool, error) {
+	info, err := powerSupplyInfo(ctx, d)
+	if err != nil {
+		return false, err
+	}
+
+	return info.Online, nil
 }
 
 // CableConnectedPortNumber on success will returns Active/Passive cable connected port number.
