@@ -435,7 +435,7 @@ func StartRecordFromUI(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 	openBtn := nodewith.Name("Open").Role(role.Button)
 	desktop := nodewith.Role(role.Window).First()
 	newFolderTextBox := nodewith.NameRegex(regexp.MustCompile("New folder.*")).Role(role.InlineTextBox)
-	statusTrayBtm := nodewith.NameRegex(regexp.MustCompile("Status tray.*")).Role(role.Button)
+	statusTrayBtm := nodewith.NameRegex(regexp.MustCompile("Status tray.*")).Role(role.Button).First()
 	screenCaptureBtm := nodewith.Name("Screen capture").Role(role.Button)
 
 	ui := New(tconn)
