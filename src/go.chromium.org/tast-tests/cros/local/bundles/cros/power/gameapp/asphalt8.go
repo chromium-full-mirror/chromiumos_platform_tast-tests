@@ -76,22 +76,24 @@ func (as *Asphalt8) Launch(ctx context.Context) error {
 func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	kb := as.kb
 	ud := uidetection.NewDefault(as.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-
+	ui := uiauto.New(as.tconn)
 	profileDismissReg := `(Not now|Cancel)`
 	profileDismissButton := as.d.Object(androidui.TextMatches(profileDismissReg), androidui.ClassName("android.widget.Button"))
-	actionBarRoot := as.d.Object(androidui.ID(asphalt8IDPrefix + "action_bar_root"))
 	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene), uidetection.MinConfidence(0.65))
 	raceNow := uidetection.TextBlock([]string{"RACE", "NOW!"})
+	learnToDrive := uidetection.TextBlock([]string{"LEARN", "TO", "DRIVE"})
 	return uiauto.NamedCombine("enter game scene",
-		// Dismiss the profile dialog if it exists.
-		cuj.ClickIfExist(profileDismissButton, longUITimeout),
-		cuj.WaitForExists(actionBarRoot, defaultUITimeout),
-		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2 minutes for the 'RACE-NOW' button.
-		uiauto.NamedAction("wait 'RACE-NOW' button", ud.WithTimeout(2*time.Minute).WaitUntilExists(raceNow)),
-		uiauto.NamedAction("press 'RACE-NOW' button", kb.AccelAction("Enter")),
-		// Wait up to 2s for the 'LEARN TO DRIVE' menu.
-		uiauto.NamedAction("wait 'LEARN TO DRIVE' menu", uiauto.Sleep(2*time.Second)),
+		// On low-end devices, keep checking the profile prompt in 2 minutes for the 'RACE-NOW' button.
+		ui.WithTimeout(2*time.Minute).RetryUntil(
+			cuj.ClickIfExist(profileDismissButton, 3*time.Second),
+			ud.Exists(raceNow)),
+		uiauto.NamedAction("press 'RACE-NOW' button", ui.WithTimeout(longUITimeout).RetryUntil(
+			uiauto.IfSuccessThen(ud.Exists(raceNow),
+				uiauto.Combine("press enter twice to play 'MINI-GAME'",
+					kb.AccelAction("Enter"),
+					kb.AccelAction("Enter"))),
+			ud.WithTimeout(10*time.Second).WaitUntilGone(raceNow))),
+		ud.WithTimeout(defaultUITimeout).WaitUntilExists(learnToDrive),
 		uiauto.NamedAction("press left to select 'MINI-GAME' button", kb.AccelAction("Left")),
 		// Wait up to 2s for the 'MINI-GAME' button.
 		uiauto.NamedAction("wait 'MINI-GAME' button", uiauto.Sleep(2*time.Second)),
