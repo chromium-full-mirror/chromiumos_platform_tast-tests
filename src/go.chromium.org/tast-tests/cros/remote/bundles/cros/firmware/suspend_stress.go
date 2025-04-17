@@ -39,7 +39,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Vars:         []string{"firmware.suspendStressFailFast"},
+		Vars:         []string{"firmware.suspendStressFailFast", "firmware.suspendStressIters"},
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "group:dsp"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
@@ -96,6 +96,16 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 	// Number of iterations to run stress test for.
 	numIters := s.Param().(int)
+	// Read test args for override of number of iterations.
+	if numItersStr, ok := s.Var("firmware.suspendStressIters"); ok {
+		numItersInt, err := strconv.Atoi(numItersStr)
+		if err != nil {
+			s.Fatalf("Invalid value for var firmware.suspendStressIters: got %q, expected int", numItersStr)
+		} else {
+			s.Logf("Running %d iters instead of preset %d", numItersInt, numIters)
+			numIters = numItersInt
+		}
+	}
 
 	type stressInfo struct {
 		Iterations int `json:"iterations"`
