@@ -59,6 +59,8 @@ const (
 	DefaultTestTimeout = 25 * time.Minute
 	// DefaultMeetTimeout is the default timeout for the Meet session.
 	DefaultMeetTimeout = 10 * time.Minute
+	// longUITimeout is the timeout for UI interactions.
+	longUITimeout = time.Minute
 	// FakeCameraVideoFile720p is the fake camera file.
 	FakeCameraVideoFile720p = "camera_video_720p.y4m"
 )
@@ -558,7 +560,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	// Find the web view of Meet window.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 
-	const longUITimeout = time.Minute
 	// Check and grant permissions.
 	if err := prompts.ClearPotentialPrompts(
 		tconn,
@@ -566,6 +567,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		prompts.ShowNotificationsPrompt,
 		prompts.AllowAVPermissionPrompt,
 		prompts.AllowMicrophoneAndCameraPermissionPrompt,
+		prompts.OthersSeeDiffPrompt,
 	)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to grant permissions")
 	}
@@ -590,15 +592,12 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	ui := uiauto.New(tconn)
 	uiLongWait := ui.WithTimeout(longUITimeout)
-	gotItButton := nodewith.NameContaining("Got it").Role(role.Button)
 	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
 	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
-	if err := uiauto.NamedCombine("wait for the number of participants to be loaded",
+	if err := uiauto.NamedAction("wait for the number of participants to be loaded",
 		// Some DUT models have poor performance. When joining a large conference
 		// (over 15 participants), it would take much time to render DOM elements.
 		// Set a longer timer here.
-		uiLongWait.WaitUntilAnyExists(gotItButton, participantText),
-		uiauto.IfSuccessThen(ui.Exists(gotItButton), ui.DoDefault(gotItButton)),
 		uiLongWait.WaitUntilExists(participantText),
 	)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for participant info")
@@ -923,6 +922,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				isPresenting = false
 			}
 		}(presentingCleanupCtx)
+		clearPromptsChannel := make(chan error)
 		if meet.Present {
 			if !meet.Docs {
 				return errors.New("need a Google Docs tab to present")
@@ -938,6 +938,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			isPresenting = true
 			expectedParticipantCount++
+			dismissPromptIfExists(ctx, tconn, clearPromptsChannel)
 
 			endPresentSection(ctx)
 		}
@@ -1026,6 +1027,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					}
 					botsInCall += numBotsToAdd
 					recorder.Annotate(ctx, fmt.Sprintf("Added_%d_bots", numBotsToAdd))
+
+					if expectedParticipantCount <= 2 {
+						dismissPromptIfExists(ctx, tconn, clearPromptsChannel)
+					}
 
 					// Ensure to properly keep track of how many participants
 					// are in the call, which would include the current user
@@ -1415,7 +1420,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		if err := <-errc; err != nil {
 			return errors.Wrap(err, "failed to collect GPU counters")
 		}
-
+		if err := <-clearPromptsChannel; err != nil {
+			return errors.Wrap(err, "failed to dismiss the prompt")
+		}
 		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
 			if isPresenting && ui.Gone(googlemeet.StopPresentingButton)(ctx) == nil {
 				return errors.Wrap(err, "the number of bots is unexpected, screen sharing is interrupted")
@@ -1662,6 +1669,17 @@ func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestC
 		return errors.Wrap(err, "failed to do Ash workflows")
 	}
 	return nil
+}
+
+// dismissPromptIfExists retry to dismiss the prompt in the background if the dialog exists.
+func dismissPromptIfExists(ctx context.Context, tconn *chrome.TestConn, errCh chan error) {
+	async.Run(ctx, func(ctx context.Context) {
+		errCh <- uiauto.Retry(3, prompts.ClearPotentialPrompts(
+			tconn,
+			longUITimeout,
+			prompts.OthersSeeDiffPrompt,
+		))(ctx)
+	}, "dismiss the prompt if it exists")
 }
 
 // ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.

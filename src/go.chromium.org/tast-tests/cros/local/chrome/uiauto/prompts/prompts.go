@@ -35,6 +35,7 @@ var (
 	avMeetPermPromptFinder        = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
 	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 	cameraPermPromptFinder        = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
+	othersSeeYouDialogFinder      = nodewith.Name("Others may see your video differently").Role(role.Dialog)
 )
 
 // General dismiss button finders for prompts.
@@ -93,6 +94,13 @@ var AllowCameraPermPrompt = Prompt{
 	Name:              "Allow camera permission",
 	PromptFinder:      AllowAVButtonFinder,
 	ClearButtonFinder: AllowAVButtonFinder.Ancestor(cameraPermPromptFinder),
+}
+
+// OthersSeeDiffPrompt represents the browser prompt to notify others may see your video differently.
+var OthersSeeDiffPrompt = Prompt{
+	Name:              "Others may see your video differently",
+	PromptFinder:      othersSeeYouDialogFinder,
+	ClearButtonFinder: GotItButtonFinder.Ancestor(othersSeeYouDialogFinder),
 }
 
 // ClearPotentialPrompts clears one or more potential prompts disorderly.
