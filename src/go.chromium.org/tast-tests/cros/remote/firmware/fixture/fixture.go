@@ -499,6 +499,10 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Error("Test did not run")
 		s.Fatal("Servo echo failed: ", err)
 	}
+	// Initiate test states
+	if err := i.value.Helper.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
+		s.Fatal("Failed reset EC UART capturing state to off state")
+	}
 	// Check whether servo_micro connection exists, if it does not, attempt
 	// to open CCD with all capabilities set to factory settings. If CCD is
 	// locked, transitioning the dut from one mode to another might fail,
