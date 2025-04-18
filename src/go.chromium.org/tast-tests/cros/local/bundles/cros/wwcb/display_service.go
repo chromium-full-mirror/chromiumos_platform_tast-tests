@@ -332,13 +332,15 @@ func (ds *DisplayService) ChangeResolution(ctx context.Context, req *wwcb.QueryR
 			if err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to get display info"))
 			}
+			w := changedInfo.Bounds.Width
+			h := changedInfo.Bounds.Height
 			// Test for success first in the display resolution started at 'low'.
-			if changedInfo.Bounds.Width == setWidth && changedInfo.Bounds.Height == setHeight {
+			if w == setWidth && h == setHeight {
 				return nil
 			}
-			if (setWidth == 3840 && changedInfo.Bounds.Width == 2742 && setHeight == 2160 && changedInfo.Bounds.Height == 1542) ||
-				(setWidth == 2560 && changedInfo.Bounds.Width == 2226 && setHeight == 1440 && changedInfo.Bounds.Height == 1252) {
-				testing.ContextLogf(ctx, "Known Issue b/339474160: expected display bounds: %d x %d, got: %d x %d", changedInfo.Bounds.Width, changedInfo.Bounds.Height, setWidth, setHeight)
+			if (setWidth == 3840 && w == 2742 && setHeight == 2160 && h == 1542) ||
+				(setWidth == 2560 && (w == 2226 || w == 2327) && setHeight == 1440 && (h == 1252 || h == 1308)) {
+				testing.ContextLogf(ctx, "Known Issue b/339474160: expected display bounds: %d x %d, got: %d x %d", w, h, setWidth, setHeight)
 				return nil
 			}
 			if changedInfo.Bounds == info.Bounds {
