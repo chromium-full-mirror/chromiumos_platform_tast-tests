@@ -116,7 +116,7 @@ func CheckCPURoutine(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("click Cancel",
 		ui.WithTimeout(20*time.Second).WaitUntilExists(cancelBtn),
 		ui.MakeVisible(cancelBtn),
-		ui.EnsureFocused(cancelBtn),
+		ui.WithTimeout(20*time.Second).EnsureFocused(cancelBtn),
 		ui.WithPollOpts(pollOpts).LeftClick(cancelBtn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click cancel button: ", err)
