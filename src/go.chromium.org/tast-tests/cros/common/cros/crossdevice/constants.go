@@ -5,7 +5,7 @@
 package crossdevice
 
 // UnstableModels are devices on which cross device tests have not yet been stabilized.
-var UnstableModels = []string{"coachz", "dewatt", "fennel", "rusty", "markarth", "steelix"}
+var UnstableModels = []string{"coachz", "dewatt", "fennel", "markarth", "rusty", "steelix", "tomato"}
 
 // BackgroundScanningDisabledModels are models that do not support the background scanning feature.
 var BackgroundScanningDisabledModels = []string{"babymega", "barla", "blooglet", "dewatt", "dumo", "fennel", "hana", "hayato", "kevin", "krane", "sentry", "soraka", "tomato", "treeya", "treeya360"}
