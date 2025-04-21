@@ -40,6 +40,9 @@ var customProbePlatforms = []string{"trogdor", "strongbad"}
 // Deku is intended to have no wifi assembled(b/384404427).
 var wifiNotProbable = []string{"deku"}
 
+// Brox is intended to have no touchscreen(b/412248274)
+var touchscreenNotProbable = []string{"brox"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     HWIDDatabase,
@@ -56,7 +59,7 @@ func init() {
 		Params: []testing.Param{
 			testing.Param{
 				Name:              "probe_by_default",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(append(storageNotProbable, displayPanelNotProbable...), wifiNotProbable...)...), hwdep.ChromeEC()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(append(append(storageNotProbable, displayPanelNotProbable...), wifiNotProbable...), touchscreenNotProbable...)...), hwdep.ChromeEC()),
 				Val: extraCmdParams{
 					extraBuildParams: []string{
 						"--add-firmware-components",
@@ -93,6 +96,17 @@ func init() {
 						"--add-firmware-components",
 						"--auto-accept-essential-prompt",
 						"wireless",
+					},
+				},
+			},
+			testing.Param{
+				Name:              "allow_probe_no_touchscreen",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(touchscreenNotProbable...)),
+				Val: extraCmdParams{
+					extraBuildParams: []string{
+						"--add-firmware-components",
+						"--auto-accept-essential-prompt",
+						"touchscreen",
 					},
 				},
 			},
