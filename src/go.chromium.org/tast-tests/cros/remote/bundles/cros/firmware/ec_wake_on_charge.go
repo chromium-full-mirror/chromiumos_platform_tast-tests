@@ -54,6 +54,7 @@ func init() {
 		Vars:         []string{"board", "model"},
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
+		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      40 * time.Minute,
 		Params: []testing.Param{{
