@@ -32,7 +32,7 @@ type extraCmdParams struct {
 var storageNotProbable = []string{"anahera", "bobba", "chronicler", "dewatt", "pico6"}
 
 // The plan for these device is undecided, the progress is tracked in b/317670344.
-var displayPanelNotProbable = []string{"starmie"}
+var displayPanelNotProbable = []string{"starmie", "wyrdeer"}
 
 // Wifi is an essential component and should be probed in this test. The following platforms requires custom probe statement. The progress is tracked in b/261355069.
 var customProbePlatforms = []string{"trogdor", "strongbad"}
