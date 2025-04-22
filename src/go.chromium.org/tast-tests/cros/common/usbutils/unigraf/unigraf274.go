@@ -355,6 +355,16 @@ func (s *UsbTester) SrcPdoCount(ctx context.Context) (int64, error) {
 	return reply.GetNonDescrete(), err
 }
 
+// VbusVoltage will return the Vbus voltage.
+func (s *UsbTester) VbusVoltage(ctx context.Context) (int, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_VBUS_VOLTAGE},
+	)
+
+	return int(reply.GetNonDescrete()), err
+}
+
 // DpInfo will get the display port information.
 func (s *UsbTester) DpInfo(ctx context.Context) (*passport.GetDpInfoReply, error) {
 

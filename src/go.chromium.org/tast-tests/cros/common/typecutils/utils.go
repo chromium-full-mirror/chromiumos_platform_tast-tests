@@ -165,6 +165,7 @@ func CheckUSBPdMuxinfo(ctx context.Context, dut *dut.DUT, deviceStr string) erro
 }
 
 // powerSupplyInfo executes the "power_supply_info" command on the DUT and returns the parsed output.
+// It expects that the output will start from "Device: Line Power" entry.
 func powerSupplyInfo(ctx context.Context, d *dut.DUT) (*PowerSupplyInfo, error) {
 	out, err := d.Conn().CommandContext(ctx, "power_supply_info").Output()
 	if err != nil {
@@ -196,6 +197,8 @@ func powerSupplyInfo(ctx context.Context, d *dut.DUT) (*PowerSupplyInfo, error) 
 		} else if strings.HasPrefix(line, "supports dual-role:") {
 			value := strings.TrimSpace(strings.TrimPrefix(line, "supports dual-role:"))
 			info.SupportsDualRole = value == "yes"
+		} else if strings.HasPrefix(line, "Device: Battery") {
+			break
 		}
 	}
 
@@ -211,6 +214,21 @@ func VerifyChargerConnected(ctx context.Context, d *dut.DUT) (bool, error) {
 	}
 
 	return info.Online, nil
+}
+
+// GetChargerVoltage returns the voltage of the charger.
+func GetChargerVoltage(ctx context.Context, d *dut.DUT) (int, error) {
+	info, err := powerSupplyInfo(ctx, d)
+	if err != nil {
+		return 0, err
+	}
+
+	voltage, err := strconv.ParseFloat(info.Voltage, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(voltage * 1000), nil
 }
 
 // CableConnectedPortNumber on success will returns Active/Passive cable connected port number.

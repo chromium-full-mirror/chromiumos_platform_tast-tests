@@ -26,25 +26,18 @@ func init() {
 	})
 }
 
-var unigrafURI = testing.RegisterVarString(
-	"typec.UnigrafUri",
-	"localhost:8300",
-	"The uri at which the unigraf control app can be found",
-)
-
 const (
 	numIterations = 30
 	dutTestPortID = 1
 )
 
 func PowerSwapStability(ctx context.Context, s *testing.State) {
-	s.Logf("Unigraf resources are uri=%s", unigrafURI.Value())
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	unigrafctl, err := unigraf.New(ctx, unigrafURI.Value())
+	unigrafURI := s.RequiredVar("typec.UnigrafUri")
+	unigrafctl, err := unigraf.New(ctx, unigrafURI)
 	if err != nil {
 		s.Fatal("Failed to allocate unigraf device: ", err)
 	}
