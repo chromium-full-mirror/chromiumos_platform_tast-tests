@@ -20,7 +20,7 @@ import (
 var dpPlusModels = []string{
 	"asuka",
 	// brask family
-	"aurash", "brask", "kinox", "kuldax", "moli",
+	"aurash", "brask", "kinox", "kuldax", "moli", "moxie",
 	"cave",
 	"caroline",
 	"chell",
