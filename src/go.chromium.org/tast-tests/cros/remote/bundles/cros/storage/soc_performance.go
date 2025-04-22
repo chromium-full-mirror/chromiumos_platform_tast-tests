@@ -40,7 +40,7 @@ func init() {
 			Name: "emmc_link_bw",
 			Val: []bounds.MetricBounds{{
 				Metric: bounds.MatchRegexp(`_seq_read_soc_read_bw`),
-				Bounds: bounds.Max(256_000), // KiB/sec, 250 MiB/sec
+				Bounds: bounds.Min(256_000), // KiB/sec, 250 MiB/sec
 			}},
 			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcControllerBW},
