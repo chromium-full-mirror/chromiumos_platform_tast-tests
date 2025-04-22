@@ -32,9 +32,9 @@ type InitPdState passport.InitPdState
 
 // Constants for PowerRole
 const (
-	PowerRole_POWER_ROLE_NOT_SET PowerRole = PowerRole(passport.PowerRole_POWER_ROLE_NOT_SET)
-	PowerRole_SNK                PowerRole = PowerRole(passport.PowerRole_SNK)
-	PowerRole_SRC                PowerRole = PowerRole(passport.PowerRole_SRC)
+	PowerRoleNotSet PowerRole = PowerRole(passport.PowerRole_POWER_ROLE_NOT_SET)
+	PowerRoleSnk    PowerRole = PowerRole(passport.PowerRole_SNK)
+	PowerRoleSrc    PowerRole = PowerRole(passport.PowerRole_SRC)
 )
 
 func (x PowerRole) String() string {
@@ -43,35 +43,42 @@ func (x PowerRole) String() string {
 
 // Constants for DataRole
 const (
-	DataRole_DATA_ROLE_NOT_SET DataRole = DataRole(passport.DataRole_DATA_ROLE_NOT_SET)
-	DataRole_DATA_UFP          DataRole = DataRole(passport.DataRole_DATA_UFP)
-	DataRole_DATA_DFP          DataRole = DataRole(passport.DataRole_DATA_DFP)
+	DataRoleNotSet DataRole = DataRole(passport.DataRole_DATA_ROLE_NOT_SET)
+	DataRoleUfp    DataRole = DataRole(passport.DataRole_DATA_UFP)
+	DataRoleDfp    DataRole = DataRole(passport.DataRole_DATA_DFP)
 )
 
 func (x DataRole) String() string {
-	return passport.DataRole(x).String()
+	switch x {
+	case DataRoleUfp:
+		return "UFP"
+	case DataRoleDfp:
+		return "DFP"
+	default:
+		return "Data role not set"
+	}
 }
 
 // Constants for UsbChannel
 const (
-	UsbChannel_USB_CHANNEL_NOT_SET UsbChannel = UsbChannel(passport.UsbChannel_USB_CHANNEL_NOT_SET)
-	UsbChannel_USB_2_HS            UsbChannel = UsbChannel(passport.UsbChannel_USB_2_HS)
-	UsbChannel_USB_3_AND_2_HS      UsbChannel = UsbChannel(passport.UsbChannel_USB_3_AND_2_HS)
+	UsbChannelNotSet   UsbChannel = UsbChannel(passport.UsbChannel_USB_CHANNEL_NOT_SET)
+	UsbChannelUSB2     UsbChannel = UsbChannel(passport.UsbChannel_USB_2_HS)
+	UsbChannelUSB3And2 UsbChannel = UsbChannel(passport.UsbChannel_USB_3_AND_2_HS)
 )
 
 // Constants for PinAssignment
 const (
-	PinAssignment_PIN_AASSIGNMENT_NOT_SET PinAssignment = PinAssignment(passport.PinAassignment_PIN_AASSIGNMENT_NOT_SET)
-	PinAssignment_C                       PinAssignment = PinAssignment(passport.PinAassignment_C)
-	PinAssignment_D                       PinAssignment = PinAssignment(passport.PinAassignment_D)
+	PinAssignmentNotSet PinAssignment = PinAssignment(passport.PinAassignment_PIN_AASSIGNMENT_NOT_SET)
+	PinAssignmentC      PinAssignment = PinAssignment(passport.PinAassignment_C)
+	PinAssignmentD      PinAssignment = PinAssignment(passport.PinAassignment_D)
 )
 
 // Constants for InitPdState
 const (
-	InitPdState_INIT_PD_STATE_NOT_SET InitPdState = InitPdState(passport.InitPdState_INIT_PD_STATE_NOT_SET)
-	InitPdState_PD_UFP                InitPdState = InitPdState(passport.InitPdState_PD_UFP)
-	InitPdState_PD_DFP                InitPdState = InitPdState(passport.InitPdState_PD_DFP)
-	InitPdState_PD_DRP                InitPdState = InitPdState(passport.InitPdState_PD_DRP)
+	InitPdStateNotSet InitPdState = InitPdState(passport.InitPdState_INIT_PD_STATE_NOT_SET)
+	InitPdStateUfp    InitPdState = InitPdState(passport.InitPdState_PD_UFP)
+	InitPdStateDfp    InitPdState = InitPdState(passport.InitPdState_PD_DFP)
+	InitPdStateDrp    InitPdState = InitPdState(passport.InitPdState_PD_DRP)
 )
 
 // UsbTester is data type to model a unigraf utc274 usb tester.

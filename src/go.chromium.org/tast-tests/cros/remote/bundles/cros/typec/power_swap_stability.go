@@ -62,9 +62,9 @@ func PowerSwapStability(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get power role: ", err)
 		}
 
-		newRole := unigraf.PowerRole_SNK
-		if prevRole == unigraf.PowerRole_SNK {
-			newRole = unigraf.PowerRole_SRC
+		newRole := unigraf.PowerRoleSnk
+		if prevRole == unigraf.PowerRoleSnk {
+			newRole = unigraf.PowerRoleSrc
 		}
 		s.Logf("Unigraf power role is %s, switch to %s", prevRole.String(), newRole.String())
 
