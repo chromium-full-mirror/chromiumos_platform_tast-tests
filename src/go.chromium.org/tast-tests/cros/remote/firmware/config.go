@@ -118,6 +118,11 @@ type Config struct {
 	RawECColdBootTime                float64 `json:"ec_cold_boot_time"`
 	RawMemoryRetrainTimeout          float64 `json:"memory_retrain_timeout"`
 
+	// Raw duration fields represent a quantity of milliseconds.
+	RawStorageInitEmmc float64 `json:"storage_init_time_emmc"`
+	RawStorageInitNvme float64 `json:"storage_init_time_nvme"`
+	RawStorageInitUfs  float64 `json:"storage_init_time_ufs"`
+
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
 	USBImageBootTimeout           time.Duration
@@ -134,6 +139,10 @@ type Config struct {
 	ECWatchdogLeadingTime         time.Duration
 	WhiteScreenPowerPressTime     time.Duration
 	ECColdBootTime                time.Duration
+	StorageInitEmmc               time.Duration
+	StorageInitNvme               time.Duration
+	StorageInitUfs                time.Duration
+
 	// Shutdown is supposed to be the time the DUT takes to power off.
 	//
 	// Deprecated: Do not use this, just wait for G3/S5 power states instead.
@@ -242,6 +251,9 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.WhiteScreenPowerPressTime = fromSeconds(cfg.RawWhiteScreenPowerPressTime)
 	cfg.ECColdBootTime = fromSeconds(cfg.RawECColdBootTime)
 	cfg.MemoryRetrainTimeout = fromSeconds(cfg.RawMemoryRetrainTimeout)
+	cfg.StorageInitEmmc = fromMilliseconds(cfg.RawStorageInitEmmc)
+	cfg.StorageInitNvme = fromMilliseconds(cfg.RawStorageInitNvme)
+	cfg.StorageInitUfs = fromMilliseconds(cfg.RawStorageInitUfs)
 	// Parse list of raw json objects into go structs
 	cfg.USBEnablePins = parseRawUSBEnablePins(cfg.RawUSBEnablePins)
 
