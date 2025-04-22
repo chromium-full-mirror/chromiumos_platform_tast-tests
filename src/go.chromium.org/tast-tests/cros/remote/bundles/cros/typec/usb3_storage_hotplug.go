@@ -29,7 +29,7 @@ func init() {
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_usb_bringup"},
+			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
 			Val:       10,
 			Timeout:   5 * time.Minute,
 		}, {

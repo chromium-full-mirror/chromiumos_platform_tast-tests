@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_unigraf274"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri", "servo"},
 		Params: []testing.Param{{
 			Val:     300,

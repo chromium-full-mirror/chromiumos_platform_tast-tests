@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"reboot"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_dp_bringup"},
+			ExtraAttr: []string{"typec_dp_bringup", "typec_unigraf274"},
 			Val:       5,
 			Timeout:   7 * time.Minute,
 		}, {

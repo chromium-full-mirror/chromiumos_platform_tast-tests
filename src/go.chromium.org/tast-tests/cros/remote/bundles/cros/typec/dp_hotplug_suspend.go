@@ -29,7 +29,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_dp_bringup"},
+			ExtraAttr: []string{"typec_dp_bringup", "typec_unigraf274"},
 			Val:       10,
 			Timeout:   6 * time.Minute,
 		}, {
