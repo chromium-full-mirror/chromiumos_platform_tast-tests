@@ -6,6 +6,9 @@ package nearbyshare
 
 import "go.chromium.org/tast/core/testing"
 
+// AccountRotationDays is the number of days after which the cros account is rotated
+const AccountRotationDays = 7
+
 // CrosAccountPoolVarName is the nearbyshare cros account pool name.
 const CrosAccountPoolVarName = "nearbyshare.crosAccount"
 

@@ -174,17 +174,17 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	var androidPassword string
 	switch f.androidNearbyChannel {
 	case modulefood:
-		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.AndroidAccountPoolVarName)
+		androidUsername, androidPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.AndroidAccountPoolVarName, nearbyCommon.AccountRotationDays)
 		if err != nil {
 			s.Fatal("Failed to get user and password: ", err)
 		}
 	case prod:
-		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.ProdAndroidAccountPoolVarName)
+		androidUsername, androidPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.ProdAndroidAccountPoolVarName, nearbyCommon.AccountRotationDays)
 		if err != nil {
 			s.Fatal("Failed to get user and password: ", err)
 		}
 	case dev:
-		androidUsername, androidPassword, err = dma.UserPassFromPool(nearbyCommon.DevAndroidAccountPoolVarName)
+		androidUsername, androidPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.DevAndroidAccountPoolVarName, nearbyCommon.AccountRotationDays)
 		if err != nil {
 			s.Fatal("Failed to get user and password: ", err)
 		}

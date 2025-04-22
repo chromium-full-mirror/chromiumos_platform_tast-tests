@@ -5,6 +5,7 @@
 package dma
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -176,6 +177,22 @@ func UserPassFromPool(pool string) (user, pass string, err error) {
 	cred, err := credconfig.PickRandomCreds(creds)
 	if err != nil {
 		return "", "", err
+	}
+
+	return cred.User, cred.Pass, nil
+}
+
+// UserPassFromPoolWithRotation returns a username, password, error (if present) from pool based on rotation.
+// If rotation fails, it will fallback to random selection.
+func UserPassFromPoolWithRotation(ctx context.Context, pool string, rotationDays int) (user, pass string, err error) {
+	creds := CredsFromPool(pool)
+
+	cred, rotErr := credconfig.PickRotatingCreds(creds, rotationDays)
+	if rotErr != nil {
+		testing.ContextLogf(ctx, "Warning: Failed to pick rotating credential for pool %q: %v. Falling back to random selection", pool, rotErr)
+
+		// Fallback to the standard random selection function
+		return UserPassFromPool(pool)
 	}
 
 	return cred.User, cred.Pass, nil

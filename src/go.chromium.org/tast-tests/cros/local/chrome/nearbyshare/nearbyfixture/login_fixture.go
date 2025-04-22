@@ -370,7 +370,7 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	// Save logcat so we have Android logs even if fixture setup fails.
 	defer androidDevice.DumpLogs(cleanupCtx, s.OutDir(), "fixture_setup_logcat.txt")
 
-	crosUsername, crosPassword, err := dma.UserPassFromPool(nearbyshare.CrosAccountPoolVarName)
+	crosUsername, crosPassword, err := dma.UserPassFromPoolWithRotation(ctx, nearbyshare.CrosAccountPoolVarName, nearbyshare.AccountRotationDays)
 	if err != nil {
 		s.Fatal("Failed to get user and password: ", err)
 	}
@@ -386,17 +386,17 @@ func (f *nearbyShareLoginFixture) SetUp(ctx context.Context, s *testing.FixtStat
 		s.Log("Logging in with Android GAIA credentials")
 		switch s.ParentValue().(*FixtData).AndroidNearbyChannel {
 		case modulefood:
-			crosUsername, crosPassword, err = dma.UserPassFromPool(nearbyshare.AndroidAccountPoolVarName)
+			crosUsername, crosPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyshare.AndroidAccountPoolVarName, nearbyshare.AccountRotationDays)
 			if err != nil {
 				s.Fatal("Failed to get user and password: ", err)
 			}
 		case prod:
-			crosUsername, crosPassword, err = dma.UserPassFromPool(nearbyshare.ProdAndroidAccountPoolVarName)
+			crosUsername, crosPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyshare.ProdAndroidAccountPoolVarName, nearbyshare.AccountRotationDays)
 			if err != nil {
 				s.Fatal("Failed to get user and password: ", err)
 			}
 		case dev:
-			crosUsername, crosPassword, err = dma.UserPassFromPool(nearbyshare.DevAndroidAccountPoolVarName)
+			crosUsername, crosPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyshare.DevAndroidAccountPoolVarName, nearbyshare.AccountRotationDays)
 			if err != nil {
 				s.Fatal("Failed to get user and password: ", err)
 			}

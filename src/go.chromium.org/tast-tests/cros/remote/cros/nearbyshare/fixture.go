@@ -176,7 +176,7 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	const crosBaseName = "cros_test"
 	senderDisplayName := nearbyshare.RandomDeviceName(crosBaseName)
 	s.Log("Enabling Nearby Share on DUT1 (Sender). Name: ", senderDisplayName)
-	senderUsername, senderPassword, err := dma.UserPassFromPool(nearbyCommon.CrosAccountPoolVarName)
+	senderUsername, senderPassword, err := dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.CrosAccountPoolVarName, nearbyCommon.AccountRotationDays)
 	if err != nil {
 		s.Fatal("Failed to get sender user and password: ", err)
 	}
@@ -197,12 +197,12 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// Features like Self Share require that both devices are logged into the same Gaia.
 	s.Log("Logging into both DUTs with the same GAIA login = ", f.sameGaiaLogin)
-	receiverUsername, receiverPassword, err := dma.UserPassFromPool(nearbyCommon.CrosAccountPoolVarName)
+	receiverUsername, receiverPassword, err := dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.CrosAccountPoolVarName, nearbyCommon.AccountRotationDays)
 	if err != nil {
 		s.Fatal("Failed to get receiver user and password: ", err)
 	}
 	if !f.sameGaiaLogin {
-		receiverUsername, receiverPassword, err = dma.UserPassFromPool(nearbyCommon.CrosAccount2PoolVarName)
+		receiverUsername, receiverPassword, err = dma.UserPassFromPoolWithRotation(ctx, nearbyCommon.CrosAccount2PoolVarName, nearbyCommon.AccountRotationDays)
 		if err != nil {
 			s.Fatal("Failed to get receiver user and password: ", err)
 		}

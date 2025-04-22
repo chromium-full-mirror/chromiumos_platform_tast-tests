@@ -8,6 +8,7 @@ package credconfig
 import (
 	"math/rand"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -106,4 +107,33 @@ func PickNRandomCreds(creds string, n int) ([]Creds, error) {
 
 	rand.Shuffle(len(cs), func(i, j int) { cs[i], cs[j] = cs[j], cs[i] })
 	return cs[0:n], nil
+}
+
+// PickRotatingCreds picks a credential pair from the passed string based on
+// a given rotation period in days. For the format details refer to the
+// GAIALoginPool option documentation.
+func PickRotatingCreds(credsText string, rotationDays int) (Creds, error) {
+	var result Creds
+
+	cs, err := ParseCreds(credsText)
+	if err != nil {
+		return result, err
+	} else if len(cs) < 1 {
+		return result, errors.New("no credentials passed in")
+	}
+
+	if rotationDays <= 0 {
+		return result, errors.Errorf("rotationDays must be positive, got %d", rotationDays)
+	}
+
+	// Calculate the number of periods since the Unix epoch.
+	now := time.Now()
+	period := time.Hour * 24 * time.Duration(rotationDays)
+	rotationIndex := int(now.Unix() / int64(period.Seconds()))
+
+	// Select the credential using the rotation index modulo the number of credentials.
+	selectedIndex := rotationIndex % len(cs)
+	result = cs[selectedIndex]
+
+	return result, nil
 }
