@@ -154,6 +154,12 @@ func TPMNotCorruptedDevMode(ctx context.Context, s *testing.State) {
 		}(cleanupCtx)
 	}
 
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+		s.Error("Failed to preserve dev image: ", err)
+	}
+
 	s.Log("Rebooting dut by warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset dut: ", err)
