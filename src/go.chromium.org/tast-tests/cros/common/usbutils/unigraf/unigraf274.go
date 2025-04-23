@@ -24,9 +24,6 @@ type DataRole passport.DataRole
 // UsbChannel is a wrapper around passport.UsbChannel
 type UsbChannel passport.UsbChannel
 
-// PinAssignment is a wrapper around passport.PinAassignment
-type PinAssignment passport.PinAassignment
-
 // InitPdState is a wrapper around passport.InitPdState
 type InitPdState passport.InitPdState
 
@@ -64,13 +61,6 @@ const (
 	UsbChannelNotSet   UsbChannel = UsbChannel(passport.UsbChannel_USB_CHANNEL_NOT_SET)
 	UsbChannelUSB2     UsbChannel = UsbChannel(passport.UsbChannel_USB_2_HS)
 	UsbChannelUSB3And2 UsbChannel = UsbChannel(passport.UsbChannel_USB_3_AND_2_HS)
-)
-
-// Constants for PinAssignment
-const (
-	PinAssignmentNotSet PinAssignment = PinAssignment(passport.PinAassignment_PIN_AASSIGNMENT_NOT_SET)
-	PinAssignmentC      PinAssignment = PinAssignment(passport.PinAassignment_C)
-	PinAssignmentD      PinAssignment = PinAssignment(passport.PinAassignment_D)
 )
 
 // Constants for InitPdState
@@ -214,19 +204,6 @@ func (s *UsbTester) SetUsbChannel(ctx context.Context, channel UsbChannel) error
 	)
 }
 
-// SetPinAssignment will set the display port alternate mode pin assignment.
-func (s *UsbTester) SetPinAssignment(ctx context.Context, pinMode PinAssignment) error {
-	return s.doCapabilitySetRequest(
-		ctx,
-		&passport.SetUsbTesterCapabilityRequest{
-			Capability: passport.Capability_PIN_ASSIGMENT,
-			Value: &passport.SetUsbTesterCapabilityRequest_PinMode{
-				PinMode: passport.PinAassignment(pinMode),
-			},
-		},
-	)
-}
-
 // SetInitPdState will set the initial PD state.
 func (s *UsbTester) SetInitPdState(ctx context.Context, state InitPdState) error {
 	return s.doCapabilitySetRequest(
@@ -313,16 +290,6 @@ func (s *UsbTester) UsbChannel(ctx context.Context) (UsbChannel, error) {
 	)
 
 	return UsbChannel(reply.GetUsbChannel()), err
-}
-
-// PinAssignment will return the display port alternate mode pin assignment.
-func (s *UsbTester) PinAssignment(ctx context.Context) (PinAssignment, error) {
-	reply, err := s.doCapabilityGetRequest(
-		ctx,
-		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_PIN_ASSIGMENT},
-	)
-
-	return PinAssignment(reply.GetPinMode()), err
 }
 
 // InitPdState will return the starting state of power delivery.
