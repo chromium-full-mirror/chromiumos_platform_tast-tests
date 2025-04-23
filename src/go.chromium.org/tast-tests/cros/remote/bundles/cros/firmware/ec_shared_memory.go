@@ -36,6 +36,10 @@ func init() {
 
 func ECSharedMemory(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+
+	// Skip checking for EC crashes in this test because it crashes intentionally.
+	h.CheckECCrash = false
+
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -64,14 +68,6 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 	if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
 		s.Fatal("Failed to send 'crash divzero' to EC: ", err)
 	}
-	defer func() {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to boot DUT after test: ", err)
-		}
-		if err := h.UpdateECCrashCache(ctx); err != nil {
-			s.Fatal("Failed to update EC crash file cache after test: ", err)
-		}
-	}()
 
 	/**
 	 * GoBigSleepLint: Wait for the EC to successfully crash before making the first attempt
