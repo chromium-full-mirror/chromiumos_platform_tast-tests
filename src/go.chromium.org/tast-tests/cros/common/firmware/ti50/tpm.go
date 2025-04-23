@@ -110,7 +110,7 @@ func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([
 	var args []string
 	args = append(args, "tpm", "--gsc-ready", string(GpioTi50ApIntL), subcmd)
 	args = append(args, subargs...)
-	ctx, cancel := context.WithTimeout(t.Ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(t.Ctx, 2*time.Minute)
 	defer cancel()
 	response, err := t.b.OpenTitanToolCommand(ctx, string(t.Bus), args...)
 	if err != nil {
