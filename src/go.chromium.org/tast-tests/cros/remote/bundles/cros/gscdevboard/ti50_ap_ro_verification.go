@@ -30,12 +30,6 @@ const (
 	verificationFailedForcedReset
 )
 
-// todoWpSenseCausesReset tracks if WP monitoring is causing GSC reset. This
-// is currently be rolled out slowly through UMA tracking. Once tracking looks
-// good, we will enable this and can remove all of the false branches.
-// See b/254309086
-const todoWpSenseCausesReset = false
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50APROVerification,
@@ -114,11 +108,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set address mode: ", modeSet)
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	if todoWpSenseCausesReset {
-		expectGscReboot(ctx, s, i, "AP turned off")
-	} else {
-		b.Reset(ctx)
-	}
+	expectGscReboot(ctx, s, b, i, "AP turned off")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	s.Log("GSC should now have a passing AP RO verification which flips the latch")
@@ -126,9 +116,7 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	verifyResetState(ctx, s, b, i, verificationSuccessAllowReset, "AP RO verification passes")
 
 	// Before trying the bad image, verify that WP monitoring is working
-	if todoWpSenseCausesReset {
-		verifyWPMonitoring(ctx, s, b, i)
-	}
+	verifyWPMonitoring(ctx, s, b, i)
 
 	// Now all failed verification should hold system in reset when
 	// AllowUnverifiedRO is false
@@ -288,7 +276,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	expectNoGscReboot(ctx, s, i, "enabling WP")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
@@ -307,7 +295,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	expectNoGscReboot(ctx, s, i, "disabling WP")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	expectGscReboot(ctx, s, i, "AP turned off")
+	expectGscReboot(ctx, s, b, i, "AP turned off")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Now, WP_SENSE_L doesn't follow WP emulating an external driver
@@ -317,20 +305,20 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	expectNoGscReboot(ctx, s, i, "WP is externally disabled")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
 	expectNoGscReboot(ctx, s, i, "WP is continually externally disabled")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	expectGscReboot(ctx, s, i, "AP turns off")
+	expectGscReboot(ctx, s, b, i, "AP turns off")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Verify booting with already disabled WP_SENSE_L is detected, and stop externally
 	// disabling WP before AP turns on to prevent boot loops
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Verify deep sleep WP_SENSE_L detection
@@ -339,14 +327,16 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	s.Log("Waiting 70 seconds for GSC to go to deep sleep")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 
-	// Externally pulse WP disable quickly. Should wake up GSC
+	// Externally pulse WP disable quickly. Should wake up GSC from deep sleep
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
-	expectGscReboot(ctx, s, i, "pusling external WP while deep sleeping")
+	if err := i.WaitUntilRoBoot(ctx, time.Second); err != nil {
+		s.Error("GSC did not wake from deep sleep with external WP pulse: ", err)
+	}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Verify normal sleep WP_SENSE_L detection
@@ -358,7 +348,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	expectNoGscReboot(ctx, s, i, "pulsing external WP while in normal sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	expectGscReboot(ctx, s, i, "AP turned off")
+	expectGscReboot(ctx, s, b, i, "AP turned off")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Verify chip restores external wp is dirty after deep sleep resume
@@ -369,7 +359,7 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Verify chip does restores cooperative wp is dirty state after deep sleep
@@ -380,13 +370,17 @@ func verifyWPMonitoring(ctx context.Context, s *testing.State, b utils.DevboardH
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Enter deep sleep")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after deep sleep")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	expectGscReboot(ctx, s, i, "AP turned on")
+	expectGscReboot(ctx, s, b, i, "AP turned on")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 }
 
-func expectGscReboot(ctx context.Context, s *testing.State, i *ti50.CrOSImage, scenario string) {
+func expectGscReboot(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, scenario string) {
 	if err := i.WaitUntilRoBoot(ctx, time.Second); err != nil {
 		s.Errorf("GSC did not reset when %s: %s", scenario, err)
+	} else {
+		// Do pin reset to reset the rollback counter, so rollback logic won't
+		// interfere with the test
+		b.Reset(ctx)
 	}
 }
 
