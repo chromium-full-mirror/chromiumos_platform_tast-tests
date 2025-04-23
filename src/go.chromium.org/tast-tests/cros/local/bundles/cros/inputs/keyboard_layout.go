@@ -246,7 +246,11 @@ func keyEligibleForHardwareLayout(key util.LinuxKeyCode, hardwareLayoutType stri
 	case "ABNT":
 		return key.LinuxKeyCode != input.KEY_YEN
 	case "JIS":
-		return key.LinuxKeyCode != input.KEY_102ND
+		// KEY_GRAVE exists on JIS but is a functional key, without
+		// character assignments for text typing. On CrOS, it toggles
+		// between "Alphanumeric for Japanese keyboard" (Latin-script
+		// layout) and "Japanese" (IME) input methods.
+		return (key.LinuxKeyCode != input.KEY_102ND) && (key.LinuxKeyCode != input.KEY_GRAVE)
 	default:
 		return false
 	}
