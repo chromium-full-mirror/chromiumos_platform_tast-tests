@@ -22,7 +22,7 @@ rddkeepalive
 recbtnforce
 rma_auth
 sleepmask
-sn
+-sn
 sysinfo
 sysrst
 taskinfo
