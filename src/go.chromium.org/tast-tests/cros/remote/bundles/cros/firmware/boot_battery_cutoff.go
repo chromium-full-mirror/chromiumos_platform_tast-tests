@@ -92,7 +92,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	}
 
 	// This function will disconnect the charger, send the command Batterycutoff, and wait for 60 seconds.
-	sendingBatterryCutoff := func(ctx context.Context) error {
+	sendingBatteryCutoff := func(ctx context.Context) error {
 		// Disconnect Charger.
 		s.Log("Stopping power supply")
 		if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
@@ -115,6 +115,9 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		}
 		// Send batterycutoff command.
 		s.Log("Sending batterycutoff command")
+		if err := s.DUT().Conn().CommandContext(ctx, "sync").Start(); err != nil {
+			return errors.Wrap(err, "failed to send sync command")
+		}
 		if err := s.DUT().Conn().CommandContext(ctx, "ectool", "batterycutoff").Start(); err != nil {
 			return errors.Wrap(err, "failed to send batterycutoff command")
 		}
@@ -278,7 +281,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	}
 
 	// Send battery cutoff and check EC is unresponsive.
-	if err := sendingBatterryCutoff(ctx); err != nil {
+	if err := sendingBatteryCutoff(ctx); err != nil {
 		s.Fatal("Failed to send Batterycutoff command and wait: ", err)
 	}
 
@@ -309,7 +312,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	if ffIsChromeslate && hasMicroOrC2D2 {
 		s.Log("Performing extra steps for CHROMESLATE")
 		// Send battery cutoff and check EC is unresponsive.
-		if err := sendingBatterryCutoff(ctx); err != nil {
+		if err := sendingBatteryCutoff(ctx); err != nil {
 			s.Fatal("Failed to send Batterycutoff command and wait: ", err)
 		}
 
