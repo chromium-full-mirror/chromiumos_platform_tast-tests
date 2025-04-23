@@ -429,6 +429,14 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 		defer func() {
 			if isBackupAP {
 				s.Log("Flashing DUT with backup AP firmware file")
+				// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+				// The binary will return success on all other layouts.
+				if h.DUT.Connected(ctx) {
+					if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+						s.Log("Failed preserving dev image: ", err)
+					}
+				}
+
 				flashOpts := futility.NewUpdateOptions(backupFirmwareFile).
 					WithMode(futility.UpdateModeRecovery).
 					WithGBBFlags(24)
@@ -452,6 +460,12 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	}
 	if firmwarePathVal == "" && localFirmwarePathVal == "" {
 		return
+	}
+
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+		s.Fatal("Failed preserving dev image: ", err)
 	}
 
 	s.Log("Flashing DUT AP with downloaded firmware file")
@@ -522,6 +536,12 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 					s.Log("Completed flashing of backup AP fw")
 				}
 
+				// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+				// The binary will return success on all other layouts.
+				if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+					s.Log("Failed preserving dev image: ", err)
+				}
+
 				if err := safeRebootDut(ctx, h); err != nil {
 					s.Fatal("Failed to reboot DUT after flashing: ", err)
 				}
@@ -542,6 +562,13 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, firmware.APFirmwareFileToFlash)).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
+
+	// For dm-default-key layouts, the dev image preservation requires an extra preservation step.
+	// The binary will return success on all other layouts.
+	if err := h.DUT.Conn().CommandContext(ctx, "/usr/local/bin/preserve_dev_image").Run(); err != nil {
+		s.Fatal("Failed preserving dev image: ", err)
+	}
+
 	s.Log("Completed flashing of downloaded fw")
 	if err := safeRebootDut(ctx, h); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
