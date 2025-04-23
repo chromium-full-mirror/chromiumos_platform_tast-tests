@@ -1122,7 +1122,7 @@ func (h *Helper) GetCCDLevel(ctx context.Context) (string, error) {
 
 	var ccdLevel string
 	if hasCCDLevel {
-		ccdLevel, err = h.Servo.GetString(ctx, servo.GSCCCDLevel)
+		ccdLevel, err = h.Servo.GetStringTimeout(ctx, servo.GSCCCDLevel, 20*time.Second)
 		if err != nil {
 			testing.ContextLog(ctx, "WARNING! failed to get gsc_ccd_level: ", err)
 		}
