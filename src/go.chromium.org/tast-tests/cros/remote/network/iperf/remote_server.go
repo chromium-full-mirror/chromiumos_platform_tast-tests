@@ -109,7 +109,7 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 3 * time.Second,
+		Timeout: 10 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed to verify that iperf server is started")
 	}
