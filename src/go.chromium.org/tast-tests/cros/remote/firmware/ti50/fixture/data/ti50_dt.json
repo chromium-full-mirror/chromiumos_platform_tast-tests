@@ -77,17 +77,6 @@
       "alias_of": "B0"
     },
     {
-      "name": "UART_DBG_TX_EC_RX",
-      "mode": "Alternate",
-      "pull_mode": "None",
-      "alias_of": "B1"
-    },
-    {
-      "name": "UART_EC_TX_DBG_RX",
-      "mode": "Alternate",
-      "alias_of": "B2"
-    },
-    {
       "name": "PWM3",
       "mode": "OpenDrain",
       "level": false,
@@ -287,6 +276,7 @@
     {
       "name": "UART_DBG_TX_EC_RX",
       "mode": "Alternate",
+      "pull_mode": "None",
       "alias_of": "B1"
     },
     {
@@ -463,6 +453,7 @@
         {
           "name": "UART_DBG_TX_EC_RX",
           "mode": "Alternate",
+          "pull_mode": "None"
         }
       ]
     },
@@ -471,8 +462,8 @@
       "pins": [
         {
           "name": "UART_DBG_TX_EC_RX",
-          "mode": "PushPull",
-          "level": true,
+          "mode": "Alternate",
+          "pull_mode": "PullUp"
         }
       ]
     }
