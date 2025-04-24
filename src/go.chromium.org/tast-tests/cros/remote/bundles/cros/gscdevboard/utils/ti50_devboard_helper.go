@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -1193,4 +1194,75 @@ func (h DevboardHelper) mustParseVerificationResult(m [][]byte) uint32 {
 		h.Fatalf("Could not parse verification result of %v: %s", m[1], err)
 	}
 	return uint32(result)
+}
+
+// TestUARTForwarding verifies sending and receiving data from the CCD UART
+func (h DevboardHelper) TestUARTForwarding(ctx context.Context, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) error {
+	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
+	uart := h.PhysicalUart(port)
+	ccd := h.CcdSerialInterface(port, time.Second)
+	th.MustSucceed(ccd.Open(ctx), "%s: Failed to open %s ccd", caseStr, port)
+	defer ccd.Close(ctx)
+	th.MustSucceed(uart.Open(ctx), "%s: Failed to open %s uart", caseStr, port)
+	defer uart.Close(ctx)
+
+	// Flush out any "DATA LOST" message along with other queued-up data.
+	if expectUartToUsb {
+		uart.WriteSerial(ctx, []byte("AB\r\n"))
+		_, _, err := ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		if err != nil {
+			return errors.Errorf("%s: Error clearing buffer %s: %s", caseStr, port, err)
+		}
+	}
+
+	// Send data to UART, expecting to read it out of the USB interface.
+	databuf := []byte(fmt.Sprintf("The quick red fox jumps over the lazy brown dog for the %dth time", r.Intn(1000000000)))
+
+	var errs []string
+	th.MustSucceed(uart.WriteSerial(ctx, databuf), "Write error")
+	byt, err := ccd.ReadSerialBytes(ctx, len(databuf))
+	if expectUartToUsb {
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: Data sent to %s UART did not come out of USB: %s", caseStr, port, err))
+		} else if !bytes.Equal(byt, databuf) {
+			errs = append(errs, fmt.Sprintf("%s: Data sent to %s UART came out of USB corrupted", caseStr, port))
+			errs = append(errs, fmt.Sprintf("Wanted '%+v' got '%+v'", databuf, byt))
+		}
+	} else {
+		if err == nil {
+			if !bytes.Equal(byt, databuf) {
+				errs = append(errs, fmt.Sprintf("%s: Data sent to %s UART unexpectedly did come out of USB: corrupted", caseStr, port))
+				errs = append(errs, fmt.Sprintf("Sent '%+v' got '%+v'", databuf, byt))
+			} else {
+				errs = append(errs, fmt.Sprintf("%s: Data sent to %s UART unexpectedly did come out of USB", caseStr, port))
+			}
+		}
+	}
+
+	// Send data to USB interface, expecting to read it out of the UART.
+	th.MustSucceed(uart.ClearInput(ctx), "Error clearing buffer")
+
+	th.MustSucceed(ccd.WriteSerial(ctx, databuf), "Write error")
+	byt, err = uart.ReadSerialBytes(ctx, len(databuf))
+	if expectUsbToUart {
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: Data sent to %s USB did not come out of UART: %s", caseStr, port, err))
+		} else if !bytes.Equal(byt, databuf) {
+			errs = append(errs, fmt.Sprintf("%s: Data sent to %s USB came out of UART corrupted", caseStr, port))
+			errs = append(errs, fmt.Sprintf("Wanted '%+v' got '%+v'", databuf, byt))
+		}
+	} else {
+		if err == nil {
+			if !bytes.Equal(byt, databuf) {
+				errs = append(errs, fmt.Sprintf("%s: Data sent to %s USB unexpectedly did come out of UART: corrupted", caseStr, port))
+				errs = append(errs, fmt.Sprintf("Sent '%+v' got '%+v'", databuf, byt))
+			} else {
+				errs = append(errs, fmt.Sprintf("%s: Data sent to %s USB unexpectedly did come out of UART", caseStr, port))
+			}
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Errorf("%s uart forwarding failed: %s", caseStr, errs)
 }

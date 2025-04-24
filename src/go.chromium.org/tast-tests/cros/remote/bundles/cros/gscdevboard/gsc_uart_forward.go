@@ -5,11 +5,8 @@
 package gscdevboard
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"math/rand"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -38,7 +35,6 @@ func init() {
 
 func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
-	gscProps := b.GscProperties()
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
@@ -67,22 +63,14 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, no uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, true, "AP off, no uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartAP, false, false, "AP off, no uServo")
-	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP off, no uServo")
-	}
+	testForwardingUARTs(ctx, s, b, r, true, true, false, "AP off, no uServo")
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP on, no uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, true, "AP on, no uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartAP, true, true, "AP on, no uServo")
-	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
-	}
+	testForwardingUARTs(ctx, s, b, r, true, true, true, "AP on, no uServo")
 
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 
@@ -108,84 +96,31 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, with uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, false, "AP off, with uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartAP, false, false, "AP off, with uServo")
-	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, false, "AP off, with uServo")
-	}
+	testForwardingUARTs(ctx, s, b, r, true, false, false, "AP off, with uServo")
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP on, with uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, false, "AP on, with uServo")
-	testForwarding(ctx, s, b, th, r, ti50.UartAP, true, false, "AP on, with uServo")
-	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, false, "AP on, with uServo")
-	}
+	testForwardingUARTs(ctx, s, b, r, true, false, true, "AP on, with uServo")
 }
+func testForwardingUARTs(ctx context.Context, s *testing.State, b utils.DevboardHelper, r *rand.Rand, expectUartToUsb, expectUsbToUart, apOn bool, caseStr string) {
+	gscProps := b.GscProperties()
 
-func testForwarding(ctx context.Context, s *testing.State, b utils.DevboardHelper, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) {
-	uart := b.PhysicalUart(port)
-	ccd := b.CcdSerialInterface(port, time.Second)
-	th.MustSucceed(ccd.Open(ctx), "Failed to open %s ccd", port)
-	defer ccd.Close(ctx)
-	th.MustSucceed(uart.Open(ctx), "Failed to open %s uart", port)
-	defer uart.Close(ctx)
-
-	// Flush out any "DATA LOST" message along with other queued-up data.
-	if expectUartToUsb {
-		uart.WriteSerial(ctx, []byte("AB\r\n"))
-		_, _, err := ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
-		th.MustSucceed(err, "Error clearing buffer")
+	if err := b.TestUARTForwarding(ctx, r, ti50.UartEC, expectUartToUsb, expectUsbToUart, caseStr); err != nil {
+		s.Errorf("EC UART failed: %s", err)
+	}
+	apExpectUartToUsb := expectUartToUsb && apOn
+	apExpectUsbToUart := expectUsbToUart && apOn
+	if err := b.TestUARTForwarding(ctx, r, ti50.UartAP, apExpectUartToUsb, apExpectUsbToUart, caseStr); err != nil {
+		s.Errorf("AP UART failed: %s", err)
 	}
 
-	// Send data to UART, expecting to read it out of the USB interface.
-	databuf := []byte(fmt.Sprintf("The quick red fox jumps over the lazy brown dog for the %dth time", r.Intn(1000000000)))
-
-	th.MustSucceed(uart.WriteSerial(ctx, databuf), "Write error")
-	byt, err := ccd.ReadSerialBytes(ctx, len(databuf))
-	if expectUartToUsb {
-		if err != nil {
-			s.Errorf("%s: Data sent to %s UART did not come out of USB: %s", caseStr, port, err)
-		} else if !bytes.Equal(byt, databuf) {
-			s.Errorf("%s: Data sent to %s UART came out of USB corrupted", caseStr, port)
-			s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
-		}
-	} else {
-		if err == nil {
-			if !bytes.Equal(byt, databuf) {
-				s.Errorf("%s: Data sent to %s UART unexpectedly did come out of USB: corrupted", caseStr, port)
-				s.Errorf("Sent '%+v' got '%+v'", databuf, byt)
-			} else {
-				s.Errorf("%s: Data sent to %s UART unexpectedly did come out of USB", caseStr, port)
-			}
-		}
+	if !gscProps.HasFpmcuUart() {
+		return
 	}
-
-	// Send data to USB interface, expecting to read it out of the UART.
-	th.MustSucceed(uart.ClearInput(ctx), "Error clearing buffer")
-
-	databuf = []byte(fmt.Sprintf("The quick red fox jumps over the lazy brown dog for the %dth time", r.Intn(1000000000)))
-
-	th.MustSucceed(ccd.WriteSerial(ctx, databuf), "Write error")
-	byt, err = uart.ReadSerialBytes(ctx, len(databuf))
-	if expectUsbToUart {
-		if err != nil {
-			s.Errorf("%s: Data sent to %s USB did not come out of UART: %s", caseStr, port, err)
-		} else if !bytes.Equal(byt, databuf) {
-			s.Errorf("%s: Data sent to %s USB came out of UART corrupted", caseStr, port)
-			s.Errorf("Wanted '%+v' got '%+v'", databuf, byt)
-		}
-	} else {
-		if err == nil {
-			if !bytes.Equal(byt, databuf) {
-				s.Errorf("%s: Data sent to %s USB unexpectedly did come out of UART: corrupted", caseStr, port)
-				s.Errorf("Sent '%+v' got '%+v'", databuf, byt)
-			} else {
-				s.Errorf("%s: Data sent to %s USB unexpectedly did come out of UART", caseStr, port)
-			}
-		}
+	if err := b.TestUARTForwarding(ctx, r, ti50.UartFPMCU, expectUartToUsb, expectUsbToUart, caseStr); err != nil {
+		s.Errorf("FPMCU UART failed: %s", err)
 	}
 }
