@@ -113,7 +113,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"ec_component"},
 				}}},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix", "karis")),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
