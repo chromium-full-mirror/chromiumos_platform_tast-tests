@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -288,29 +287,9 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return errors.Wrap(err, "failed to get tablet mode")
 	}
 	if tabletModeEnabled {
-		dispInfo, err := display.GetInternalInfo(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get internal display info")
-		}
-		// Ideally we'd use screen.orientation.lock("landscape"), but that needs the
-		// content to be in full screen (requestFullscreen()), which needs a user
-		// gesture. Instead, implement the algorithm: landscape is, by definition,
-		// when the screen's width is larger than the height, see
-		// https://w3c.github.io/screen-orientation/#dfn-landscape-primary
-		var width, height int64
-		if err := tconn.Eval(ctx, "window.screen.width", &width); err != nil {
-			return errors.Wrap(err, "failed to retrieve screen width")
-		}
-		if err := tconn.Eval(ctx, "window.screen.height", &height); err != nil {
-			return errors.Wrap(err, "failed to retrieve screen height")
-		}
-		rotation := display.Rotate0
-		if height > width {
-			rotation = display.Rotate90
-		}
-
-		if err := display.SetDisplayRotationSync(ctx, tconn, dispInfo.ID, rotation); err != nil {
-			return errors.Wrap(err, "failed to rotate display")
+		// Rotate the display to landscape-primary.
+		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
 		}
 	}
 
