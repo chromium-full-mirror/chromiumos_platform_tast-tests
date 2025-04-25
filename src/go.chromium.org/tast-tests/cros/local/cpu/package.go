@@ -153,53 +153,66 @@ func FetchPackageStates() (map[string]int64, error) {
 	return fullStateMap[uarch], nil
 }
 
-// FindCPUPerPackage returns a slice that contains 1 CPU from each package.
+// FindCPUPerPackage returns a slice containing the minimum CPU number in each
+// package.
+// e.g. [minimum CPU number in package 0, minimum CPU number in package 1]
+//
+// Note:
+//  1. The returned slice index does not represent a package ID.
+//  2. This function relies on a specific file path to query CPU/package
+//     information.
 func FindCPUPerPackage(ctx context.Context) ([]int, error) {
-	packages := make(map[int]int)
+	packages := make(map[int64]int64)
 	cpuInfos, err := os.ReadDir("/dev/cpu")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read /dev/cpu")
+		return nil, errors.Wrap(err, "failed to read /dev/cpu to fetch each CPU")
 	}
 	for _, cpuInfo := range cpuInfos {
-		cpu, err := strconv.ParseInt(cpuInfo.Name(), 10, 32)
+		cpuID, err := strconv.ParseInt(cpuInfo.Name(), 10, 32)
 		if err != nil {
 			// Skip misc files in the directory
 			continue
 		}
-		path := fmt.Sprintf("/sys/devices/system/cpu/cpu%d/topology/physical_package_id", cpu)
+		path := fmt.Sprintf("/sys/devices/system/cpu/cpu%d/topology/physical_package_id", cpuID)
 		if _, err := os.Stat(path); err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return nil, errors.Wrap(err, "failed to determine package")
+			return nil, errors.Wrapf(err, "failed to fetch physical package ID for CPU %v", cpuID)
 		}
 
-		pkgStr, err := os.ReadFile(path)
+		pkgBytes, err := os.ReadFile(path)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read package")
+			return nil, errors.Wrapf(err, "failed to read package information for CPU %v", cpuID)
 		}
-		pkg, err := strconv.ParseInt(strings.TrimSpace(string(pkgStr)), 10, 64)
+		packageID, err := strconv.ParseInt(strings.TrimSpace(string(pkgBytes)), 10, 64)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse package")
+			return nil, errors.Wrap(err, "failed to parse packageID from string to int")
 		}
-		packages[int(pkg)] = int(cpu)
+
+		// Keep only the minimum CPU number for each package.
+		if existCPU, ok := packages[packageID]; !ok || existCPU > cpuID {
+			packages[packageID] = cpuID
+		}
 	}
-	perPackageCPUs := make([]int, len(packages))
-	for i, cpu := range packages {
-		perPackageCPUs[i] = cpu
+
+	var perPackageCPUs []int
+	for _, cpu := range packages {
+		perPackageCPUs = append(perPackageCPUs, int(cpu))
 	}
+
 	return perPackageCPUs, nil
 }
 
 func readMSR(addr int64, cpu int) (uint64, error) {
 	file, err := os.Open(fmt.Sprintf("/dev/cpu/%d/msr", cpu))
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to open msrs")
+		return 0, errors.Wrapf(err, "failed to open Model-Specific Register file for CPU %v", cpu)
 	}
 	defer file.Close()
 	data := make([]byte, 8)
 	if _, err := file.ReadAt(data, addr); err != nil {
-		return 0, errors.Wrap(err, "failed to read msrs")
+		return 0, errors.Wrapf(err, "failed to read Model-Specific Register file for CPU %v", cpu)
 	}
 	return binary.LittleEndian.Uint64(data), nil
 }
@@ -207,26 +220,28 @@ func readMSR(addr int64, cpu int) (uint64, error) {
 // ReadPackageCStates takes a list of CPUs which correspond to the device's
 // packages and the package C-states, returns a map containing how long was
 // spent in each state.
-func ReadPackageCStates(perPackageCPUs []int, pCStates map[string]int64) (map[string]uint64, error) {
-	ret := make(map[string]uint64)
-	ret[c0C1Key] = 0
-	ret[aggregateNonC0C1Key] = 0
+func ReadPackageCStates(perPackageCPUs []int, perCStates map[string]int64) (map[string]uint64, error) {
+	result := make(map[string]uint64)
+	result[c0C1Key] = 0
+	result[aggregateNonC0C1Key] = 0
+
+	const msrIA32TSC = 0x10
 
 	for _, cpu := range perPackageCPUs {
-		tsc, err := readMSR(0x10, cpu)
+		timeStampCounter, err := readMSR(msrIA32TSC, cpu)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read tsc value")
+			return nil, errors.Wrap(err, "failed to read time stamp counter value")
 		}
-		ret[c0C1Key] += tsc
-		for pcstate, addr := range pCStates {
+		result[c0C1Key] += timeStampCounter
+		for perCState, addr := range perCStates {
 			val, err := readMSR(addr, cpu)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to read pcstate msr")
 			}
-			ret[pcstate] = val
-			ret[c0C1Key] -= val
-			ret[aggregateNonC0C1Key] += val
+			result[perCState] += val
+			result[c0C1Key] -= val
+			result[aggregateNonC0C1Key] += val
 		}
 	}
-	return ret, nil
+	return result, nil
 }
