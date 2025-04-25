@@ -72,7 +72,7 @@ func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 		if err := pxy.Servo().ServoCcSnk(ctx); err != nil {
 			s.Fatal("Failed to set servo CC to off: ", err)
 		}
-		defer pxy.Servo().ServoCcDrp(cleanupCtx)
+		defer pxy.Servo().ServoCcSrc(cleanupCtx, true)
 
 		// On Unigraf setup, ethernet is connected by servo, wait for the connection to resume.
 		connectCtx, connectCtxCancel := context.WithTimeout(ctx, 10*time.Second)

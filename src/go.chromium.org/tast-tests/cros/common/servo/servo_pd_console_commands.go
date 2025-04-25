@@ -626,13 +626,15 @@ func (s *Servo) ServoCcSnk(ctx context.Context) error {
 	return err
 }
 
-// ServoCcDrp runs the `cc drp` console command on the Servo.
-func (s *Servo) ServoCcDrp(ctx context.Context) error {
-	output, err := s.RunServoCommandGetOutput(ctx, "cc drp", []string{`drp enabled: (\w+)[\r\n]`})
-
-	if err == nil && output[0][1] != "on" {
-		return errors.New("CC state did not change to 'drp': " + output[0][1])
+// ServoCcSrc runs the `cc src` console command on the Servo, optionally with dts enabled.
+// Source role with dts enabled is default servo cc state.
+func (s *Servo) ServoCcSrc(ctx context.Context, dts bool) error {
+	dtsString := ""
+	if dts {
+		dtsString = "dts"
 	}
+	cmd := fmt.Sprintf("cc src%s", dtsString)
+	err := s.RunServoCommand(ctx, cmd)
 
 	return err
 }
