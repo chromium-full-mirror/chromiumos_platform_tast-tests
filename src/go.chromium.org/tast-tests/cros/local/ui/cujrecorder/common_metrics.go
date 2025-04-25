@@ -50,6 +50,8 @@ func AshCommonMetricConfigs() []MetricConfig {
 		// Media Quality.
 		NewCustomMetricConfig("Cras.FetchDelayMilliSeconds", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Cras.UnderrunsPerDevice", "count", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Media.Audio.Capture.Glitches2", "glitches", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Media.Audio.Render.Glitches2", "glitches", perf.SmallerIsBetter),
 
 		// Other metrics to monitor.
 		NewCustomMetricConfig("Power.BatteryDischargeRate", "mW", perf.SmallerIsBetter),
