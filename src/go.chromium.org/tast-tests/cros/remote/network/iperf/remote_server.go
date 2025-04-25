@@ -186,7 +186,26 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 				}
 			}
 		}
-	} // Version3 cleans server by itself.
+	} else {
+		// Version3 cleans server by itself.
+		// Try to verify that server has been stopped and that port is not in use.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			portName := fmt.Sprintf(":%d", c.config.Port)
+			cmd := fmt.Sprintf("netstat -l")
+			out, err := c.conn.CommandContext(ctx, "sh", "-c", cmd).Output()
+			if err != nil {
+				return errors.Wrapf(err, "failed to check port %v status", c.config.Port)
+			}
+			if strings.Contains(string(out), portName) {
+				return errors.Errorf("port %d is in use", c.config.Port)
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout: 10 * time.Second,
+		}); err != nil {
+			allErrors = errors.Wrap(err, "failed to verify that iperf server has stopped")
+		}
+	}
 	c.pid = ""
 
 	if err := c.fw.close(ctx); err != nil {
