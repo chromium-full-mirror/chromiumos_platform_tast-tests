@@ -100,6 +100,11 @@ func (sw Switch) Close(_ context.Context) error {
 	return sw.sPort.Close()
 }
 
+// GetType returns the type of the switch.
+func (sw Switch) GetType() string {
+	return "MCCI"
+}
+
 // checkPort is a helper function that checks if the MCCI switch (represented by its serial port `port` matches the supplied serial number.
 func checkPort(port serial.Port, serialNum string) bool {
 	if err := writeSerial("sn\r", port); err != nil {

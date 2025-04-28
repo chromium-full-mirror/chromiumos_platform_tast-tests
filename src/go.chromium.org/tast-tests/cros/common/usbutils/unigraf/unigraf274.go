@@ -446,3 +446,8 @@ func (s *UsbTester) EnablePort(ctx context.Context) error {
 func (s *UsbTester) DevicePort(_ context.Context) (int, error) {
 	return 0, nil
 }
+
+// GetType returns the type of the switch.
+func (s *UsbTester) GetType() string {
+	return "UTC274"
+}

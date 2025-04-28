@@ -22,6 +22,7 @@ type Switch interface {
 	DevicePort(context.Context) (int, error)
 	TestPort(context.Context) (int, error)
 	Close(context.Context) error
+	GetType() string
 }
 
 // GetSwitch returns an interface for the usb switch.
