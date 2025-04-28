@@ -436,9 +436,10 @@ type RecorderOptions struct {
 	// Mode specifies which mode to run the recorder in.
 	Mode RecorderMode
 
-	// TurnOffDisplay, if set, will turn the display off before running the
-	// function in recorder.Run and turn it back on in recorder.StopRecording
-	TurnOffDisplay bool
+	// DisplayPowerStatus sets the display power status before running the
+	// function in recorder.Run and turn it back on in recorder.StopRecording.
+	// If not set, the default will be DisplayPowerAllOn.
+	DisplayPowerStatus power.DisplayPowerStatus
 
 	// RunOnBattery forces the device to run on battery, regardless of the
 	// set RecorderMode.
@@ -861,7 +862,7 @@ func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 // Close clears states for all trackers.
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
-	if r.options.TurnOffDisplay {
+	if r.options.DisplayPowerStatus != power.DisplayPowerAllOn {
 		testing.ContextLog(ctx, "Turning on display")
 		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
 			testing.ContextLog(ctx, "Failed to turn on display: ", err)
@@ -1030,19 +1031,13 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		r.powerSetupCleanup = fullPowerTestCleanup
 	}(ctx)
 
-	if r.options.TurnOffDisplay {
-		testing.ContextLog(ctx, "Turning off display")
-		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOff); err != nil {
-			return nil, errors.Wrap(err, "failed to turn off display")
-		}
-	} else {
-		testing.ContextLog(ctx, "Turning on display")
-		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
-			return nil, errors.Wrap(err, "failed to turn on display")
-		}
+	testing.ContextLog(ctx, "Setting display power to ", r.options.DisplayPowerStatus)
+	if err := power.SetDisplayPower(ctx, r.options.DisplayPowerStatus); err != nil {
+		return nil, errors.Wrapf(err, "failed to set display power to %v", r.options.DisplayPowerStatus)
 	}
+
 	defer func(ctx context.Context) {
-		if success || !r.options.TurnOffDisplay {
+		if success || r.options.DisplayPowerStatus == power.DisplayPowerAllOn {
 			return
 		}
 		testing.ContextLog(ctx, "Turning on display")

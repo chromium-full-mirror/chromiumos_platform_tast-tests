@@ -12,9 +12,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -72,6 +74,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 		return nil, errors.Wrap(err, "failed to connect to the test API connection")
 	}
 
+	var displayPowerStatus power.DisplayPowerStatus
+	// If there is no internal display, test without display.
+	// If any external displays are connected, turn them off and test with
+	// the internal display.
+	if _, err := display.GetInternalInfo(ctx, tconn); err != nil {
+		testing.ContextLog(ctx, "No internal display found, test without display")
+		displayPowerStatus = power.DisplayPowerAllOff
+	} else {
+		testing.ContextLog(ctx, "Turn off all external displays, test with internal display")
+		displayPowerStatus = power.DisplayPowerInternalOnExternalOff
+	}
+
 	dir, ok := testing.ContextOutDir(ctx)
 	if !ok || dir == "" {
 		return nil, errors.New("failed to get the out directory")
@@ -94,9 +108,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLin
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{
-		Mode:              testParam.RecorderMode,
-		CooldownBeforeRun: !testParam.SkipCooldown,
-		RunOnBattery:      testParam.RunOnBattery,
+		Mode:               testParam.RecorderMode,
+		CooldownBeforeRun:  !testParam.SkipCooldown,
+		RunOnBattery:       testParam.RunOnBattery,
+		DisplayPowerStatus: displayPowerStatus,
 	})
 
 	if err != nil {
