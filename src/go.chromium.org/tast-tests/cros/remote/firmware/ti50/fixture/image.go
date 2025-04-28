@@ -709,6 +709,10 @@ func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, image
 	if c == "" {
 		s.Fatal("Unable to determine chip from testbedType: ", testbedType)
 	}
+	if c == "nt" {
+		// nt shares fw config with ot.
+		c = "ot"
+	}
 
 	switch imageType {
 	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image, SystemTestAutoAImage, Ti50AImage:
