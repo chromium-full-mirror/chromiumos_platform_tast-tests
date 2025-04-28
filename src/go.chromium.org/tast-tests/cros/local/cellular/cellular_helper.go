@@ -1660,6 +1660,10 @@ func (h *Helper) GetLabelStarfishSlotMapping(ctx context.Context) string {
 
 // GetLabelOwnNumber return the current own number.
 func (h *Helper) GetLabelOwnNumber(ctx context.Context, iccid string) string {
+	if h.di == nil {
+		testing.ContextLog(ctx, " DUT info is nil. Did you make sure SetDUTInfo was called?")
+		return ""
+	}
 	for _, s := range h.di.SimInfo {
 		for _, p := range s.ProfileInfo {
 			if p.Iccid == iccid {
