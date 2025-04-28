@@ -132,7 +132,7 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 		testing.ContextLogf(ctx, "P2P channel configuration: Generation = %v, Channel Number = %d, Frequency = %d, Width = %d", gen, chConfig.Number, chConfig.Freq, chConfig.Width)
 
 		for _, testType := range tc.testType {
-			finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", testType, iperf.Version2)
+			finalResult, err := wifiutil.P2PPerf(ctx, ctx, tf, p2pGO, p2pClient, s.OutDir(), "p2p", testType, iperf.Version2, true)
 			if err != nil {
 				s.Fatal("Failed to run performance test: ", err)
 			}

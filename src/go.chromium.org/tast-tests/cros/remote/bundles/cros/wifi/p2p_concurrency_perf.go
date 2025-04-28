@@ -248,7 +248,7 @@ func P2PConcurrencyPerf(ctx context.Context, s *testing.State) {
 				ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 				defer cancel()
 				ctx = testing.SetLogPrefix(ctx, "[Infra] ")
-				return wifiutil.InfraPerf(ctx, cleanupCtx, tf, tf.DUTDevice(wificell.DefaultDUT), tc.powerSave, ap1, s.OutDir(),
+				return wifiutil.InfraPerf(ctx, cleanupCtx, tf, tf.DUTDevice(wificell.DefaultDUT), tc.powerSave, false, ap1, s.OutDir(),
 					perfTagPrefix, testType, iperf.Version3)
 			}
 
@@ -259,7 +259,7 @@ func P2PConcurrencyPerf(ctx context.Context, s *testing.State) {
 
 				p2pGO, _ := tf.P2PDevice(ctx, tc.GoDev)
 				p2pClient, _ := tf.P2PDevice(ctx, tc.ClientDev)
-				return wifiutil.P2PPerf(ctx, cleanupCtx, tf, p2pGO, p2pClient, s.OutDir(), perfTagPrefix, testType, iperf.Version3)
+				return wifiutil.P2PPerf(ctx, cleanupCtx, tf, p2pGO, p2pClient, s.OutDir(), perfTagPrefix, testType, iperf.Version3, false)
 			}
 
 			iperfCleanup := func(ctx context.Context) {

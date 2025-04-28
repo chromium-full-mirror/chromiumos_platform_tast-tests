@@ -67,7 +67,7 @@ func storePerfResults(ctx context.Context, finalResult *iperf.Result, results ip
 // runPerf is meant to run perf test between any kind of the WiFi device.
 func runPerf(ctx, cleanUpCtx context.Context, wd1, wd2, wd3 wificell.WiFiDevice,
 	ifaceType wificell.IfaceType, outDir, tag string, testType perfmanager.TestType,
-	version iperf.Version, port int) (_ *iperf.Result, err error) {
+	version iperf.Version, port int, autoClean bool) (_ *iperf.Result, err error) {
 
 	staIface, _ := wd1.IfName(ctx, wificell.StaIfaceType)
 
@@ -122,7 +122,7 @@ func runPerf(ctx, cleanUpCtx context.Context, wd1, wd2, wd3 wificell.WiFiDevice,
 	}
 	config.Version = version
 	config.Port = port
-	config.AutoClean = false
+	config.AutoClean = autoClean
 	session, err := manager.Session(ctx, testType)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get the iperf/netperf session for test type %s", testType)
@@ -151,7 +151,7 @@ func Cleanup(ctx context.Context, processes []string, devs []wificell.WiFiDevice
 
 // P2PPerf runs perf test using P2P interfaces.
 func P2PPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, p2pGO, p2pClient wificell.P2PWiFiDevice,
-	outDir, tag string, testType perfmanager.TestType, version iperf.Version) (*iperf.Result, error) {
+	outDir, tag string, testType perfmanager.TestType, version iperf.Version, autoClean bool) (*iperf.Result, error) {
 	// We assume here that cleanUpCtx is an uncacellable copy of ctx, but we have no guarantees
 	// that the original context has been already shortened.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -209,7 +209,7 @@ func P2PPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, p2pGO, p
 	}
 	tag = fmt.Sprintf("%v_%v_MHz", tag, freq)
 
-	return runPerf(ctx, cleanUpCtx, p2pGO, p2pClient, nil, wificell.P2PIfaceType, outDir, tag, testType, version, 5003)
+	return runPerf(ctx, cleanUpCtx, p2pGO, p2pClient, nil, wificell.P2PIfaceType, outDir, tag, testType, version, 5003, autoClean)
 }
 
 // PerfRouter returns router device that will run perf.
@@ -222,7 +222,7 @@ func PerfRouter(tf *wificell.TestFixture) wificell.WiFiDevice {
 }
 
 // InfraPerf runs perf test using Infrastructure (STA) connection.
-func InfraPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, wd wificell.WiFiDevice, powerSave bool, apIface *wificell.APIface,
+func InfraPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, wd wificell.WiFiDevice, powerSave, autoClean bool, apIface *wificell.APIface,
 	outDir, tag string, perfTestType perfmanager.TestType, version iperf.Version) (_ *iperf.Result, err error) {
 	// We assume here that cleanUpCtx is an uncacellable copy of ctx, but we have no guarantees
 	// that the original context has been already shortened.
@@ -291,10 +291,10 @@ func InfraPerf(ctx, cleanUpCtx context.Context, tf *wificell.TestFixture, wd wif
 	if err := tf.AssertNoDisconnect(ctx, wificell.DefaultDUT, func(ctx context.Context) error {
 		if routerType == support.LegacyT {
 			ret, err = runPerf(ctx, cleanUpCtx, wd, tf.RouterDevice(wificell.DefaultRouter), tf.PcapDevice(),
-				wificell.StaIfaceType, outDir, configTag, perfTestType, version, 5001)
+				wificell.StaIfaceType, outDir, configTag, perfTestType, version, 5001, autoClean)
 		} else {
 			ret, err = runPerf(ctx, cleanUpCtx, wd, tf.RouterDevice(wificell.DefaultRouter), nil,
-				wificell.StaIfaceType, outDir, configTag, perfTestType, version, 5001)
+				wificell.StaIfaceType, outDir, configTag, perfTestType, version, 5001, autoClean)
 		}
 		return err
 	}); err != nil {
