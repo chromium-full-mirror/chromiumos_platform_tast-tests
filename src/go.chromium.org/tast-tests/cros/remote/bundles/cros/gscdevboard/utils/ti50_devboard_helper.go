@@ -252,7 +252,9 @@ func (h DevboardHelper) GscProperties() GscProperties {
 	case ti50.GscH1Shield:
 		return &gscH1{}
 	case ti50.GscOTShield, ti50.GscNTShieldV2, ti50.GscOpentitanCw310Fpga:
-		return &gscOT{}
+		return &gscOT{
+			hasEcResetFet: h.TestbedType == ti50.GscNTShieldV2,
+		}
 	case ti50.GscHostEmulation:
 		return &gscHE{}
 	default:

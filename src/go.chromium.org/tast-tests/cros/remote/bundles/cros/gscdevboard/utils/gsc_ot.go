@@ -7,6 +7,7 @@ package utils
 import "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 
 type gscOT struct {
+	hasEcResetFet bool
 }
 
 func (g *gscOT) HasFpmcuUart() bool {
@@ -37,7 +38,7 @@ func (g *gscOT) PreferredTPMBus() ti50.TpmBus {
 }
 
 func (g *gscOT) HasEcRstFet() bool {
-	return false
+	return g.hasEcResetFet
 }
 
 func (g *gscOT) ChipType() ti50.ChipType {
