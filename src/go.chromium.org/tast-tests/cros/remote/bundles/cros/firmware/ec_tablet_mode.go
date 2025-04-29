@@ -47,7 +47,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
-		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService", "tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService"},
+		ServiceDeps:  []string{"tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
@@ -200,9 +200,8 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	screenLockService := ui.NewScreenLockServiceClient(h.RPCClient.Conn)
 	lockScreen := func(ctx context.Context) error {
-		if _, err := screenLockService.Lock(ctx, &empty.Empty{}); err != nil {
+		if _, err := powerMenuService.Lock(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to lock screen")
 		}
 		return nil
@@ -275,16 +274,10 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 
 		case atLockScreen:
 			s.Logf("------------------------Perform testCase: %s------------------------", testCase)
-			// Reuse the existing login session from same user.
-			if _, err := screenLockService.ReuseChrome(ctx, &empty.Empty{}); err != nil {
-				s.Fatal("Failed to reuse existing chrome session for screenLockService: ", err)
-			}
 			s.Log("Lock Screen")
 			if err := lockScreen(ctx); err != nil {
 				s.Fatal("Lock-screen did not behave as expected: ", err)
 			}
-			// Close chrome instance at the end of the test.
-			defer screenLockService.CloseChrome(ctx, &empty.Empty{})
 		}
 
 		if err := turnDisplayOffAndOn(ctx); err != nil {

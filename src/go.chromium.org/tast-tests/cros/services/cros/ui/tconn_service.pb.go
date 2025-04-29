@@ -359,13 +359,15 @@ type TconnServiceClient interface {
 	Eval(ctx context.Context, in *EvalRequest, opts ...grpc.CallOption) (*structpb.Value, error)
 	// Call calls the javascript fn with given args. See Conn.Call for details
 	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*structpb.Value, error)
-	// WaitForExpr repeatedly evaluates the JavaScript expression expr until it evaluates to true.
-	// Errors returned by Eval are treated the same as expr == false unless fail_on_err is true.
+	// WaitForExpr repeatedly evaluates the JavaScript expression expr until it
+	// evaluates to true. Errors returned by Eval are treated the same as expr ==
+	// false unless fail_on_err is true.
 	WaitForExpr(ctx context.Context, in *WaitForExprRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ResetAutomation resets the automation API feature. The automation API feature
-	// is widely used to control the UI, but keeping it activated sometimes causes
-	// performance drawback on low-end devices. This method deactivates the
-	// automation API and resets internal states. See: https://crbug.com/1096719.
+	// ResetAutomation resets the automation API feature. The automation API
+	// feature is widely used to control the UI, but keeping it activated
+	// sometimes causes performance drawback on low-end devices. This method
+	// deactivates the automation API and resets internal states. See:
+	// https://crbug.com/1096719.
 	ResetAutomation(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -419,13 +421,15 @@ type TconnServiceServer interface {
 	Eval(context.Context, *EvalRequest) (*structpb.Value, error)
 	// Call calls the javascript fn with given args. See Conn.Call for details
 	Call(context.Context, *CallRequest) (*structpb.Value, error)
-	// WaitForExpr repeatedly evaluates the JavaScript expression expr until it evaluates to true.
-	// Errors returned by Eval are treated the same as expr == false unless fail_on_err is true.
+	// WaitForExpr repeatedly evaluates the JavaScript expression expr until it
+	// evaluates to true. Errors returned by Eval are treated the same as expr ==
+	// false unless fail_on_err is true.
 	WaitForExpr(context.Context, *WaitForExprRequest) (*emptypb.Empty, error)
-	// ResetAutomation resets the automation API feature. The automation API feature
-	// is widely used to control the UI, but keeping it activated sometimes causes
-	// performance drawback on low-end devices. This method deactivates the
-	// automation API and resets internal states. See: https://crbug.com/1096719.
+	// ResetAutomation resets the automation API feature. The automation API
+	// feature is widely used to control the UI, but keeping it activated
+	// sometimes causes performance drawback on low-end devices. This method
+	// deactivates the automation API and resets internal states. See:
+	// https://crbug.com/1096719.
 	ResetAutomation(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 

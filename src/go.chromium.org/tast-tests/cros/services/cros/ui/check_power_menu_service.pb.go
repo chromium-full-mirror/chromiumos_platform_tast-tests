@@ -202,7 +202,7 @@ var file_check_power_menu_service_proto_rawDesc = []byte{
 	0x6f, 0x77, 0x65, 0x72, 0x4d, 0x65, 0x6e, 0x75, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x65, 0x6e, 0x75, 0x5f, 0x69, 0x74, 0x65,
 	0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x65, 0x6e, 0x75, 0x49, 0x74,
-	0x65, 0x6d, 0x73, 0x32, 0xc0, 0x02, 0x0a, 0x10, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x4d, 0x65, 0x6e,
+	0x65, 0x6d, 0x73, 0x32, 0xf8, 0x02, 0x0a, 0x10, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x4d, 0x65, 0x6e,
 	0x75, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x45, 0x0a, 0x09, 0x4e, 0x65, 0x77, 0x43,
 	0x68, 0x72, 0x6f, 0x6d, 0x65, 0x12, 0x1e, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
 	0x73, 0x2e, 0x75, 0x69, 0x2e, 0x4e, 0x65, 0x77, 0x43, 0x68, 0x72, 0x6f, 0x6d, 0x65, 0x52, 0x65,
@@ -222,11 +222,14 @@ var file_check_power_menu_service_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
 	0x23, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x50,
 	0x6f, 0x77, 0x65, 0x72, 0x4d, 0x65, 0x6e, 0x75, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x32, 0x5a, 0x30, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72,
-	0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74,
-	0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x36, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x16,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x42, 0x32,
+	0x5a, 0x30, 0x67, 0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72,
+	0x67, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f,
+	0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f,
+	0x75, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -253,12 +256,14 @@ var file_check_power_menu_service_proto_depIdxs = []int32{
 	3, // 1: tast.cros.ui.PowerMenuService.CloseChrome:input_type -> google.protobuf.Empty
 	3, // 2: tast.cros.ui.PowerMenuService.PowerMenuPresent:input_type -> google.protobuf.Empty
 	3, // 3: tast.cros.ui.PowerMenuService.PowerMenuItem:input_type -> google.protobuf.Empty
-	3, // 4: tast.cros.ui.PowerMenuService.NewChrome:output_type -> google.protobuf.Empty
-	3, // 5: tast.cros.ui.PowerMenuService.CloseChrome:output_type -> google.protobuf.Empty
-	1, // 6: tast.cros.ui.PowerMenuService.PowerMenuPresent:output_type -> tast.cros.ui.PowerMenuPresentResponse
-	2, // 7: tast.cros.ui.PowerMenuService.PowerMenuItem:output_type -> tast.cros.ui.PowerMenuItemResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	3, // 4: tast.cros.ui.PowerMenuService.Lock:input_type -> google.protobuf.Empty
+	3, // 5: tast.cros.ui.PowerMenuService.NewChrome:output_type -> google.protobuf.Empty
+	3, // 6: tast.cros.ui.PowerMenuService.CloseChrome:output_type -> google.protobuf.Empty
+	1, // 7: tast.cros.ui.PowerMenuService.PowerMenuPresent:output_type -> tast.cros.ui.PowerMenuPresentResponse
+	2, // 8: tast.cros.ui.PowerMenuService.PowerMenuItem:output_type -> tast.cros.ui.PowerMenuItemResponse
+	3, // 9: tast.cros.ui.PowerMenuService.Lock:output_type -> google.protobuf.Empty
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -344,12 +349,17 @@ type PowerMenuServiceClient interface {
 	NewChrome(ctx context.Context, in *NewChromeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Close releases the resources obtained by NewChrome.
 	CloseChrome(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// PowerMenuPresent returns a bool to indicate whether the presence of a power menu
-	// is true. Chrome instance is necessary prior to the deployment. For this reason,
-	// NewChrome must be called in prior, but not CloseChrome.
+	// PowerMenuPresent returns a bool to indicate whether the presence of a power
+	// menu is true. Chrome instance is necessary prior to the deployment. For
+	// this reason, NewChrome must be called in prior, but not CloseChrome.
 	PowerMenuPresent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PowerMenuPresentResponse, error)
 	// PowerMenuItem returns a slice which contains names of power menu items.
 	PowerMenuItem(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*PowerMenuItemResponse, error)
+	// Lock performs the operation to lock the screen. Implementing Lock
+	// would be equivalent to pressing "Search+L" at a login session.
+	// Note, NewChrome or ReuseChrome needs to be called in prior, but not
+	// CloseChrome.
+	Lock(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type powerMenuServiceClient struct {
@@ -396,6 +406,15 @@ func (c *powerMenuServiceClient) PowerMenuItem(ctx context.Context, in *emptypb.
 	return out, nil
 }
 
+func (c *powerMenuServiceClient) Lock(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.ui.PowerMenuService/Lock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PowerMenuServiceServer is the server API for PowerMenuService service.
 type PowerMenuServiceServer interface {
 	// NewChrome starts a Chrome session and processes the sign-in request.
@@ -403,12 +422,17 @@ type PowerMenuServiceServer interface {
 	NewChrome(context.Context, *NewChromeRequest) (*emptypb.Empty, error)
 	// Close releases the resources obtained by NewChrome.
 	CloseChrome(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	// PowerMenuPresent returns a bool to indicate whether the presence of a power menu
-	// is true. Chrome instance is necessary prior to the deployment. For this reason,
-	// NewChrome must be called in prior, but not CloseChrome.
+	// PowerMenuPresent returns a bool to indicate whether the presence of a power
+	// menu is true. Chrome instance is necessary prior to the deployment. For
+	// this reason, NewChrome must be called in prior, but not CloseChrome.
 	PowerMenuPresent(context.Context, *emptypb.Empty) (*PowerMenuPresentResponse, error)
 	// PowerMenuItem returns a slice which contains names of power menu items.
 	PowerMenuItem(context.Context, *emptypb.Empty) (*PowerMenuItemResponse, error)
+	// Lock performs the operation to lock the screen. Implementing Lock
+	// would be equivalent to pressing "Search+L" at a login session.
+	// Note, NewChrome or ReuseChrome needs to be called in prior, but not
+	// CloseChrome.
+	Lock(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedPowerMenuServiceServer can be embedded to have forward compatible implementations.
@@ -426,6 +450,9 @@ func (*UnimplementedPowerMenuServiceServer) PowerMenuPresent(context.Context, *e
 }
 func (*UnimplementedPowerMenuServiceServer) PowerMenuItem(context.Context, *emptypb.Empty) (*PowerMenuItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PowerMenuItem not implemented")
+}
+func (*UnimplementedPowerMenuServiceServer) Lock(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Lock not implemented")
 }
 
 func RegisterPowerMenuServiceServer(s *grpc.Server, srv PowerMenuServiceServer) {
@@ -504,6 +531,24 @@ func _PowerMenuService_PowerMenuItem_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PowerMenuService_Lock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PowerMenuServiceServer).Lock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.ui.PowerMenuService/Lock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PowerMenuServiceServer).Lock(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _PowerMenuService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.ui.PowerMenuService",
 	HandlerType: (*PowerMenuServiceServer)(nil),
@@ -523,6 +568,10 @@ var _PowerMenuService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PowerMenuItem",
 			Handler:    _PowerMenuService_PowerMenuItem_Handler,
+		},
+		{
+			MethodName: "Lock",
+			Handler:    _PowerMenuService_Lock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -138,4 +139,23 @@ func (p *PowerMenuService) PowerMenuItem(ctx context.Context, req *empty.Empty) 
 	}
 
 	return &pb.PowerMenuItemResponse{MenuItems: itemsName}, nil
+}
+
+// Lock locks the screen.
+func (p *PowerMenuService) Lock(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if p.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	tconn, err := p.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lock the screen.
+	if err := lockscreen.Lock(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to lock the screen")
+	}
+
+	return &empty.Empty{}, nil
 }

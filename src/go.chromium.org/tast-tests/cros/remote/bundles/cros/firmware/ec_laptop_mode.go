@@ -51,7 +51,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.NormalMode,
-		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService", "tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService", "tast.cros.firmware.UtilsService"},
+		ServiceDeps:  []string{"tast.cros.ui.PowerMenuService", "tast.cros.graphics.ScreenshotService", "tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
@@ -222,9 +222,8 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	screenLockService := ui.NewScreenLockServiceClient(h.RPCClient.Conn)
 	lockScreen := func(ctx context.Context) error {
-		if _, err := screenLockService.Lock(ctx, &empty.Empty{}); err != nil {
+		if _, err := powerMenuService.Lock(ctx, &empty.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to lock screen")
 		}
 		return nil
@@ -260,10 +259,6 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 
 		case atLockScreen:
 			s.Logf("------------------------Perform testCase: %s------------------------", testCase)
-			// Reuse the existing login session from same user.
-			if _, err := screenLockService.ReuseChrome(ctx, &empty.Empty{}); err != nil {
-				s.Fatal("Failed to reuse existing chrome session for screenLockService: ", err)
-			}
 			vals := compareDispBusInfo{}
 			if out, err := readDispBusRuntime(ctx, h); err != nil {
 				s.Log("Failed to read display bus info: ", err)
@@ -274,8 +269,6 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			if err := lockScreen(ctx); err != nil {
 				s.Fatal("Lock-screen did not behave as expected: ", err)
 			}
-			// Close chrome instance at the end of the test.
-			defer screenLockService.CloseChrome(ctx, &empty.Empty{})
 
 			// GoBigSleepLint: Allow some delay for enhancing stability.
 			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
