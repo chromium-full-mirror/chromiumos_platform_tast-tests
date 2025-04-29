@@ -24,6 +24,7 @@ func init() {
 		Func: CloseApp,
 		Desc: "Test closes an application by two methods in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // VDI testing infrastructure owner
 			"giovax@google.com",      // Test owner

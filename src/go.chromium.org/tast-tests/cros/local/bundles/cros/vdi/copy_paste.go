@@ -29,6 +29,7 @@ func init() {
 		Func: CopyPaste,
 		Desc: "Copy and paste text between Notepad VDI application and native text editor application",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"cros-engprod-muc@google.com",
 			"hendrich@google.com", // Test author
 		},

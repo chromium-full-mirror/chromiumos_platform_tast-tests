@@ -44,6 +44,7 @@ func init() {
 		Func: EndVdiSession,
 		Desc: "Test verifies the behaviour of ending a VDI session",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"cros-engprod-muc@google.com",
 			"giovax@google.com", // Test author
 		},

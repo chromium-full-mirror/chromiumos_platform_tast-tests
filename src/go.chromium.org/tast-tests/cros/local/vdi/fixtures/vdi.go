@@ -36,6 +36,7 @@ func init() {
 		Contacts: []string{
 			"kamilszare@google.com",
 			"cros-engprod-muc@google.com",
+			"iwa-team@google.com",
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fixtureState{
@@ -68,6 +69,7 @@ func init() {
 		Contacts: []string{
 			"kamilszare@google.com",
 			"cros-engprod-muc@google.com",
+			"iwa-team@google.com",
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Impl: &fixtureState{

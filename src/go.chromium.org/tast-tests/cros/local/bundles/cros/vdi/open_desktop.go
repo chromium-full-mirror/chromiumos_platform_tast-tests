@@ -28,6 +28,7 @@ func init() {
 		Func: OpenDesktop,
 		Desc: "Test opens Desktop in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
 		},

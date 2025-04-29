@@ -30,6 +30,7 @@ func init() {
 		Func: KeyboardShortcuts,
 		Desc: "Test checks that certain keystrokes used for e.g. copy-paste and printing are carried into VDI sessions",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"pwa-commercial@google.com",
 			"kamilszarek@google.com", // VDI testing infrastructure owner
 			"giovax@google.com",      // Test owner

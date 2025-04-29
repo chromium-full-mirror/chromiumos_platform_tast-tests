@@ -23,6 +23,7 @@ func init() {
 		Func: OpenChromeApp,
 		Desc: "Test opens Google Chrome application in VDI sessions in user session, Kiosk and MGS",
 		Contacts: []string{
+			"iwa-team@google.com",
 			"cros-engprod-muc@google.com",
 			"kamilszarek@google.com", // Test author
 		},
