@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: DeepSleep,
-		Desc: "Estimate battery life in deep sleep state, as a replacement for manual test 1.10.1",
+		Desc: "Estimate battery life in deep sleep state",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"jbettis@google.com",
@@ -193,10 +193,13 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 
 	var (
 		dur   = time.Since(start)
-		usage = mahEnd - mahStart
+		usage = mahStart - mahEnd
 	)
 	s.Logf("Battery Usage: %dmAh in %s", usage, dur)
 
+	if usage < 0 {
+		s.Fatalf("Impossible, battery increased in charge by %dmAh while off", -usage)
+	}
 	if usage > 0 {
 		days := float64(max) / (float64(usage) / dur.Seconds()) / (24 * time.Hour.Seconds())
 		s.Logf("Estimate Battery Life: %f day(s)", days)
@@ -204,6 +207,9 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			s.Errorf("Estimate Battery Life(%f) less than 100 days", days)
 		}
 	} else {
+		days := float64(max) * dur.Seconds() / (24 * time.Hour.Seconds())
+		s.Logf("Estimate Battery Life: >%f day(s), increase firmware.hibernate_time to increase accuracy", days)
+
 		// If less than 1 mAh is consumed during the test, we still won't know if passed unless we
 		// ran for long enough for it not to be a rounding error. This does assume that
 		// the battery is capable of reporting charge in increments of 1mAh, which might not
