@@ -497,6 +497,11 @@ const (
 	DigestRecDevBoot = "2A7580E5DA289546F4D2E0509CC6DE155EA131818954D36D49E027FD42B8C8F8"
 	// ZeroPCR is the uninitialized PCR0 value
 	ZeroPCR = "0000000000000000000000000000000000000000000000000000000000000000"
+
+	// ExtendUnknownBoot is a non-standard value. Used to test unknown boot modes
+	ExtendUnknownBoot = "1000000000000000000000000000000000000000000000000000000000000000"
+	// DigestUnknownBoot is the digest for the UnknownBoot extended value
+	DigestUnknownBoot = "a44a029e04493b8d2fe7893391c2b3ceefec1603c585aad6203f2d14e07bfead"
 )
 
 // PCRRead reads the contents of the given PCR

@@ -25,13 +25,6 @@ type testGSCPCRFWMPPolicy struct {
 	writeable  bool
 }
 
-const (
-	// This is a unsupported PCR0 value. Protected spaces should not be
-	// writeable with unknown PCR0 values.
-	extendUnknown = "1000000000000000000000000000000000000000000000000000000000000000"
-	digestUnknown = "a44a029e04493b8d2fe7893391c2b3ceefec1603c585aad6203f2d14e07bfead"
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCPCRFWMPPolicy,
@@ -115,16 +108,16 @@ func init() {
 		}, {
 			Name: "unknown_blocks_define",
 			Val: testGSCPCRFWMPPolicy{
-				extend:     extendUnknown,
-				digest:     digestUnknown,
+				extend:     ti50.ExtendUnknownBoot,
+				digest:     ti50.DigestUnknownBoot,
 				testDefine: true,
 				writeable:  false,
 			},
 		}, {
 			Name: "unknown_blocks_write",
 			Val: testGSCPCRFWMPPolicy{
-				extend:    extendUnknown,
-				digest:    digestUnknown,
+				extend:    ti50.ExtendUnknownBoot,
+				digest:    ti50.DigestUnknownBoot,
 				testWrite: true,
 				writeable: false,
 			},
@@ -177,7 +170,22 @@ func GSCPCRFWMPPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	if testParams.extend != "" {
+		gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
+		// Read from the gpio monitor to clear existing events.
+		events := b.GpioMonitorRead(ctx, gpioMonitor)
+		testing.ContextLog(ctx, "Cleared Events: ", events)
+
 		tpm.PCRExtendCheckDigest(0, testParams.extend, testParams.digest)
+
+		// Read new events from the GPIO monitor
+		events = b.GpioMonitorFinish(ctx, gpioMonitor)
+		testing.ContextLog(ctx, "EC_RST_L Events: ", events)
+
+		// GSC should not pulse EC_RST_L with an erased board id
+		if len(events.Sorted) != 0 {
+			s.Errorf("GSC pulsed EC_RST_L extending %s", testParams.extend)
+		}
+
 	}
 
 	ccdstate, err := i.Command(ctx, "ccdstate")
