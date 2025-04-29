@@ -115,12 +115,17 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		}
 		// Send batterycutoff command.
 		s.Log("Sending batterycutoff command")
-		if err := s.DUT().Conn().CommandContext(ctx, "sync").Start(); err != nil {
-			return errors.Wrap(err, "failed to send sync command")
+		if err := s.DUT().Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to run sync command")
 		}
-		if err := s.DUT().Conn().CommandContext(ctx, "ectool", "batterycutoff").Start(); err != nil {
+		unreachableCtx, close := context.WithTimeout(ctx, 10*time.Second)
+		defer close()
+		cmd := s.DUT().Conn().CommandContext(unreachableCtx, "ectool", "batterycutoff")
+		if err := cmd.Start(); err != nil {
 			return errors.Wrap(err, "failed to send batterycutoff command")
 		}
+		err := cmd.Wait(ssh.DumpLogOnError)
+		s.Log("ectool batterycutoff: ", err)
 
 		// Verify the DUT becomes unresponsive.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
