@@ -42,8 +42,9 @@ func init() {
 				},
 			},
 			{
-				Name:    "body_dev",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
+				Name:              "body_dev",
+				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
+				ExtraHardwareDeps: hwdep.D(hwdep.DevRecEventlog()),
 				Val: &rbios.CorruptTestVal{
 					SectionA: bios.FWBodyAImageSection, SectionB: bios.FWBodyBImageSection,
 				},
@@ -57,8 +58,9 @@ func init() {
 				},
 			},
 			{
-				Name:    "sig_dev",
-				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
+				Name:              "sig_dev",
+				ExtraHardwareDeps: hwdep.D(hwdep.DevRecEventlog()),
+				Fixture:           fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				Val: &rbios.CorruptTestVal{
 					SectionA: bios.FWSignAImageSection, SectionB: bios.FWSignBImageSection,
 				},
