@@ -238,8 +238,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		}
 
 		// Wait for root web area to exist to ensure the UI elements are captured.
-		docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
-		if err := ac.WaitUntilExists(docsRootWebArea)(ctx); err != nil {
+		if err := ac.WaitUntilExists(googledocs.DocsWebArea)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for docs root web area")
 		}
 

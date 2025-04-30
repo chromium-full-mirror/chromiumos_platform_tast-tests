@@ -1110,15 +1110,14 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			// The UI elements might not immediately appear after activating the window.
 			// Wait for the web area of the Google Docs website to appear
 			// to ensure the security alert can be correctly dismissed.
-			docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
-			if err := ui.WaitUntilExists(docsRootWebArea)(ctx); err != nil {
+			if err := ui.WaitUntilExists(googledocs.DocsWebArea)(ctx); err != nil {
 				return errors.Wrap(err, "failed to wait for docs root web area to appear")
 			}
 			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, collaborationConn); err != nil {
 				return errors.Wrap(err, "failed to dismiss critical security alert")
 			}
 			// There may be multiple canvases in the docs root area, so add First() here.
-			docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea).First()
+			docsCanvas := nodewith.Role(role.Canvas).Ancestor(googledocs.DocsWebArea).First()
 			if err := action.Combine("select and zoom document",
 				pc.Click(docsCanvas),
 				kw.AccelAction("Ctrl+Alt+["),
@@ -1178,7 +1177,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 			// Toggle the Google Docs File menu button for press and
 			// release metrics.
-			if err := toggleFileMenuButton(ctx, ui, pc, inTabletMode); err != nil {
+			if err := toggleFileMenuButton(ctx, tconn, kw, ui, pc, inTabletMode); err != nil {
 				return errors.Wrap(err, "failed to toggle file menu button")
 			}
 
@@ -1325,7 +1324,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return err
 			}
 			// Ensure MouseClick, LCP2 and ADF metrics are generated.
-			if err := generateMetrics(ctx, collaborationConn, tconn, ui, pc, inTabletMode); err != nil {
+			if err := generateMetrics(ctx, collaborationConn, tconn, kw, ui, pc, inTabletMode); err != nil {
 				return err
 			}
 
@@ -1382,7 +1381,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return err
 			}
 			// Ensure MouseClick, LCP2 and ADF metrics are generated.
-			if err := generateMetrics(ctx, collaborationConn, tconn, ui, pc, inTabletMode); err != nil {
+			if err := generateMetrics(ctx, collaborationConn, tconn, kw, ui, pc, inTabletMode); err != nil {
 				return err
 			}
 			endSheetsInteractions(ctx)
@@ -1588,18 +1587,25 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 }
 
 // toggleFileMenuButton toggles the "File" menu button for press and release metrics.
-func toggleFileMenuButton(ctx context.Context, ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
+func toggleFileMenuButton(ctx context.Context, tconn *chrome.TestConn, kw *input.KeyboardEventWriter,
+	ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
 	fileMenu := nodewith.Name("File").Role(role.MenuItem).HasClass("menu-button").First()
 	menuContainer := nodewith.Role(role.MenuBar).HasClass("goog-container").First()
-	if !inTabletMode {
-		if err := ui.MouseMoveTo(fileMenu, 500*time.Millisecond)(ctx); err != nil {
-			return errors.Wrap(err, "failed to move mouse to File menu button")
-		}
-	}
-
 	clickFileMenu := pc.Click(fileMenu)
 	waitForFileMenu := ui.WithTimeout(10 * time.Second).WaitUntilExists(menuContainer)
-	return uiauto.NamedAction("toggle file menu button",
+	moveMouseToFileMenu := func(ctx context.Context) error {
+		if !inTabletMode {
+			if err := ui.MouseMoveTo(fileMenu, 500*time.Millisecond)(ctx); err != nil {
+				return errors.Wrap(err, "failed to move mouse to File menu button")
+			}
+		}
+		return nil
+	}
+	return uiauto.NamedCombine("toggle file menu button",
+		// Sometimes, there's a menu without DocsWebArea, such as in Google Slides
+		// or Google Sheets. In this case, we don't need to show the doc menus.
+		uiauto.IfSuccessThen(ui.Exists(googledocs.DocsWebArea), googledocs.ShowTheDocMenus(tconn, kw)),
+		moveMouseToFileMenu,
 		// If the File menu doesn't appear, maybe it's because the click
 		// only focused the page. Then we just need to click again.
 		ui.WithTimeout(time.Minute).RetryUntil(clickFileMenu, waitForFileMenu),
@@ -1655,9 +1661,10 @@ func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEv
 }
 
 // generateMetrics generates metrics by interacting with the page and the Ash UI.
-func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
+func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, kw *input.KeyboardEventWriter,
+	ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
 	// Collect mouse events by toggling "File" button.
-	if err := toggleFileMenuButton(ctx, ui, pc, inTabletMode); err != nil {
+	if err := toggleFileMenuButton(ctx, tconn, kw, ui, pc, inTabletMode); err != nil {
 		return errors.Wrap(err, "failed to toggle the File menu button")
 	}
 	// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.

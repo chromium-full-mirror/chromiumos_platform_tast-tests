@@ -29,8 +29,9 @@ import (
 const docsName = "Google Docs"
 
 var (
-	docsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea)
-	docsApplication = nodewith.Role(role.Application).Ancestor(docsWebArea)
+	// DocsWebArea represents the web area of the Google Docs.
+	DocsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea)
+	docsApplication = nodewith.Role(role.Application).Ancestor(DocsWebArea)
 )
 
 // NewGoogleDocs returns an action to create a new Google document.
@@ -52,10 +53,10 @@ func NewGoogleDocs(ctx context.Context, uiHandler cuj.UIActionHandler, newWindow
 // RenameDoc returns an action to rename the document.
 func RenameDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title string) action.Action {
 	ui := uiauto.New(tconn)
-	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(docsWebArea).Editable().Focusable()
+	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(DocsWebArea).Editable().Focusable()
 	return ui.Retry(5, uiauto.NamedCombine("rename document",
 		ShowTheDocMenus(tconn, kb),
-		ui.WaitUntilExists(docsWebArea),
+		ui.WaitUntilExists(DocsWebArea),
 		ui.LeftClickUntil(renameTextbox, ui.WithTimeout(5*time.Second).WaitUntilExists(renameTextbox.State("focused", true))),
 		kb.AccelAction("Ctrl+A"),
 		kb.TypeAction(title),
@@ -68,8 +69,8 @@ func RenameDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title stri
 // EditDoc returns an action to edit the document.
 func EditDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, paragraph string) action.Action {
 	ui := uiauto.New(tconn)
-	content := nodewith.Name("Document content").Role(role.TextField).Ancestor(docsWebArea).Editable().First()
-	canvas := nodewith.Role(role.Canvas).Ancestor(docsWebArea).First()
+	content := nodewith.Name("Document content").Role(role.TextField).Ancestor(DocsWebArea).Editable().First()
+	canvas := nodewith.Role(role.Canvas).Ancestor(DocsWebArea).First()
 	return uiauto.NamedCombine("edit document",
 		ui.WaitUntilExists(content),
 		ui.LeftClick(canvas),
@@ -81,9 +82,9 @@ func EditDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, paragraph st
 // ChangeDocTextColor returns an action to change text color to specific color.
 func ChangeDocTextColor(tconn *chrome.TestConn, color string) action.Action {
 	ui := uiauto.New(tconn)
-	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docsWebArea)
-	textColorButton := nodewith.Name("Text color").Role(role.PopUpButton).Ancestor(docsWebArea)
-	colorButton := nodewith.Name(color).Role(role.Cell).Ancestor(docsWebArea)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(DocsWebArea)
+	textColorButton := nodewith.Name("Text color").Role(role.PopUpButton).Ancestor(DocsWebArea)
+	colorButton := nodewith.Name(color).Role(role.Cell).Ancestor(DocsWebArea)
 	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change document text color to "+color,
 		uiauto.IfSuccessThen(ui.Gone(textColorButton), ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(textColorButton))),
 		ui.LeftClickUntil(textColorButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(colorButton)),
@@ -95,9 +96,9 @@ func ChangeDocTextColor(tconn *chrome.TestConn, color string) action.Action {
 // ChangeDocFontSize returns an action to change font size to specific font size.
 func ChangeDocFontSize(tconn *chrome.TestConn, size string) action.Action {
 	ui := uiauto.New(tconn)
-	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docsWebArea)
-	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(docsWebArea)
-	fontSizeOption18 := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(docsWebArea)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(DocsWebArea)
+	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(DocsWebArea)
+	fontSizeOption18 := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(DocsWebArea)
 	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change document font size to "+size,
 		uiauto.IfSuccessThen(ui.Gone(fontSizeTextField), ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeTextField))),
 		ui.LeftClickUntil(fontSizeTextField, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeOption18)),
@@ -109,7 +110,7 @@ func ChangeDocFontSize(tconn *chrome.TestConn, size string) action.Action {
 // UndoDoc returns an action to undo document.
 func UndoDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	undoButton := nodewith.NameContaining("Undo").Role(role.Button).Ancestor(docsWebArea)
+	undoButton := nodewith.NameContaining("Undo").Role(role.Button).Ancestor(DocsWebArea)
 	return uiauto.NamedCombine("undo document",
 		ui.LeftClick(undoButton),
 		waitForDocsSaved(tconn),
@@ -119,7 +120,7 @@ func UndoDoc(tconn *chrome.TestConn) action.Action {
 // RedoDoc returns an action to redo document.
 func RedoDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	redoButton := nodewith.NameContaining("Redo").Role(role.Button).Ancestor(docsWebArea)
+	redoButton := nodewith.NameContaining("Redo").Role(role.Button).Ancestor(DocsWebArea)
 	return uiauto.NamedCombine("redo document",
 		ui.LeftClick(redoButton),
 		waitForDocsSaved(tconn),
