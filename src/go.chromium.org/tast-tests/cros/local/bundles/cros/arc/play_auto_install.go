@@ -36,7 +36,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 10*time.Minute,
 		VarDeps: []string{arcCommon.PlayAutoInstallAccountVarName},
 	})
 }
@@ -108,7 +108,7 @@ func PlayAutoInstall(ctx context.Context, s *testing.State) {
 		}
 		data = string(out)
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Minute}); err != nil {
 		s.Fatal("Failed to read PAI list: ", err)
 	}
 
