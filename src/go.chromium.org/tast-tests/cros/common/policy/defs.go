@@ -21300,38 +21300,6 @@ func (p *DevicePowerAdaptiveChargingEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 972. GetDisplayMediaSetSelectAllScreensAllowedForUrls
-// ****************************************************************************
-type GetDisplayMediaSetSelectAllScreensAllowedForUrls struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) Name() string {
-	return "GetDisplayMediaSetSelectAllScreensAllowedForUrls"
-}
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) Scope() Scope          { return ScopeUser }
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) Status() Status        { return p.Stat }
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) UntypedV() interface{} { return p.Val }
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *GetDisplayMediaSetSelectAllScreensAllowedForUrls) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 974. SystemTerminalSshAllowed
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
@@ -25923,36 +25891,6 @@ func (p *PasswordSharingEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1171. ZstdContentEncodingEnabled
-// ****************************************************************************
-type ZstdContentEncodingEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ZstdContentEncodingEnabled) Name() string          { return "ZstdContentEncodingEnabled" }
-func (p *ZstdContentEncodingEnabled) Scope() Scope          { return ScopeUser }
-func (p *ZstdContentEncodingEnabled) Status() Status        { return p.Stat }
-func (p *ZstdContentEncodingEnabled) UntypedV() interface{} { return p.Val }
-func (p *ZstdContentEncodingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ZstdContentEncodingEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ZstdContentEncodingEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1172. IPv6ReachabilityOverrideEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -28920,7 +28858,6 @@ func (p *AllowExcludeDisplayInMirrorMode) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1300. AutofillPredictionSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type AutofillPredictionSettings struct {
 	Stat Status
@@ -29113,7 +29050,6 @@ func (p *SelectParserRelaxationEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1307. ClassManagementEnabled
-// This policy can be modified without rebooting.
 // ****************************************************************************
 type ClassManagementEnabled struct {
 	Stat Status
@@ -29945,30 +29881,29 @@ func (p *GenAiChromeOsSmartActionsSettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1338. RelaunchSupersededReleaseAge
+// 1338. RelaunchFastIfOutdated
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type RelaunchSupersededReleaseAge struct {
+type RelaunchFastIfOutdated struct {
 	Stat Status
 	Val  int
 }
 
-func (p *RelaunchSupersededReleaseAge) Name() string          { return "RelaunchSupersededReleaseAge" }
-func (p *RelaunchSupersededReleaseAge) Scope() Scope          { return ScopeUser }
-func (p *RelaunchSupersededReleaseAge) Status() Status        { return p.Stat }
-func (p *RelaunchSupersededReleaseAge) UntypedV() interface{} { return p.Val }
-func (p *RelaunchSupersededReleaseAge) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *RelaunchFastIfOutdated) Name() string          { return "RelaunchFastIfOutdated" }
+func (p *RelaunchFastIfOutdated) Scope() Scope          { return ScopeUser }
+func (p *RelaunchFastIfOutdated) Status() Status        { return p.Stat }
+func (p *RelaunchFastIfOutdated) UntypedV() interface{} { return p.Val }
+func (p *RelaunchFastIfOutdated) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v int
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as int", m)
 	}
 	return v, nil
 }
-func (p *RelaunchSupersededReleaseAge) SetProto(m *protoreflect.Message) {
+func (p *RelaunchFastIfOutdated) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *RelaunchSupersededReleaseAge) Equal(iface interface{}) bool {
+func (p *RelaunchFastIfOutdated) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
 	if !ok {
 		return ok
@@ -29978,7 +29913,6 @@ func (p *RelaunchSupersededReleaseAge) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1339. ClassManagementCaptionsEnabled
-// This policy can be modified without rebooting.
 // ****************************************************************************
 type ClassManagementCaptionsEnabled struct {
 	Stat Status
@@ -30009,7 +29943,6 @@ func (p *ClassManagementCaptionsEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1340. ClassManagementClassroomIntegrationEnabled
-// This policy can be modified without rebooting.
 // ****************************************************************************
 type ClassManagementClassroomIntegrationEnabled struct {
 	Stat Status
@@ -30042,7 +29975,6 @@ func (p *ClassManagementClassroomIntegrationEnabled) Equal(iface interface{}) bo
 
 // ****************************************************************************
 // 1341. ClassManagementNetworkRestrictionEnabled
-// This policy can be modified without rebooting.
 // ****************************************************************************
 type ClassManagementNetworkRestrictionEnabled struct {
 	Stat Status
@@ -30066,39 +29998,6 @@ func (p *ClassManagementNetworkRestrictionEnabled) SetProto(m *protoreflect.Mess
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *ClassManagementNetworkRestrictionEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1342. ClassManagementSendingContentEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type ClassManagementSendingContentEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ClassManagementSendingContentEnabled) Name() string {
-	return "ClassManagementSendingContentEnabled"
-}
-func (p *ClassManagementSendingContentEnabled) Scope() Scope          { return ScopeUser }
-func (p *ClassManagementSendingContentEnabled) Status() Status        { return p.Stat }
-func (p *ClassManagementSendingContentEnabled) UntypedV() interface{} { return p.Val }
-func (p *ClassManagementSendingContentEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ClassManagementSendingContentEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ClassManagementSendingContentEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -30265,7 +30164,6 @@ func (p *HappyEyeballsV3Enabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1350. FaceGazeEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type FaceGazeEnabled struct {
 	Stat Status
@@ -30288,6 +30186,166 @@ func (p *FaceGazeEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *FaceGazeEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1352. DeviceLoginScreenFaceGazeEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeviceLoginScreenFaceGazeEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceLoginScreenFaceGazeEnabled) Name() string          { return "DeviceLoginScreenFaceGazeEnabled" }
+func (p *DeviceLoginScreenFaceGazeEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLoginScreenFaceGazeEnabled) Status() Status        { return p.Stat }
+func (p *DeviceLoginScreenFaceGazeEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceLoginScreenFaceGazeEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceLoginScreenFaceGazeEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "accessibility_settings", "login_screen_face_gaze_enabled", p.Val)
+}
+func (p *DeviceLoginScreenFaceGazeEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1355. DefaultSmartCardConnectSetting
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DefaultSmartCardConnectSetting struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DefaultSmartCardConnectSetting) Name() string          { return "DefaultSmartCardConnectSetting" }
+func (p *DefaultSmartCardConnectSetting) Scope() Scope          { return ScopeUser }
+func (p *DefaultSmartCardConnectSetting) Status() Status        { return p.Stat }
+func (p *DefaultSmartCardConnectSetting) UntypedV() interface{} { return p.Val }
+func (p *DefaultSmartCardConnectSetting) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DefaultSmartCardConnectSetting) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DefaultSmartCardConnectSetting) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1356. DeviceUserInitiatedFirmwareUpdatesEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceUserInitiatedFirmwareUpdatesEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) Name() string {
+	return "DeviceUserInitiatedFirmwareUpdatesEnabled"
+}
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) Status() Status        { return p.Stat }
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceUserInitiatedFirmwareUpdatesEnabled", "value", p.Val)
+}
+func (p *DeviceUserInitiatedFirmwareUpdatesEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1357. BuiltInAIAPIsEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type BuiltInAIAPIsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *BuiltInAIAPIsEnabled) Name() string          { return "BuiltInAIAPIsEnabled" }
+func (p *BuiltInAIAPIsEnabled) Scope() Scope          { return ScopeUser }
+func (p *BuiltInAIAPIsEnabled) Status() Status        { return p.Stat }
+func (p *BuiltInAIAPIsEnabled) UntypedV() interface{} { return p.Val }
+func (p *BuiltInAIAPIsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *BuiltInAIAPIsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *BuiltInAIAPIsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1358. TabGroupSharingSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type TabGroupSharingSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *TabGroupSharingSettings) Name() string          { return "TabGroupSharingSettings" }
+func (p *TabGroupSharingSettings) Scope() Scope          { return ScopeUser }
+func (p *TabGroupSharingSettings) Status() Status        { return p.Stat }
+func (p *TabGroupSharingSettings) UntypedV() interface{} { return p.Val }
+func (p *TabGroupSharingSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *TabGroupSharingSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *TabGroupSharingSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -31607,8 +31665,6 @@ func newByName(name string) (Policy, error) {
 		return &FirstPartySetsOverrides{}, nil
 	case "DevicePowerAdaptiveChargingEnabled":
 		return &DevicePowerAdaptiveChargingEnabled{}, nil
-	case "GetDisplayMediaSetSelectAllScreensAllowedForUrls":
-		return &GetDisplayMediaSetSelectAllScreensAllowedForUrls{}, nil
 	case "SystemTerminalSshAllowed":
 		return &SystemTerminalSshAllowed{}, nil
 	case "InsightsExtensionEnabled":
@@ -31887,8 +31943,6 @@ func newByName(name string) (Policy, error) {
 		return &ShowHumanPresenceSensorScreenEnabled{}, nil
 	case "PasswordSharingEnabled":
 		return &PasswordSharingEnabled{}, nil
-	case "ZstdContentEncodingEnabled":
-		return &ZstdContentEncodingEnabled{}, nil
 	case "IPv6ReachabilityOverrideEnabled":
 		return &IPv6ReachabilityOverrideEnabled{}, nil
 	case "UserFeedbackWithLowLevelDebugDataAllowed":
@@ -32137,16 +32191,14 @@ func newByName(name string) (Policy, error) {
 		return &GenAISmartGroupingSettings{}, nil
 	case "GenAiChromeOsSmartActionsSettings":
 		return &GenAiChromeOsSmartActionsSettings{}, nil
-	case "RelaunchSupersededReleaseAge":
-		return &RelaunchSupersededReleaseAge{}, nil
+	case "RelaunchFastIfOutdated":
+		return &RelaunchFastIfOutdated{}, nil
 	case "ClassManagementCaptionsEnabled":
 		return &ClassManagementCaptionsEnabled{}, nil
 	case "ClassManagementClassroomIntegrationEnabled":
 		return &ClassManagementClassroomIntegrationEnabled{}, nil
 	case "ClassManagementNetworkRestrictionEnabled":
 		return &ClassManagementNetworkRestrictionEnabled{}, nil
-	case "ClassManagementSendingContentEnabled":
-		return &ClassManagementSendingContentEnabled{}, nil
 	case "ClassManagementViewScreenEnabled":
 		return &ClassManagementViewScreenEnabled{}, nil
 	case "KioskChromeAppsForceAllowed":
@@ -32159,6 +32211,16 @@ func newByName(name string) (Policy, error) {
 		return &HappyEyeballsV3Enabled{}, nil
 	case "FaceGazeEnabled":
 		return &FaceGazeEnabled{}, nil
+	case "DeviceLoginScreenFaceGazeEnabled":
+		return &DeviceLoginScreenFaceGazeEnabled{}, nil
+	case "DefaultSmartCardConnectSetting":
+		return &DefaultSmartCardConnectSetting{}, nil
+	case "DeviceUserInitiatedFirmwareUpdatesEnabled":
+		return &DeviceUserInitiatedFirmwareUpdatesEnabled{}, nil
+	case "BuiltInAIAPIsEnabled":
+		return &BuiltInAIAPIsEnabled{}, nil
+	case "TabGroupSharingSettings":
+		return &TabGroupSharingSettings{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
