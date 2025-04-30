@@ -6,6 +6,8 @@ package wwcb
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -142,18 +144,24 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to press ctrl + search + scale: ", err)
 	}
 	// GoBigSleepLint: wait for screenshot.
-	testing.Sleep(ctx, 2*time.Second)
+	testing.Sleep(ctx, 5*time.Second)
 
 	fs := dutfs.NewClient(cl.Conn)
 	defer fs.RemoveAll(cleanupCtx, utils.DownloadsPath)
-	files, err := fs.ReadDir(ctx, utils.DownloadsPath)
+	// Recursively search users `MyFiles` dir for `Screenshot` files, this is a workaround
+	// for b/413085982 where ScreenRecorder interferes with screenshot and causes the
+	// screenshot to end up in folder other than Downloads.
+	downloadParent := filepath.Dir(utils.DownloadsPath)
+	var files []string
+	err = recursiveReadDir(ctx, fs, downloadParent, &files)
 	if err != nil {
-		s.Fatal("Failed to read downloads folder: ", err)
+		s.Fatal("Failed to read user folder: ", err)
 	}
 	verifyScreenshot := false
+	s.Logf("Searching for screenshots in files from %v for screen shots: %v", utils.DownloadsPath, files)
 	// Check screenshot is success.
 	for _, file := range files {
-		if strings.Contains(file.Name(), "Screenshot") {
+		if strings.Contains(file, "Screenshot") {
 			verifyScreenshot = true
 			break
 		}
@@ -162,4 +170,34 @@ func ShortKeysCombinationsWithEmulator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to screenshot")
 	}
 
+}
+
+func recursiveReadDir(ctx context.Context, fs *dutfs.Client, dir string, files *[]string) error {
+	entries, err := fs.ReadDir(ctx, dir)
+	if err != nil {
+		// If a directory cannot be read (e.g., permissions), then skip it.
+		testing.ContextLogf(ctx, "Failed to read directory %s: %v", dir, err)
+		return nil // Continue with other directories if possible.
+	}
+
+	for _, entry := range entries {
+		// Construct the full path for the current entry.
+		// Assumes entry.Name() is just the name, not a full path.
+		// And assumes paths used by the reader are OS-compatible.
+		entryPath := filepath.Join(dir, entry.Name())
+
+		if entry.IsDir() {
+			// If it's a directory, recurse.
+			err := recursiveReadDir(ctx, fs, entryPath, files)
+			if err != nil {
+				// If recursion into a subdirectory fails critically, propagate the error.
+				return fmt.Errorf("error recursing into %s: %w", entryPath, err)
+			}
+		} else {
+			// If it's a file, add its absolute path to the list.
+			// We assume entryPath is already effectively absolute because currentSearchDir is.
+			*files = append(*files, entryPath)
+		}
+	}
+	return nil
 }
