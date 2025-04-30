@@ -1271,19 +1271,15 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := collaborationConn.Navigate(shortCtx, chrome.VersionURL); err != nil {
 				testing.ContextLogf(ctx, "Failed to navigate to %s: %v", chrome.VersionURL, err)
 				// If the "Leave site?" prompt pops up, click the leave button.
-				if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(prompts.LeaveSitePrompt.PromptFinder)(ctx); err == nil {
-					if err := prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx); err != nil {
-						return errors.Wrap(err, "failed to clear leave site prompt")
-					}
-					if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
-						testing.ContextLogf(ctx, "Failed to wait for %s to achieve quiescence: %v", chrome.VersionURL, err)
-					}
-					targets, err := cr.FindTargets(ctx, chrome.MatchTargetURL(chrome.VersionURL))
-					if err != nil || len(targets) == 0 {
-						return errors.Wrapf(err, "failed to find URL %s", chrome.VersionURL)
-					}
-				} else {
-					return errors.Wrapf(err, "failed to navigate to %s", chrome.VersionURL)
+				if err := uiauto.Retry(3, prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt))(ctx); err != nil {
+					return errors.Wrap(err, "failed to clear leave site prompt")
+				}
+				if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
+					testing.ContextLogf(ctx, "Failed to wait for %s to achieve quiescence: %v", chrome.VersionURL, err)
+				}
+				targets, err := cr.FindTargets(ctx, chrome.MatchTargetURL(chrome.VersionURL))
+				if err != nil || len(targets) == 0 {
+					return errors.Wrapf(err, "failed to find URL %s", chrome.VersionURL)
 				}
 			}
 		}
