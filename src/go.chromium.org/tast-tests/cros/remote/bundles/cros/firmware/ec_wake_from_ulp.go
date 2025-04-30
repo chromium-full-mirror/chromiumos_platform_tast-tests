@@ -124,6 +124,7 @@ func init() {
 				"guren",
 				"guren360",
 				"joxer",
+				"meliks",
 				"nirwen",
 				"pujjoga",
 				"pujjogatwin",
