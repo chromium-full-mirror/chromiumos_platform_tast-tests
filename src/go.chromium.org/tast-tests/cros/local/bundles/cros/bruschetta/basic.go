@@ -20,15 +20,20 @@ func init() {
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
-		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Params: []testing.Param{
 			{
-				Name:    "",
-				Fixture: bruschetta.BruschettaFixture,
+				Name:      "",
+				ExtraAttr: []string{"group:mainline", "group:bruschetta_cq"},
+				Fixture:   bruschetta.BruschettaFixture,
 			}, {
-				Name:    "with_fieldtrial_config",
-				Fixture: bruschetta.BruschettaFixtureWithFieldtrialConfig,
+				// This test shouldn't be enabled for automation.
+				Name:    "with_vm_config",
+				Fixture: bruschetta.BruschettaFixtureWithVMConfig,
+			}, {
+				Name:      "with_fieldtrial_config",
+				ExtraAttr: []string{"group:mainline", "group:bruschetta_cq"},
+				Fixture:   bruschetta.BruschettaFixtureWithFieldtrialConfig,
 			},
 		},
 	})

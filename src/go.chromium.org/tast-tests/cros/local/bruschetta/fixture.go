@@ -53,6 +53,8 @@ const (
 
 	// BruschettaFixture is the name of the fixture with ash.
 	BruschettaFixture = "bruschettaReferenceVM"
+	// BruschettaFixtureWithVMConfig is the name of the fixture that assumes a custom VM config other than refvm.
+	BruschettaFixtureWithVMConfig = "bruschettaFixtureWithCustomVMConfig"
 	// BruschettaFixtureClamshell is the name of the fixture with ash, only in clamshell mode.
 	BruschettaFixtureClamshell = "bruschettaReferenceVMClamshell"
 	// BruschettaFixtureWithFieldtrialConfig is the name of the fixture with ash
@@ -93,6 +95,18 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
+		Parent:          fixture.ChromePolicyLoggedInBruschetta,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            BruschettaFixtureWithVMConfig,
+		Desc:            "Set up reference VM assuming a non-refvm VM config is provided",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
+		Impl:            &bruschettaFixture{},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
 		Parent:          fixture.ChromePolicyLoggedInBruschetta,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -213,14 +227,17 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	}
 	f.tconn = tconn
 
-	s.Log("Starting local HTTP server")
+	// If a custom VM config is specified then we assume serving those artifacts is handled externally.
+	if bruschettaVMConfigurationVar.Value() == "" {
+		s.Log("Starting local HTTP server")
 
-	// Use cleanupCtx here because the HTTP server needs to use the cleanup time for shutdown.
-	shutdownServer := startHTTPServer(cleanupCtx, s.DataPath(referenceVMInstaller), s.DataPath(referenceVMPflash))
-	defer func() {
-		s.Log("Stopping local HTTP server")
-		shutdownServer()
-	}()
+		// Use cleanupCtx here because the HTTP server needs to use the cleanup time for shutdown.
+		shutdownServer := startHTTPServer(cleanupCtx, s.DataPath(referenceVMInstaller), s.DataPath(referenceVMPflash))
+		defer func() {
+			s.Log("Stopping local HTTP server")
+			shutdownServer()
+		}()
+	}
 
 	s.Log("Setting chrome policy")
 
