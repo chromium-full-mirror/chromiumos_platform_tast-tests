@@ -131,7 +131,7 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 
 		if currPowerState, err := h.Servo.GetECSystemPowerState(ctx); err != nil {
 			return errors.Wrap(err, "failed to check powerstate")
-		} else if currPowerState != "S0" {
+		} else if currPowerState != "S0" && currPowerState != "AP_POWER_STATE_S0" {
 			return errors.Errorf("expected DUT to remain in S0, but got powerstate %v instead", currPowerState)
 		}
 		return nil
