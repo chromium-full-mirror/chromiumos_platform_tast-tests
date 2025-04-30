@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Checks resourced querying memory status",
 		Contacts:     []string{"chromeos-memory@google.com", "vovoy@chromium.org"},
 		BugComponent: "b:167286", // ChromeOS > Platform > System > Memory Management
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cq-medium"},
 		Timeout:      2 * time.Minute,
 	})
 }
