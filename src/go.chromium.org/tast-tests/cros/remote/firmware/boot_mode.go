@@ -458,9 +458,15 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1", "dev_boot_signed_only=0", "dev_default_boot=usb").Run(ssh.DumpLogOnError); err != nil {
 				return errors.Wrap(err, "enabling dev_boot_usb")
 			}
-			testing.ContextLog(ctx, "Removing USB")
+			testing.ContextLog(ctx, "Removing USB (for devusb)")
 			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 				return err
+			}
+			if msOptsContain(opts, AllowGBBForce) {
+				testing.ContextLog(ctx, "Enabling USB (for devusb)")
+				if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+					return err
+				}
 			}
 			testing.ContextLog(ctx, "Rebooting")
 			powerOffCtx, cancel := context.WithTimeout(ctx, cmdTimeout)
@@ -478,8 +484,20 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			if err := ms.Helper.DUT.WaitUnreachable(offCtx); err != nil {
 				return errors.Wrap(err, "waiting for DUT to be unreachable after reboot")
 			}
-			if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
-				return errors.Wrap(err, "moving from firmware screen to usb dev mode")
+			if msOptsContain(opts, AllowGBBForce) {
+				totalTimeout := h.Config.USBImageBootTimeout + h.Config.FirmwareScreen
+				if msOptsContain(opts, WaitSoftwareSync) {
+					totalTimeout += h.Config.SoftwareSyncUpdate
+				}
+				connectCtx, cancel := context.WithTimeout(ctx, totalTimeout)
+				defer cancel()
+				if err := ms.Helper.DUT.WaitConnect(connectCtx); err != nil {
+					return errors.Wrap(err, "waiting for DUT reboot to usb")
+				}
+			} else {
+				if err := ms.fwScreenToUSBDevMode(ctx, opts...); err != nil {
+					return errors.Wrap(err, "moving from firmware screen to usb dev mode")
+				}
 			}
 		}
 		// Reconnect to the DUT.
