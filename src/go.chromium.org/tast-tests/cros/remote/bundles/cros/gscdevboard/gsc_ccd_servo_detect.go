@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var hypEcUartEnabled bool
+
 type expectedServoDetectResult struct {
 	rdd     ti50.CCDStateStandardVal
 	ccdMode ti50.CCDStateStandardVal
@@ -146,6 +148,7 @@ func GSCCCDServoDetect(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	commands := s.Param().([]string)
+	hypEcUartEnabled = true
 
 	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
@@ -219,11 +222,20 @@ func runCommandCheckState(ctx context.Context, s *testing.State, b utils.Devboar
 	if ccdstate.Rdd.State != ti50.CCDStateOn {
 		return
 	}
-	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 
-	// Test forwarding on each of three ports.
+	var ecUartTxEnabled bool
+	if b.TestbedType == ti50.GscH1Shield {
+		ecUartTxEnabled = uartTxEnabled
+	} else {
+		// Ti50 shields cannot connect Servo and read the EC UART.
+		// The shield will not be able to read the UART when it's
+		// simulating servo connected.
+		ecUartTxEnabled = hypEcUartEnabled && uartTxEnabled
+	}
+
 	s.Log("Testing UARTs")
-	if err = b.TestUARTForwarding(ctx, r, ti50.UartEC, true, uartTxEnabled, caseStr); err != nil {
+	// Test forwarding on each of three ports.
+	if err = b.TestUARTForwarding(ctx, r, ti50.UartEC, true, ecUartTxEnabled, caseStr); err != nil {
 		s.Errorf("EC UART failed: %s", err)
 	}
 	if err = b.TestUARTForwarding(ctx, r, ti50.UartAP, true, uartTxEnabled, caseStr); err != nil {
@@ -247,8 +259,14 @@ func runSetupCommand(ctx context.Context, b utils.DevboardHelper, th utils.Firmw
 		b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	case "servo_disconnect":
 		b.GpioApplyStrap(ctx, ti50.ServoMicroDisconnected)
+		// For servo disconnect DT shields put the uart signal back in
+		// alternate mode. It can read EC UART.
+		hypEcUartEnabled = true
 	case "servo_connect":
 		b.GpioApplyStrap(ctx, ti50.ServoMicroConnected)
+		// The DT shields have to output high to simulate servo connect.
+		// It isn't in Alternate mode, so it can't read EC UART.
+		hypEcUartEnabled = false
 	}
 	// Wait until GSC stops debouncing any ccdstate.
 	th.MustSucceed(i.WaitForStableCCDState(ctx), "failed to wait for stable ccdstate")
