@@ -23,6 +23,7 @@ recbtnforce
 rma_auth
 sleepmask
 -sn
+spi_drive
 sysinfo
 sysrst
 taskinfo
