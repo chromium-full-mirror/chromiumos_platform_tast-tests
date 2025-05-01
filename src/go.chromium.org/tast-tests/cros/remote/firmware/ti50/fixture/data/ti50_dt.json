@@ -452,8 +452,7 @@
       "pins": [
         {
           "name": "UART_DBG_TX_EC_RX",
-          "mode": "Alternate",
-          "pull_mode": "None"
+          "mode": "Alternate"
         }
       ]
     },
@@ -462,8 +461,8 @@
       "pins": [
         {
           "name": "UART_DBG_TX_EC_RX",
-          "mode": "Alternate",
-          "pull_mode": "PullUp"
+          "mode": "PushPull",
+          "level": true
         }
       ]
     }
