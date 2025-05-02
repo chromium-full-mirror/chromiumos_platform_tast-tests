@@ -276,16 +276,8 @@ func FindDockEthernet(ctx context.Context, dut *dut.DUT, defaultEth []string) (s
 		if err != nil {
 			return err
 		}
-
 		diff = FindDifference(current, defaultEth)
-		diffCount := 0
-		for i := range diff {
-			if err := pingNetwork(ctx, dut, diff[i], WWCBIPPowerIP.Value()); err == nil {
-				diffCount++
-				index = i
-			}
-		}
-
+		diffCount := len(diff)
 		if diffCount != 1 {
 			return errors.Errorf("unexpected number of Ethernet detected; got %d, want 1", diffCount)
 		}
