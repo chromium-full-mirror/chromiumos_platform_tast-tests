@@ -204,7 +204,7 @@ func TestPaths(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			helper := NewHelper(test.topology, "localhost", nil)
+			helper := newHelperTest(test.topology, "localhost", nil, "192.168.100.101")
 
 			path, err := helper.path(test.find, nil)
 			verifyPath(t, "path", path, test.expectedPath, err, test.pathNotFound)
@@ -244,7 +244,7 @@ func TestPathsVia(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			helper := NewHelper(test.topology, "localhost", nil)
+			helper := newHelperTest(test.topology, "localhost", nil, "192.168.100.101")
 			devices := helper.devicesByTypeVia(test.find, test.via)
 
 			find := func(d *labapi.PasitHost_Device) bool { return d.GetId() == devices[0] }

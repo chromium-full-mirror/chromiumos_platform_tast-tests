@@ -12,6 +12,7 @@ import (
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -23,10 +24,11 @@ type Connection struct {
 	connection *labapi.PasitHost_Connection
 	childID    string
 	manager    api.SwitchService
+	devices    map[string]*labapi.PasitHost_Device
 }
 
 // newConnection creates a connection between to components.
-func newConnection(connection *labapi.PasitHost_Connection, reverse bool, manager api.SwitchService) *Connection {
+func newConnection(connection *labapi.PasitHost_Connection, reverse bool, manager api.SwitchService, devices map[string]*labapi.PasitHost_Device) *Connection {
 	childID := connection.GetChildId()
 	if reverse {
 		childID = connection.GetParentId()
@@ -36,6 +38,7 @@ func newConnection(connection *labapi.PasitHost_Connection, reverse bool, manage
 		connection: connection,
 		childID:    childID,
 		manager:    manager,
+		devices:    devices,
 	}
 }
 
@@ -57,10 +60,12 @@ func (c ConnectionPath) Activate(ctx context.Context) error {
 	// Plug in devices starting at peripheral and working towards DUT.
 	for i := len(c) - 1; i >= 0; i-- {
 		con := c[i]
+		if err := con.SetRPM(ctx, true); err != nil {
+			return errors.Wrap(err, "ActivateAll failed to set RPM")
+		}
 		if con.IsStatic() {
 			continue
 		}
-
 		req := &passport.ConfigureSwitchPortRequest{
 			State:    passport.SwitchPortState_SWITCH_PORT_ENABLED,
 			SwitchId: con.connection.GetParentId(),
@@ -78,6 +83,9 @@ func (c ConnectionPath) Activate(ctx context.Context) error {
 func (c ConnectionPath) DisableAll(ctx context.Context) error {
 	foundSwitch := false
 	for _, con := range c {
+		if err := con.SetRPM(ctx, false); err != nil {
+			return errors.Wrap(err, "DisableAll failed to set RPM")
+		}
 		if con.IsStatic() {
 			continue
 		}
@@ -144,4 +152,21 @@ func (c ConnectionPath) FlipLast(ctx context.Context) error {
 		return nil
 	}
 	return errors.New("failed to flip path, no switch connections found")
+}
+
+// SetRPM set RPM(s) to enabled state for the connection
+// if the connection has an associated RPM it will be set to the enabled state.
+//
+// ctx: context to use
+// enabled: true = power on the port, false = power off the port
+func (c Connection) SetRPM(ctx context.Context, enabled bool) error {
+	d := c.devices[c.connection.GetParentId()]
+	if d == nil {
+		return errors.Errorf("unable to set RPM could not find device with ID: %s", c.connection.GetParentId())
+	}
+	rpm := d.GetRpm()
+	if rpm == nil {
+		return nil
+	}
+	return utils.SetRPM(ctx, rpm, enabled)
 }

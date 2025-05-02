@@ -122,11 +122,6 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	ippowerPorts := []int{1}
-	if err := powerOffOn(ctx, dut, ippowerPorts, USBDevices); err != nil {
-		s.Fatal("Failed to verify peripherals after power off/on the docking station: ", err)
-	}
-
 	if _, ok := s.Var("newTestItem"); ok {
 		if err := tf.VerifyDockingInterface(ctx, s.DUT(), s.DataPath("Capabilities.json")); err != nil {
 			s.Fatal("Failed to verify the docking station interface: ", err)
@@ -137,7 +132,7 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := rebootDUT(ctx, dut, ippowerPorts, USBDevices); err != nil {
+	if err := rebootDUT(ctx, tf.Helper, dut, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after reboot DUT: ", err)
 	}
 
@@ -151,7 +146,7 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := powerOffRebootOn(ctx, dut, ippowerPorts, USBDevices); err != nil {
+	if err := powerOffRebootOn(ctx, tf.Helper, dut, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after power off dock, reboot DUT, power on dock: ", err)
 	}
 
@@ -167,16 +162,21 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 }
 
 // powerOffOn powers off and on the docking station and verifies the connection of peripherals.
-func powerOffOn(ctx context.Context, dut *dut.DUT, ippowerPorts []int, USBDevices []string) error {
-	if err := utils.CloseIppower(ctx, ippowerPorts); err != nil {
-		return errors.Wrap(err, "failed to power off the docking station")
+func powerOffOn(ctx context.Context, tf *topology.Helper, dut *dut.DUT, USBDevices []string) error {
+	docks := tf.DevicesByType(topology.DeviceTypeDockingStation)
+	for _, dock := range docks {
+		if err := tf.SetPowerByID(ctx, dock, false); err != nil {
+			return errors.Wrap(err, "failed to power off the docking station")
+		}
 	}
 
 	// GoBigSleepLint: Prevent Dock cached
 	testing.Sleep(ctx, 5*time.Second)
 
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		return errors.Wrap(err, "failed to power on the docking station")
+	for _, dock := range docks {
+		if err := tf.SetPowerByID(ctx, dock, true); err != nil {
+			return errors.Wrap(err, "failed to power off the docking station")
+		}
 	}
 
 	if err := utils.VerifyPeripheralsConnection(ctx, dut, true, USBDevices); err != nil {
@@ -186,7 +186,7 @@ func powerOffOn(ctx context.Context, dut *dut.DUT, ippowerPorts []int, USBDevice
 }
 
 // rebootDUT reboots the DUT then verifies the connection of peripherals.
-func rebootDUT(ctx context.Context, dut *dut.DUT, ippowerPorts []int, USBDevices []string) error {
+func rebootDUT(ctx context.Context, tf *topology.Helper, dut *dut.DUT, USBDevices []string) error {
 	if err := dut.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT")
 	}
@@ -198,17 +198,22 @@ func rebootDUT(ctx context.Context, dut *dut.DUT, ippowerPorts []int, USBDevices
 }
 
 // powerOffRebootOn powers off the docking station, reboots the DUT, powers on the docking station then verifies the connection of peripherals.
-func powerOffRebootOn(ctx context.Context, dut *dut.DUT, ippowerPorts []int, USBDevices []string) error {
-	if err := utils.CloseIppower(ctx, ippowerPorts); err != nil {
-		return errors.Wrap(err, "failed to power off the docking station")
+func powerOffRebootOn(ctx context.Context, tf *topology.Helper, dut *dut.DUT, USBDevices []string) error {
+	docks := tf.DevicesByType(topology.DeviceTypeDockingStation)
+	for _, dock := range docks {
+		if err := tf.SetPowerByID(ctx, dock, false); err != nil {
+			return errors.Wrap(err, "failed to power off the docking station")
+		}
 	}
 
 	if err := dut.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT")
 	}
 
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		return errors.Wrap(err, "failed to power on the docking station")
+	for _, dock := range docks {
+		if err := tf.SetPowerByID(ctx, dock, true); err != nil {
+			return errors.Wrap(err, "failed to power on the docking station")
+		}
 	}
 
 	if err := utils.VerifyPeripheralsConnection(ctx, dut, true, USBDevices); err != nil {

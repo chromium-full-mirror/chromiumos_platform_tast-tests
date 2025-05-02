@@ -8,6 +8,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -304,13 +305,17 @@ func CloseAllFixture(ctx context.Context) error {
 
 // PowerCycleFixture Turns the IP power supply's 4th port (assigned to the USB hub) off and on to power cycle the fixtures.
 func PowerCycleFixture(ctx context.Context) error {
-	ippowerPorts := []int{USBHubPort}
-	if err := CloseIppower(ctx, ippowerPorts); err != nil {
+	rpm := WWCBIPowerRPM("")
+	if rpm == nil {
+		return nil
+	}
+	rpm.PowerUnitOutlet = strconv.Itoa(USBHubPort)
+	if err := SetRPM(ctx, rpm, false); err != nil {
 		return errors.Wrap(err, "close the 4th port of the IP power supply")
 	}
 	// GoBigSleepLint: Sleep for a second before power on USB hub.
 	testing.Sleep(ctx, 1*time.Second)
-	if err := OpenIppower(ctx, ippowerPorts); err != nil {
+	if err := SetRPM(ctx, rpm, true); err != nil {
 		return errors.Wrap(err, "open the 4th port of the IP power supply")
 	}
 	return nil

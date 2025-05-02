@@ -11,6 +11,7 @@ import (
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 
 	"go.chromium.org/tast/core/errors"
@@ -47,12 +48,29 @@ type Helper struct {
 	switchService api.SwitchService
 }
 
+var wwcbPowerEndpointVar string = ""
+
+// newHelperTest used only for testing to prevent dependency on global tast config
+func newHelperTest(topology *labapi.PasitHost, hostname string, switchService api.SwitchService, wwcbPowerEndpoint string) *Helper {
+	wwcbPowerEndpointVar = wwcbPowerEndpoint
+	return NewHelper(topology, hostname, switchService)
+}
+
 // NewHelper creates a new PASIT topology helper for the given topology and host.
 func NewHelper(topology *labapi.PasitHost, hostname string, switchService api.SwitchService) *Helper {
 	// Cache devices in the topology.
 	devices := make(map[string]*labapi.PasitHost_Device)
 	for _, d := range topology.GetDevices() {
 		devices[d.GetId()] = d
+		// For backwards compatibility with test arg, if the IP Power test arg
+		// is present then assume it is for the dock as with other test
+		// args this will also override the topology if one is specified.
+		if d.GetType() == DeviceTypeDockingStation {
+			rpm := utils.WWCBIPowerRPM(wwcbPowerEndpointVar)
+			if rpm != nil {
+				d.Rpm = rpm
+			}
+		}
 	}
 
 	// Cache connections between devices.
@@ -66,8 +84,8 @@ func NewHelper(topology *labapi.PasitHost, hostname string, switchService api.Sw
 			service = switchService
 		}
 
-		connections[parent] = append(connections[parent], newConnection(c, false, service))
-		connections[child] = append(connections[child], newConnection(c, true, service))
+		connections[parent] = append(connections[parent], newConnection(c, false, service, devices))
+		connections[child] = append(connections[child], newConnection(c, true, service, devices))
 	}
 
 	return &Helper{
@@ -90,19 +108,12 @@ func (t *Helper) InitializeFixtures(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Found switch: %q", s.GetId())
 	}
 
-	// Reset all connected switches.
-	if err := t.resetAllSwitches(ctx); err != nil {
-		return errors.Wrap(err, "failed to initialize fixtures")
-	}
-	return nil
+	return t.ResetAll(ctx)
 }
 
 // CloseAll cleans up and releases any resources held open by the fixtures.
 func (t *Helper) CloseAll(ctx context.Context) error {
-	if err := t.resetAllSwitches(ctx); err != nil {
-		return errors.Wrap(err, "failed to reset switches")
-	}
-	return nil
+	return t.ResetAll(ctx)
 }
 
 // ResetAll resets the fixture state to the default.
@@ -110,12 +121,28 @@ func (t *Helper) ResetAll(ctx context.Context) error {
 	if err := t.resetAllSwitches(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset switches")
 	}
+	if err := t.resetAllRPM(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset RPM")
+	}
 	return nil
 }
 
 func (t *Helper) resetAllSwitches(ctx context.Context) error {
 	_, err := t.switchService.ResetAllSwitches(ctx, &passport.ResetAllSwitchesRequest{})
 	return err
+}
+
+func (t *Helper) resetAllRPM(ctx context.Context) error {
+	var errs []error
+	for _, device := range t.devices {
+		if err := setPowerForDevice(ctx, device, false); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
 }
 
 // devicePredicate is a function that returns true if this is the device that we're searching for.
@@ -453,4 +480,25 @@ func (t *Helper) connectionsInPath(path []string) ConnectionPath {
 		}
 	}
 	return connections
+}
+
+// SetPowerByID sets the RPM power to enabled for a given device referenced by ID.
+// If the devices has no associated RPM in the topology this will be a no-op.
+//
+// id: the ID of the device to set power for
+// enabled: true = power on the port, false = power off the port
+func (t *Helper) SetPowerByID(ctx context.Context, id string, enabled bool) error {
+	d := t.devices[id]
+	if d == nil {
+		return errors.Errorf("could not set power no device found with ID: %s", id)
+	}
+	return setPowerForDevice(ctx, d, enabled)
+}
+
+func setPowerForDevice(ctx context.Context, device *labapi.PasitHost_Device, enabled bool) error {
+	rpm := device.GetRpm()
+	if rpm == nil || !rpm.GetPresent() {
+		return nil
+	}
+	return utils.SetRPM(ctx, rpm, enabled)
 }

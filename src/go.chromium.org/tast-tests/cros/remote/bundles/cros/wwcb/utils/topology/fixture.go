@@ -118,8 +118,6 @@ func init() {
 	})
 }
 
-var ipPowerPorts = []int{1}
-
 var marshaller = prototext.MarshalOptions{
 	Multiline: true,
 	Indent:    " ",
@@ -280,25 +278,10 @@ func (tf *TestFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := tf.CameraHelper.InitializeCameras(ctx); err != nil {
 		s.Fatal("Failed to initialize cameras: ", err)
 	}
-
-	// Try to power cycle IP power for DUTs that have docks.
-	if len(tf.Helper.DevicesByType(DeviceTypeDockingStation)) > 0 {
-		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-			// Just log errors here since this may not always be provided.
-			// Later this should be moved into the proto.
-			s.Log("Failed to power on the docking station: ", err)
-		}
-	}
 }
 
 // PostTest cleans up the test fixture after each test run.
-func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if len(tf.Helper.DevicesByType(DeviceTypeDockingStation)) > 0 {
-		if err := utils.CloseIppower(ctx, ipPowerPorts); err != nil {
-			s.Log("Failed to power off the docking station: ", err)
-		}
-	}
-}
+func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 // TearDown releases resources held open by the test fixture.
 func (tf *TestFixture) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -328,7 +311,8 @@ func (tf *TestFixture) ConnectPeripheralsViaDock(ctx context.Context, dut *dut.D
 			return "", nil, errors.Wrapf(err, "failed to connect to the USB Type-A device: %s", deviceID)
 		}
 	}
-
+	// GoBigSleepLint: allow extra time for the dock to be powered on and connect
+	testing.Sleep(ctx, 10*time.Second)
 	usbDevices, err := utils.GetStableUSBDevices(ctx, dut)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "failed to get a list of USB devices")
