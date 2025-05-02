@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"encoding/json"
-	"regexp"
 	"strings"
 	"time"
 
@@ -25,11 +24,10 @@ import (
 )
 
 const (
-	certTesterAppName         = "IntegrityAPI"
-	certTesterPackageName     = "com.dynamic.integrity"
-	keyAttestationTabText     = "KA"
-	expectedCertificateLength = "3"
-	recordFirstLinePattern    = "Key attestation record certificate length: (\\d+)"
+	certTestAppApkName    = "IntegrityAPIApp.apk"
+	certTesterAppName     = "IntegrityAPI"
+	certTesterPackageName = "com.dynamic.integrity"
+	keyAttestationTabText = "KA"
 
 	tabLayoutID                  = ":id/tab_layout"
 	devicePropCheckboxID         = ":id/include_device_properties_checkbox"
@@ -37,7 +35,7 @@ const (
 	keyAttestationResponseTextID = ":id/key_attestation_response_text"
 
 	expectedVersion                         = 200
-	expectedVerificationResultForTestImages = "KEY_ATTESTATION_RECORD_VERIFICATION_RESULT_CHAIN_UNVERIFIED"
+	expectedVerificationResultForTestImages = "KEY_ATTESTATION_RECORD_VERIFICATION_RESULT_OK"
 	expectedBootKeyForTestImages            = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 	expectedBootStateForTestImages          = "UNVERIFIED"
 	expectedSecurityLevelForTestImages      = "TRUSTED_ENVIRONMENT"
@@ -85,6 +83,10 @@ type keyAttestationRecord struct {
 	AttestedKey        string            `json:"attestedKey"`
 }
 
+type attestationCertificateTestParam struct {
+	enableAttestationFlag bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     AttestationCertificate,
@@ -94,27 +96,49 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
-		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"android_vm_t", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
+		Data:         []string{certTestAppApkName},
 		Params: []testing.Param{{
-			ExtraData: []string{
-				"IntegrityAPIApp.apk",
-			},
-			Val: "IntegrityAPIApp.apk",
+			Name:              "launched",
+			Val:               attestationCertificateTestParam{enableAttestationFlag: false},
+			ExtraSoftwareDeps: []string{"arc_attestation_launched"},
+		}, {
+			Name:              "not_launched",
+			Val:               attestationCertificateTestParam{enableAttestationFlag: true},
+			ExtraSoftwareDeps: []string{"arc_attestation_not_launched"},
 		}},
 	})
 }
 
+// AttestationCertificate will only pass on lab devices. It is expected to fail for DUTs used for development.
 func AttestationCertificate(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	a := s.FixtValue().(*arc.PreData).ARC
-	cr := s.FixtValue().(*arc.PreData).Chrome
-	d := s.FixtValue().(*arc.PreData).UIDevice
+	opts := []chrome.Option{
+		chrome.ARCEnabled(),
+		chrome.UnRestrictARCCPU(),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
+	}
+	enableAttestationFlag := s.Param().(attestationCertificateTestParam).enableAttestationFlag
+	if enableAttestationFlag {
+		opts = append(opts, chrome.EnableFeatures("ArcAttestation"))
+	}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Failed to connect to Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to start ARC: ", err)
+	}
+	defer a.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -122,13 +146,12 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	testerApkName := s.Param().(string)
 	s.Log("Installing " + certTesterAppName)
-	if err := a.Install(ctx, s.DataPath(testerApkName)); err != nil {
+	if err := a.Install(ctx, s.DataPath(certTestAppApkName)); err != nil {
 		s.Fatal("Failed to install IntegrityAPI: ", err)
 	}
 	defer func(ctx context.Context) {
-		s.Log("Uninstalling " + testerApkName)
+		s.Log("Uninstalling " + certTestAppApkName)
 		if err := a.Uninstall(ctx, certTesterPackageName); err != nil {
 			s.Fatal("Failed to uninstall IntegrityAPI APK: ", err)
 		}
@@ -139,6 +162,12 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get keyboard controller: ", err)
 	}
 	defer kb.Close(cleanupCtx)
+
+	d, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed to initialize UI Automator: ", err)
+	}
+	defer d.Close(cleanupCtx)
 
 	s.Log("Launching " + certTesterAppName)
 	app, err := apputil.NewApp(ctx, kb, tconn, a, d, certTesterAppName, certTesterPackageName)
@@ -157,21 +186,12 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 
 	s.Logf("Retrieved Key Attestation record: [%s]", result)
 
-	re := regexp.MustCompile(recordFirstLinePattern)
-	regexMatch := re.FindStringSubmatch(result)
-	if regexMatch == nil {
-		s.Fatal("Unexpected format for first line of result")
-	}
-	if regexMatch[1] != expectedCertificateLength {
-		s.Fatalf("Expected certificate length of %s but got %s", expectedCertificateLength, regexMatch[1])
-	}
-
 	s.Log("Verifying values in Key Attestation record")
 	var record keyAttestationRecord
 	if err = json.Unmarshal([]byte(result[strings.Index(result, "{"):]), &record); err != nil {
 		s.Fatal("Failed to unmarshal the Key Attestation record: ", err)
 	}
-	if err = verifyKeyAttestationRecord(record); err != nil {
+	if err = verifyKeyAttestationRecord(ctx, record); err != nil {
 		s.Fatal("Failed to verify values in Key Attestation record: ", err)
 	}
 }
@@ -229,8 +249,9 @@ func retrieveRecordFromAppUI(ctx context.Context, d *ui.Device) (string, error) 
 
 // verifyKeyAttestationRecord inspects the data within the record to validate the values
 // of certain key fields and make sure other key fields are not empty or nil.
-func verifyKeyAttestationRecord(record keyAttestationRecord) error {
+func verifyKeyAttestationRecord(ctx context.Context, record keyAttestationRecord) error {
 	if record.VerificationResult != expectedVerificationResultForTestImages {
+		testing.ContextLog(ctx, "This will fail on dev devices. This test must be run on lab/crosfleet")
 		return errors.Errorf("unexpected verification result: %s; Expected: %s",
 			record.VerificationResult, expectedVerificationResultForTestImages)
 	}
