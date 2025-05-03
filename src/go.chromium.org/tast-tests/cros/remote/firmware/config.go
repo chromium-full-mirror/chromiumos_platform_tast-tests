@@ -222,26 +222,26 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	}
 
 	// Populate actual durations based on raw JSON values.
-	cfg.DelayRebootToPing = toSeconds(cfg.RawDelayRebootToPing)
-	cfg.USBImageBootTimeout = toSeconds(cfg.RawUSBImageBootTimeout)
-	cfg.ECBootToPwrButton = toSeconds(cfg.RawECBootToPwrButton)
-	cfg.FirmwareScreen = toSeconds(cfg.RawFirmwareScreen)
-	cfg.FirmwareScreenRecMode = toSeconds(cfg.RawFirmwareScreenRecMode)
-	cfg.HoldPwrButtonNoPowerdShutdown = toSeconds(cfg.RawHoldPwrButtonNoPowerdShutdown)
-	cfg.HoldPwrButtonPowerOff = toSeconds(cfg.RawHoldPwrButtonPowerOff)
-	cfg.HoldPwrButtonPowerOn = toSeconds(cfg.RawHoldPwrButtonPowerOn)
-	cfg.KeypressDelay = toSeconds(cfg.RawKeypressDelay)
-	cfg.Shutdown = toSeconds(cfg.RawShutdown)
-	cfg.ShutdownTimeout = toSeconds(cfg.RawShutdownTimeout)
-	cfg.SoftwareSyncUpdate = toSeconds(cfg.RawSoftwareSyncUpdate)
-	cfg.USBPlug = toSeconds(cfg.RawUSBPlug)
-	cfg.RecInvalidScreen = toSeconds(cfg.RawRecInvalidScreen)
-	cfg.MiniOSScreen = toSeconds(cfg.RawMiniOSScreen)
-	cfg.ECWatchdogPeriod = toSeconds(cfg.RawECWatchdogPeriod)
-	cfg.ECWatchdogLeadingTime = toSeconds(cfg.RawECWatchdogLeadingTime)
-	cfg.WhiteScreenPowerPressTime = toSeconds(cfg.RawWhiteScreenPowerPressTime)
-	cfg.ECColdBootTime = toSeconds(cfg.RawECColdBootTime)
-	cfg.MemoryRetrainTimeout = toSeconds(cfg.RawMemoryRetrainTimeout)
+	cfg.DelayRebootToPing = fromSeconds(cfg.RawDelayRebootToPing)
+	cfg.USBImageBootTimeout = fromSeconds(cfg.RawUSBImageBootTimeout)
+	cfg.ECBootToPwrButton = fromSeconds(cfg.RawECBootToPwrButton)
+	cfg.FirmwareScreen = fromSeconds(cfg.RawFirmwareScreen)
+	cfg.FirmwareScreenRecMode = fromSeconds(cfg.RawFirmwareScreenRecMode)
+	cfg.HoldPwrButtonNoPowerdShutdown = fromSeconds(cfg.RawHoldPwrButtonNoPowerdShutdown)
+	cfg.HoldPwrButtonPowerOff = fromSeconds(cfg.RawHoldPwrButtonPowerOff)
+	cfg.HoldPwrButtonPowerOn = fromSeconds(cfg.RawHoldPwrButtonPowerOn)
+	cfg.KeypressDelay = fromSeconds(cfg.RawKeypressDelay)
+	cfg.Shutdown = fromSeconds(cfg.RawShutdown)
+	cfg.ShutdownTimeout = fromSeconds(cfg.RawShutdownTimeout)
+	cfg.SoftwareSyncUpdate = fromSeconds(cfg.RawSoftwareSyncUpdate)
+	cfg.USBPlug = fromSeconds(cfg.RawUSBPlug)
+	cfg.RecInvalidScreen = fromSeconds(cfg.RawRecInvalidScreen)
+	cfg.MiniOSScreen = fromSeconds(cfg.RawMiniOSScreen)
+	cfg.ECWatchdogPeriod = fromSeconds(cfg.RawECWatchdogPeriod)
+	cfg.ECWatchdogLeadingTime = fromSeconds(cfg.RawECWatchdogLeadingTime)
+	cfg.WhiteScreenPowerPressTime = fromSeconds(cfg.RawWhiteScreenPowerPressTime)
+	cfg.ECColdBootTime = fromSeconds(cfg.RawECColdBootTime)
+	cfg.MemoryRetrainTimeout = fromSeconds(cfg.RawMemoryRetrainTimeout)
 	// Parse list of raw json objects into go structs
 	cfg.USBEnablePins = parseRawUSBEnablePins(cfg.RawUSBEnablePins)
 
@@ -273,10 +273,15 @@ func (cfg *Config) HasECCapability(ecc ECCapability) bool {
 	return false
 }
 
-// toSeconds casts a float64 to a time.Duration, in seconds.
-func toSeconds(f float64) time.Duration {
-	// The 1000* factor enables a non-integer f to be cast as a time.Duration, an integer field.
+// fromSeconds and fromMilliseconds casts a float64 to a time.Duration, representing
+// seconds and milliseconds, respectively. The 1000* factor enables a non-integer f
+// to be cast as a time.Duration, an integer field.
+func fromSeconds(f float64) time.Duration {
 	return time.Duration(1000*f) * time.Millisecond
+}
+
+func fromMilliseconds(f float64) time.Duration {
+	return time.Duration(1000*f) * time.Microsecond
 }
 
 // HasMiniDiagCapability checks whether cfg has a certain MiniDiagCapability.
