@@ -986,17 +986,15 @@ func (f *cellularFixture) fixtureCleanUp(ctx context.Context, s *testing.FixtSta
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	testing.ContextLog(ctx, "Teardown")
+	teardownFailure := false
 	if f.cleanupPolicies != nil {
 		f.cleanupPolicies(ctx)
 	}
 
 	if f.modemLoggingStarted {
 		if err := stopModemLogging(ctx); err != nil {
-			if f.useFakeDMS {
-				s.Log("Could not stop modem logging: ", err)
-			} else {
-				s.Fatal("Could not stop modem logging: ", err)
-			}
+			testing.ContextLog(ctx, "Could not stop modem logging: ", err)
+			teardownFailure = true
 		} else {
 			f.modemLoggingStarted = false
 		}
@@ -1017,27 +1015,31 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			Timeout:  5 * time.Second,
 			Interval: 500 * time.Millisecond,
 		}); err != nil {
-			s.Fatal("Unable to enable Cellular: ", err)
+			testing.ContextLog(ctx, "Unable to enable Cellular: ", err)
+			teardownFailure = true
 		}
 	}
 	if f.modemfwdStopped {
 		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
-			s.Fatalf("Failed to start %q: %s", modemfwd.JobName, err)
+			testing.ContextLogf(ctx, "Failed to start %q: %s", modemfwd.JobName, err)
+			teardownFailure = true
 		}
-		s.Logf("Started %q", modemfwd.JobName)
+		testing.ContextLogf(ctx, "Started %q", modemfwd.JobName)
 	}
 	if f.uiStopped {
 		if err := upstart.EnsureJobRunning(ctx, uiJobName); err != nil {
-			s.Fatalf("Failed to start %q: %s", uiJobName, err)
+			testing.ContextLogf(ctx, "Failed to start %q: %s", uiJobName, err)
+			teardownFailure = true
 		}
-		s.Logf("Started %q", uiJobName)
+		testing.ContextLogf(ctx, "Started %q", uiJobName)
 	}
 	if f.hasChrome && f.cr != nil {
 		f.cr.Close(ctx)
 	}
 	if f.sf != nil {
 		if err := f.sf.Teardown(ctx); err != nil {
-			s.Fatalf("Failed to teardown starfish: %s", err)
+			testing.ContextLogf(ctx, "Failed to teardown starfish: %s", err)
+			teardownFailure = true
 		}
 	}
 
@@ -1047,10 +1049,15 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	if err := modemmanager.SetModemmanagerLogLevel(ctx, "INFO"); err != nil {
-		s.Fatal("Failed to set Modemmanager log level to INFO: ", err)
+		testing.ContextLog(ctx, "Failed to set Modemmanager log level to INFO: ", err)
+		teardownFailure = true
 	}
 	if err := SetShillDefaultLogging(ctx); err != nil {
-		s.Fatal("Failed to reset shill's logging config: ", err)
+		testing.ContextLog(ctx, "Failed to reset shill's logging config: ", err)
+		teardownFailure = true
+	}
+	if teardownFailure {
+		testing.ContextLog(ctx, "Teardown failed")
 	}
 }
 
