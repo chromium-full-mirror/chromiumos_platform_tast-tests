@@ -286,44 +286,50 @@ var ModifiersStatusCombo = []ModifiersStatus{
 }
 
 // SingleKeyAction return the action for pressing different modifier with key-1.
-func SingleKeyAction(needEsc bool, modifiers ModifiersStatus, key input.EventCode, kb *input.KeyboardEventWriter) action.Action {
-	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
-	// it unexpectedly disrupts dead-key composition (crbug/383673473).
+func SingleKeyAction(needEsc, useShortcutForCapslock bool, modifiers ModifiersStatus, key input.EventCode, kb *input.KeyboardEventWriter) action.Action {
 	return uiauto.Combine("click key based on modifers state",
 		ifThen(needEsc, kb.TypeKeyAction(input.KEY_ESC)),
-		ifThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(modifiers.Caps, capslockAction(useShortcutForCapslock, kb)),
 		ifThen(modifiers.Shift, kb.AccelPressAction("Shift")),
 		ifThen(modifiers.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key),
 		ifThen(modifiers.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers.Shift, kb.AccelReleaseAction("Shift")),
-		ifThen(modifiers.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(modifiers.Caps, capslockAction(useShortcutForCapslock, kb)),
 	)
 }
 
 // TwoKeysAction return the action for pressing different modifier with key-1 and key-2.
-func TwoKeysAction(needEsc bool, modifiers1, modifiers2 ModifiersStatus, key1, key2 input.EventCode, kb *input.KeyboardEventWriter) action.Action {
-	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
-	// it unexpectedly disrupts dead-key composition (crbug/383673473).
+func TwoKeysAction(needEsc, useShortcutForCapslock bool, modifiers1, modifiers2 ModifiersStatus, key1, key2 input.EventCode, kb *input.KeyboardEventWriter) action.Action {
 	return uiauto.Combine("click key based on modifers state",
 		ifThen(needEsc, kb.TypeKeyAction(input.KEY_ESC)),
 
-		ifThen(modifiers1.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(modifiers1.Caps, capslockAction(useShortcutForCapslock, kb)),
 		ifThen(modifiers1.Shift, kb.AccelPressAction("Shift")),
 		ifThen(modifiers1.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key1),
 		ifThen(modifiers1.Altgr && !modifiers2.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers1.Shift && !modifiers2.Shift, kb.AccelReleaseAction("Shift")),
-		ifThen(modifiers1.Caps && !modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(modifiers1.Caps && !modifiers2.Caps, capslockAction(useShortcutForCapslock, kb)),
 
-		ifThen(!modifiers1.Caps && modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(!modifiers1.Caps && modifiers2.Caps, capslockAction(useShortcutForCapslock, kb)),
 		ifThen(!modifiers1.Shift && modifiers2.Shift, kb.AccelPressAction("Shift")),
 		ifThen(!modifiers1.Altgr && modifiers2.Altgr, kb.AccelPressAction("RightAlt")),
 		kb.TypeKeyAction(key2),
 		ifThen(modifiers2.Altgr, kb.AccelReleaseAction("RightAlt")),
 		ifThen(modifiers2.Shift, kb.AccelReleaseAction("Shift")),
-		ifThen(modifiers2.Caps, kb.TypeKeyAction(input.KEY_CAPSLOCK)),
+		ifThen(modifiers2.Caps, capslockAction(useShortcutForCapslock, kb)),
 	)
+}
+
+func capslockAction(useShortcut bool, kb *input.KeyboardEventWriter) action.Action {
+	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
+	// it unexpectedly disrupts dead-key composition (crbug/383673473), so
+	// such shortcut should be avoided unless absolutely necessary.
+	if useShortcut {
+		return kb.AccelAction("Alt+Search")
+	}
+	return kb.TypeKeyAction(input.KEY_CAPSLOCK)
 }
 
 func ifThen(condition bool, action action.Action) uiauto.Action {

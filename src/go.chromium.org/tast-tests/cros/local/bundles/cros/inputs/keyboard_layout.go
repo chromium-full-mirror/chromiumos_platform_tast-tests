@@ -125,6 +125,13 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	// modifier latch from previous iteration.
 	needEsc := false
 
+	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
+	// it unexpectedly disrupts dead-key composition (crbug/383673473), so
+	// shortcut should be avoided where possible. For JIS, real Capslock
+	// doesn't always work (crbug/408113747) and fortunately JIS is known to
+	// not have dead keys, so use shortcut for Capslock on JIS only.
+	useShortcutForCapslock := hardwareLayoutType == "JIS"
+
 	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
 		s.Fatal("Failed to ClickFieldAndWaitForActive: ", err)
 	}
@@ -139,7 +146,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			}
 			if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s", getModifierInfo(modifiers), key.KeyName),
 				its.Clear(inputField),
-				util.SingleKeyAction(needEsc, modifiers, key.LinuxKeyCode, kb),
+				util.SingleKeyAction(needEsc, useShortcutForCapslock, modifiers, key.LinuxKeyCode, kb),
 			)(ctx); err != nil {
 				s.Fatal("Failed to typing key: ", err)
 			}
@@ -186,7 +193,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 				}
 				if err := uiauto.NamedCombine(fmt.Sprintf("typing %s + %s, then %s + %s", getModifierInfo(keystroke1.modifiers), keystroke1.key.KeyName, getModifierInfo(modifiers2), key2.KeyName),
 					its.Clear(inputField),
-					util.TwoKeysAction(needEsc, keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
+					util.TwoKeysAction(needEsc, useShortcutForCapslock, keystroke1.modifiers, modifiers2, keystroke1.key.LinuxKeyCode, key2.LinuxKeyCode, kb),
 				)(ctx); err != nil {
 					s.Fatal("Failed to typing key: ", err)
 				}
