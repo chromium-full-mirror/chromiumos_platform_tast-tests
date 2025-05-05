@@ -64,19 +64,6 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan",
-				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
 				Name:    "dataonline_noone_txt30mb_webrtc",
 				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCOnly",
 				Val: nearbycommon.TestData{
@@ -118,18 +105,6 @@ func init() {
 			{
 				Name:    "dataonline_noone_txt30mb_unstable_sender",
 				Fixture: "nearbyShareRemoteDataUsageOnlineNoOne",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan_unstable_sender",
-				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
@@ -188,18 +163,6 @@ func init() {
 				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan_unstable_receiver",
-				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
 				Name:    "dataonline_noone_txt30mb_webrtc_unstable_receiver",
 				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCOnly",
 				Val: nearbycommon.TestData{
@@ -238,18 +201,6 @@ func init() {
 			{
 				Name:    "dataonline_noone_txt30mb_unstable_both",
 				Fixture: "nearbyShareRemoteDataUsageOnlineNoOne",
-				Val: nearbycommon.TestData{
-					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				},
-				Timeout: nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan_unstable_both",
-				Fixture: "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
 				Val: nearbycommon.TestData{
 					Filename: "big_txt.zip", TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),

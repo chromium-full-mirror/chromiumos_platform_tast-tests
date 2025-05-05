@@ -67,21 +67,6 @@ func init() {
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCAndWLAN",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-					MimeType:        nearbycommon.MimeTypeTextPlain,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				ExtraSoftwareDeps: []string{"gaia"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
 				Name:    "dataonline_noone_txt30mb_webrtc",
 				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCOnly",
 				Val: nearbycommon.TestData{
@@ -130,20 +115,6 @@ func init() {
 			{
 				Name:    "dataonline_noone_txt30mb_unstable",
 				Fixture: "nearbyShareDataUsageOnlineNoOne",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-					MimeType:        nearbycommon.MimeTypeTextPlain,
-				},
-				ExtraAttr:         []string{"group:cross-device", "cross-device_nearbyshare"},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_webrtc_and_wlan_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCAndWLAN",
 				Val: nearbycommon.TestData{
 					Filename:        "big_txt.zip",
 					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,

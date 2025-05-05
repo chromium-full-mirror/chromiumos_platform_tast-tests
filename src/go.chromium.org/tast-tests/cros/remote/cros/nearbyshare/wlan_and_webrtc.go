@@ -14,23 +14,6 @@ import (
 // addWebRTCAndWLANFixtures registers fixtures for tests using WebRTC and WLAN transfer mediums.
 func addWebRTCAndWLANFixtures() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "nearbyShareRemoteDataUsageOnlineNoOneWebRTCAndWLAN",
-		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC and WLAN are eligible upgrade mediums",
-		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC, wlan} /*disabledFeatures=*/, []string{}),
-		Contacts: []string{"chromeos-sw-engprod@google.com"},
-		Vars: []string{
-			nearbycommon.KeepStateVar,
-		},
-		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-		Data:            []string{"big_txt.zip", "small_jpg.zip", "small_png.zip"},
-		BugComponent:    "b:1108889", // ChromeOS > Software > System Services > Cross Device
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name:     "nearbyShareRemoteDataUsageOnlineNoOneWebRTCOnly",
 		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in with a real GAIA account that are in each other's contacts. Configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. CrOS feature flags configured such that WebRTC is the only upgrade medium",
 		Impl:     NewNearbyShareFixture(nearbycommon.DataUsageOnline, nearbycommon.VisibilityNoOne /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{webRTC} /*disabledFeatures=*/, []string{wlan}),

@@ -27,7 +27,6 @@ type mediums int
 
 const (
 	defaultMediums mediums = iota
-	webRTCAndWLAN
 	webRTCOnly
 	wlanOnly
 )
@@ -48,8 +47,6 @@ func NewNearbyShareLogin(arcEnabled, backgroundScanningEnabled, useAndroidAccoun
 			chrome.EnableFeatures("NearbySharingBackgroundScanning"))
 	}
 	switch m {
-	case webRTCAndWLAN:
-		defaultNearbyOpts = append(defaultNearbyOpts, chrome.EnableFeatures("NearbySharingWebRtc"), chrome.EnableFeatures("NearbySharingWifiLan"))
 	case webRTCOnly:
 		defaultNearbyOpts = append(defaultNearbyOpts, chrome.EnableFeatures("NearbySharingWebRtc"), chrome.DisableFeatures("NearbySharingWifiLan"))
 	case wlanOnly:
@@ -267,29 +264,6 @@ func init() {
 	})
 
 	// Fixtures for testing different online transfer media (WebRTC and WLAN).
-	testing.AddFixture(&testing.Fixture{
-		Name: "nearbyShareGAIALoginWebRTCAndWLAN",
-		Desc: "CrOS login with GAIA; use WebRTC and WLAN upgrade mediums",
-		Contacts: []string{
-			"chromeos-cross-device-eng@google.com",
-			"hansenmichael@google.com",
-			"joaquinmarquez@google.com",
-		},
-		BugComponent: "b:1131838", // ChromeOS > Software > System Services > Cross Device > Nearby Share
-		Parent:       "nearbyShareAndroidSetup",
-		Impl:         NewNearbyShareLogin(false, false, false, webRTCAndWLAN, nil),
-		Vars: []string{
-			customCrOSUsername,
-			customCrOSPassword,
-			keepState,
-		},
-		SetUpTimeout:    3 * time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name: "nearbyShareGAIALoginWebRTCOnly",
 		Desc: "CrOS login with GAIA; only use WebRTC upgrade medium",
