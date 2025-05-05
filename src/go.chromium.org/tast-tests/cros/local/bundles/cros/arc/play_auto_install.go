@@ -29,7 +29,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "gaia"},
+		SoftwareDeps: []string{"chrome", "gaia", "no_arc_userdebug"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "chrome"},
 		}, {
@@ -61,6 +61,7 @@ func PlayAutoInstall(ctx context.Context, s *testing.State) {
 	opts := []chrome.Option{
 		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs("--arc-disable-app-sync", "--arc-disable-locale-sync", "--arc-play-store-auto-update=off"),
 	}
 
