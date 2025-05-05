@@ -11,9 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -1003,7 +1002,21 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 	}
 	if f.disableCellularInShill && f.helper != nil {
-		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
+		// In Shill::Cellular::Start(), we don't allow Start(enable Cellular technology) when
+		// Cellular is in Stopping state. This scenario is not hard to reproduce when modemmanager
+		// is restarted by itself on the fixture teardown(for example, on fixture
+		// cellularModemManager). Since EnableTechnology will return an error if Cellular is being
+		// stopped, retry a few times until Cellular has completed the Stopping operation.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
+				testing.ContextLog(ctx, "Failed to enable Cellular technology: ", err)
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  5 * time.Second,
+			Interval: 500 * time.Millisecond,
+		}); err != nil {
 			s.Fatal("Unable to enable Cellular: ", err)
 		}
 	}
