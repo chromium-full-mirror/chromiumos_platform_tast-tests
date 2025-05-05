@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/nebraska"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -56,6 +57,15 @@ func (r *AURunner) Start(ctx context.Context) error {
 		return errors.New("runner already running")
 	}
 	r.runnerStatus = make(chan error, 1)
+
+	updateEngineJobName := "update-engine"
+	// Verify update-engine has started.
+	if !upstart.JobExists(ctx, updateEngineJobName) {
+		return errors.Errorf("service %v does not exist", updateEngineJobName)
+	}
+	if err := upstart.CheckJob(ctx, updateEngineJobName); err != nil {
+		return errors.Wrapf(err, "%v is not running", updateEngineJobName)
+	}
 
 	// Start a nebraska server with given payload and metadata.
 	nebraskaServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
