@@ -35,7 +35,7 @@ func init() {
 		Contacts: []string{"arc-commercial@google.com", "batoon@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBootedWithoutUIAutomator",
 		// TODO update dep to android_vm after KeyMint is launched on V+ in b/308630124
