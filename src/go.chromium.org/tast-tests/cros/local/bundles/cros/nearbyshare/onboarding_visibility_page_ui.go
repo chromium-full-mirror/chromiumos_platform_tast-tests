@@ -29,8 +29,9 @@ func init() {
 		// i.e. tast run -var=keepState=true <dut> nearbyshare.OnboardingSinglePageUI
 		Vars: []string{nearbycommon.KeepStateVar},
 		Attr: []string{
-			"group:cross-device",
-			"cross-device_nearbyshare",
+			// TODO(b/415848715): Disabled in order to free up lab resources.
+			// "group:cross-device",
+			// "cross-device_nearbyshare",
 			"group:release-health",
 			"release-health_cross_device",
 		},
