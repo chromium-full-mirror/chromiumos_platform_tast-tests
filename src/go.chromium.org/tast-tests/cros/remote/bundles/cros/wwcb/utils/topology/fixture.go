@@ -269,22 +269,28 @@ func (tf *TestFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to initialize cameras: ", err)
 	}
 
-	// Try to power cycle IP power for DUTs that have it.
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		// Just log errors here since this may not always be provided.
-		// Later this should be moved into the proto.
-		s.Log("Failed to power on the docking station: ", err)
+	// Try to power cycle IP power for DUTs that have docks.
+	if len(tf.Helper.DevicesByType(DeviceTypeDockingStation)) > 0 {
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			// Just log errors here since this may not always be provided.
+			// Later this should be moved into the proto.
+			s.Log("Failed to power on the docking station: ", err)
+		}
 	}
 }
 
 // PostTest cleans up the test fixture after each test run.
 func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	tf.Helper.ResetAll(ctx)
-	utils.CloseIppower(ctx, ipPowerPorts)
+	if len(tf.Helper.DevicesByType(DeviceTypeDockingStation)) > 0 {
+		if err := utils.CloseIppower(ctx, ipPowerPorts); err != nil {
+			s.Log("Failed to power off the docking station: ", err)
+		}
+	}
 }
 
 // TearDown releases resources held open by the test fixture.
 func (tf *TestFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	tf.Helper.ResetAll(ctx)
 }
 
 // ConnectPeripheralsViaDock connects the peripherals via the dock, verifies each connection and returns the list of USB devices.
