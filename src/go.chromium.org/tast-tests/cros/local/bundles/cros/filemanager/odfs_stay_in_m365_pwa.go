@@ -253,10 +253,8 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	if err := uiauto.Combine("Create a new PowerPoint presentation in M365",
 		ui.WaitUntilExists(appsButton),
-		ui.DoDefault(appsButton),
-		ui.WaitUntilExists(powerPointLink),
-		ui.DoDefault(powerPointLink),
-		ui.WaitUntilExists(newPresentationLink),
+		ui.DoDefaultUntil(appsButton, ui.Exists(powerPointLink)),
+		ui.DoDefaultUntil(powerPointLink, ui.Exists(newPresentationLink)),
 		ui.DoDefault(newPresentationLink),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new PowerPoint presentation from M365: ", err)
@@ -298,10 +296,12 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	oneDriveButton := nodewith.Role(role.Link).NameContaining("OneDrive").Ancestor(m365Context).Focusable().First()
 	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(oneDriveUIAncestor)
 	fileNameButton := nodewith.Role(role.StaticText).Name(fileName).Ancestor(oneDriveUIAncestor)
+	// Open OneDrive tab twice as it's sometimes empty on the first try.
 	if err := uiauto.Combine("Open my files in OneDrive",
 		ui.WaitUntilExists(appsButton),
-		ui.DoDefault(appsButton),
-		ui.WaitUntilExists(oneDriveButton),
+		ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
+		ui.DoDefaultUntil(oneDriveButton, ui.Exists(appsButton)),
+		ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
 		ui.DoDefault(oneDriveButton),
 		maybeDismissOneDriveAd(ui, oneDriveUIAncestor),
 		ui.WaitUntilExists(myFilesButton),
