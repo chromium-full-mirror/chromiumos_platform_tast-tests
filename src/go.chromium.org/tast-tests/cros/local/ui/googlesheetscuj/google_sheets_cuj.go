@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj/updateengine"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -38,12 +39,13 @@ import (
 
 // TestParam is the test parameters for GoogleSheetsCUJ.
 type TestParam struct {
-	FocusModeEnabled bool
+	FocusModeEnabled   bool
+	AUBackgroundEnable bool
 }
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
 // scroll the sheets file, to test the Google Sheets performance.
-func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath string, args func(string) (string, bool)) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath, payloadPath, metadataPath string, args func(string) (string, bool)) (pv *perf.Values, retErr error) {
 	overallScrollTimeout := 10 * time.Minute
 	if testDuration, ok := args("ui.GoogleSheetsCUJ.duration"); ok {
 		var err error
@@ -123,7 +125,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 	ui := uiauto.New(tconn)
 
-	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujrecorder.RecorderOptions{CooldownBeforeRun: true})
+	options := cujrecorder.RecorderOptions{CooldownBeforeRun: true}
+	options.DoNotChangeUpdateEngine = testParam.AUBackgroundEnable
+	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, options)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
@@ -187,6 +191,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		pv, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 		if err != nil {
 			return errors.Wrap(err, "failed to capture device snapshot")
+		}
+
+		if testParam.AUBackgroundEnable {
+			runner := updateengine.NewAURunner(payloadPath, metadataPath)
+			err := runner.Start(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to start AURunner")
+			}
+			defer runner.Stop(closeCtx)
 		}
 
 		// Open Google Sheets file.

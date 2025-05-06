@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj/updateengine"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{cujrecorder.SystemTraceConfigFile},
+		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Vars: []string{
 			// Parsable test duration, like 10m or 60s, to run the test.
 			"ui.GoogleSheetsCUJ.duration",
@@ -40,6 +41,18 @@ func init() {
 				Fixture:   "loggedInToCUJUserWithoutCooldown",
 			},
 			// Experimental variants.
+			{
+				Name: "au_background",
+				Val: googlesheetscuj.TestParam{
+					AUBackgroundEnable: true,
+				},
+				ExtraData: []string{
+					updateengine.PayloadFilename,
+					updateengine.MetadataFilename},
+				ExtraAttr:         []string{"group:cuj"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Platform("volteer")),
+				Fixture:           "loggedInToCUJUserWithoutCooldown",
+			},
 			{
 				Name:      "field_trials",
 				Val:       googlesheetscuj.TestParam{},
@@ -70,7 +83,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(googlesheetscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile), s.Var); err != nil {
+	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile), s.DataPath(updateengine.PayloadFilename), s.DataPath(updateengine.MetadataFilename), s.Var); err != nil {
 		s.Fatal("Failed to run GoogleSheetsCUJ: ", err)
 	}
 }
