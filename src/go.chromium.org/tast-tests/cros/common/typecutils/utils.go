@@ -216,7 +216,7 @@ func VerifyChargerConnected(ctx context.Context, d *dut.DUT) (bool, error) {
 	return info.Online, nil
 }
 
-// GetChargerVoltage returns the voltage of the charger.
+// GetChargerVoltage returns the voltage of the charger in mV.
 func GetChargerVoltage(ctx context.Context, d *dut.DUT) (int, error) {
 	info, err := powerSupplyInfo(ctx, d)
 	if err != nil {
@@ -229,6 +229,21 @@ func GetChargerVoltage(ctx context.Context, d *dut.DUT) (int, error) {
 	}
 
 	return int(voltage * 1000), nil
+}
+
+// GetChargerCurrent returns the current of the charger in mA.
+func GetChargerCurrent(ctx context.Context, d *dut.DUT) (int, error) {
+	info, err := powerSupplyInfo(ctx, d)
+	if err != nil {
+		return 0, err
+	}
+
+	current, err := strconv.ParseFloat(info.Current, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(current * 1000), nil
 }
 
 // CableConnectedPortNumber on success will returns Active/Passive cable connected port number.

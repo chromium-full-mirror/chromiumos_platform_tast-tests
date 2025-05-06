@@ -332,6 +332,16 @@ func (s *UsbTester) VbusVoltage(ctx context.Context) (int, error) {
 	return int(reply.GetNonDescrete()), err
 }
 
+// VbusCurrent will return the Vbus current.
+func (s *UsbTester) VbusCurrent(ctx context.Context) (int, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_VBUS_CURRENT},
+	)
+
+	return int(reply.GetNonDescrete()), err
+}
+
 // DpInfo will get the display port information.
 func (s *UsbTester) DpInfo(ctx context.Context) (*passport.GetDpInfoReply, error) {
 
