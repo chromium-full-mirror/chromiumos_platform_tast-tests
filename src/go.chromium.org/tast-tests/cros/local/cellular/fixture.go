@@ -683,11 +683,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if f.uiStopped, err = stopJob(ctx, uiJobName); err != nil {
 			s.Fatalf("Failed to stop job: %q, %s", uiJobName, err)
 		}
-		if f.uiStopped {
-			s.Logf("Stopped %q", uiJobName)
-		} else {
-			s.Logf("%q not running", uiJobName)
-		}
 	}
 
 	var fdms *fakedms.FakeDMS
@@ -715,11 +710,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
 		s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
-	}
-	if f.modemfwdStopped {
-		s.Logf("Stopped %q", modemfwd.JobName)
-	} else {
-		s.Logf("%q not running", modemfwd.JobName)
 	}
 
 	if upstart.JobExists(ctx, hermes.JobName) {
@@ -876,6 +866,7 @@ func (f *cellularFixture) restartJobs(ctx context.Context, restartOnFailure []st
 		if err := upstart.StartJob(ctx, p, getUpstartArgsForVerboseLogging(p)...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", p, err)
 		}
+		testing.ContextLogf(ctx, "Restarted job: %q", p)
 	}
 	if slices.Contains(restartOnFailure, modemmanager.JobName) {
 		if _, err := modemmanager.NewModem(ctx); err != nil {
@@ -985,7 +976,7 @@ func (f *cellularFixture) fixtureCleanUp(ctx context.Context, s *testing.FixtSta
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	testing.ContextLog(ctx, "Teardown")
+	testing.ContextLog(ctx, "Executing Fixture::Teardown")
 	teardownFailure := false
 	if f.cleanupPolicies != nil {
 		f.cleanupPolicies(ctx)
@@ -1063,6 +1054,7 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 func stopJob(ctx context.Context, job string) (bool, error) {
 	if !upstart.JobExists(ctx, job) {
+		testing.ContextLogf(ctx, "StopJob has no action. Job %q does not exist", job)
 		return false, nil
 	}
 	_, _, pid, err := upstart.JobStatus(ctx, job)
@@ -1070,12 +1062,14 @@ func stopJob(ctx context.Context, job string) (bool, error) {
 		return false, errors.Wrapf(err, "failed to run upstart.JobStatus for %q", job)
 	}
 	if pid == 0 {
+		testing.ContextLogf(ctx, "StopJob has no action. Job %q has pid == 0", job)
 		return false, nil
 	}
 	err = upstart.StopJob(ctx, job)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to stop %q", job)
 	}
+	testing.ContextLogf(ctx, "Stopped job `%q`", job)
 	return true, nil
 
 }

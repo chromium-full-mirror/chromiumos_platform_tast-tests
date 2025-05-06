@@ -123,6 +123,7 @@ func parseUpdateFirmwareCompletedSignal(sig *dbus.Signal) (UpdateFirmwareComplet
 // Stop stops the Modem Firmware Daemon if it is currently running and returns true if it was stopped.
 func Stop(ctx context.Context) (bool, error) {
 	if !upstart.JobExists(ctx, JobName) {
+		testing.ContextLogf(ctx, "StopJob has no action. Job %q does not exist", JobName)
 		return false, nil
 	}
 	_, _, pid, err := upstart.JobStatus(ctx, JobName)
@@ -130,18 +131,21 @@ func Stop(ctx context.Context) (bool, error) {
 		return false, errors.Wrapf(err, "failed to run upstart.JobStatus for %q", JobName)
 	}
 	if pid == 0 {
+		testing.ContextLogf(ctx, "StopJob has no action. Job %q has pid == 0", JobName)
 		return false, nil
 	}
 	err = upstart.StopJob(ctx, JobName)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to stop %q", JobName)
 	}
+	testing.ContextLogf(ctx, "Stopped job `%q`", JobName)
 	return true, nil
 }
 
 // StartAndWaitForQuiescence starts the modemfwd job and waits for the initial sequence to complete
 // or until an error is logged.
 func StartAndWaitForQuiescence(ctx context.Context) error {
+	testing.ContextLog(ctx, "StartAndWaitForQuiescence called")
 	startJob := func(ctx context.Context) error {
 		err := upstart.StartJob(ctx, JobName, upstart.WithArg("DEBUG_MODE", "true"))
 		if err != nil {
@@ -290,7 +294,7 @@ func WaitForUsbDevice(ctx context.Context, usbID string, maxWaitTime time.Durati
 type qmiService int
 
 const (
-	qmiWirelessDataService     qmiService = iota + 1
+	qmiWirelessDataService qmiService = iota + 1
 	qmiDeviceManagementService
 	qmiNetworkAccessService
 )

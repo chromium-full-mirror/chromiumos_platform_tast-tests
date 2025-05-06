@@ -59,11 +59,6 @@ func (s *RemoteCellularService) SetUp(ctx context.Context, req *empty.Empty) (*e
 	if s.modemfwdStopped, err = modemfwd.Stop(ctx); err != nil {
 		return nil, errors.Wrapf(err, "failed to stop job: %q", modemfwd.JobName)
 	}
-	if s.modemfwdStopped {
-		testing.ContextLogf(ctx, "Stopped %q", modemfwd.JobName)
-	} else {
-		testing.ContextLogf(ctx, "%q not running", modemfwd.JobName)
-	}
 
 	// make sure modem is using the correct SIM
 	if _, err = modemmanager.NewModemWithSim(ctx); err != nil {
@@ -112,7 +107,7 @@ func (s *RemoteCellularService) TearDown(ctx context.Context, req *empty.Empty) 
 		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to restart modemfwd")
 		}
-		testing.ContextLogf(ctx, "Started %q", modemfwd.JobName)
+		testing.ContextLogf(ctx, "Started %q on RemoteCellularService", modemfwd.JobName)
 	}
 
 	return &empty.Empty{}, nil
