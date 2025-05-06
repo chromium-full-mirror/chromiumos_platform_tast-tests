@@ -1,0 +1,14 @@
+set noparent
+
+# Essential Inputs team
+shend@chromium.org
+jopalmer@google.com
+tranbaoduy@google.com
+mehrab@chromium.org
+curtismcmullan@google.com
+
+# Platform Inputs team
+include chromiumos/owners:v1:/platform/OWNERS.hmr
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
