@@ -380,7 +380,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			_ = <-powerStateCh
 
 			if res != nil {
-				if err := evalSecondSystemResume(ctx, h, res.Output); err != nil {
+				if err := evalSystemResume(ctx, h, res.Output, pv); err != nil {
 					s.Errorf("Iteration %d: %v", i+1, err)
 				}
 				displayAfterResume.StopAndQuery(ctx, s.DUT(), cl)
@@ -478,7 +478,7 @@ func convertTimeStamp(timeStr string) (int64, error) {
 	return t.UnixMilli(), nil
 }
 
-func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, wakeAlarm string) error {
+func evalSystemResume(ctx context.Context, h *firmware.Helper, wakeAlarm string, pv *perf.Values) error {
 	matchSubString := regexp.MustCompile(`rtc wakealarm: (\d+)`).FindStringSubmatch(wakeAlarm)
 	if len(matchSubString) != 2 {
 		return errors.Errorf("unexpected wakealarm format, got: %s", wakeAlarm)
@@ -498,7 +498,13 @@ func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, wakeAlarm s
 		return errors.Wrap(err, "failed to convert time format")
 	}
 
-	secondSystemResumeTime := actualWakeupTime - expectedWakeupTime*1000
+	systemResumeTimeMs := actualWakeupTime - expectedWakeupTime*1000
+	pv.Append(perf.Metric{
+		Name:      "system_resume",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, float64(systemResumeTimeMs))
 	var maxSystemResumeMs int64
 	maxSystemResumeMs = 500
 
@@ -512,10 +518,10 @@ func evalSecondSystemResume(ctx context.Context, h *firmware.Helper, wakeAlarm s
 		maxSystemResumeMs = int64(val)
 	}
 
-	if secondSystemResumeTime > maxSystemResumeMs {
-		return errors.Errorf("failed to resume from suspend state in %d milliseconds, got %d. Use --var=%s=??? to override if you have an approved waiver", maxSystemResumeMs, secondSystemResumeTime, waiverMaxSystemResumeMs.Name())
+	if systemResumeTimeMs > maxSystemResumeMs {
+		return errors.Errorf("failed to resume from suspend state in %d milliseconds, got %d. Use --var=%s=??? to override if you have an approved waiver", maxSystemResumeMs, systemResumeTimeMs, waiverMaxSystemResumeMs.Name())
 	}
-	testing.ContextLogf(ctx, "Resume time %d ms within limit of %d ms", secondSystemResumeTime, maxSystemResumeMs)
+	testing.ContextLogf(ctx, "Resume time %d ms within limit of %d ms", systemResumeTimeMs, maxSystemResumeMs)
 
 	return nil
 }
