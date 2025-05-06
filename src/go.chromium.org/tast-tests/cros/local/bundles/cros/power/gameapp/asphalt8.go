@@ -87,13 +87,13 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 		ui.WithTimeout(2*time.Minute).RetryUntil(
 			cuj.ClickIfExist(profileDismissButton, 3*time.Second),
 			ud.Exists(raceNow)),
-		uiauto.NamedAction("press 'RACE-NOW' button", ui.WithTimeout(longUITimeout).RetryUntil(
+		uiauto.NamedAction("press 'RACE-NOW' button", ui.WithTimeout(2*time.Minute).RetryUntil(
 			uiauto.IfSuccessThen(ud.Exists(raceNow),
 				uiauto.Combine("press enter twice to play 'MINI-GAME'",
 					kb.AccelAction("Enter"),
 					kb.AccelAction("Enter"))),
-			ud.WithTimeout(10*time.Second).WaitUntilGone(raceNow))),
-		ud.WithTimeout(defaultUITimeout).WaitUntilExists(learnToDrive),
+			ud.WithTimeout(longUITimeout).WaitUntilGone(raceNow))),
+		ud.WithTimeout(longUITimeout).WaitUntilExists(learnToDrive),
 		uiauto.NamedAction("press left to select 'MINI-GAME' button", kb.AccelAction("Left")),
 		// Wait up to 2s for the 'MINI-GAME' button.
 		uiauto.NamedAction("wait 'MINI-GAME' button", uiauto.Sleep(2*time.Second)),
