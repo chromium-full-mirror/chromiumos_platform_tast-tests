@@ -7,6 +7,7 @@ package audio
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -43,6 +44,9 @@ func init() {
 				Fixture: fixture.CrasSetUp{
 					VoiceIsolationUIPreferredEffect: audio.VoiceIsolationEffectBeamforming,
 				}.Instance(),
+				ExtraTestBedDeps: []string{
+					tbdep.AudioBeamforming("intelligo"),
+				},
 			},
 		},
 	})
