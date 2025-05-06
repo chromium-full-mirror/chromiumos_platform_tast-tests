@@ -16,8 +16,9 @@ import (
 )
 
 type testTPMCmd struct {
-	bus ti50.TpmBus
-	cmd string
+	bus      ti50.TpmBus
+	cmd      string
+	function func(*utils.TpmHelper, utils.FirmwareTestingHelper)
 }
 
 func init() {
@@ -119,8 +120,35 @@ func init() {
 				bus: ti50.TpmBusI2c,
 				cmd: "--wp",
 			},
+		}, {
+			Name: "spi_nv_read",
+			Val: testTPMCmd{
+				bus:      ti50.TpmBusSpi,
+				function: tpmNvRead,
+			},
+		}, {
+			Name: "i2c_nv_read",
+			Val: testTPMCmd{
+				bus:      ti50.TpmBusI2c,
+				function: tpmNvRead,
+			},
 		}},
 	})
+}
+
+func tpmNvRead(tpmHandle *utils.TpmHelper, th utils.FirmwareTestingHelper) {
+	// NV_Read first 0x101 bytes from EKcert
+	// size: 0101
+	// offset: 0000
+	// auth 00000009400000090000000000 (size=13)
+	//   size: 00000009
+	//   session: TPM_RS_PW = 40000009
+	//   nonce size: 0000
+	//   sess attr: 00
+	//   auth size: 0000
+	// total cmd size: 10+8+13+4 = 35 = 0x23
+	_, err := tpmHandle.OpenTitanToolTpmCommand("execute-command", "--hexdata", "8002000000230000014e01c0000101c000010000000940000009000000000001010000")
+	th.MustSucceed(err, "GSC NV_Read")
 }
 
 func GSCTPM(ctx context.Context, s *testing.State) {
@@ -169,12 +197,18 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	events := b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "setup.vcd")
 
-	out, err := b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
-	if err != nil {
-		s.Error("Could not get version via TPM: ", err)
+	if config.function != nil {
+		config.function(tpmHandle, th)
+	} else if config.cmd != "" {
+		out, err := b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
+		if err != nil {
+			s.Error("Could not get version via TPM: ", err)
+		}
+		s.Logf("GSCTool %s output: %s", cmd, out)
+	} else {
+		s.Error("Missing configuration parameter, either cmd or function")
 	}
 
 	events = b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "cmd.vcd")
-	s.Logf("GSCTool %s output: %s", cmd, out)
 }
