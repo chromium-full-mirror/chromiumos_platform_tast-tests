@@ -997,7 +997,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	if f.modemLoggingStarted {
-		if err := stopModemLogging(ctx); err != nil {
+		waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
+		if err := stopModemLogging(waitCtx); err != nil {
 			testing.ContextLog(ctx, "Could not stop modem logging: ", err)
 			teardownFailure = true
 		} else {
@@ -1011,7 +1013,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		// cellularModemManager). Since EnableTechnology will return an error if Cellular is being
 		// stopped, retry a few times until Cellular has completed the Stopping operation.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
+			waitCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+			defer cancel()
+			if err := f.helper.Manager.EnableTechnology(waitCtx, shill.TechnologyCellular); err != nil {
 				testing.ContextLog(ctx, "Failed to enable Cellular technology: ", err)
 				return err
 			}
@@ -1025,14 +1029,18 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 	}
 	if f.modemfwdStopped {
-		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
+		waitCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+		defer cancel()
+		if err := modemfwd.StartAndWaitForQuiescence(waitCtx); err != nil {
 			testing.ContextLogf(ctx, "Failed to start %q: %s", modemfwd.JobName, err)
 			teardownFailure = true
 		}
 		testing.ContextLogf(ctx, "Started %q", modemfwd.JobName)
 	}
 	if f.uiStopped {
-		if err := upstart.EnsureJobRunning(ctx, uiJobName); err != nil {
+		waitCtx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+		defer cancel()
+		if err := upstart.EnsureJobRunning(waitCtx, uiJobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to start %q: %s", uiJobName, err)
 			teardownFailure = true
 		}
@@ -1042,7 +1050,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		f.cr.Close(ctx)
 	}
 	if f.sf != nil {
-		if err := f.sf.Teardown(ctx); err != nil {
+		waitCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+		defer cancel()
+		if err := f.sf.Teardown(waitCtx); err != nil {
 			testing.ContextLogf(ctx, "Failed to teardown starfish: %s", err)
 			teardownFailure = true
 		}
@@ -1053,13 +1063,21 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		f.restartJobs(ctx, []string{hermes.JobName, modemmanager.JobName, shill.JobName})
 	}
 
-	if err := modemmanager.SetModemmanagerLogLevel(ctx, "INFO"); err != nil {
-		testing.ContextLog(ctx, "Failed to set Modemmanager log level to INFO: ", err)
-		teardownFailure = true
+	{
+		waitCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
+		if err := modemmanager.SetModemmanagerLogLevel(waitCtx, "INFO"); err != nil {
+			testing.ContextLog(ctx, "Failed to set Modemmanager log level to INFO: ", err)
+			teardownFailure = true
+		}
 	}
-	if err := SetShillDefaultLogging(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to reset shill's logging config: ", err)
-		teardownFailure = true
+	{
+		waitCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
+		if err := SetShillDefaultLogging(waitCtx); err != nil {
+			testing.ContextLog(ctx, "Failed to reset shill's logging config: ", err)
+			teardownFailure = true
+		}
 	}
 	if teardownFailure {
 		testing.ContextLog(ctx, "Teardown failed")
