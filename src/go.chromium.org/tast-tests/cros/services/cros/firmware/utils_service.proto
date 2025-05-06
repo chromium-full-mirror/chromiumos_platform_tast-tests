@@ -55,6 +55,19 @@ service UtilsService {
 
   // FlashUSBDrive flashes the attached USB drive with a ChromeOS test image.
   rpc FlashUSBDrive(FlashUSBDriveRequest) returns (google.protobuf.Empty) {}
+
+  // FirmwareBuildTargets returns the names of the firmware targets from the
+  // cros config yaml file.
+  rpc FirmwareBuildTargets(FirmwareBuildTargetsRequest)
+      returns (FirmwareBuildTargetsResponse) {}
+
+  // ExtractAPFirmwareImage downloads and extracts the AP image from devservers.
+  rpc ExtractAPFirmwareImage(ExtractFirmwareImageRequest)
+      returns (ExtractFirmwareImageResponse) {}
+
+  // ExtractECFirmwareImage downloads and extracts the EC image from devservers.
+  rpc ExtractECFirmwareImage(ExtractFirmwareImageRequest)
+      returns (ExtractFirmwareImageResponse) {}
 }
 
 // InputDevicePath provides the path to /dev/input/event* for a device.
@@ -93,3 +106,47 @@ message FlashUSBDriveRequest {
   repeated string devserver = 1;
   string gsPath = 2;
 }
+
+// FirmwareBuildTargetsRequest is the request to the FirmwareBuildTargets call.
+message FirmwareBuildTargetsRequest {}
+
+// FirmwareBuildTargetsResponse is the response from the FirmwareBuildTargets
+// call.
+message FirmwareBuildTargetsResponse {
+  // The name of the coreboot build target. The name to use for image-NAME.bin
+  // files and NAME.12345.678.0.tar.bz2 archives.
+  string coreboot_name = 1;
+  // The name of the EC build target in the firmare-ec-R* branches. The name to
+  // use for NAME/ec.bin files and NAME.EC.12345.678.0.tar.bz2 archives.
+  string standalone_ec_name = 2;
+  // The name of the EC build target in the firmare-BOARD-12345.B (legacy)
+  // branches. The name to use for NAME/ec.bin files and
+  // NAME.EC.12345.678.0.tar.bz2 archives.
+  string legacy_ec_name = 3;
+  // The name of the model in chromeos-firmwareupdate's manifest.json file.
+  string firmware_manifest_key = 4;
+}
+
+// ExtractFirmwareImageRequest is the request to the Extract*FirmwareImage
+// calls.
+message ExtractFirmwareImageRequest {
+  // The list of devservers to try to download from.
+  repeated string preferred_devserver = 1;
+  // The list of devservers to try to download from if the preferred_devserver
+  // list didn't find any.
+  repeated string backup_devserver = 2;
+  // The location on the DUT to write the file.
+  string dest = 3;
+  // The gs:// url from which to extract the image.
+  string url = 4;
+  // The build targets to find in the archive or directory at url.
+  FirmwareBuildTargetsResponse build_targets = 5;
+  // The board name of the DUT
+  string board = 6;
+  // The model name of the DUT
+  string model = 7;
+}
+
+// ExtractFirmwareImageRequest is the response from the Extract*FirmwareImage
+// calls.
+message ExtractFirmwareImageResponse {}

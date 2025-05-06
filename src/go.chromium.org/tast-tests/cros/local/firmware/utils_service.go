@@ -7,16 +7,21 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -352,6 +357,44 @@ func (lr *localRunner) OutputCommand(ctx context.Context, asRoot bool, name stri
 	return testexec.CommandContext(ctx, name, args...).Output(testexec.DumpLogOnError)
 }
 
+func findDevServer(ctx context.Context, devservers []string) (string, error) {
+	ch := make(chan devserverStatus, len(devservers))
+	cl := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+			Proxy:               http.ProxyFromEnvironment,
+		},
+	}
+
+	for _, dsURL := range devservers {
+		go func(dsURL string) {
+			req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/check_health", dsURL), nil)
+			if err != nil {
+				ch <- devserverStatus{dsURL, err}
+				return
+			}
+			res, err := cl.Do(req)
+			if err != nil {
+				ch <- devserverStatus{dsURL, err}
+				return
+			}
+			res.Body.Close()
+			if res.StatusCode == http.StatusOK {
+				ch <- devserverStatus{dsURL, nil}
+			}
+		}(dsURL)
+	}
+	for range devservers {
+		s := <-ch
+		if s.err != nil {
+			testing.ContextLogf(ctx, "Devserver %s not healthy:%v", s.url, s.err)
+			continue
+		}
+		return s.url, nil
+	}
+	return "", errors.New("no healthy devservers")
+}
+
 // FlashUSBDrive flashes a test image on a usb drive.
 // - Find the USB device in /dev/sd*, make sure it is removable by reading /sys/block/sdX/removable
 // - Find a healthy devserver
@@ -396,107 +439,508 @@ func (us *UtilsService) FlashUSBDrive(ctx context.Context, req *fwpb.FlashUSBDri
 		return &empty.Empty{}, nil
 	}
 
-	ch := make(chan devserverStatus, len(req.GetDevserver()))
+	devserverURL, err := findDevServer(ctx, req.GetDevserver())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find devserver")
+	}
+
 	cl := &http.Client{
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: 10,
 			Proxy:               http.ProxyFromEnvironment,
 		},
 	}
-
-	for _, dsURL := range req.GetDevserver() {
-		go func(dsURL string) {
-			req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/check_health", dsURL), nil)
-			if err != nil {
-				ch <- devserverStatus{dsURL, err}
-				return
-			}
-			res, err := cl.Do(req)
-			if err != nil {
-				ch <- devserverStatus{dsURL, err}
-				return
-			}
-			res.Body.Close()
-			if res.StatusCode == http.StatusOK {
-				ch <- devserverStatus{dsURL, nil}
-			}
-		}(dsURL)
+	stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=chromiumos_test_image.tar.xz", devserverURL, artifactsURL)
+	testing.ContextLogf(ctx, "Staging image %q", stagingURL)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", stagingURL, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to stage file at %q", stagingURL)
 	}
-	for range req.GetDevserver() {
-		s := <-ch
-		if s.err != nil {
-			testing.ContextLogf(ctx, "Devserver %s not healthy:%v", s.url, s.err)
-			continue
-		}
-		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=chromiumos_test_image.tar.xz", s.url, artifactsURL)
-		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
-		req, err := http.NewRequestWithContext(ctx, "GET", stagingURL, nil)
+	res, err := cl.Do(httpReq)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to stage file at %q", stagingURL)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("failed to stage file at %q: %v", stagingURL, res.StatusCode)
+	}
+	testImageURL := fmt.Sprintf("%s/extract/%s/chromiumos_test_image.tar.xz?file=chromiumos_test_image.bin", devserverURL, strings.TrimPrefix(artifactsURL, "gs://"))
+	if err := func() (retErr error) {
+		defer func() {
+			testing.ContextLogf(ctx, "Syncing %s", usbDevice)
+			if err := testexec.CommandContext(ctx, "sync", usbDevice).Run(testexec.DumpLogOnError); err != nil {
+				retErr = errors.Join(retErr, err)
+			}
+			if err := testexec.CommandContext(ctx, "blockdev", "--rereadpt", usbDevice).Run(testexec.DumpLogOnError); err != nil {
+				retErr = errors.Join(retErr, err)
+			}
+		}()
+		testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", testImageURL)
+		httpReq, err = http.NewRequestWithContext(ctx, "GET", testImageURL, nil)
 		if err != nil {
-			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
-			continue
+			return err
 		}
-		res, err := cl.Do(req)
+		res, err = cl.Do(httpReq)
 		if err != nil {
-			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
-			continue
+			return err
 		}
-		res.Body.Close()
+		defer res.Body.Close()
 		if res.StatusCode != http.StatusOK {
-			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, res.Status)
+			return err
+		}
+		outF, err := os.OpenFile(usbDevice, os.O_WRONLY, 0)
+		if err != nil {
+			return err
+		}
+		defer outF.Close()
+
+		bytes, err := io.Copy(outF, res.Body)
+		if err != nil {
+			return err
+		}
+		if res.ContentLength >= 0 && bytes != res.ContentLength {
+			return errors.Errorf("failed to write all data, got %d, want %d", bytes, res.ContentLength)
+		}
+		return nil
+	}(); err != nil {
+		return nil, errors.Wrapf(err, "failed to download %q", testImageURL)
+	}
+
+	// ensure that image was successfully flashed by reading back OS version
+	usbRelease, _, err = usb.ValidateUSBImage(ctx, usbDevice, "/media/usbkey", &localRunner{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to verify %s", usbDevice)
+	}
+	if usbRelease != "" && strings.HasSuffix(artifactsURL, usbRelease) {
+		testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbDevice, testImageURL)
+		return &empty.Empty{}, nil
+	}
+	return nil, errors.Errorf("wrong version on %s after flashing, got %s, want %s", usbDevice, usbRelease, artifactsURL)
+}
+
+type configData struct {
+	ChromeOS struct {
+		Configs []struct {
+			Firmware struct {
+				BuildTargets struct {
+					// AP image name, if missing fallback to ImageName
+					Coreboot string `yaml:"coreboot"`
+					EC       string `yaml:"ec"`
+					ZephyrEC string `yaml:"zephyr-ec"`
+				} `yaml:"build-targets"`
+				ImageName string `yaml:"image-name"`
+			} `yaml:"firmware"`
+		}
+	}
+}
+
+// FirmwareBuildTargets returns the names of the firmware targets from the cros config yaml file.
+// This code matches the logic in infra/go/src/infra/cros/cmd/provision/cros-fw-provision/service/firmwareservice.go:ReadConfigYaml
+// TODO: Figure out how to share the code.
+func (us *UtilsService) FirmwareBuildTargets(ctx context.Context, req *fwpb.FirmwareBuildTargetsRequest) (*fwpb.FirmwareBuildTargetsResponse, error) {
+	retVal := &fwpb.FirmwareBuildTargetsResponse{}
+	out, err := testexec.CommandContext(ctx, "crosid").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run crosid")
+	}
+	configIndexRe, err := regexp.Compile(`CONFIG_INDEX='([^']*)'`)
+	if err != nil {
+		return nil, errors.Wrap(err, "config index regex failed")
+	}
+	m := configIndexRe.FindSubmatch(out)
+	if m == nil {
+		return nil, errors.Wrapf(err, "regexp match of CONFIG_INDEX failed on %q", string(out))
+	}
+	configIndex, err := strconv.Atoi(string(m[1]))
+	if err != nil {
+		return nil, errors.Wrapf(err, "parse of CONFIG_INDEX %q failed", string(m[1]))
+	}
+	fwManifestKeyRe, err := regexp.Compile(`FIRMWARE_MANIFEST_KEY='([^']*)'`)
+	if err != nil {
+		return nil, errors.Wrap(err, "config index regex failed")
+	}
+	m = fwManifestKeyRe.FindSubmatch(out)
+	if m == nil {
+		return nil, errors.Wrapf(err, "regexp match of FIRMWARE_MANIFEST_KEY failed on %q", string(out))
+	}
+	retVal.FirmwareManifestKey = string(m[1])
+
+	testing.ContextLogf(ctx, "DUT configIndex = %d firmwareManifestKey = %s", configIndex, retVal.FirmwareManifestKey)
+	yamlPath := "/usr/share/chromeos-config/yaml/config.yaml"
+	configFile, err := os.Open(yamlPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open config.yaml")
+	}
+	defer configFile.Close()
+	configYaml := configData{}
+	parser := yaml.NewDecoder(configFile)
+	err = parser.Decode(&configYaml)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse config.yaml")
+	}
+	config := configYaml.ChromeOS.Configs[configIndex]
+	testing.ContextLogf(ctx, "config entry: %+v", config)
+	thisAPName := config.Firmware.BuildTargets.Coreboot
+	if thisAPName == "" {
+		thisAPName = config.Firmware.ImageName
+	}
+	if thisAPName != "" {
+		retVal.CorebootName = thisAPName
+	}
+	// Bizarrely, firmware branch builders use the coreboot name for the ec.bin file for zephyr binaries.
+	if config.Firmware.BuildTargets.ZephyrEC != "" {
+		retVal.StandaloneEcName = config.Firmware.BuildTargets.ZephyrEC
+		retVal.LegacyEcName = thisAPName
+	} else {
+		retVal.StandaloneEcName = config.Firmware.BuildTargets.EC
+		retVal.LegacyEcName = config.Firmware.BuildTargets.EC
+	}
+	// Special case for reef boards. See b/398900326
+	if retVal.CorebootName != retVal.LegacyEcName && retVal.LegacyEcName == "reef" {
+		testing.ContextLogf(ctx, "Overriding EC name to '%q", retVal.CorebootName)
+		retVal.LegacyEcName = retVal.CorebootName
+	}
+	testing.ContextLogf(ctx, "config.yaml image names AP: %s EC(legacy): %s EC(standalone): %s", retVal.CorebootName, retVal.LegacyEcName, retVal.StandaloneEcName)
+	return retVal, nil
+}
+
+type imageCandidate struct {
+	GSURL     string
+	Filenames []string
+}
+
+// A url like gs://chromeos-image-archive/firmware-brya-14505.B-branch/R100-14505.832.0-1-8730368903603296945/brya/firmware_from_source.tar.bz2
+// becomes gs://firmware-image-archive/firmware-brya-14505.B/14505.832.0/omnigul.14505.832.0.tar.bz2
+var legacyURLRE = regexp.MustCompile(`^gs://(?:chromeos|firmware)-image-archive/(firmware-\S+-[\d\.]+\.B)(?:-branch(?:-firmware)?)?/(?:R\d+-)?(\d+\.\d+\.\d+)[-\d]*/.*`)
+
+// A url like gs://firmware-image-archive/firmware-ec-R135-16209.5.B/16209.5.25/ or gs://chromeos-image-archive/firmware-zephyr-postsubmit/R136-16217.0.0-108800-8720748254242768705/
+// with a trailing slash needs the version number extracted so we can append the single target tar file.
+var versionedDirRE = regexp.MustCompile(`^(gs://.*)/((?:R\d+-)?(\d+\.\d+\.\d+)[-\d]*)/$`)
+
+// The legacy builder (i.e. firmware-brya-14505.B) creates files using the coreboot name
+// gs://firmware-image-archive/firmware-brya-14505.B/14505.846.0/omnigul.14505.846.0.tar.bz2
+// gs://firmware-image-archive/firmware-brya-14505.B/14505.846.0/omnigul.EC.14505.846.0.tar.bz2
+
+// getAPCandidateURLs returns a list of urls and files to extract. Try them in order.
+func getAPCandidateURLs(ctx context.Context, gsPath, board, model string, buildTargets *fwpb.FirmwareBuildTargetsResponse) ([]imageCandidate, error) {
+	var candidates []imageCandidate
+	// If the url matches versionedDirRe, try the single target tarfile, but don't fallback to the other patterns.
+	m := versionedDirRE.FindStringSubmatch(gsPath)
+	if m != nil {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s.%[3]s.tar.bz2", m[1], m[2], m[3], buildTargets.CorebootName),
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName)},
+		})
+		return candidates, nil
+	}
+	// If the url matches legacyUrlRe, and we have a coreboot name, try the single target tarfile
+	m = legacyURLRE.FindStringSubmatch(gsPath)
+	if m != nil && buildTargets.CorebootName != "" {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.%[2]s.tar.bz2", m[1], m[2], buildTargets.CorebootName),
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName)},
+		})
+	}
+	// Then fallback to the giant tarball.
+	var filenames []string
+	if buildTargets.CorebootName != "" {
+		filenames = append(filenames, fmt.Sprintf("image-%v.bin", buildTargets.CorebootName))
+	}
+	if len(model) > 0 {
+		filenames = append(filenames, fmt.Sprintf("image-%v.bin", model))
+	}
+	if len(board) > 0 {
+		filenames = append(filenames, fmt.Sprintf("image-%v.bin", board))
+	}
+	filenames = append(filenames, "image.bin")
+	filenames = append(filenames, "bios.bin")
+	candidates = append(candidates, imageCandidate{
+		GSURL:     gsPath,
+		Filenames: filenames,
+	})
+	return candidates, nil
+}
+
+// getECCandidateURLs returns a list of urls and files to extract. Try them in order.
+func getECCandidateURLs(ctx context.Context, gsPath, board, model string, buildTargets *fwpb.FirmwareBuildTargetsResponse) ([]imageCandidate, error) {
+	var candidates []imageCandidate
+	ecName := buildTargets.LegacyEcName
+	// The "standalone" builders that just build zephyr ECs use a different naming scheme.
+	if strings.Contains(gsPath, "/firmware-ec-R") || strings.Contains(gsPath, "/firmware-zephyr-") {
+		ecName = buildTargets.StandaloneEcName
+	}
+	// If the url matches versionedDirRE, try the single target tarfile, but don't fallback to the other patterns.
+	m := versionedDirRE.FindStringSubmatch(gsPath)
+	if m != nil {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s.EC.%[3]s.tar.bz2", m[1], m[2], m[3], ecName),
+			Filenames: []string{"ec.bin"},
+		})
+		return candidates, nil
+	}
+	// If the url matches legacyURLRE, and we have a legacy ec name, try the single target tarfile
+	m = legacyURLRE.FindStringSubmatch(gsPath)
+	if m != nil && buildTargets.LegacyEcName != "" {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.EC.%[2]s.tar.bz2", m[1], m[2], ecName),
+			Filenames: []string{"ec.bin"},
+		})
+	}
+	// Then fallback to the giant tarball.
+	var filenames []string
+	if ecName != "" {
+		filenames = append(filenames, path.Join(ecName, "ec.bin"))
+	}
+	if len(model) > 0 {
+		filenames = append(filenames, path.Join(model, "ec.bin"))
+	}
+	if len(board) > 0 {
+		filenames = append(filenames, path.Join(board, "ec.bin"))
+	}
+	filenames = append(filenames, "ec.bin")
+	candidates = append(candidates, imageCandidate{
+		GSURL:     gsPath,
+		Filenames: filenames,
+	})
+	return candidates, nil
+}
+
+// createStageURL returns the URL to stage a gsPath. Pass to curl on the DUT.
+func createStageURL(ctx context.Context, gsPath string, cacheServer url.URL) (url.URL, error) {
+	gsURL, err := url.Parse(gsPath)
+	if err != nil {
+		return url.URL{}, err
+	}
+	stagingURL := cacheServer
+	stagingURL.Path = "/stage"
+	v := url.Values{}
+	v.Set("files", path.Base(gsURL.Path))
+	gsURL.Path = path.Dir(gsURL.Path)
+	v.Set("archive_url", gsURL.String())
+	stagingURL.RawQuery = v.Encode()
+	return stagingURL, nil
+}
+
+// createExtractURL returns the URL to extract a file from a gsPath. Pass to curl on the DUT.
+func createExtractURL(ctx context.Context, gsPath, fileInArchive string, cacheServer url.URL) (url.URL, error) {
+	gsPathURL, err := url.Parse(gsPath)
+	if err != nil {
+		return url.URL{}, errors.Wrapf(err, "failed to parse %q", gsPath)
+	}
+	extractURL := cacheServer
+	extractURL.Path = fmt.Sprintf("/extract/%s%s", gsPathURL.Host, gsPathURL.Path)
+	v := url.Values{}
+	v.Set("file", fileInArchive)
+	extractURL.RawQuery = v.Encode()
+	return extractURL, nil
+}
+
+var curlErrorRE *regexp.Regexp = regexp.MustCompile(`The requested URL returned error: (\d+)`)
+
+func stageFile(ctx context.Context, gsPath string, devserverURL *url.URL, cl *http.Client) (bool, error) {
+	testing.ContextLogf(ctx, "Staging %q", gsPath)
+	url, err := createStageURL(ctx, gsPath, *devserverURL)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to stage file at %q", url.String())
+	}
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to stage file at %q", url.String())
+	}
+	res, err := cl.Do(httpReq)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to stage file at %q", url.String())
+	}
+	defer res.Body.Close()
+	if res.StatusCode == http.StatusNotFound {
+		body, _ := io.ReadAll(res.Body)
+		testing.ContextLogf(ctx, "not found at %q: %v %s", url.String(), res.StatusCode, html.UnescapeString(string(body)))
+		return false, nil
+	}
+	if res.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(res.Body)
+		return false, errors.Errorf("failed to stage file at %q: %v %s", url.String(), res.StatusCode, html.UnescapeString(string(body)))
+	}
+
+	testing.ContextLogf(ctx, "Stage of %q success", gsPath)
+	return true, nil
+}
+
+// extractFile calls the cache server to extract a file to the DUT, and retries on 5xx http errors.
+// Returns false, nil on 404 errors. Returns an error on all other errors.
+func extractFile(ctx context.Context, destPath, filename, gsPath string, devserverURL *url.URL, cl *http.Client) (bool, error) {
+	testing.ContextLogf(ctx, "Trying %q", filename)
+	url, err := createExtractURL(ctx, gsPath, filename, *devserverURL)
+	if err != nil {
+		return false, errors.Wrapf(err, "no url for %q", filename)
+	}
+	var lastError error
+	lastError = errors.New("this will never happen")
+	for i := 0; i < 5; i++ {
+		httpReq, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to extract file at %q", url.String())
+		}
+		res, err := cl.Do(httpReq)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to extract file at %q", url.String())
+		}
+		defer res.Body.Close()
+		if res.StatusCode == http.StatusNotFound {
+			body, _ := io.ReadAll(res.Body)
+			testing.ContextLogf(ctx, "not found at %q: %v %s", url.String(), res.StatusCode, html.UnescapeString(string(body)))
+			return false, nil
+		}
+		if res.StatusCode > 500 && res.StatusCode < 600 {
+			body, _ := io.ReadAll(res.Body)
+			lastError = errors.Errorf("failed to extract file at %q: %v %s", url.String(), res.StatusCode, html.UnescapeString(string(body)))
+			testing.ContextLog(ctx, "Retryable error: ", lastError)
 			continue
 		}
-		testImageURL := fmt.Sprintf("%s/extract/%s/chromiumos_test_image.tar.xz?file=chromiumos_test_image.bin", s.url, strings.TrimPrefix(artifactsURL, "gs://"))
-		if err := func() (retErr error) {
-			defer func() {
-				testing.ContextLogf(ctx, "Syncing %s", usbDevice)
-				if err := testexec.CommandContext(ctx, "sync", usbDevice).Run(testexec.DumpLogOnError); err != nil {
-					retErr = errors.Join(retErr, err)
-				}
-				if err := testexec.CommandContext(ctx, "blockdev", "--rereadpt", usbDevice).Run(testexec.DumpLogOnError); err != nil {
-					retErr = errors.Join(retErr, err)
-				}
-			}()
-			testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", testImageURL)
-			req, err = http.NewRequestWithContext(ctx, "GET", testImageURL, nil)
-			if err != nil {
-				return err
-			}
-			res, err = cl.Do(req)
-			if err != nil {
-				return err
-			}
-			defer res.Body.Close()
-			if res.StatusCode != http.StatusOK {
-				return err
-			}
-			outF, err := os.OpenFile(usbDevice, os.O_WRONLY, 0)
-			if err != nil {
-				return err
-			}
-			defer outF.Close()
-
-			bytes, err := io.Copy(outF, res.Body)
-			if err != nil {
-				return err
-			}
-			if res.ContentLength >= 0 && bytes != res.ContentLength {
-				return errors.Errorf("failed to write all data, got %d, want %d", bytes, res.ContentLength)
-			}
-			return nil
-		}(); err != nil {
-			return nil, errors.Wrapf(err, "failed to download %q", testImageURL)
+		if res.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(res.Body)
+			return false, errors.Errorf("failed to extract file at %q: %v %s", url.String(), res.StatusCode, html.UnescapeString(string(body)))
 		}
-
-		// ensure that image was successfully flashed by reading back OS version
-		usbRelease, _, err := usb.ValidateUSBImage(ctx, usbDevice, "/media/usbkey", &localRunner{})
+		outFile, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to verify %s", usbDevice)
+			return false, errors.Wrapf(err, "open %q", destPath)
 		}
-		if usbRelease != "" && strings.HasSuffix(artifactsURL, usbRelease) {
-			testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbDevice, testImageURL)
-			return &empty.Empty{}, nil
+		defer outFile.Close()
+
+		_, err = io.Copy(outFile, res.Body)
+		if err != nil {
+			return false, errors.Wrapf(err, "extract %q", filename)
 		}
-		return nil, errors.Errorf("wrong version on %s after flashing, got %s, want %s", usbDevice, usbRelease, artifactsURL)
+
+		testing.ContextLog(ctx, "Success: ", destPath)
+
+		return true, nil
 	}
-	return &empty.Empty{}, errors.New("no healthy devservers")
+	return false, lastError
+}
+
+// ExtractAPFirmwareImage downloads and extracts AP firmware images from devservers.
+// This code matches the logic in infra/go/src/infra/cros/cmd/provision/cros-fw-provision/service/common.go:PickAndExtractMainImage
+// TODO: Figure out how to share the code.
+func (us *UtilsService) ExtractAPFirmwareImage(ctx context.Context, req *fwpb.ExtractFirmwareImageRequest) (*fwpb.ExtractFirmwareImageResponse, error) {
+	retVal := &fwpb.ExtractFirmwareImageResponse{}
+	devserver, err := findDevServer(ctx, req.GetPreferredDevserver())
+	if err != nil {
+		testing.ContextLog(ctx, "No working preferred devservers: ", err)
+		devserver, err = findDevServer(ctx, req.GetBackupDevserver())
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to find devserver")
+		}
+	}
+	testing.ContextLogf(ctx, "Found a working devserver at %s", devserver)
+	devserverURL, err := url.Parse(devserver)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse %q", devserver)
+	}
+
+	// Short circuit if we already downloaded the image
+	_, err = os.Stat(req.Dest)
+	if err == nil {
+		testing.ContextLogf(ctx, "File already downloaded: %s", req.Dest)
+		return retVal, nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return nil, errors.Wrap(err, "failed to check dest")
+	}
+	candidates, err := getAPCandidateURLs(ctx, req.Url, req.Board, req.Model, req.BuildTargets)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to calculate candidates")
+	}
+	cl := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+			Proxy:               http.ProxyFromEnvironment,
+		},
+	}
+	for _, candidate := range candidates {
+		ok, err := stageFile(ctx, candidate.GSURL, devserverURL, cl)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to stage")
+		}
+		if !ok {
+			continue
+		}
+		for _, filename := range candidate.Filenames {
+			ok, err := extractFile(ctx, req.Dest, filename, candidate.GSURL, devserverURL, cl)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to extract")
+			}
+			if ok {
+				return retVal, nil
+			}
+		}
+	}
+	return nil, errors.Errorf("could not find an AP image in any of: %v", candidates)
+}
+
+// ExtractECFirmwareImage downloads and extracts EC firmware images from devservers.
+// This code matches the logic in infra/go/src/infra/cros/cmd/provision/cros-fw-provision/service/common.go:PickAndExtractECImage
+// TODO: Figure out how to share the code.
+func (us *UtilsService) ExtractECFirmwareImage(ctx context.Context, req *fwpb.ExtractFirmwareImageRequest) (*fwpb.ExtractFirmwareImageResponse, error) {
+	retVal := &fwpb.ExtractFirmwareImageResponse{}
+	devserver, err := findDevServer(ctx, req.GetPreferredDevserver())
+	if err != nil {
+		testing.ContextLog(ctx, "No working preferred devservers: ", err)
+		devserver, err = findDevServer(ctx, req.GetBackupDevserver())
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to find devserver")
+		}
+	}
+	testing.ContextLogf(ctx, "Found a working devserver at %s", devserver)
+	devserverURL, err := url.Parse(devserver)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse %q", devserver)
+	}
+
+	// Short circuit if we already downloaded the image
+	_, err = os.Stat(req.Dest)
+	if err == nil {
+		testing.ContextLogf(ctx, "File already downloaded: %s", req.Dest)
+		return retVal, nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return nil, errors.Wrap(err, "failed to check dest")
+	}
+	candidates, err := getECCandidateURLs(ctx, req.Url, req.Board, req.Model, req.BuildTargets)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to calculate candidates")
+	}
+	cl := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+			Proxy:               http.ProxyFromEnvironment,
+		},
+	}
+	for _, candidate := range candidates {
+		ok, err := stageFile(ctx, candidate.GSURL, devserverURL, cl)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to stage")
+		}
+		if !ok {
+			continue
+		}
+		for _, filename := range candidate.Filenames {
+			ok, err := extractFile(ctx, req.Dest, filename, candidate.GSURL, devserverURL, cl)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to extract ec.bin")
+			}
+			if !ok {
+				continue
+			}
+			// Try to get ec.config also
+			ecConfigFilename := strings.Replace(filename, ".bin", ".config", 1)
+			ecConfigDest := strings.Replace(req.Dest, ".bin", ".config", 1)
+			ok, err = extractFile(ctx, ecConfigDest, ecConfigFilename, candidate.GSURL, devserverURL, cl)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to extract ec.config")
+			}
+			return retVal, nil
+		}
+	}
+	return nil, errors.Errorf("could not find an EC image in any of: %v", candidates)
 }

@@ -50,17 +50,20 @@ const (
 var (
 	knownCrossystemParams = []CrossystemParam{
 		CrossystemParamDevswBoot,
+		CrossystemParamFwid,
+		CrossystemParamFWPrevResult,
+		CrossystemParamFWPrevTried,
+		CrossystemParamFWResult,
+		CrossystemParamFWTried,
 		CrossystemParamFWTryCount,
 		CrossystemParamFWTryNext,
 		CrossystemParamKernkeyVfy,
 		CrossystemParamMainfwAct,
 		CrossystemParamMainfwType,
-		CrossystemParamWpswCur,
 		CrossystemParamRecoveryReason,
-		CrossystemParamFWTried,
-		CrossystemParamFWResult,
-		CrossystemParamFWPrevTried,
-		CrossystemParamFWPrevResult,
+		CrossystemParamRoFwid,
+		CrossystemParamTpmFwVer,
+		CrossystemParamWpswCur,
 	}
 	rCrossystemLine = regexp.MustCompile(`^([^ =]*) *= *(.*[^ ]) *# [^#]*$`)
 )
