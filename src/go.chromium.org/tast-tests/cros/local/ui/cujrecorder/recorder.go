@@ -450,12 +450,13 @@ type RecorderOptions struct {
 	DischargeThreshold *float64
 	// FailOnDischargeErr, if set, will cause test to fail on battery discharge error.
 	// NoBatteryError is not considered as dischage error, though.
-	FailOnDischargeErr   bool
-	DoNotChangeWifi      bool
-	DoNotChangePowerd    bool
-	DoNotChangeDPTF      bool
-	DoNotChangeAudio     bool
-	DoNotChangeBluetooth bool
+	FailOnDischargeErr      bool
+	DoNotChangeWifi         bool
+	DoNotChangePowerd       bool
+	DoNotChangeDPTF         bool
+	DoNotChangeAudio        bool
+	DoNotChangeBluetooth    bool
+	DoNotChangeUpdateEngine bool
 
 	// RecordLoginEvents, if set, will enable |loginEventRecorder| to collect login metrics.
 	RecordLoginEvents bool
@@ -1216,6 +1217,9 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	}
 	if r.options.DoNotChangeBluetooth {
 		powerTestOptions.Bluetooth = setup.DoNotChangeBluetooth
+	}
+	if r.options.DoNotChangeUpdateEngine {
+		powerTestOptions.UpdateEngine = setup.DoNotChangeUpdateEngine
 	}
 	dischargeThreshold := setup.DefaultDischargeThreshold
 	if r.options.DischargeThreshold != nil {
