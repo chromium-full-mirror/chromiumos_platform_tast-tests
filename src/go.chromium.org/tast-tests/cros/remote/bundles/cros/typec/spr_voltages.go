@@ -63,6 +63,11 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 		connectCtxCancel()
 	}
 
+	// Make sure Unigraf uses correct port.
+	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
+		s.Fatal("Failed to set testing port: ", err)
+	}
+
 	// Set unigraf as a power source
 	if err := unigrafctl.SetInitPdState(ctx, unigraf.InitPdStateDfp); err != nil {
 		s.Fatal("Failed to set power role to SRC: ", err)
@@ -78,13 +83,19 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 	voltages := []int{5000, 9000, 15000, 20000}
 	for index, voltage := range voltages {
 		pdoCnt := index + 1
+		voltageBuf := voltage / 10
 		s.Logf("Setting SrcPdoCount to %d for voltage %dV", pdoCnt, voltage)
 		if err := unigrafctl.SetSrcPdoCount(ctx, int64(pdoCnt)); err != nil {
 			s.Fatalf("Failed to set SrcPdoCount to %d: %v", pdoCnt, err)
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			voltageBuf := voltage / 10
+			if connected, err := typecutils.VerifyChargerConnected(ctx, d); err != nil {
+				return errors.Wrap(err, "failed to verify charger connection")
+			} else if !connected {
+				return errors.New("charger is not connected")
+			}
+
 			if reportedVoltageDUT, err := typecutils.GetChargerVoltage(ctx, d); err != nil {
 				return errors.Wrap(err, "failed to get DUT voltage report")
 			} else if reportedVoltageDUT < voltage-voltageBuf || reportedVoltageDUT > voltage+voltageBuf {
