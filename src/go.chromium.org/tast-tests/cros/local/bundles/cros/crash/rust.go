@@ -45,7 +45,6 @@ func init() {
 					crashFileName: "cras",
 					metaSig:       "sig=panicked at 'panicing due to CRAS_RUST_PANIC_FOR_TESTING'",
 				},
-				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
