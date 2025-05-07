@@ -118,14 +118,14 @@ func init() {
 				Val:  bootPerfWarmReboot,
 			},
 			{
-				Name:             "warm_reboot_bounds",
+				Name:             "fw_qual_warm",
 				Fixture:          fixture.NormalMode,
 				Val:              bootPerfWarmReboot,
 				ExtraAttr:        []string{"group:firmware", "firmware_unstable"},
 				ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
 			},
 			{
-				Name:              "ec_reboot_bounds",
+				Name:              "fw_qual_ec_reboot",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
@@ -133,7 +133,7 @@ func init() {
 				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
-				Name:              "from_g3_bounds",
+				Name:              "fw_qual_from_g3",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
@@ -141,7 +141,7 @@ func init() {
 				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
 			},
 			{
-				Name:              "from_s5_bounds",
+				Name:              "fw_qual_from_s5",
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
@@ -526,22 +526,22 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 
 	return []bounds.MetricBounds{
 		{
-			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
+			Test:   bounds.MatchRegexp(`(fw_qual_from_..|fw_qual_warm|default_bounds)$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
 			Bounds: bounds.Max(maxSecondsPowerOnToLogin),
 		},
 		{
-			Test:   bounds.MatchRegexp(`(from_.._bounds|warm_reboot_bounds|default_bounds)$`),
+			Test:   bounds.MatchRegexp(`(fw_qual_from_..|fw_qual_warm|default_bounds)$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_kernel$`),
 			Bounds: bounds.Max(maxSecondsPowerOnToKernel),
 		},
 		{
-			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
+			Test:   bounds.MatchRegexp(`fw_qual_ec_reboot$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_kernel$`),
 			Bounds: bounds.Max(maxSecondsPowerOnToKernel + ecRebootTime),
 		},
 		{
-			Test:   bounds.MatchRegexp(`ec_reboot_bounds$`),
+			Test:   bounds.MatchRegexp(`fw_qual_ec_reboot$`),
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
 			Bounds: bounds.Max(maxSecondsPowerOnToLogin + ecRebootTime),
 		},
