@@ -1602,9 +1602,14 @@ func toggleFileMenuButton(ctx context.Context, tconn *chrome.TestConn, kw *input
 		return nil
 	}
 	return uiauto.NamedCombine("toggle file menu button",
-		// Sometimes, there's a menu without DocsWebArea, such as in Google Slides
-		// or Google Sheets. In this case, we don't need to show the doc menus.
-		uiauto.IfSuccessThen(ui.Exists(googledocs.DocsWebArea), googledocs.ShowTheDocMenus(tconn, kw)),
+		// Show the menus before clicking the File menu button.
+		// If the menus are not shown, the File menu button may not be clickable.
+		// If the Google Docs window exists, show the doc menus.
+		uiauto.IfSuccessThen(ui.Exists(googledocs.DocsWindow), googledocs.ShowTheDocMenus(tconn, kw)),
+		// If the Google Slides window exists, show the slide menus.
+		uiauto.IfSuccessThen(ui.Exists(googledocs.SlidesWindow), googledocs.ShowTheSlideMenus(tconn)),
+		// If the Google Sheets window exists, show the sheet menus.
+		uiauto.IfSuccessThen(ui.Exists(googledocs.SheetsWindow), googledocs.ShowTheSheetMenus(tconn)),
 		moveMouseToFileMenu,
 		// If the File menu doesn't appear, maybe it's because the click
 		// only focused the page. Then we just need to click again.

@@ -25,12 +25,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// slideName represents the name of the Google Slides web area.
-const slideName = "Google Slides"
+// slidesName represents the name of the Google Slides web area.
+const slidesName = "Google Slides"
 
 var (
-	slideWebArea = nodewith.NameContaining(slideName).Role(role.RootWebArea)
-	navigation   = nodewith.Role(role.Navigation).Ancestor(slideWebArea)
+	// SlidesWindow represents the window of the Google Slides.
+	SlidesWindow = nodewith.NameContaining(slidesName).Role(role.Window).First()
+	// SlidesWebArea represents the web area of the Google Slides.
+	SlidesWebArea = nodewith.NameContaining(slidesName).Role(role.RootWebArea).First()
+	navigation    = nodewith.Role(role.Navigation).Ancestor(SlidesWebArea)
+	gotIt         = nodewith.Name("Got it").First()
 )
 
 // NewGoogleSlides returns an action that creates a new google slides from web.
@@ -44,7 +48,6 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.
 	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
 		return errors.Wrap(err, "failed to wait for page to finish loading")
 	}
-	gotIt := nodewith.Name("Got it").First()
 
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("confirm to enter Google Slides",
@@ -56,10 +59,10 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.
 // NewSlide returns an action that creates a new slide, edits its title and content.
 func NewSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title, content, pageNumber string) action.Action {
 	ui := uiauto.New(tconn)
-	newSlide := nodewith.Name("New slide (Ctrl+M)").Role(role.Button).Ancestor(slideWebArea)
-	titleNode := nodewith.Name("title").Role(role.StaticText).Ancestor(slideWebArea).First()
+	newSlide := nodewith.Name("New slide (Ctrl+M)").Role(role.Button).Ancestor(SlidesWebArea)
+	titleNode := nodewith.Name("title").Role(role.StaticText).Ancestor(SlidesWebArea).First()
 	pageNumberText := nodewith.Name(pageNumber).Role(role.StaticText).Ancestor(navigation)
-	textNode := nodewith.Name("text").Role(role.StaticText).Ancestor(slideWebArea).First()
+	textNode := nodewith.Name("text").Role(role.StaticText).Ancestor(SlidesWebArea).First()
 
 	return uiauto.NamedCombine(fmt.Sprintf("create a new slide with page number %s and edit its content", pageNumber),
 		ui.WaitUntilExists(newSlide),
@@ -78,11 +81,11 @@ func NewSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title, cont
 // RenameSlide returns an action that renames google slide.
 func RenameSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title string) action.Action {
 	ui := uiauto.New(tconn)
-	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(slideWebArea).Editable().Focusable()
+	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(SlidesWebArea).Editable().Focusable()
 	return uiauto.NamedAction("rename the slide",
 		ui.Retry(5, uiauto.Combine("rename slide",
-			ui.WaitUntilExists(slideWebArea),
-			maybeShowTheSlideMenu(tconn),
+			ui.WaitUntilExists(SlidesWebArea),
+			ShowTheSlideMenus(tconn),
 			ui.LeftClickUntil(renameTextbox, ui.WithTimeout(5*time.Second).WaitUntilExists(renameTextbox.State("focused", true))),
 			kb.AccelAction("Ctrl+A"),
 			kb.TypeAction(title),
@@ -99,9 +102,9 @@ func PresentSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, slideCo
 	presentationOptionsButton := nodewith.Name("Presentation options").First()
 	// There are two versions of ui to present slide.
 	presentFromBeginningButton := nodewith.NameRegex(regexp.MustCompile("(Present|Start) from beginning.*")).Role(role.MenuItem).First()
-	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(slideWebArea).First()
+	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(SlidesWebArea).First()
 	return uiauto.NamedCombine("present slide",
-		maybeShowTheSlideMenu(tconn),
+		ShowTheSlideMenus(tconn),
 		ui.WaitUntilExists(presentationOptionsButton),
 		ui.DoDefaultUntil(presentationOptionsButton, ui.WithTimeout(5*time.Second).WaitUntilExists(presentFromBeginningButton)),
 		ui.DoDefault(presentFromBeginningButton),
@@ -164,14 +167,14 @@ func EditSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, text, expe
 // DeleteSlide returns an action that deletes google slide.
 func DeleteSlide(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	slideHomeWebArea := nodewith.Name(slideName).Role(role.RootWebArea)
-	application := nodewith.Role(role.Application).Ancestor(slideWebArea) // Google Slide appliction node.
+	slideHomeWebArea := nodewith.Name(slidesName).Role(role.RootWebArea)
+	application := nodewith.Role(role.Application).Ancestor(SlidesWebArea) // Google Slide application node.
 	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(application)
 	menu := nodewith.Role(role.Menu).Ancestor(application)
 	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToSlidesHome := nodewith.Name("Go to Slides home screen").Role(role.Button)
 	return uiauto.NamedCombine("delete slide",
-		maybeShowTheSlideMenu(tconn),
+		ShowTheSlideMenus(tconn),
 		cuj.ExpandMenu(tconn, fileButton, menu, 470),
 		ui.DoDefault(moveToTrash),
 		ui.DoDefault(goToSlidesHome),
@@ -184,16 +187,21 @@ func DeleteSlide(tconn *chrome.TestConn) action.Action {
 
 // waitForSlideSaved waits for the slide document state to be saved.
 func waitForSlideSaved(tconn *chrome.TestConn) action.Action {
-	return waitForDocumentSaved(tconn, slideName)
+	return waitForDocumentSaved(tconn, slidesName)
 }
 
-// maybeShowTheSlideMenu shows the hidden Slide menu.
-func maybeShowTheSlideMenu(tconn *chrome.TestConn) action.Action {
+// ShowTheSlideMenus shows the hidden Slide menu.
+func ShowTheSlideMenus(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	showTheMenusButton := nodewith.NameContaining("Show the menus").Role(role.Button)
-	hideTheMenusButton := nodewith.NameContaining("Hide the menus").Role(role.Button)
-	return uiauto.IfSuccessThen(ui.Exists(showTheMenusButton),
-		ui.LeftClickUntil(showTheMenusButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(hideTheMenusButton)))
+	return uiauto.Combine("show the slide menus",
+		uiauto.IfFailThen(ui.Exists(SlidesWebArea),
+			ui.DoDefaultUntil(SlidesWindow,
+				ui.WithTimeout(5*time.Second).WaitUntilExists(SlidesWebArea),
+			),
+		),
+		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
+		showTheMenus(ui),
+	)
 }
 
 // ActivateTitleField makes slide title field editable.
@@ -208,5 +216,5 @@ func ActivateTitleField(tconn *chrome.TestConn) action.Action {
 // ClickOnSlidesWebArea clicks on slide's web area.
 func ClickOnSlidesWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	return ui.LeftClick(slideWebArea)
+	return ui.LeftClick(SlidesWebArea)
 }

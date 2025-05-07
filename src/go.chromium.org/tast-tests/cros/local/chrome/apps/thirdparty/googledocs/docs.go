@@ -29,9 +29,12 @@ import (
 const docsName = "Google Docs"
 
 var (
+	// DocsWindow represents the window of the Google Docs.
+	DocsWindow = nodewith.NameContaining(docsName).Role(role.Window).First()
 	// DocsWebArea represents the web area of the Google Docs.
-	DocsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea)
+	DocsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea).First()
 	docsApplication = nodewith.Role(role.Application).Ancestor(DocsWebArea)
+	moveToTrashItem = nodewith.NameContaining("Move to trash t").Role(role.MenuItem).First()
 )
 
 // NewGoogleDocs returns an action to create a new Google document.
@@ -133,7 +136,6 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	docHomeWebArea := nodewith.Name(docsName).Role(role.RootWebArea).First()
 	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(docsApplication)
 	menu := nodewith.Role(role.Menu).Ancestor(docsApplication)
-	moveToTrashItem := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToDocsHome := nodewith.Name("Go to Docs home screen").Role(role.Button)
 	moveToTrash := uiauto.NamedCombine("move to trash",
 		ui.DoDefault(moveToTrashItem),
@@ -226,21 +228,18 @@ func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) acti
 	ui := uiauto.New(tconn)
 	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(docsApplication)
 	modeAndViewToolBar := nodewith.Name("Mode and view").Role(role.Toolbar).Ancestor(docsApplication)
-	hideTheMenusButton := nodewith.Name("Hide the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
-	showTheMenusButton := nodewith.Name("Show the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
-	showTheMenus := uiauto.NamedCombine("show the menus",
-		kb.AccelAction("Ctrl+Shift+F"),
-		ui.WaitUntilExists(hideTheMenusButton),
-		ui.WaitForLocation(hideTheMenusButton),
-	)
 	exitFullScreen := uiauto.NamedCombine("exit full screen",
 		kb.AccelAction("Esc"),
 		ui.WaitUntilExists(modeAndViewToolBar),
 	)
 	return uiauto.Combine("show the doc menus",
+		uiauto.IfFailThen(ui.Exists(DocsWebArea),
+			ui.DoDefaultUntil(DocsWindow,
+				ui.WithTimeout(5*time.Second).WaitUntilExists(DocsWebArea),
+			),
+		),
 		ui.WaitUntilExists(menuBar),
 		// In some cases, the toolbar is hidden in full screen.
 		uiauto.IfFailThen(ui.Exists(modeAndViewToolBar), exitFullScreen),
-		ui.WaitUntilAnyExists(hideTheMenusButton, showTheMenusButton),
-		uiauto.IfSuccessThen(ui.Exists(showTheMenusButton), showTheMenus))
+		showTheMenus(ui))
 }

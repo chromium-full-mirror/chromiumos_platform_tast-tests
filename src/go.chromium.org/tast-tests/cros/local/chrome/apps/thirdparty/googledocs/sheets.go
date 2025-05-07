@@ -24,7 +24,12 @@ import (
 // sheetsName represents the name of the Google Sheets web area.
 const sheetsName = "Google Sheets"
 
-var sheetsWebArea = nodewith.NameContaining(sheetsName).Role(role.RootWebArea)
+var (
+	// SheetsWindow represents the window of the Google Sheets.
+	SheetsWindow = nodewith.NameContaining(sheetsName).Role(role.Window).First()
+	// SheetsWebArea represents the web area of the Google Sheets.
+	SheetsWebArea = nodewith.NameContaining(sheetsName).Role(role.RootWebArea).First()
+)
 
 // DeleteSheetsWithURL returns an action to open the sheets url and delete the document.
 func DeleteSheetsWithURL(tconn *chrome.TestConn, cr *chrome.Chrome, url, outDir string) action.Action {
@@ -52,16 +57,14 @@ func DeleteSheetsWithURL(tconn *chrome.TestConn, cr *chrome.Chrome, url, outDir 
 // DeleteSheets returns an action to delete the document.
 func DeleteSheets(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-
-	application := nodewith.Role(role.Application).Ancestor(sheetsWebArea) // Google Sheets application node.
+	application := nodewith.Role(role.Application).Ancestor(SheetsWebArea) // Google Sheets application node.
 	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(application).Onscreen()
 	menu := nodewith.Role(role.Menu).Ancestor(application)
-	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToSheetsHome := nodewith.Name("Go to Sheets home screen").Role(role.Button)
 
 	return uiauto.NamedCombine("delete document",
 		cuj.ExpandMenu(tconn, fileButton, menu, 400),
-		ui.DoDefault(moveToTrash),
+		ui.DoDefault(moveToTrashItem),
 		ui.DoDefault(goToSheetsHome),
 		ui.WaitUntilGone(goToSheetsHome),
 	)
@@ -104,9 +107,9 @@ func waitForSheetSaved(tconn *chrome.TestConn) action.Action {
 // ChangeSheetFontSize returns an action to change sheet font size to specific font size.
 func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 	ui := uiauto.New(tconn)
-	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(sheetsWebArea)
-	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(sheetsWebArea)
-	fontSizeOption := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(sheetsWebArea)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(SheetsWebArea)
+	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(SheetsWebArea)
+	fontSizeOption := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(SheetsWebArea)
 	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change sheet font size to "+size,
 		uiauto.IfSuccessThen(ui.Gone(fontSizeTextField),
 			ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeTextField))),
@@ -119,12 +122,26 @@ func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 // ClickOnSheetsWebArea clicks on sheets's web area.
 func ClickOnSheetsWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	return ui.LeftClick(sheetsWebArea)
+	return ui.LeftClick(SheetsWebArea)
 }
 
 // ClickOnSheetsCanvas clicks on sheets's canvas to focus on the sheet cell.
 func ClickOnSheetsCanvas(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	sheetsCanvas := nodewith.Role(role.Canvas).Ancestor(sheetsWebArea)
+	sheetsCanvas := nodewith.Role(role.Canvas).Ancestor(SheetsWebArea)
 	return ui.LeftClick(sheetsCanvas)
+}
+
+// ShowTheSheetMenus shows the hidden Sheet menu.
+func ShowTheSheetMenus(tconn *chrome.TestConn) action.Action {
+	ui := uiauto.New(tconn)
+	return uiauto.Combine("show the sheet menus",
+		uiauto.IfFailThen(ui.Exists(SheetsWebArea),
+			ui.DoDefaultUntil(SheetsWindow,
+				ui.WithTimeout(5*time.Second).WaitUntilExists(SheetsWebArea),
+			),
+		),
+		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
+		showTheMenus(ui),
+	)
 }

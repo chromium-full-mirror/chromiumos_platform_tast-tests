@@ -61,6 +61,17 @@ func waitForFieldTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expec
 		})
 }
 
+// showTheMenus shows the hidden menu.
+func showTheMenus(ui *uiauto.Context) action.Action {
+	showTheMenusButton := nodewith.NameContaining("Show the menus").Role(role.Button)
+	hideTheMenusButton := nodewith.NameContaining("Hide the menus").Role(role.Button)
+	return uiauto.Combine("show the menus",
+		ui.WaitUntilAnyExists(showTheMenusButton, hideTheMenusButton),
+		uiauto.IfSuccessThen(ui.Exists(showTheMenusButton),
+			ui.DoDefaultUntil(showTheMenusButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(hideTheMenusButton))),
+	)
+}
+
 // DeleteDocsOrSlidesContent used for clean the test environment
 func DeleteDocsOrSlidesContent(ctx context.Context, tconn *chrome.TestConn, appType string) error {
 	var webArea = nodewith.NameContaining(appType).Role(role.RootWebArea)
