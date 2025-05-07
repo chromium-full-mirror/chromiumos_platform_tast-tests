@@ -166,11 +166,8 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to check external storage file: ", err)
 	}
+
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	// Unplug the USB devices.
-	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
-		s.Fatal("Failed to unplug the external storage after copy file: ", err)
-	}
 	// Waiting for the system to display the "Whoa, there. Be careful." message.
 	notificationMessage := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
@@ -178,9 +175,21 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 			{Value: &ui.NodeWith_NameRegex{NameRegex: "Whoa, there. Be careful."}},
 		},
 	}
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: notificationMessage}); err != nil {
+	errChannel := make(chan error)
+	go func() {
+		_, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: notificationMessage})
+		errChannel <- err
+	}()
+
+	// Unplug the USB devices.
+	if err := tf.Helper.DeactivateDeviceByID(ctx, usbID); err != nil {
+		s.Fatal("Failed to unplug the external storage after copy file: ", err)
+	}
+
+	if err := <-errChannel; err != nil {
 		s.Fatal("Failed to Wait 'Whoa, there. Be careful.' message after unplug external storage: ", err)
 	}
+
 	// Close the Files app.
 	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
 		s.Fatal("Failed to close Files app perhaps due to an app crash: ", err)
