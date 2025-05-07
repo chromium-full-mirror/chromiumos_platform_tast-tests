@@ -25,7 +25,7 @@ func init() {
 		Desc:           "Signs into ChromeOS, locks device and then unlocks it with Smart Lock",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
-			"chromeos-sw-engprod@google.com",
+			"hansberry@google.com",
 			"joaquinmarquez@google.com",
 		},
 		BugComponent: "b:1131772",

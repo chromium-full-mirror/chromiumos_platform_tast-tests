@@ -25,7 +25,6 @@ func init() {
 		Desc:           "Tests ability to enable/disable Smart Lock with Settings",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
-			"chromeos-sw-engprod@google.com",
 			"hansberry@google.com",
 		},
 		BugComponent: "b:1131772",
