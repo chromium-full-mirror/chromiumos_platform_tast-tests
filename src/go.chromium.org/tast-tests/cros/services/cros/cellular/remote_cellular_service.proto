@@ -10,7 +10,8 @@ import "google/protobuf/empty.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/cellular";
 
-// RemoteCellularService provides RPC methods to interact with the cellular environment on the DUT.
+// RemoteCellularService provides RPC methods to interact with the cellular
+// environment on the DUT.
 service RemoteCellularService {
   // SetUp initialize the DUT for cellular testing.
   rpc SetUp(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -46,7 +47,8 @@ service RemoteCellularService {
   rpc QueryLTESignal(google.protobuf.Empty) returns (QueryLTESignalResponse) {}
 
   // VerifyIPConnectivity verifies that the DUT can ping the provided addresses.
-  rpc VerifyIPConnectivity(VerifyIPConnectivityRequest) returns (VerifyIPConnectivityResponse) {}
+  rpc VerifyIPConnectivity(VerifyIPConnectivityRequest)
+      returns (VerifyIPConnectivityResponse) {}
 
   // DisableSar disables dynamic SAR on the DUT.
   rpc DisableSar(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -64,24 +66,21 @@ service RemoteCellularService {
   rpc QueryModemType(google.protobuf.Empty) returns (QueryModemTypeResponse) {}
 
   // QuerySignalBars returns dut signal bars count from ui.
-  rpc QuerySignalBars(google.protobuf.Empty) returns (QuerySignalBarsResponse) {}
+  rpc QuerySignalBars(google.protobuf.Empty) returns (QuerySignalBarsResponse) {
+  }
+
+  // QueryTearDownFailure returns whether the last TearDown failed or not.
+  rpc QueryTearDownFailure(google.protobuf.Empty)
+      returns (QueryTearDownFailureResponse) {}
 }
 
-message EnableResponse {
-  int64 enable_time = 1;
-}
+message EnableResponse { int64 enable_time = 1; }
 
-message DisableResponse {
-  int64 disable_time = 1;
-}
+message DisableResponse { int64 disable_time = 1; }
 
-message ConnectResponse {
-  int64 connect_time = 1;
-}
+message ConnectResponse { int64 connect_time = 1; }
 
-message DisconnectResponse {
-  int64 disconnect_time = 1;
-}
+message DisconnectResponse { int64 disconnect_time = 1; }
 
 message QueryServiceResponse {
   string name = 1;
@@ -92,9 +91,7 @@ message QueryServiceResponse {
   string network_technology = 6;
 }
 
-message QueryInterfaceResponse {
-  string name = 1;
-}
+message QueryInterfaceResponse { string name = 1; }
 
 message QueryLTESignalResponse {
   double rsrp = 1;
@@ -102,21 +99,13 @@ message QueryLTESignalResponse {
   double snr = 3;
 }
 
-message ConfigureSarRequest {
-  int32 power_level = 1;
-}
+message ConfigureSarRequest { int32 power_level = 1; }
 
-message SmsMessage {
-  string text = 1;
-}
+message SmsMessage { string text = 1; }
 
-message WaitForNextSmsResponse {
-  SmsMessage message = 1;
-}
+message WaitForNextSmsResponse { SmsMessage message = 1; }
 
-message QueryModemTypeResponse {
-  uint32 modem_type = 1;
-}
+message QueryModemTypeResponse { uint32 modem_type = 1; }
 
 message VerifyIPConnectivityRequest {
   string IPv4Address = 1;
@@ -133,6 +122,6 @@ message VerifyIPConnectivityResponse {
   bool ipv6 = 2;
 }
 
-message QuerySignalBarsResponse {
-    int32 count = 1;
-}
+message QuerySignalBarsResponse { int32 count = 1; }
+
+message QueryTearDownFailureResponse { bool tearDown_failed = 1; }

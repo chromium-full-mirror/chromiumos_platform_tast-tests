@@ -22,13 +22,15 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:         "cellularRebootSetupRemote",
-		Desc:         "A remote fixture that reboots the device as part of the setup to help enforce isolation between tests",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
-		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Impl:         newFixture(rebootOnSetup),
-		SetUpTimeout: 3 * time.Minute,
-		Vars:         []string{"skipReboot"},
+		Name:            "cellularRebootSetupRemote",
+		Desc:            "A remote fixture that reboots the device as part of the setup to help enforce isolation between tests",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Impl:            newFixture(rebootOnSetup),
+		SetUpTimeout:    3 * time.Minute,
+		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
+		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSuspendRemote",
@@ -38,6 +40,7 @@ func init() {
 		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -48,6 +51,7 @@ func init() {
 		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -58,6 +62,7 @@ func init() {
 		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -68,6 +73,7 @@ func init() {
 		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -76,9 +82,11 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		// Just reboot in SetUp since there shouldn't be any side effects to these tests.
-		Impl:         newFixture(rebootOnSetup),
-		SetUpTimeout: 3 * time.Minute,
-		Vars:         []string{"skipReboot"},
+		Impl:            newFixture(rebootOnSetup),
+		SetUpTimeout:    3 * time.Minute,
+		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
+		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularAutoconnectRemote",
@@ -88,6 +96,7 @@ func init() {
 		Impl:            newFixture(rebootOnSetup, rebootOnTeardown),
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -99,6 +108,17 @@ func init() {
 		SetUpTimeout:    3 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    5 * time.Minute,
+		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
+		Vars:            []string{"skipReboot"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularEnsureCleanTearDownRemote",
+		Desc:            "Remote cellular fixture that reboots the device when there is a failure on TearDown. All other remote fixtures also do this",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com", "andrewlassalle@google.com"},
+		BugComponent:    "b:167157", // ChromeOS > Platform > Connectivity > Cellular
+		Impl:            newFixture(),
+		SetUpTimeout:    3 * time.Minute,
+		TearDownTimeout: 3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
 	})
@@ -146,11 +166,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 
 	d := s.DUT()
-	if !d.Connected(ctx) {
-		s.Log("Reconnecting to DUT")
-		if err := d.Connect(ctx); err != nil {
-			s.Fatal("Failed to connect to DUT: ", err)
-		}
+	if err := reconnectToDut(ctx, d); err != nil {
+		s.Fatal("Failed to connect to DUT: ", err)
 	}
 	tf.dut = d
 	tf.hint = s.RPCHint()
@@ -169,12 +186,8 @@ func (tf *fixture) Reset(ctx context.Context) error {
 		return nil
 	}
 
-	// Reconnect to DUT if needed.
-	if !tf.dut.Connected(ctx) {
-		testing.ContextLog(ctx, "Reconnecting to DUT")
-		if err := tf.dut.Connect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to dut")
-		}
+	if err := reconnectToDut(ctx, tf.dut); err != nil {
+		return errors.Wrap(err, "failed to reconnect to dut")
 	}
 
 	cl, err := rpc.Dial(ctx, tf.dut, tf.hint)
@@ -203,23 +216,56 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if tf.rebootOnTeardown {
-		d := s.DUT()
+	tearDownFailed, err := tf.hasTeardownFailed(ctx, s)
+	if err != nil {
+		// Don't throw Fatal, since we might still need to reboot the DUT
+		s.Log("Failed to query for TearDown failure result: ", err)
+	}
 
+	if tf.rebootOnTeardown || tearDownFailed {
 		// DUT may be disconnected prior to TearDown even if there are more tests
 		// to run. Reconnect so we can reboot.
-		if !d.Connected(ctx) {
-			s.Log("Reconnecting to DUT")
-			if err := d.Connect(ctx); err != nil {
-				s.Fatal("Failed to connect to DUT: ", err)
-			}
+		if err := reconnectToDut(ctx, tf.dut); err != nil {
+			s.Fatal("Failed to connect to DUT: ", err)
 		}
-
 		s.Log("Rebooting DUT")
-		if err := d.Reboot(ctx); err != nil {
+		if err := s.DUT().Reboot(ctx); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	}
+}
+
+func reconnectToDut(ctx context.Context, dut *dut.DUT) error {
+	if !dut.Connected(ctx) {
+		testing.ContextLog(ctx, "Reconnecting to DUT")
+		if err := dut.Connect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to dut")
+		}
+	}
+	return nil
+}
+
+func (tf *fixture) hasTeardownFailed(ctx context.Context, s *testing.FixtState) (bool, error) {
+	if err := reconnectToDut(ctx, tf.dut); err != nil {
+		return false, errors.Wrap(err, "failed to reconnect to dut")
+	}
+
+	cl, err := rpc.Dial(ctx, tf.dut, tf.hint)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	remoteCellularClient := cellular.NewRemoteCellularServiceClient(cl.Conn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to create new remote cellular service client")
+	}
+
+	resp, err := remoteCellularClient.QueryTearDownFailure(ctx, &empty.Empty{})
+	if err != nil {
+		return false, errors.Wrap(err, "failed to query for TearDown failure result")
+	}
+	return resp.TearDownFailed, nil
 }
 
 // hasStartupRebootUptime returns true if the device has been up long enough to reboot on startup.

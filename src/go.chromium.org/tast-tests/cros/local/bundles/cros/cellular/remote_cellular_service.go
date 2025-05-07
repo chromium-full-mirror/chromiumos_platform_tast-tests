@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -497,4 +498,11 @@ func (s *RemoteCellularService) QuerySignalBars(ctx context.Context, _ *empty.Em
 		return nil, errors.Wrap(err, "failed to find signal bars count from ui")
 	}
 	return &cellular_pb.QuerySignalBarsResponse{Count: int32(count)}, err
+}
+
+// QueryTearDownFailure returns true if there was a failure executing the TearDown of the last fixture.
+func (s *RemoteCellularService) QueryTearDownFailure(ctx context.Context, _ *empty.Empty) (*cellular_pb.QueryTearDownFailureResponse, error) {
+	_, tearDownFailureFileStatErr := os.Stat(cellular.TearDownFailureFlagPath)
+	// os.Stat() returns err == nil when the file exists.
+	return &cellular_pb.QueryTearDownFailureResponse{TearDownFailed: (tearDownFailureFileStatErr == nil)}, nil
 }

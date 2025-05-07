@@ -40,6 +40,9 @@ import (
 const (
 	uiJobName    = "ui"
 	tearDownTime = 5 * time.Minute
+	// TearDownFailureFlagPath is set when a step in the TearDown fails. All contents of /run get
+	// erased on reboot.
+	TearDownFailureFlagPath = "/run/cellularTearDownFailureFlag"
 )
 
 // The Cellular test fixture ensures that modemfwd is stopped.
@@ -55,6 +58,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -68,6 +72,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -179,6 +184,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setUseTestESIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -193,8 +199,9 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true),
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"autotest_host_info_labels"},
+		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		Parent: fixture.FakeDMSEnrolled,
+		Vars:   []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndTestSIM",
@@ -207,8 +214,9 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setUseTestESIM(true),
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"autotest_host_info_labels"},
+		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		Parent: fixture.FakeDMSEnrolled,
+		Vars:   []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
@@ -221,8 +229,9 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setClearSIMLock(true),
-		Parent:          fixture.FakeDMSEnrolled,
-		Vars:            []string{"autotest_host_info_labels"},
+		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		Parent: fixture.FakeDMSEnrolled,
+		Vars:   []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularModemManager",
@@ -237,6 +246,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -253,6 +263,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -269,6 +280,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -283,8 +295,9 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setHasArc(true),
-		Parent:          "arcBooted",
-		Vars:            []string{"autotest_host_info_labels"},
+		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with arcBooted
+		Parent: "arcBooted",
+		Vars:   []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningRoamingSim",
@@ -296,6 +309,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setUseRoaming(true).setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -309,6 +323,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -323,8 +338,9 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setCheckSIM(true),
-		Parent:          "powerMetricsNoUI",
-		Vars:            []string{"autotest_host_info_labels"},
+		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with powerMetricsNoUI
+		Parent: "powerMetricsNoUI",
+		Vars:   []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSIMLockCleared",
@@ -336,6 +352,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
+		Parent:          "cellularEnsureCleanTearDownRemote",
 		Impl:            newCellularFixture().setClearSIMLock(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -1081,6 +1098,10 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	if teardownFailure {
 		testing.ContextLog(ctx, "Teardown failed")
+		if err := os.WriteFile(TearDownFailureFlagPath, []byte("1"), 0666); err != nil {
+			testing.ContextLogf(ctx, "Could not write to %s: %s", TearDownFailureFlagPath, err)
+		}
+
 	}
 }
 
