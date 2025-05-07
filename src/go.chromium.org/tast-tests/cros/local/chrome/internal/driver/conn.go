@@ -6,6 +6,7 @@ package driver
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/mafredri/cdp/protocol/input"
@@ -185,7 +186,14 @@ func (c *Conn) Call(ctx context.Context, out interface{}, fn string, args ...int
 			testing.ContextLog(ctx, "Ignored: failed to release 'this' object: ", err)
 		}
 	}()
-	return this.Call(ctx, out, fn, args...)
+	if err := this.Call(ctx, out, fn, args...); err != nil {
+		if !strings.Contains(err.Error(), "Promise was collected") {
+			return err
+		}
+		testing.ContextLog(ctx, "Retrying Call after 'Promise was collected' error")
+		return this.Call(ctx, out, fn, args...)
+	}
+	return nil
 }
 
 // WaitForExpr repeatedly evaluates the JavaScript expression expr until it evaluates to true.
