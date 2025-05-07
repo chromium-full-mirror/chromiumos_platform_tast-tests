@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verify USB device storage partitions are mounted while the DUT is at the lock screen and after unlocking",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_storage",
@@ -39,7 +39,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 	})
 }
 func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
