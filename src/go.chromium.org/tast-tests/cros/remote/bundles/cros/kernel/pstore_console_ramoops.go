@@ -20,7 +20,7 @@ func init() {
 		Desc: "Fails if console-ramoops isn't maintained across a warm reboot",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"swboyd@chromium.org",
+			"tfiga@chromium.org",
 		},
 		BugComponent: "b:167278",
 		SoftwareDeps: []string{"pstore", "reboot"},

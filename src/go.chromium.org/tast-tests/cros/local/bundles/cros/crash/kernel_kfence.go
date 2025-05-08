@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelKfence,
 		Desc:         "Verify kernel kfence errors are logged as expected",
-		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "tfiga@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		// TODO(b/201790026): The lkdtm resides on the debugfs,

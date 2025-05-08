@@ -26,7 +26,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WatchdogCrash,
 		Desc:         "Verify artificial watchdog crash creates crash files",
-		Contacts:     []string{"chromeos-data-eng@google.com", "swboyd@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "tfiga@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"device_crash", "pstore", "reboot", "watchdog"},

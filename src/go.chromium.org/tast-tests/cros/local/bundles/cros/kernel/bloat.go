@@ -35,7 +35,7 @@ func init() {
 		Desc: "Tracks kernel bloat",
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
-			"swboyd@chromium.org",
+			"tfiga@chromium.org",
 		},
 		BugComponent: "b:167278",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
