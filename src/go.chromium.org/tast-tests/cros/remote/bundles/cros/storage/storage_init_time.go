@@ -1,8 +1,8 @@
-// Copyright 2024 The ChromiumOS Authors
+// Copyright 2025 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package firmware
+package storage
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func init() {
 		Func:         StorageInitTime,
 		Desc:         "Measures storage time against threshold",
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 	})
@@ -52,7 +52,7 @@ func getStorageDeviceInitTime(ctx context.Context, s *testing.State) time.Durati
 	return initTime
 }
 
-func getStorageThreshold(ctx context.Context, s *testing.State) time.Duration {
+func getStorageThreshold(ctx context.Context, s *testing.State) (time.Duration, string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	rootPart, err := reporters.RootPartition(ctx, reporters.New(s.DUT()))
@@ -61,20 +61,24 @@ func getStorageThreshold(ctx context.Context, s *testing.State) time.Duration {
 	}
 
 	var thresholdTime time.Duration = 0
+	var storageType string = "undefined"
 	if util.IsEMMC(rootPart) {
 		s.Logf("eMMC storage initialization threshold: %s ", h.Config.StorageInitEmmc)
 		thresholdTime = h.Config.StorageInitEmmc
+		storageType = "eMMC"
 	} else if util.IsNVME(rootPart) {
 		s.Logf("NVMe storage initialization threshold: %s ", h.Config.StorageInitNvme)
 		thresholdTime = h.Config.StorageInitNvme
+		storageType = "NVMe"
 	} else if util.IsUFS(rootPart) {
 		s.Logf("UFS storage initialization threshold: %s ", h.Config.StorageInitUfs)
 		thresholdTime = h.Config.StorageInitUfs
+		storageType = "UFS"
 	} else {
 		s.Fatalf("Unable to get the storage type for root partition %s", rootPart)
 	}
 
-	return thresholdTime
+	return thresholdTime, storageType
 }
 
 func StorageInitTime(ctx context.Context, s *testing.State) {
@@ -89,10 +93,13 @@ func StorageInitTime(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
-	var thresholdTime time.Duration = getStorageThreshold(ctx, s)
-	var initTime time.Duration = getStorageDeviceInitTime(ctx, s)
+	thresholdTime, storageType := getStorageThreshold(ctx, s)
+	initTime := getStorageDeviceInitTime(ctx, s)
 
 	if initTime > thresholdTime {
-		s.Fatalf("Current storage initialization time: %s is higher than threshold: %s", initTime, thresholdTime)
+		qualMessage := "please note, failure is only informational, and won't block the qualification"
+		s.Fatalf("\"%s\" initialization time: %s is higher than threshold: %s, %s", storageType, initTime, thresholdTime, qualMessage)
+	} else {
+		s.Logf("\"%s\" initialization time: %s is within threshold: %s", storageType, initTime, thresholdTime)
 	}
 }
