@@ -45,7 +45,7 @@ type TestParam struct {
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
 // scroll the sheets file, to test the Google Sheets performance.
-func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath, payloadPath, metadataPath string, args func(string) (string, bool)) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir string, dataPath func(string) string, args func(string) (string, bool)) (pv *perf.Values, retErr error) {
 	overallScrollTimeout := 10 * time.Minute
 	if testDuration, ok := args("ui.GoogleSheetsCUJ.duration"); ok {
 		var err error
@@ -194,6 +194,8 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		}
 
 		if testParam.AUBackgroundEnable {
+			payloadPath := dataPath(updateengine.PayloadFilename)
+			metadataPath := dataPath(updateengine.MetadataFilename)
 			runner := updateengine.NewAURunner(payloadPath, metadataPath)
 			err := runner.Start(ctx)
 			if err != nil {
@@ -282,6 +284,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 
 			// See go/trace-in-cuj-tests about rules for tracing.
 			if scroller.recordTrace {
+				systemTraceConfigPath := dataPath(cujrecorder.SystemTraceConfigFile)
 				if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}

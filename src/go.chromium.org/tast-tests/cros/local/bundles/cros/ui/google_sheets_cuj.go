@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
-		Data: []string{cujrecorder.SystemTraceConfigFile},
+		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Vars: []string{
 			// Parsable test duration, like 10m or 60s, to run the test.
 			"ui.GoogleSheetsCUJ.duration",
@@ -83,7 +83,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(googlesheetscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile), s.DataPath(updateengine.PayloadFilename), s.DataPath(updateengine.MetadataFilename), s.Var); err != nil {
+	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath, s.Var); err != nil {
 		s.Fatal("Failed to run GoogleSheetsCUJ: ", err)
 	}
 }
