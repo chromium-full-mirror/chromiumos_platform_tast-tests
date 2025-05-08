@@ -96,7 +96,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
-		SoftwareDeps: []string{"android_vm_t", "chrome"},
+		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Data:         []string{certTestAppApkName},
@@ -140,12 +140,6 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 	}
 	defer a.Close(cleanupCtx)
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
 	s.Log("Installing " + certTesterAppName)
 	if err := a.Install(ctx, s.DataPath(certTestAppApkName)); err != nil {
 		s.Fatal("Failed to install IntegrityAPI: ", err)
@@ -168,6 +162,12 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize UI Automator: ", err)
 	}
 	defer d.Close(cleanupCtx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create test API connection: ", err)
+	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	s.Log("Launching " + certTesterAppName)
 	app, err := apputil.NewApp(ctx, kb, tconn, a, d, certTesterAppName, certTesterPackageName)
