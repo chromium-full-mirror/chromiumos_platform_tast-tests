@@ -19,7 +19,7 @@ func init() {
 		Desc: "Ensures the system is running the expected cpuidle governor",
 		Contacts: []string{
 			"baseos-perf@google.com",
-			"swboyd@chromium.org",
+			"bgeffon@chromium.org",
 		},
 		BugComponent: "b:167279",
 		Attr:         []string{"group:mainline"},
