@@ -24,7 +24,12 @@ func DDCommand(ctx context.Context, dut *dut.DUT, ifParam, ofParam, bsParam stri
 		ofStr = fmt.Sprintf("of=%v ", ofParam)
 	}
 
-	cmd := fmt.Sprintf("dd if=%v %vbs=%v count=%v", ifParam, ofStr, bsParam, countParam)
+	bsStr := ""
+	if bsParam != "" {
+		bsStr = fmt.Sprintf("bs=%v ", bsParam)
+	}
+
+	cmd := fmt.Sprintf("dd if=%v %v%vcount=%v", ifParam, ofStr, bsStr, countParam)
 
 	if skipParam > 0 {
 		cmd += fmt.Sprintf(" skip=%v", skipParam)

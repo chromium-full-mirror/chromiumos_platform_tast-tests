@@ -31,10 +31,15 @@ func BootFromUSB(ctx context.Context, dut *dut.DUT) error {
 }
 
 // InstallChromeOS function will install the ChromeOS using the usb drive.
-func InstallChromeOS(ctx context.Context, dut *dut.DUT) error {
+func InstallChromeOS(ctx context.Context, dut *dut.DUT, skipPostInstallFlag bool) error {
 
 	// chromeOS-install.
-	_, err := RunCmdWithOutput(ctx, dut, "sh", "-c", "chromeos-install --skip_postinstall -y")
+	skipPostInstall := ""
+	if skipPostInstallFlag {
+		skipPostInstall = " --skip_postinstall"
+	}
+	cmd := fmt.Sprintf("chromeos-install%s -y", skipPostInstall)
+	_, err := RunCmdWithOutput(ctx, dut, "sh", "-c", cmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to install ChromeOS")
 	}
@@ -47,11 +52,18 @@ func InstallChromeOS(ctx context.Context, dut *dut.DUT) error {
 	// Using partition 11 to format.
 	partition += "1"
 
-	// Formatting partition with ext4.
-	cmd := fmt.Sprintf("mkfs.ext4 %v", partition)
-	_, err = RunCmdWithOutput(ctx, dut, "sh", "-c", cmd)
-	if err != nil {
-		return errors.Wrap(err, "failed to format the partition")
+	if skipPostInstallFlag {
+		// Formatting partition with ext4.
+		cmd = fmt.Sprintf("mkfs.ext4 %v", partition)
+		_, err = RunCmdWithOutput(ctx, dut, "sh", "-c", cmd)
+		if err != nil {
+			return errors.Wrap(err, "failed to format the partition")
+		}
+	} else {
+		_, err := DDCommand(ctx, dut, "/dev/zero", partition, "", 4, 0)
+		if err != nil {
+			return errors.Wrap(err, "failed to run dd command for lvm")
+		}
 	}
 
 	// Enabling boot from disk.

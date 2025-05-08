@@ -67,7 +67,7 @@ func DLCPreservation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create dlc file: ", err)
 	}
 	// Function to install chromeOS using usb drive.
-	err = util.InstallChromeOS(ctx, dut)
+	err = util.InstallChromeOS(ctx, dut, true)
 	if err != nil {
 		s.Fatal("Error while installing the chromeOS: ", err)
 	}

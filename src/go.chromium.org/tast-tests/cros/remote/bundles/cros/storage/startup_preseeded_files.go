@@ -36,7 +36,7 @@ func StartupPreseededFiles(ctx context.Context, s *testing.State) {
 	}
 
 	// This function installs chromeOS using usb drive.
-	err = util.InstallChromeOS(ctx, dut)
+	err = util.InstallChromeOS(ctx, dut, true)
 	if err != nil {
 		s.Fatal("Error while installing the chromeOS: ", err)
 	}
