@@ -193,17 +193,23 @@ func (d *Device) Close(ctx context.Context) error {
 		returnError = errors.Join(returnError, err)
 	}
 
+	if err := d.sp.Wait(); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for UI Automator server to shutdown: ", err)
+
+		// Forcefully terminate the UI Automator server process if the graceful shutdown
+		// via /stop did not successfully terminate the process.
+		if err := d.sp.Kill(); err != nil {
+			testing.ContextLog(ctx, "Failed to kill UI Automator server: ", err)
+			returnError = errors.Join(returnError, err)
+		}
+
+		d.sp.Wait() // ignore error `signal: killed`
+	}
+
 	if err := d.hostDevice.RemoveForwardTCP(ctx, d.hostPort); err != nil {
 		testing.ContextLogf(ctx, "Failed to clean up UI Automator port(%d) for device(%v): %v", d.hostPort, d.hostDevice, err)
 		returnError = errors.Join(returnError, err)
 	}
-
-	if err := d.sp.Kill(); err != nil {
-		testing.ContextLog(ctx, "Failed to kill UI Automator server: ", err)
-		returnError = errors.Join(returnError, err)
-	}
-
-	d.sp.Wait() // ignore error `signal: killed`
 
 	return returnError
 }
