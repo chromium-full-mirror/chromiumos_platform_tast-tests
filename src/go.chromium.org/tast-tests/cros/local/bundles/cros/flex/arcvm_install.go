@@ -6,13 +6,11 @@ package flex
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast-tests/cros/local/flex"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -27,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		Attr:         []string{"group:mainline"},
-		Fixture:      "flexARCVM",
+		Fixture:      flex.ARCVMEnrolled,
 		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5"), hwdep.Model("reven")),
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Timeout:      30 * time.Minute,
@@ -38,27 +36,9 @@ func init() {
 }
 
 func ARCVMInstall(ctx context.Context, s *testing.State) {
-	s.Log("Waiting for Android system image to appear")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := os.Stat("/opt/google/vms/android/system.raw.img"); err == nil {
-			return nil
-		} else if os.IsNotExist(err) {
-			return errors.New("system image is not present")
-		} else {
-			return errors.Errorf("failed to check system image: %q", err)
-		}
-	}, &testing.PollOptions{Timeout: 20 * time.Minute}); err != nil {
-		s.Fatal("Android system image did not appear within the timeout: ", err)
-	}
-
-	s.Log("Cleaning up")
-	err := testexec.CommandContext(ctx, "dlcservice_util", "--uninstall", "--id=android-vm-dlc").Run(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to uninstall the android-vm-dlc: ", err)
-	}
-	err = testexec.CommandContext(ctx, "umount", "/opt/google/vms/android").Run(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to unmount Android bind mount: ", err)
-	}
-
+	// The "test code" for this test was moved to the flex.ARCVMEnrolled fixture
+	// by crrev/c/6527449, so other tests could enable/disable ARCVM on Flex.
+	//
+	// We still want to be able to track whether the enablement process works
+	// independent of other tests, so please do not delete this.
 }

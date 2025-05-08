@@ -6,10 +6,13 @@ package flex
 
 import (
 	"context"
+	"os"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -17,9 +20,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// Fixture names.
+const (
+	ARCVMEnrolled = "flexARCVMEnrolled"
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            "flexARCVM",
+		Name:            ARCVMEnrolled,
 		Desc:            "Base fixture for ChromeOS Flex ARCVM tests",
 		Contacts:        []string{"chromeos-flex-eng+oncall@google.com", "josephsussman@google.com"},
 		BugComponent:    "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
@@ -91,6 +99,19 @@ func (i *flexARCVMImpl) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	}
 	i.cr = cr
 
+	s.Log("Waiting for Android system image to appear")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := os.Stat("/opt/google/vms/android/system.raw.img"); err == nil {
+			return nil
+		} else if os.IsNotExist(err) {
+			return errors.New("system image is not present")
+		} else {
+			return errors.Errorf("failed to check system image: %q", err)
+		}
+	}, &testing.PollOptions{Timeout: 20 * time.Minute}); err != nil {
+		s.Fatal("Android system image did not appear within the timeout: ", err)
+	}
+
 	return &FixtData{i.fdms, i.cr}
 }
 
@@ -123,5 +144,13 @@ func (i *flexARCVMImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	if err := i.cr.Close(ctx); err != nil {
 		s.Error("Failed to close Chrome connection: ", err)
+	}
+	err := testexec.CommandContext(ctx, "dlcservice_util", "--uninstall", "--id=android-vm-dlc").Run(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed to uninstall the android-vm-dlc: ", err)
+	}
+	err = testexec.CommandContext(ctx, "umount", "/opt/google/vms/android").Run(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed to unmount Android bind mount: ", err)
 	}
 }
