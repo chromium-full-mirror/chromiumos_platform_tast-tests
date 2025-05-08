@@ -75,6 +75,7 @@ func EmojiInput(ctx context.Context, s *testing.State) {
 		nodeName            = "Emoji Picker"
 		inputEmoji          = "😄"
 		emojiPickerShortcut = "search+shift+space"
+		timeOutForUIPolling = 60 * time.Second
 	)
 
 	s.Log("Installing app")
@@ -113,7 +114,7 @@ func EmojiInput(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	auto := uiauto.New(tconn)
+	auto := uiauto.New(tconn).WithTimeout(timeOutForUIPolling)
 	emojiPickerFinder := nodewith.Name(nodeName).Role(role.RootWebArea)
 	emojiItem := nodewith.Name(inputEmoji).Ancestor(emojiPickerFinder).First()
 	if err := uiauto.Combine("Emoji",
