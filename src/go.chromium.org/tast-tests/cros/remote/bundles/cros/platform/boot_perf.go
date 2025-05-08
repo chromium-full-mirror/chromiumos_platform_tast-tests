@@ -16,7 +16,6 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 
-	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/bounds"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -56,6 +55,22 @@ const (
 	bootPerfEcReboot
 	bootPerfFromG3
 	bootPerfFromS5
+)
+
+var waiverMaxPowerOnToKernelSeconds = testing.RegisterVarString(
+	"platform.waiverMaxPowerOnToKernelSeconds",
+	"",
+	"Override the maxPowerOnToKernelSeconds time",
+)
+var waiverMaxPowerOnToLoginSeconds = testing.RegisterVarString(
+	"platform.waiverMaxPowerOnToLoginSeconds",
+	"",
+	"Override the maxPowerOnToLoginSeconds time",
+)
+var waiverMaxECRebootSeconds = testing.RegisterVarString(
+	"platform.waiverMaxECRebootSeconds",
+	"",
+	"Override the maxECRebootSeconds time",
 )
 
 func init() {
@@ -454,7 +469,7 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
-func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string, dut *dut.DUT) []bounds.MetricBounds {
+func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string, dut *dut.DUT) ([]bounds.MetricBounds, error) {
 	maxSecondsPowerOnToKernel := 1.0
 	maxSecondsPowerOnToLogin := 8.0
 	ecRebootTime := 0.5
@@ -470,58 +485,32 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 		}
 	}
 
-	// Board specific waivers
-	if board == "atlas" { // b/122563096#comment5
-		testing.ContextLogf(ctx, "atlas waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.52", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.52
-	} else if board == "coral" {
-		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.4 (2 for EC reboot)", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.4 // b/177845648#comment30
-		ecRebootTime = 0.6              // EC reboot gets extra time also: b/345835444#comment3
-		testing.ContextLogf(ctx, "coral waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10", maxSecondsPowerOnToLogin)
-		maxSecondsPowerOnToLogin = 10 // b/364942918
-	} else if board == "octopus" { // b/111625580 & b/119845733
-		testing.ContextLogf(ctx, "octopus waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.4 (2 for EC reboot)", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.4
-		ecRebootTime = 0.6
-		testing.ContextLogf(ctx, "octopus waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10", maxSecondsPowerOnToLogin)
-		maxSecondsPowerOnToLogin = 10 // b/121040937 & b/120006504
-	} else if board == "dedede" { // b/177845648#comment30
-		testing.ContextLogf(ctx, "dedede waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.3
-	} else if board == "zork" { // go/zork-waiver-b2k -> deck 5
-		testing.ContextLogf(ctx, "zork waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.8", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.8
-	} else if board == "skyrim" { // ROW 135 in go/cros-waivers
-		testing.ContextLogf(ctx, "skyrim waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.3", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.3
-	} else if board == "guybrush" { // ROW 96 in go/cros-waivers
-		testing.ContextLogf(ctx, "guybrush waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.47", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.47
-	} else if board == "brya" || board == "brask" { // ROW 115 in go/cros-waivers
-		err := dut.Conn().CommandContext(ctx, "bash", "-c", "lscpu | grep '^Model name:\\s*Intel(R) Celeron(R)'").Run()
-		if err == nil {
-			testing.ContextLogf(ctx, "brya/brask Celeron waiver: Adjusting maxSecondsPowerOnToLogin from %f to 8.5", maxSecondsPowerOnToLogin)
-			maxSecondsPowerOnToLogin = 8.5
+	waiver := waiverMaxPowerOnToKernelSeconds.Value()
+	if waiver != "" {
+		val, err := strconv.ParseFloat(waiver, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "bad flag %s=%q", waiverMaxPowerOnToKernelSeconds.Name(), waiver)
 		}
-	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "gladios" {
-		// b/373945910#comment27
-		testing.ContextLogf(ctx, "gladios waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.351", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.351
-		if features.GetHardware().GetHardwareFeatures().GetStorage().GetStorageType() == api.Component_Storage_EMMC &&
-			features.GetHardware().GetHardwareFeatures().GetStorage().GetSizeGb() <= 64 {
-			// ROW 139, go/cros-waivers - gladios comes in several sizes and 64GB is the smallest, the detected size will be slightly smaller than 64GB
-			testing.ContextLogf(ctx, "gladios eMMC-64GB waiver: Adjusting maxSecondsPowerOnToLogin from %f to 10.57", maxSecondsPowerOnToLogin)
-			maxSecondsPowerOnToLogin = 10.57
+		testing.ContextLogf(ctx, "Using user provided value %f for maxPowerOnToKernelSeconds", val)
+		maxSecondsPowerOnToKernel = val
+	}
+	waiver = waiverMaxPowerOnToLoginSeconds.Value()
+	if waiver != "" {
+		val, err := strconv.ParseFloat(waiver, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "bad flag %s=%q", waiverMaxPowerOnToLoginSeconds.Name(), waiver)
 		}
-	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omnigul" || features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "omniknight" {
-		// ROW 151 in go/cros-waivers
-		testing.ContextLogf(ctx, "%s waiver: Adjusting maxSecondsPowerOnToKernel from %f to 1.7", features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel(), maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 1.7
-	} else if features.GetHardware().GetDeprecatedDeviceConfig().GetId().GetModel() == "boxy" {
-		// ROW 143 in go/cros-waivers
-		testing.ContextLogf(ctx, "boxy waiver: Adjusting maxSecondsPowerOnToKernel from %f to 2", maxSecondsPowerOnToKernel)
-		maxSecondsPowerOnToKernel = 2
+		testing.ContextLogf(ctx, "Using user provided value %f for maxPowerOnToLoginSeconds", val)
+		maxSecondsPowerOnToLogin = val
+	}
+	waiver = waiverMaxECRebootSeconds.Value()
+	if waiver != "" {
+		val, err := strconv.ParseFloat(waiver, 32)
+		if err != nil {
+			return nil, errors.Wrapf(err, "bad flag %s=%q", waiverMaxECRebootSeconds.Name(), waiver)
+		}
+		testing.ContextLogf(ctx, "Using user provided value %f for maxECRebootSeconds", val)
+		ecRebootTime = val
 	}
 
 	return []bounds.MetricBounds{
@@ -545,7 +534,7 @@ func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, b
 			Metric: bounds.MatchRegexp(`seconds_power_on_to_login$`),
 			Bounds: bounds.Max(maxSecondsPowerOnToLogin + ecRebootTime),
 		},
-	}
+	}, nil
 }
 
 // BootPerf is the function that reboots the client and collect boot perf data.
@@ -560,7 +549,10 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	// Remove hyphenated suffixes: ex. "samus-kernelnext" becomes "samus"
 	board = strings.SplitN(board, "-", 2)[0]
 
-	var bootPerfMetricBounds = bootPerfMetricBounds(ctx, s.Features(""), board, d)
+	bootPerfMetricBounds, err := bootPerfMetricBounds(ctx, s.Features(""), board, d)
+	if err != nil {
+		s.Fatal("bootPerfMetricBounds: ", err)
+	}
 
 	// Parse test options.
 	skipRootfsCheck := defaultSkipRootfsCheck
@@ -690,6 +682,7 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	}
 	if err := bounds.EvaluateResults(ctx, bootPerfMetricBounds, s.OutDir()); err != nil {
 		s.Error("Failed bounds check: ", err)
+		s.Errorf("Use one of--var={%s,%s,%s}=??? to override if you have an approved waiver", waiverMaxPowerOnToKernelSeconds.Name(), waiverMaxPowerOnToLoginSeconds.Name(), waiverMaxECRebootSeconds.Name())
 	}
 	s.Logf("Bounds check report written to %s/bounds-check.json", path.Base(s.OutDir()))
 }
