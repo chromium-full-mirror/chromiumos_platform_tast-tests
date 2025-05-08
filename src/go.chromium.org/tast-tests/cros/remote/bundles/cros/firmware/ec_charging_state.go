@@ -47,15 +47,16 @@ func init() {
 			"tast.cros.power.BatteryService",
 		},
 		Fixture: fixture.NormalMode,
-		Params: []testing.Param{{
-			Name:    "discharge",
-			Timeout: 70 * time.Minute,
-			Val:     voltageOnDischarge,
-		}, {
-			Name:    "full_charge",
-			Timeout: 120 * time.Minute,
-			Val:     statusOnFullCharge,
-		},
+		Params: []testing.Param{
+			{
+				Name:    "charge_to_full",
+				Timeout: 120 * time.Minute,
+				Val:     statusOnFullCharge,
+			}, {
+				Name:    "discharge",
+				Timeout: 70 * time.Minute,
+				Val:     voltageOnDischarge,
+			},
 		},
 	})
 }
