@@ -105,16 +105,24 @@ func parseReportAndRecordMetrics(ctx context.Context, reportPath, metricNameSuff
 	if err := json.Unmarshal(b, &metrics); err != nil {
 		return errors.Wrap(err, "failed to unmarshal performance metrics")
 	}
-	for testName, milliseconds := range metrics {
-		if testName != "PerformOcr" {
+	for testName, value := range metrics {
+		if testName == "PerformOcr" {
+			testing.ContextLogf(ctx, "Perf: %v => %v ms", testName, value)
+			p.Set(perf.Metric{
+				Name:      testName + "_" + metricNameSuffix,
+				Unit:      "milliseconds",
+				Direction: perf.SmallerIsBetter,
+			}, value)
+		} else if testName == "PerformOcr_mem" {
+			testing.ContextLogf(ctx, "Perf: %v => %v mb", testName, value)
+			p.Set(perf.Metric{
+				Name:      testName + "_" + metricNameSuffix,
+				Unit:      "megabyte",
+				Direction: perf.SmallerIsBetter,
+			}, value)
+		} else {
 			return errors.Errorf("unrecognized test name %v", testName)
 		}
-		testing.ContextLogf(ctx, "Perf: %v => %v ms", testName, milliseconds)
-		p.Set(perf.Metric{
-			Name:      testName + "_" + metricNameSuffix,
-			Unit:      "milliseconds",
-			Direction: perf.SmallerIsBetter,
-		}, milliseconds)
 	}
 	return nil
 }
