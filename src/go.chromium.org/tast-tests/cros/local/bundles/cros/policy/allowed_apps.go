@@ -46,7 +46,6 @@ func init() {
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.SystemFeaturesDisableMode{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
@@ -60,7 +59,7 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	pb := policy.NewBlob()
-	pb.AddPolicies([]policy.Policy{systemFeaturesDisableList(), &policy.SystemFeaturesDisableMode{Val: "hidden"}})
+	pb.AddPolicies(systemFeaturesDisableList())
 
 	if err := policyutil.ServeBlobAndRefresh(ctx, fakeDMS, cr, pb); err != nil {
 		s.Fatal("Failed to serve and refresh: ", err)
@@ -91,34 +90,36 @@ func AllowedApps(ctx context.Context, s *testing.State) {
 }
 
 // systemFeaturesDisableList returns the SystemFeaturesDisableList policy set with all its possible enum values.
-func systemFeaturesDisableList() policy.Policy {
-	return &policy.SystemFeaturesDisableList{Val: []string{
-		"camera",
-		"os_settings",
-		"browser_settings",
-		"scanning",
-		"crosh",
-		"recorder",
-		"web_store",
-		"canvas",
-		"explore",
-		"gallery",
-		"terminal",
-		"print_jobs",
-		"key_shortcuts",
-		"youtube",
-		"google_maps",
-		"gmail",
-		"google_docs",
-		"google_slides",
-		"google_sheets",
-		"google_drive",
-		"google_keep",
-		"google_calendar",
-		"google_chat",
-		"calculator",
-		"text_editor",
-	}}
+func systemFeaturesDisableList() []policy.Policy {
+	return []policy.Policy{&policy.SystemFeaturesDisableList{
+		Val: []string{
+			"camera",
+			"os_settings",
+			"browser_settings",
+			"scanning",
+			"crosh",
+			"recorder",
+			"web_store",
+			"canvas",
+			"explore",
+			"gallery",
+			"terminal",
+			"print_jobs",
+			"key_shortcuts",
+			"youtube",
+			"google_maps",
+			"gmail",
+			"google_docs",
+			"google_slides",
+			"google_sheets",
+			"google_drive",
+			"google_keep",
+			"google_calendar",
+			"google_chat",
+			"calculator",
+			"text_editor",
+		}},
+	}
 }
 
 // isAppAllowed returns true if the app is allowed to be displayed in the launcher (essential or blockable by other policies).
