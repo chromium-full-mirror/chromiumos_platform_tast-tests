@@ -748,7 +748,7 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 
 // runECFirmwareFlashDut runs EC firmware flashing from the DUT
 func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string, allowFlashFailure bool) {
-	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(testexec.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image), "--quirks", "ec_partial_recovery").Run(testexec.DumpLogOnError); err != nil {
 		if !allowFlashFailure {
 			s.Fatal("Failed to flash firmware bin file: ", err)
 		}
