@@ -127,10 +127,14 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 
 	// Alt+Search should be equivalent to Capslock, but unlike real Capslock
 	// it unexpectedly disrupts dead-key composition (crbug/383673473), so
-	// shortcut should be avoided where possible. For JIS, real Capslock
-	// doesn't always work (crbug/408113747) and fortunately JIS is known to
-	// not have dead keys, so use shortcut for Capslock on JIS only.
-	useShortcutForCapslock := hardwareLayoutType == "JIS"
+	// shortcut should be avoided where possible.
+	// - For JIS hardware layout, real Capslock doesn't always work (see
+	//   crbug/408113747) and fortunately JIS is known to not have dead
+	//   keys, so use shortcut for Capslock on JIS.
+	// - In Colemak & Workman layout families, by design real Capslock key
+	//   is remapped to have Backspace functionality instead, so use
+	//   shortcut for Capslock on these layouts.
+	useShortcutForCapslock := (hardwareLayoutType == "JIS") || slices.Contains([]string{"xkb:us:colemak:eng", "xkb:us:workman:eng", "xkb:us:workman-intl:eng"}, inputMethod.ID)
 
 	if err := its.ClickFieldAndWaitForActive(inputField)(ctx); err != nil {
 		s.Fatal("Failed to ClickFieldAndWaitForActive: ", err)
