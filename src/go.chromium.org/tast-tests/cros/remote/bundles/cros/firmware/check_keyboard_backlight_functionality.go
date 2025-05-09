@@ -45,7 +45,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.ScreenRecorderService"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		HardwareDeps: hwdep.D(
 			hwdep.ChromeEC(),
 			hwdep.KeyboardBacklight(),
@@ -116,29 +116,6 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 
 	testMethod := s.Param().(checkKeyboardBacklightTest)
 	switch testMethod {
-	case adjustBacklightWithKeyboardShortcuts:
-		s.Log("Screen recorder started")
-		filePath := filepath.Join(s.OutDir(), "kblightRecord.webm")
-		screenRecorder := pb.NewScreenRecorderServiceClient(h.RPCClient.Conn)
-		if _, err := screenRecorder.Start(ctx, &pb.StartRequest{
-			FileName: filePath,
-		}); err != nil {
-			s.Fatal("Failed to start recording: ", err)
-		}
-		defer func(ctx context.Context) {
-			res, err := screenRecorder.Stop(ctx, &empty.Empty{})
-			if err != nil {
-				s.Log("Unable to save the recording: ", err)
-			} else {
-				s.Logf("Screen recording saved to %s", res.FileName)
-			}
-
-			s.Log("Copying screen recording from DUT to local machine")
-			destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
-			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-				s.Fatal("Failed to copy screen recording to local machine: ", err)
-			}
-		}(cleanupCtx)
 	case lidCloseAndOpen:
 		defer func(ctx context.Context) {
 			if err := h.Servo.OpenLid(ctx); err != nil {

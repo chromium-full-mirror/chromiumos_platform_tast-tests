@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -71,7 +69,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.ui.ScreenRecorderService", "tast.cros.browser.ChromeService", "tast.cros.ui.CheckVirtualKeyboardService", "tast.cros.firmware.UtilsService"},
+		ServiceDeps:  []string{"tast.cros.ui.CheckVirtualKeyboardService", "tast.cros.firmware.UtilsService"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      8 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.TouchScreen()),
@@ -133,24 +131,11 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Logging in as a guest user")
-	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
-	if _, err := chromeService.New(ctx, &pb.NewRequest{
-		LoginMode: pb.LoginMode_LOGIN_MODE_GUEST_LOGIN,
-	}); err != nil {
+	vkService := pb.NewCheckVirtualKeyboardServiceClient(h.RPCClient.Conn)
+	if _, err := vkService.NewChromeLoggedIn(ctx, &pb.NewBrowserRequest{}); err != nil {
 		s.Fatal("Failed to login: ", err)
 	}
-	defer chromeService.Close(ctx, &empty.Empty{})
-
-	s.Log("Screen recorder started")
-	filePath := filepath.Join(s.OutDir(), "ecVerifyVK.webm")
-	startRequest := pb.StartRequest{
-		FileName: filePath,
-	}
-	screenRecorder := pb.NewScreenRecorderServiceClient(h.RPCClient.Conn)
-
-	if _, err := screenRecorder.Start(ctx, &startRequest); err != nil {
-		s.Fatal("Failed to start recording: ", err)
-	}
+	defer vkService.CloseChrome(ctx, &empty.Empty{})
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
@@ -163,18 +148,6 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 		if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
 			s.Fatal("Failed to set usb keyboard to off: ", err)
-		}
-		res, err := screenRecorder.Stop(ctx, &empty.Empty{})
-		if err != nil {
-			s.Log("Unable to save the recording: ", err)
-		} else {
-			s.Logf("Screen recording saved to %s", res.FileName)
-		}
-
-		testing.ContextLog(ctx, "Copying screen recording from DUT to local machine")
-		destPath := filepath.Join(s.OutDir(), filepath.Base(res.FileName))
-		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), res.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to copy screen recording to local machine: ", err)
 		}
 	}(cleanupCtx)
 
@@ -205,7 +178,6 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	vkService := pb.NewCheckVirtualKeyboardServiceClient(h.RPCClient.Conn)
 	for _, tc := range []struct {
 		formFactor        dutType
 		canDoTabletSwitch bool
