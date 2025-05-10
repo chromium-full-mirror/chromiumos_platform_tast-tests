@@ -70,8 +70,6 @@ const (
 	// ToTBranch is the Tip-of-Tree branch having artifacts at postSubmitArtifactsBuilder.
 	ToTBranch                  string = "tot"
 	postSubmitArtifactsBuilder string = "chromeos-image-archive/firmware-ti50-postsubmit"
-	// b/352341481: Move back to postSubmit location once OT signing works.
-	otPostSubmitArtifactsBuilder string = "chromeos-localmirror-private/ot-nightly-test"
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
 	Cr50QualBranch string = "cr50qual"
@@ -134,7 +132,7 @@ var (
 
 // AllTi50TestbedTypes returns all the testbed types that use ti50 images.
 func AllTi50TestbedTypes() []ti50.TestbedType {
-	return []ti50.TestbedType{ti50.GscDTAndreiboard, ti50.GscDTShield, ti50.GscOpentitanCw310Fpga, ti50.GscHostEmulation, ti50.GscOTShield}
+	return []ti50.TestbedType{ti50.GscDTAndreiboard, ti50.GscDTShield, ti50.GscOpentitanCw310Fpga, ti50.GscHostEmulation, ti50.GscOTShield, ti50.GscDTShieldV2, ti50.GscNTShieldV2}
 }
 
 // AllTi50ImageTypes returns all the ti50 image types.
@@ -325,12 +323,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
 // Returns the image and fw config json globs for the specified image type.
 func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context, t ti50.TestbedType, iT ImageType) (string, string, error) {
-	builder := postSubmitArtifactsBuilder
-	if t == ti50.GscOpentitanCw310Fpga || t == ti50.GscOTShield || t == ti50.GscNTShieldV2 {
-		builder = otPostSubmitArtifactsBuilder
-	}
-
-	builds, err := gsLs(ctx, "builds for tot", gsPrefix+builder)
+	builds, err := gsLs(ctx, "builds for tot", gsPrefix+postSubmitArtifactsBuilder)
 
 	if err != nil {
 		return "", "", err
@@ -392,18 +385,45 @@ func tastImageAndJSONExists(ctx context.Context, tastParentURL, imageDir string)
 	tastParentURL = strings.TrimPrefix(tastParentURL, gsPrefix)
 	artifactsDir := filepath.Join(tastParentURL, "tast", imageDir)
 
+	skipArtifactsDir := false
+	if strings.HasPrefix(imageDir, "nt-") && strings.Contains(artifactsDir, postSubmitArtifactsBuilder) {
+		// Avoid invalid rw.bin for NT.
+		// gs://chromeos-image-archive/firmware-ti50-postsubmit/R137-16246.0.0-109457-8718210281088122625/tast/nt-ti50/rw.bin
+		skipArtifactsDir = true
+	}
+
 	imageGlob = gsPrefix + filepath.Join(artifactsDir, imageBinGlob)
-	if !gsURLExists(ctx, imageGlob) {
-		imageGlob = gsPrefix + filepath.Join(strings.Replace(tastParentURL, postsubmitBucket, releaseBucket, 1), imageDir+".tar.bz2", imageBinGlob)
+	if skipArtifactsDir || !gsURLExists(ctx, imageGlob) {
+		imageGlob2 := ""
+		if strings.HasPrefix(imageDir, "dt-") {
+			// Check alternate location for DT signed images.
+			// gs://chromeos-image-archive/firmware-ti50-postsubmit/R137-16239.0.0-109298-8718832882770194753/tast/dt-ti50/opentitantool_fw_config.json
+			// gs://chromeos-releases/firmware-ti50-postsubmit/R137-16239.0.0-109298-8718832882770194753/dt-ti50.tar.bz2/*.bin
+			imageGlob2 = gsPrefix + filepath.Join(strings.Replace(tastParentURL, postsubmitBucket, releaseBucket, 1), imageDir+".tar.bz2", imageBinGlob)
+		} else if strings.HasPrefix(imageDir, "nt-") {
+			// Check alternate location for NT signed images.
+			// gs://chromeos-image-archive/firmware-ti50-postsubmit/R137-16246.0.0-109457-8718210281088122625/tast/nt-ti50/opentitantool_fw_config.json
+			// gs://chromeos-releases/ti50/nt-signed/R137-16246.0.0-109457/ti50_Ti50NuvoTitanSemiProdKeys_nt-ti50.bin
+			psRe := regexp.MustCompile(`.*/firmware-ti50-postsubmit/([^/]+)-[0-9]+/`)
+			psm := psRe.FindStringSubmatch(artifactsDir)
+			if psm != nil {
+				imageGlob2 = gsPrefix + filepath.Join(releaseBucket, "ti50/nt-signed", psm[1], "ti50_Ti50NuvoTitanSemiProdKeys_"+imageDir+".bin")
+			}
+		}
+		if imageGlob2 == "" {
+			testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, imageGlob)
+			return imageGlob, jsonGlob, false
+		}
+		imageGlob = imageGlob2
 		if !gsURLExists(ctx, imageGlob) {
-			testing.ContextLogf(ctx, "Rejecting %s: %s missing (and not found in %s)", artifactsDir, imageBinGlob, releaseBucket)
+			testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, imageGlob)
 			return imageGlob, jsonGlob, false
 		}
 	}
 
 	jsonGlob = gsPrefix + filepath.Join(artifactsDir, tastConfigGlob)
 	if !gsURLExists(ctx, jsonGlob) {
-		testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, tastConfigGlob)
+		testing.ContextLogf(ctx, "Rejecting %s: %s missing", artifactsDir, jsonGlob)
 		return imageGlob, jsonGlob, false
 	}
 
