@@ -260,11 +260,6 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
-	const msvdDecodeDelayHistogram = "Media.MojoStableVideoDecoder.Decode"
-	initMSVDDecodeDelayHistogram, err := metrics.GetHistogram(ctx, params.bTconn, msvdDecodeDelayHistogram)
-	if err != nil {
-		return errors.Wrap(err, "failed to get initial histogram")
-	}
 	const platformdecodeHistogram = "Media.PlatformVideoDecoding.Decode"
 	initPlatformdecodeHistogram, err := metrics.GetHistogram(ctx, params.tconn, platformdecodeHistogram)
 	if err != nil {
@@ -401,9 +396,6 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
 	}
 
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, msvdDecodeDelayHistogram, initMSVDDecodeDelayHistogram, p.GetUnderlyingValues(), "mojo_stable_video_decoder_decode_delay"); err != nil {
-		return errors.Wrap(err, "failed to calculate the MojoStableVideoDecoder decode delay perf metric")
-	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, mvdDecodeDelayHistogram, initMVDDecodeDelayHistogram, p.GetUnderlyingValues(), "video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate the MojoVideoDecoder decode delay perf metric")
 	}
