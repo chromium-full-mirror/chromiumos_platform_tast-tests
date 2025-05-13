@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed"},
-		HardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelAtomOrderList: []hwdep.IntelAtomOrder{hwdep.Gracemont}, IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.TigerLake}})),
+		HardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelAtomOrderList: []hwdep.IntelAtomOrder{hwdep.Gracemont}, IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.PantherLake}})),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
