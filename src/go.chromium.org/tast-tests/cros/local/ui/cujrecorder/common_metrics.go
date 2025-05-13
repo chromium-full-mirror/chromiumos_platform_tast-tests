@@ -111,8 +111,17 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewDistributionMetricConfig("EventLatency.GestureScrollUpdate.Touchscreen.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.GestureScrollUpdate.Touchscreen.TotalLatency2", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.GestureScrollUpdate.Wheel.TotalLatency2", "microseconds", perf.SmallerIsBetter),
+
 		NewCustomMetricConfig("PageLoad.InteractiveTiming.InputDelay3", "ms", perf.SmallerIsBetter),
-		NewCustomMetricConfig("PageLoad.InteractiveTiming.TimeToNextPaint", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("PageLoad.InteractiveTiming.TimeToNextPaint", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("PageLoad.InteractiveTiming.UserInteractionLatency.HighPercentile2.MaxEventDuration", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("PageLoad.InteractiveTiming.UserInteractionLatency.HighPercentile2.MaxEventDuration.AfterBackForwardCacheRestore", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("PageLoad.InteractiveTiming.UserInteractionLatency.HighPercentile2.MaxEventDuration.Prerender", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Blink.Responsiveness.UserInteraction.MaxEventDuration.AllTypes", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Blink.Responsiveness.UserInteraction.MaxEventDuration.Keyboard", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Blink.Responsiveness.UserInteraction.MaxEventDuration.TapOrClick", "ms", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Blink.Responsiveness.UserInteraction.MaxEventDuration.Drag", "ms", perf.SmallerIsBetter),
+
 		NewDistributionMetricConfig("EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.MouseDragged.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.MouseMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
