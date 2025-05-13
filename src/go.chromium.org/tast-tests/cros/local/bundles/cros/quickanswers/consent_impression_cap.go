@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,6 +35,7 @@ func init() {
 			quickanswers.VariantSingleWord,
 		),
 		SoftwareDeps: []string{"gaia"},
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
 	})
 }
 

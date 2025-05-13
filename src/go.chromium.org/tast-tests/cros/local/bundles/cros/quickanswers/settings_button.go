@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -36,7 +37,11 @@ func init() {
 		Fixture: quickanswers.Parameterize(
 			quickanswers.EnabledWithBrowserFixture,
 			quickanswers.VariantUnitConversion,
-		)})
+		),
+		// TODO: crbug.com/417516843 - support CBX case.
+		// Note that CBX has different settings page expectation.
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
+	})
 }
 
 // SettingsButton tests Quick Answers settings button.

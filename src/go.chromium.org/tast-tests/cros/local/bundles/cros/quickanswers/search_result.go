@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -43,7 +44,10 @@ func init() {
 		Fixture: quickanswers.Parameterize(
 			quickanswers.EnabledWithBrowserFixture,
 			quickanswers.VariantSingleWord,
-		)})
+		),
+		// TODO: crbug.com/417516843 - support CBX case
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
+	})
 }
 
 // SearchResult tests Quick Answers card click should bring up search result.

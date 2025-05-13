@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -44,6 +45,8 @@ func init() {
 			// Disabled by TORA.  See:b/331078791.
 			// "gaia"
 		},
+		// TODO: crbug.com/417516843 - support CBX case
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
 	})
 }
 

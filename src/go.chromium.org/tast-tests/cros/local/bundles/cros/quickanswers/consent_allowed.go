@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,6 +35,7 @@ func init() {
 			quickanswers.VariantSingleWord,
 		),
 		SoftwareDeps: []string{"chrome", "gaia"},
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
 	})
 }
 
@@ -55,7 +57,7 @@ func ConsentAllowed(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	// Right click the selected word and ensure the consent UI shows up.
 	userConsent := nodewith.ClassName("UserConsentView")
-	allowButton := nodewith.Name("Allow").ClassName("CustomizedLabelButton")
+	allowButton := nodewith.Name("Try it").ClassName("MdTextButton")
 	if err := uiauto.Combine("Show consent UI",
 		ui.RightClick(query),
 		ui.WaitUntilExists(userConsent))(ctx); err != nil {

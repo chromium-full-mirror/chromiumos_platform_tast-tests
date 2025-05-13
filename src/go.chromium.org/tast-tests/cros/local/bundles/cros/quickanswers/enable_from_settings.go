@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 			quickanswers.BaseFixture,
 			quickanswers.VariantNotEnabled,
 		),
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(0)),
 	})
 }
 
