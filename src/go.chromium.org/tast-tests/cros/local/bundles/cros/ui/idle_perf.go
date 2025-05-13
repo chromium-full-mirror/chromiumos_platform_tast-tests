@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -202,11 +203,12 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		}
 
 		defer func() {
-			if err := mousekeys.TearDown(ctx, kb, cr, tconn); err != nil {
+			if err := mousekeys.TearDown(closeCtx, kb, cr, tconn); err != nil {
 				s.Error("Failed to tear down MouseKeys: ", err)
 			}
 		}()
 	}
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		s.Log("Just wait for ", idleDuration, " to check the load of idle status")
