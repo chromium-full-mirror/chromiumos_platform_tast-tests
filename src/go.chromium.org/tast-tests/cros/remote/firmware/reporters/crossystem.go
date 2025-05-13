@@ -63,6 +63,7 @@ var (
 		CrossystemParamRecoveryReason,
 		CrossystemParamRoFwid,
 		CrossystemParamTpmFwVer,
+		CrossystemParamTpmKernelVer,
 		CrossystemParamWpswCur,
 	}
 	rCrossystemLine = regexp.MustCompile(`^([^ =]*) *= *(.*[^ ]) *# [^#]*$`)

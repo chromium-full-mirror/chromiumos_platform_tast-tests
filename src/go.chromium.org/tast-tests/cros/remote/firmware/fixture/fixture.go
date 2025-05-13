@@ -18,6 +18,7 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -609,6 +610,14 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err != nil {
 		s.Fatal("Failed to get current boot mode: ", err)
 	}
+
+	// TODO(b/417498481): There are many tests failing to transition from dev to normal mode. Log the tpm versions.
+	tpmVers, err := i.value.Helper.Reporter.Crossystem(ctx, reporters.CrossystemParamTpmFwVer, reporters.CrossystemParamTpmKernelVer)
+	if err != nil {
+		s.Fatal("Failed to get tpm vers: ", err)
+	}
+	s.Logf("%s=%s, %s=%s", reporters.CrossystemParamTpmFwVer, tpmVers[reporters.CrossystemParamTpmFwVer], reporters.CrossystemParamTpmKernelVer, tpmVers[reporters.CrossystemParamTpmKernelVer])
+
 	if err := i.value.Helper.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to read config: ", err)
 	}
@@ -698,7 +707,7 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err := rebootToMode(ctx, i.value.Helper, i.value.BootMode, opts...); err != nil {
 			if _, ok := err.(*firmware.GBBChangedRebootTimeoutError); ok {
 				s.Error("Test did not run")
-				s.Fatal("Failed to reconnect to DUT: ", err)
+				s.Fatal("Failed to reconnect to DUT for GBB/boot mode change: ", err)
 			}
 			s.Fatalf("Failed to reboot to mode %q: %s", i.value.BootMode, err)
 		}
