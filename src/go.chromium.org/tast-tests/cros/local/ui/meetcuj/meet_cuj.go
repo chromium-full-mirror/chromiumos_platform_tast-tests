@@ -1419,8 +1419,13 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		if err := <-errc; err != nil {
 			return errors.Wrap(err, "failed to collect GPU counters")
 		}
-		if err := <-clearPromptsChannel; err != nil {
-			return errors.Wrap(err, "failed to dismiss the prompt")
+		select {
+		case err := <-clearPromptsChannel:
+			if err != nil {
+				return errors.Wrap(err, "failed to dismiss the prompt")
+			}
+		case <-time.After(2 * time.Second):
+			testing.ContextLog(ctx, "Dismiss prompt did not start")
 		}
 		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
 			if isPresenting && ui.Gone(googlemeet.StopPresentingButton)(ctx) == nil {
