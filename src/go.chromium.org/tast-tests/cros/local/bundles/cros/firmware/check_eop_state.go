@@ -28,18 +28,18 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed"},
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel"), hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelAtomOrderList: []hwdep.IntelAtomOrder{hwdep.Gracemont}, IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.TigerLake}})),
+		HardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelAtomOrderList: []hwdep.IntelAtomOrder{hwdep.Gracemont}, IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.TigerLake}})),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "get_boot_state",
 				Val:               false,
-				ExtraHardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.PantherLake}})),
+				ExtraHardwareDeps: hwdep.D(hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}})),
 			},
 			{
 				Name:              "get_eop_state",
 				Val:               true,
-				ExtraHardwareDeps: hwdep.D(hwdep.IsIntelUarchOlderThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.PantherLake}})),
+				ExtraHardwareDeps: hwdep.D(hwdep.IsIntelUarchOlderThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}})),
 			},
 		},
 	})
