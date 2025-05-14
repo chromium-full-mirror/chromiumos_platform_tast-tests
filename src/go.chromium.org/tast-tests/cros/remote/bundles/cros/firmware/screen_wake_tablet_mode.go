@@ -252,13 +252,6 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to read GSC UART: ", err)
 		}
 	}
-	s.Log("Starting a new Chrome for the touchscreen service")
-	// Start a logged-in Chrome session, which is required prior to TouchscreenTap in the screenWake function.
-	if _, err := touchscreen.NewChrome(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to start a new Chrome for the touchscreen service: ", err)
-	}
-	defer touchscreen.CloseChrome(ctx, &empty.Empty{})
-
 	if hasControl {
 		type noMatchErr struct {
 			*errors.E
@@ -423,6 +416,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		screenIsOn bool
 		screenGpio string
 	)
+	s.Log("SCREEN IS ASSUMED ON")
+	screenIsOn = true
 	verifyScreenState := func(ctx context.Context, value screenState) error {
 		// Log gpio value relevant to the screen.
 		if screenGpio != "" {
@@ -441,11 +436,13 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			if !strings.Contains(err.Error(), "CRTC not found. Is the screen on?") {
 				return errors.Wrap(err, "unexpected error when taking screenshot")
 			}
+			s.Log("SCREEN IS OFF")
 			screenIsOn = false
 		case "on":
 			if err := checkDisplay(ctx); err != nil {
 				return errors.Wrap(err, "display was not on as expected")
 			}
+			s.Log("SCREEN IS ON")
 			screenIsOn = true
 		}
 		return nil
@@ -515,15 +512,15 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 
 	// The screenWake function attempts one of the screenWakeTrigger options to wake the screen.
 	screenWake := func(ctx context.Context, option screenWakeTrigger) error {
-		// Ensure that DUT's screen is off before sending a trigger to wake the screen.
-		if screenIsOn && option != screenWakeByCloseOpenLid {
-			s.Log("Turn off DUT's screen before testing a screen wake trigger")
-			if err := turnDisplayOffWithPower(ctx); err != nil {
-				return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
-			}
-		}
 		switch option {
 		case screenWakeByPowerButton:
+			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
+			if screenIsOn {
+				s.Log("Turn off DUT's screen before testing a screen wake trigger")
+				if err := turnDisplayOffWithPower(ctx); err != nil {
+					return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
+				}
+			}
 			s.Log("Press power button to wake DUT's screen")
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
@@ -576,6 +573,19 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 				s.Logf("Found touchscreen bounds: %s", bounds)
 			}
 
+			s.Log("Starting a new Chrome for the touchscreen service")
+			// Start a logged-in Chrome session, which is required prior to TouchscreenTap in the screenWake function.
+			if _, err := touchscreen.NewChrome(ctx, &empty.Empty{}); err != nil {
+				s.Fatal("Failed to start a new Chrome for the touchscreen service: ", err)
+			}
+			defer touchscreen.CloseChrome(ctx, &empty.Empty{})
+
+			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
+			s.Log("Turn off DUT's screen before testing a screen wake trigger")
+			if err := turnDisplayOffWithPower(ctx); err != nil {
+				return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
+			}
+
 			// Emulate the action of tapping on a touch screen.
 			if _, err := touchscreen.TouchscreenTap(ctx, &empty.Empty{}); err != nil {
 				return errors.Wrap(err, "error in performing a tap on the touch screen")
@@ -587,6 +597,13 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			if !testArgs.hasLid {
 				s.Log("Skip because DUT does not have a lid")
 				return nil
+			}
+			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
+			if screenIsOn {
+				s.Log("Turn off DUT's screen before testing a screen wake trigger")
+				if err := turnDisplayOffWithPower(ctx); err != nil {
+					return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
+				}
 			}
 			// Scan for changed event relevant to DUT's display (i.e. backlight), using the udev management tool.
 			scannDisplay, err := deviceScanner(ctx, evDisplay)
