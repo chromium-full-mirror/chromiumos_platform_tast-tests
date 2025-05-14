@@ -151,12 +151,15 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"ciri",
 	// brox
 	"lotso",
-}
-
-// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
-var ShimlessRmaEnabledModelsStaging = []string{
 	// rauru
 	"navi",
 	// zork
 	"ezkinil",
+}
+
+// ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
+var ShimlessRmaEnabledModelsStaging = []string{
+	// nissa
+	"uldrenite",
+	"uldrenite360",
 }
