@@ -147,15 +147,11 @@ func (e *Element) Login(ctx context.Context, username string) error {
 
 // loginWithGoogle completes the login flow with Google account.
 func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
-	continueWithGoogleLink := nodewith.Name("Continue with Google").Role(role.Link)
-	if err := uiauto.NamedCombine("continue with google",
-		e.waitForLoginWindowMaximized,
-		e.ui.WithTimeout(loadTimeout).DoDefaultUntil(continueWithGoogleLink,
-			e.ui.WithTimeout(longUITimeout).WaitUntilGone(continueWithGoogleLink),
-		),
-	)(ctx); err != nil {
-		return err
+	if err := e.waitForLoginWindowMaximized(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for login window maximized")
 	}
+
+	continueWithGoogleLink := nodewith.Name("Continue with Google").Role(role.Link)
 
 	userLinkRegexp := regexp.MustCompile(fmt.Sprintf("%s@gmail.com$", username))
 	userLink := nodewith.NameRegex(userLinkRegexp).Role(role.Link)
@@ -168,50 +164,68 @@ func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
 	signInHeading := nodewith.Name("Sign in to matrix.org").Role(role.Heading)
 	allowAccessHeading := nodewith.Name("Allow access to your account?").Role(role.Heading)
 
-	// It may have different subsequent UI operations depending on whether the
-	// account has been authorized, so check all possible UIs first and then
-	// decide on the next UI operation.
-	foundNode, err := e.ui.FindAnyExists(ctx, userLink, signInHeading, allowAccessHeading, createAccountButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to find any UI related to an unauthorized account")
+	loginUICandidates := []*nodewith.Finder{
+		continueWithGoogleLink,
+		userLink,
+		createAccountButton,
+		signInHeading,
+		allowAccessHeading,
 	}
 
-	// Sometimes it requires to select the google account.
-	if foundNode == userLink {
-		if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
-			userLink,
-			e.ui.WithTimeout(longUITimeout).WaitUntilAnyExists(signInHeading, createAccountButton, allowAccessHeading),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the user link to select an user")
-		}
-
-		// Update the `foundNode` to confirm further UI operations.
-		foundNode, err = e.ui.FindAnyExists(ctx, signInHeading, createAccountButton, allowAccessHeading)
+	for {
+		// It may have different subsequent UI operations depending on whether the
+		// account has been authorized, so check all possible UIs first and then
+		// decide on the next UI operation.
+		foundNode, err := e.ui.FindAnyExists(ctx, loginUICandidates...)
 		if err != nil {
 			return errors.Wrap(err, "failed to find any UI related to an unauthorized account")
 		}
-	}
 
-	if foundNode == signInHeading {
+		switch foundNode {
+		// Consecutive logins allow the user to skip selecting a different
+		// third-party login option.
+		case continueWithGoogleLink:
+			if err := e.ui.WithTimeout(longUITimeout).DoDefaultUntil(
+				continueWithGoogleLink,
+				e.ui.WithTimeout(shortUITimeout).WaitUntilGone(continueWithGoogleLink),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click on the continue with google link")
+			}
+
+		// Sometimes it requires to select the google account.
+		case userLink:
+			if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
+				userLink,
+				e.ui.WithTimeout(longUITimeout).WaitUntilAnyExists(signInHeading, createAccountButton, allowAccessHeading),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click the user link to select an user")
+			}
+
 		// Sometimes the account would forget the permission of the element app.
 		// Re-grant the permission for the app by clicking the continue button.
-		if err := e.ui.DoDefault(continueButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click continue button")
+		case signInHeading:
+			if err := e.ui.DoDefault(continueButton)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click continue button")
+			}
+
+		case createAccountButton:
+			return e.createAccount(username)(ctx)
+
+		case allowAccessHeading:
+			return e.ui.DoDefault(continueButton)(ctx)
+
+		default:
+			return errors.New("unexpected UI state")
 		}
-		// Update the `foundNode` to confirm further UI operations.
-		foundNode, err = e.ui.FindAnyExists(ctx, createAccountButton, allowAccessHeading)
-		if err != nil {
-			return errors.Wrap(err, "failed to find any nodes on login window")
+
+		// Remove the detected UI from the list to avoid unexpected behavior.
+		for i := range loginUICandidates {
+			if loginUICandidates[i] == foundNode {
+				loginUICandidates = append(loginUICandidates[:i], loginUICandidates[i+1:]...)
+				break
+			}
 		}
 	}
-
-	if foundNode == createAccountButton {
-		if err := e.createAccount(username)(ctx); err != nil {
-			return errors.Wrap(err, "failed to create account")
-		}
-	}
-
-	return e.ui.DoDefault(continueButton)(ctx)
 }
 
 // waitForLoginWindowMaximized activates and maximizes the login window.
@@ -266,6 +280,7 @@ func (e *Element) createAccount(username string) uiauto.Action {
 		e.ui.DoDefaultUntil(createAccountButton,
 			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(continueButton),
 		),
+		e.ui.DoDefault(continueButton),
 	)
 }
 
