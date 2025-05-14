@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/inputs/pre"
 	"go.chromium.org/tast-tests/cros/local/inputs/util"
@@ -76,6 +77,12 @@ func InputMethodShelf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch OS settings and land at inputs setting page: ", err)
 	}
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
 	ui := uiauto.New(tconn)
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
 	jpOptionFinder := nodewith.Name("Japanese with US keyboard").Role(role.CheckBox)
@@ -129,6 +136,8 @@ func InputMethodShelf(ctx context.Context, s *testing.State) {
 		// Select JP input method from IME tray.
 		ui.LeftClickUntil(imeMenuTrayButtonFinder, ui.WithTimeout(3*time.Second).WaitUntilExists(jpOptionFinder)),
 		ui.LeftClick(jpOptionFinder),
+		// Dismiss the menu.
+		kb.AccelAction("Esc"),
 		func(ctx context.Context) error {
 			fullyQualifiedIMEID, err := inputMethod.FullyQualifiedIMEID(ctx, tconn)
 			if err != nil {
@@ -139,6 +148,8 @@ func InputMethodShelf(ctx context.Context, s *testing.State) {
 		// Select US input method from IME tray.
 		ui.LeftClick(imeMenuTrayButtonFinder),
 		ui.LeftClick(usOptionFinder),
+		// Dismiss the menu.
+		kb.AccelAction("Esc"),
 		func(ctx context.Context) error {
 			return ime.WaitForInputMethodMatches(ctx, tconn, ime.ChromeIMEPrefix+ime.EnglishUS.ID, 10*time.Second)
 		},
