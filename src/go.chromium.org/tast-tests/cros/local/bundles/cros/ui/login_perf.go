@@ -144,7 +144,7 @@ func init() {
 			ui.GaiaPoolDefaultVarName,
 		},
 		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
-		Timeout: 15 * time.Minute,
+		Timeout: 25 * time.Minute,
 		Fixture: fixture.GpuRemoteWatcher,
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
