@@ -86,6 +86,7 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Connect to OneDrive via the Files settings page",
 		filesApp.ClickMoreMenuItem("Files settings"),
 		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
+		settingsApp.ScrollToVisible(oneDriveDisconnectedLink),
 		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
 		settingsApp.LeftClick(connectAccountButton),
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
@@ -106,6 +107,7 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Disconnect from OneDrive via the Files settings page",
 		filesApp.ClickMoreMenuItem("Files settings"),
 		settingsApp.WaitUntilExists(oneDriveConnectedLink),
+		settingsApp.ScrollToVisible(oneDriveConnectedLink),
 		settingsApp.LeftClickUntil(oneDriveConnectedLink, settingsApp.Exists(disconnectButton)),
 		settingsApp.LeftClick(disconnectButton),
 	)(ctx); err != nil {

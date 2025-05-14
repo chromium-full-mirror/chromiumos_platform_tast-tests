@@ -65,6 +65,11 @@ func (s *OSSettings) WaitUntilExists(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.WaitUntilExists(finder.FinalAncestor(WindowFinder))
 }
 
+// ScrollToVisible calls ui.ScrollToVisible scoping the finder to the Settings App.
+func (s *OSSettings) ScrollToVisible(finder *nodewith.Finder) uiauto.Action {
+	return s.ui.ScrollToVisible(finder.FinalAncestor(WindowFinder))
+}
+
 // Gone calls ui.Gone scoping the finder to the Settings app.
 func (s *OSSettings) Gone(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.Gone(finder.FinalAncestor(WindowFinder))
