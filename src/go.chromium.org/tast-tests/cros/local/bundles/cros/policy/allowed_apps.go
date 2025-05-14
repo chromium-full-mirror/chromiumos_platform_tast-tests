@@ -130,6 +130,7 @@ func isAppAllowed(app *ash.ChromeApp) bool {
 		apps.FilesSWA,
 		apps.ProjectorV2,        // Disabled by the ProjectorEnabled policy.
 		apps.SampleSystemWebApp, // Installed by default in unofficial builds.
+		apps.HpApp,              // OEM apps, like the HP app, aren't supported by the policy.
 	}
 
 	for _, expectedApp := range allowedApps {

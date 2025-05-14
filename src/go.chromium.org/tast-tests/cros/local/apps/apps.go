@@ -433,6 +433,12 @@ var SampleSystemWebApp = App{
 	Name: "Sample System Web App",
 }
 
+// HpApp has details about the HP app.
+var HpApp = App{
+	ID:   "plamffmopddapimaopfdbibfkjpbojbf",
+	Name: "HP App",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := InstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)
