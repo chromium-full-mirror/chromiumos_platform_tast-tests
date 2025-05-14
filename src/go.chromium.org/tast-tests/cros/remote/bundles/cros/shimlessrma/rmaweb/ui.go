@@ -449,9 +449,14 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 	return action.Combine("setup init status for test",
 		// Reboot in |changeEnrollment| will lock CCD (after leaving factory mode),
 		// so we have to call it before opening CCD.
-		// TODO(jeffulin): Separate reboot from |changeEnrollment| so we can have more
-		//                 flexibility and make action sequences more clear.
-		uiHelper.changeEnrollment(enroll),
+		func(ctx context.Context) error {
+			// Lab DUTs are unenrolled by default, so we only initiate the enrollment
+			// process when we want to enroll the devices.
+			if !enroll {
+				return nil
+			}
+			return uiHelper.changeEnrollment(enroll)(ctx)
+		},
 		uiHelper.openCCDIfNotOpen(),
 	)(ctx)
 }
@@ -566,6 +571,8 @@ func (uiHelper *UIHelper) umountUSB(ctx context.Context) error {
 }
 
 func (uiHelper *UIHelper) changeEnrollment(toEnroll bool) action.Action {
+	// TODO(jeffulin): Separate reboot from |changeEnrollment| so we can have more
+	//                 flexibility and make action sequences more clear.
 	return func(ctx context.Context) error {
 		// I got the following commands from b/245415715#comment5.
 		// More details can be found in the above link.
