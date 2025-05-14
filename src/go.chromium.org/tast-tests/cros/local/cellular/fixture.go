@@ -725,8 +725,22 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.disableCellularInShill {
 		// Disable cellular in shill to prevent re-enabling cellular after Modem disable called.
-		if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
-			s.Fatal("Unable to disable Cellular: ", err)
+		// In Shill::Cellular::Stop(), we don't allow Stop(disable Cellular technology) when
+		// Cellular is in Starting state. This scenario is not hard to reproduce when modemmanager
+		// is restarted on a previous fixture or test. Since DisableTechnology will return an error
+		// if Cellular is being started, retry a few times until Cellular has completed the Starting
+		// operation.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if _, err := helper.Manager.DisableTechnologyForTesting(ctx, shill.TechnologyCellular); err != nil {
+				testing.ContextLog(ctx, "Failed to disable Cellular technology: ", err)
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  8 * time.Second,
+			Interval: 500 * time.Millisecond,
+		}); err != nil {
+			testing.ContextLog(ctx, "Unable to disable Cellular: ", err)
 		}
 	}
 	if f.restartMM {
