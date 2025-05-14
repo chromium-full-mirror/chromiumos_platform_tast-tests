@@ -241,6 +241,31 @@ func init() {
 				[]string{}, // disabledFeatures
 				[]string{deferConciergeStartup, deferARCForceEnabled}, // enabledFeatures
 			},
+		}, {
+			// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
+			Name:      "noarc_2windows_bsm",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,          // windows
+				noarc,      // arcMode
+				false,      // tabletMode
+				true,       // autoSessionRestore
+				[]string{}, // disabledFeatures
+				[]string{"CrosBatterySaver", "CrosBatterySaverAlwaysOn"}, // enabledFeatures
+			},
+		}, {
+			// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
+			Name:              "2windows_bsm",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				2,          // windows
+				arcenabled, // arcMode
+				false,      // tabletMode
+				true,       // autoSessionRestore
+				[]string{}, // disabledFeatures
+				[]string{"CrosBatterySaver", "CrosBatterySaverAlwaysOn"}, // enabledFeatures
+			},
 		}},
 	})
 }
