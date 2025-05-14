@@ -41,6 +41,7 @@ const (
 	PowerNoUIWiFi          = "powerNoUIWiFi"
 	PowerMetricsNoUI       = "powerMetricsNoUI"
 	PowerNoUIPlatformAudio = "powerNoUIPlatformAudio"
+	PowerOobe              = "powerOobe"
 
 	// UI
 	PowerAsh    = "powerAsh"
@@ -184,6 +185,33 @@ func init() {
 			UI:                 DisableUI,
 			Backlight:          SetBacklightToZero,
 			KeyboardBrightness: SetKbBrightnessToZero,
+		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerOobe,
+		Desc:         "Set up test environment for measuring OOBE provisioning time",
+		BugComponent: "b:1361410",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"zactu@chromium.org",
+		},
+		Impl: NewPowerNoUIFixture(PowerTestOptions{
+			UI:           RestartUI,
+			ChargeLimit:  DisableChargeLimit,
+			Powerd:       DoNotChangePowerd,
+			UpdateEngine: DoNotChangeUpdateEngine,
+			VNC:          DoNotChangeVNC,
+			Avahi:        DoNotChangeAvahi,
+			DPTF:         DoNotChangeDPTF,
+			Audio:        DoNotChangeAudio,
+			Bluetooth:    DoNotChangeBluetooth,
+			Multicast:    DoNotChangeMulticast,
 		}),
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,

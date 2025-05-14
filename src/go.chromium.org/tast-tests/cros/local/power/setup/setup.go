@@ -366,6 +366,8 @@ const (
 	DoNotChangeUI UIMode = iota
 	// DisableUI indicates that upstart ui job should be disabled.
 	DisableUI
+	// RestartUI indicates that upstart ui job should be restarted before and after test.
+	RestartUI
 )
 
 // RamfsMode indicates whether to setup ramfs for local data.
@@ -504,6 +506,31 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.UI == DisableUI {
 			s.Add(DisableServiceIfExists(ctx, "ui"))
+		}
+		if options.UI == RestartUI {
+			restartUIFn := func(ctx context.Context) error {
+				startUIFn, err := DisableService(ctx, "ui")
+
+				if startUIFn == nil && err == nil {
+					return errors.New("cannot restart UI as it is not running")
+				}
+
+				if err != nil {
+					return errors.Wrap(err, "failed to disable UI")
+				}
+
+				if startUIFn == nil {
+					return errors.New("cannot restart UI as no restart function is provided")
+				}
+
+				if err := startUIFn(ctx); err != nil {
+					return errors.Wrap(err, "failed to restart UI")
+				}
+
+				return nil
+			}
+
+			s.Add(restartUIFn, restartUIFn(ctx))
 		}
 		if options.Ramfs == SetupRamfs {
 			s.Add(setUpRamfs(ctx))
