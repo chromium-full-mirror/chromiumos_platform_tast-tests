@@ -35,6 +35,8 @@ const (
 	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
 	FWWPState             StringControl = "fw_wp_state"
+	FWWPAtBootState       StringControl = "fw_wp_atboot_state"
+	GSCChip               StringControl = "gsc_chip"
 	ImageUSBKeyDev        StringControl = "image_usbkey_dev"
 	ImageUSBKeyDirection  StringControl = "image_usbkey_direction"
 	ImageUSBKeyPwr        StringControl = "image_usbkey_pwr"
@@ -1140,7 +1142,35 @@ func (s *Servo) GetDUTSrcCaps(ctx context.Context) ([]SrcCap, error) {
 // Because this is particularly disruptive, it is always logged.
 func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	testing.ContextLogf(ctx, "Setting %q to %q", FWWPState, value)
-	return s.SetString(ctx, FWWPState, string(value))
+	if err := s.SetString(ctx, FWWPState, string(value)); err != nil {
+		return err
+	}
+	// For devices with Ti50-based GSCs, we also need to set the `atboot` WP
+	// value since we expect the GSC to reboot itself. Note it is important that
+	// we first set the normal FWWPState otherwise we can get into a mismatch
+	// between servo_micro asserting WP externally and what Ti50 things WP should
+	// be.
+	if isTi50, err := s.IsTi50BasedDevice(ctx); err != nil {
+		return errors.Wrap(err, "failed to determine if ti50-based device")
+	} else if isTi50 {
+		if err := s.SetCCDFWWPAtBootState(ctx, value); err != nil {
+			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
+		}
+	}
+	return nil
+}
+
+// SetCCDFWWPAtBootState sets the FWWPAtBootState control with CCD prefix.
+// Because this is particularly disruptive, it is always logged.
+func (s *Servo) SetCCDFWWPAtBootState(ctx context.Context, value FWWPStateValue) error {
+	// Note when crrev.com/c/6557589 makes it into lab station servod, we
+	// can use gsc_fw_wp_atboot_state always. Until then, servo_micro only set
+	// up will fail trying to call this. However it is worth landing sooner as
+	// most set up are not servo_micro only, and this unblocks tests after the
+	// Ti50 behavior change around WP.
+	ccdFWWPAtBootState := "ccd_gsc." + FWWPAtBootState
+	testing.ContextLogf(ctx, "Setting %q to %q", ccdFWWPAtBootState, value)
+	return s.SetString(ctx, ccdFWWPAtBootState, string(value))
 }
 
 // GetPDRole returns the servo's current PDRole (SNK or SRC), or PDRoleNA if Servo is not V4.
@@ -1606,6 +1636,20 @@ func (s *Servo) IsServoTypeC(ctx context.Context) (bool, error) {
 		}
 	}
 	return connectionType == string(DUTConnTypeC), nil
+}
+
+// IsTi50BasedDevice checks if the dut has a ti50-based GSC.
+func (s *Servo) IsTi50BasedDevice(ctx context.Context) (bool, error) {
+	gscChip := ""
+	if hasGSCChip, err := s.HasControl(ctx, string(GSCChip)); err != nil {
+		return false, errors.Wrap(err, "failed to check gsc_chip control")
+	} else if hasGSCChip {
+		gscChip, err = s.GetString(ctx, GSCChip)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to get gsc_chip")
+		}
+	}
+	return strings.Contains(gscChip, "ti50"), nil
 }
 
 // CheckECActiveCopyMatch polls to check if the EC active copy matches the expected one.
