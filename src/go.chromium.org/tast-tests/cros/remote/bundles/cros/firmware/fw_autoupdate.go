@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -25,6 +26,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type testMode struct {
+	Charging     bool
+	WriteProtect bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: FWAutoupdate,
@@ -37,11 +43,42 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Vars:         []string{"firmware.apro", "firmware.aprw", "firmware.ecro", "firmware.ecrw"},
 		Timeout:      2 * time.Hour,
-		// Fixture:      fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(),
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		SoftwareDeps: []string{"crossystem"},
+		Params: []testing.Param{
+			{
+				Name: "ac_rw",
+				Val: &testMode{
+					Charging:     true,
+					WriteProtect: true,
+				},
+			},
+			{
+				Name: "ac_ro",
+				Val: &testMode{
+					Charging:     true,
+					WriteProtect: false,
+				},
+			},
+			{
+				Name: "battery_rw",
+				Val: &testMode{
+					Charging:     false,
+					WriteProtect: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
+			},
+			{
+				Name: "battery_ro",
+				Val: &testMode{
+					Charging:     false,
+					WriteProtect: false,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
+			},
+		},
 	})
 }
 
@@ -63,6 +100,8 @@ type firmwareVersions struct {
 }
 type versionJSON map[string]firmwareVersions
 
+const minChargePercent = 30
+
 // FWAutoupdate expects the DUT to have the released RO/RW installed on the DUT as a precondition (--mode=recovery),
 // then it will autoupdate to the version under test which is provided in the command line vars.
 // Next it will attempt to downgrade back to the prior version.
@@ -70,6 +109,38 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get config: ", err)
+	}
+
+	if err := h.RequireServo(ctx); err != nil {
+		s.Fatal("Failed to RequireServo: ", err)
+	}
+
+	hasBattery := true
+	switch s.Features("").GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
+	case api.HardwareFeatures_FormFactor_CHROMEBASE, api.HardwareFeatures_FormFactor_CHROMEBOX, api.HardwareFeatures_FormFactor_CHROMEBIT:
+		hasBattery = false
+	case api.HardwareFeatures_FormFactor_FORM_FACTOR_UNKNOWN:
+		s.Fatal("Unknown formfactor")
+	}
+	if hasBattery {
+		chargeTimeout := 30 * time.Minute
+		testing.ContextLogf(ctx, "Wait for DUT to reach %d%% charged state up to %s minutes", minChargePercent, chargeTimeout)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			battery, err := firmware.GetECBatteryStatus(ctx, h)
+			if err != nil {
+				return errors.Wrap(err, "error getting battery status")
+			}
+			testing.ContextLogf(ctx, "Current charge: %v, status: %v", battery.Charge, battery.Status)
+			if battery.Charge < minChargePercent {
+				if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
+					return errors.Wrap(err, "error connecting charger")
+				}
+				return errors.New("battery level too low")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: chargeTimeout, Interval: time.Minute}); err != nil {
+			s.Fatal("Failed to poll for battery level: ", err)
+		}
 	}
 
 	cleanupContext := ctx
@@ -147,7 +218,19 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to extract AP RO from %q: %+v", apROURL, err)
 	}
-	s.Logf("Extracted AP RO: %s", apROFile)
+	out, err := h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--image", apROFile).Output(ssh.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Failed to futility update --manifest --image %q: %+v", apROFile, err)
+	}
+	expectedVersions := versionJSON{}
+	err = yaml.Unmarshal(out, &expectedVersions)
+	if err != nil {
+		s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
+	}
+	expectedAPROVersion := expectedVersions["default"].AP.Versions.RO
+	expectedAPRWVersion := expectedVersions["default"].AP.Versions.RW
+	expectedECRWVersion := expectedVersions["default"].AP.Versions.ECRW
+	s.Logf("Extracted AP RO: %q (%s)", apROFile, expectedAPROVersion)
 	apRWFile := ""
 	if apROURL != apRWURL {
 		apRWFile = fmt.Sprintf("%s/aprw.bin", tmpDir)
@@ -163,8 +246,18 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to extract AP RW from %q: %+v", apRWURL, err)
 		}
-		s.Logf("Extracted AP RW: %s", apRWFile)
+		out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--image", apRWFile).Output(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatalf("Failed to futility update --manifest --image %q: %+v", apRWFile, err)
+		}
+		expectedVersions := versionJSON{}
+		err = yaml.Unmarshal(out, &expectedVersions)
+		if err != nil {
+			s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
+		}
+		expectedAPRWVersion = expectedVersions["default"].AP.Versions.RW
 	}
+	s.Logf("Extracted AP RW: %q (%s)", apRWFile, expectedAPRWVersion)
 
 	ecROFile := fmt.Sprintf("%s/ecro.bin", tmpDir)
 	_, err = h.RPCUtils.ExtractECFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
@@ -179,7 +272,17 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to extract EC RO from %q: %+v", ecROURL, err)
 	}
-	s.Logf("Extracted EC RO: %s", ecROFile)
+	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--ec_image", ecROFile).Output(ssh.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Failed to futility update --manifest --ec_image %q: %+v", ecROFile, err)
+	}
+	expectedVersions = versionJSON{}
+	err = yaml.Unmarshal(out, &expectedVersions)
+	if err != nil {
+		s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
+	}
+	expectedECROVersion := expectedVersions["default"].EC.Versions.RO
+	s.Logf("Extracted EC RO: %q (%s)", ecROFile, expectedECROVersion)
 
 	ecRWFile := ""
 	if ecRWURL != apRWURL {
@@ -200,8 +303,18 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to extract EC RW from %q: %+v", ecRWURL, err)
 			}
 		}
-		s.Logf("Extracted EC RW: %s", ecRWFile)
+		out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--ec_image", ecRWFile).Output(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatalf("Failed to futility update --manifest --ec_image %q: %+v", ecRWFile, err)
+		}
+		expectedVersions := versionJSON{}
+		err = yaml.Unmarshal(out, &expectedVersions)
+		if err != nil {
+			s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
+		}
+		expectedECRWVersion = expectedVersions["default"].EC.Versions.RW
 	}
+	s.Logf("Extracted EC RW: %q (%s)", ecRWFile, expectedECRWVersion)
 
 	// Much of this logic is copied from src/platform/firmware/pack_firmware.py
 
@@ -268,7 +381,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}
 	}
 	// Pack EC-RW into ec.bin
-	out, err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", ecROFile, "-p").Output(ssh.DumpLogOnError)
+	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", ecROFile, "-p").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility dump_fmap: %+v", err)
 	}
@@ -329,6 +442,24 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to futility read to %q: %+v", oldAPFile, err)
 	}
+	// Copy the active section to the backup section, released images will have the same firmware in A & B.
+	activeFw, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+	inactiveFw := "B"
+	if activeFw == "B" {
+		inactiveFw = "A"
+	}
+	activeSection := "RW_SECTION_" + activeFw
+	inactiveSection := "RW_SECTION_" + inactiveFw
+	s.Logf("Copying section %s to %s for chromeos-firmwareupdate-old", activeSection, inactiveSection)
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", oldAPFile, "-x", fmt.Sprintf("%s:%s/active_rw.bin", activeSection, tmpDir)).Run(ssh.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Failed to futility dump_fmap: %+v", err)
+	}
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", oldAPFile, fmt.Sprintf("%s:%s/active_rw.bin", inactiveSection, tmpDir)).Run(ssh.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("Failed to futility load_fmap: %+v", err)
+	}
+
 	// Read current EC FW
 	oldECFile := fmt.Sprintf("%s/%s/ec.bin", oldMergedDir, fwTargets.FirmwareManifestKey)
 	err = h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", oldECFile).Run(ssh.DumpLogOnError)
@@ -347,18 +478,47 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 
 	// That was all setup, start testing now
-
-	s.Log("Enabling hardware write protect")
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-		s.Fatal("Failed to enable hardware write protect: ", err)
+	if hasBattery {
+		if err := firmware.PollToSetChargerStatus(ctx, h, s.Param().(*testMode).Charging); err != nil {
+			s.Fatal("Error connecting charger: ", err)
+		}
+		defer func() {
+			if err := firmware.PollToSetChargerStatus(cleanupContext, h, true); err != nil {
+				s.Error("Failed to connect charger: ", err)
+			}
+		}()
 	}
-	testing.ContextLog(ctx, "Rebooting the DUT")
+
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
 	}
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce); err != nil {
-		s.Fatal("Failed to perform mode aware reboot: ", err)
+	if s.Param().(*testMode).WriteProtect {
+		s.Log("Enabling write protect")
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-enable").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to enable software write protect: ", err)
+		}
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+			s.Fatal("Failed to enable hardware write protect: ", err)
+		}
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		// The EC has to reboot to pick up the new WP state
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
+			s.Fatal("Failed to perform mode aware reboot: ", err)
+		}
+	} else {
+		s.Log("Disabling write protect")
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			s.Fatal("Failed to disable hardware write protect: ", err)
+		}
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		// The EC has to reboot to pick up the new WP state
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
+			s.Fatal("Failed to perform mode aware reboot: ", err)
+		}
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to enable software write protect: ", err)
+		}
 	}
 
 	getCrossystemParams := func(ctx context.Context) (result map[reporters.CrossystemParam]string, retErr error) {
@@ -384,21 +544,32 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
-	s.Logf("Before autoupdate: %+v ECRO:%s ECRW:%s", initialVersions, initialECRO, initialECRW)
+	s.Logf("Before autoupdate: APRO:%s APRW:%s ECRO:%s ECRW:%s", initialVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamFwid], initialECRO, initialECRW)
 	if initialVersions[reporters.CrossystemParamMainfwType] != "normal" {
 		s.Errorf("Expected to be in normal mode, got %q", initialVersions[reporters.CrossystemParamMainfwType])
 	}
 
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Fatalf("Failed to chromeos-firmwareupdate-new --mode=manifest: %+v", err)
+		s.Fatalf("Failed to chromeos-firmwareupdate-new --manifest: %+v", err)
 	}
-	expectedVersions := versionJSON{}
+	expectedVersions = versionJSON{}
 	err = yaml.Unmarshal(out, &expectedVersions)
 	if err != nil {
 		s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
 	}
-	s.Logf("Autoupdate expected versions: %+v", expectedVersions)
+	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO != expectedAPROVersion {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-new AP RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO, expectedAPROVersion)
+	}
+	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW != expectedAPRWVersion {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-new AP RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW, expectedAPRWVersion)
+	}
+	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO != expectedECROVersion {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-new EC RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO, expectedECROVersion)
+	}
+	if expectedECRWVersion != "" && expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW != expectedECRWVersion {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-new EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, expectedECRWVersion)
+	}
 
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
@@ -418,20 +589,29 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
-	s.Logf("After autoupdate: %+v ECRO:%s ECRW:%s", updatedVersions, updatedECRO, updatedECRW)
+	s.Logf("After autoupdate: APRO:%s APRW:%s ECRO:%s ECRW:%s", updatedVersions[reporters.CrossystemParamRoFwid], updatedVersions[reporters.CrossystemParamFwid], updatedECRO, updatedECRW)
 
 	// Assertions
 	if updatedVersions[reporters.CrossystemParamMainfwType] != "normal" {
 		s.Errorf("Expected to be in normal mode, got %q", updatedVersions[reporters.CrossystemParamMainfwType])
 	}
-	if initialVersions[reporters.CrossystemParamRoFwid] != updatedVersions[reporters.CrossystemParamRoFwid] {
-		s.Errorf("Expected AP RO unchanged, got %q want %q", updatedVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamRoFwid])
+	if s.Param().(*testMode).WriteProtect {
+		if initialVersions[reporters.CrossystemParamRoFwid] != updatedVersions[reporters.CrossystemParamRoFwid] {
+			s.Errorf("Expected AP RO unchanged, got %q want %q", updatedVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamRoFwid])
+		}
+		if initialECRO != updatedECRO {
+			s.Errorf("Expected EC RO unchanged, got %q want %q", updatedECRO, initialECRO)
+		}
+	} else {
+		if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO != updatedVersions[reporters.CrossystemParamRoFwid] {
+			s.Errorf("Expected AP RO updated, got %q want %q", updatedVersions[reporters.CrossystemParamRoFwid], expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO)
+		}
+		if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO != updatedECRO {
+			s.Errorf("Expected EC RO updated, got %q want %q", updatedECRO, expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO)
+		}
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW != updatedVersions[reporters.CrossystemParamFwid] {
 		s.Errorf("Expected AP RW updated, got %q want %q", updatedVersions[reporters.CrossystemParamFwid], expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW)
-	}
-	if initialECRO != updatedECRO {
-		s.Errorf("Expected EC RO unchanged, got %q want %q", updatedECRO, initialECRO)
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW != updatedECRW {
 		s.Errorf("Expected EC RW updated, got %q want %q", updatedECRW, expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW)
@@ -439,14 +619,25 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Fatalf("Failed to chromeos-firmwareupdate-old --mode=manifest: %+v", err)
+		s.Fatalf("Failed to chromeos-firmwareupdate-old --manifest: %+v", err)
 	}
 	expectedVersions = versionJSON{}
 	err = yaml.Unmarshal(out, &expectedVersions)
 	if err != nil {
 		s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
 	}
-	s.Logf("Rollback expected versions: %+v", expectedVersions)
+	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO != initialVersions[reporters.CrossystemParamRoFwid] {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-old AP RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO, initialVersions[reporters.CrossystemParamRoFwid])
+	}
+	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW != initialVersions[reporters.CrossystemParamFwid] {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-old AP RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW, initialVersions[reporters.CrossystemParamFwid])
+	}
+	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO != initialECRO {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-old EC RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO, initialECRO)
+	}
+	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW != initialECRW {
+		s.Errorf("Failed to pack chromeos-firmwareupdate-old EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, initialECRW)
+	}
 
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
@@ -466,20 +657,20 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
-	s.Logf("After rollback: %+v ECRO:%s ECRW:%s", rollbackVersions, rollbackECRO, rollbackECRW)
+	s.Logf("After rollback: APRO:%s APRW:%s ECRO:%s ECRW:%s", rollbackVersions[reporters.CrossystemParamRoFwid], rollbackVersions[reporters.CrossystemParamFwid], rollbackECRO, rollbackECRW)
 
 	// Assertions
 	if rollbackVersions[reporters.CrossystemParamMainfwType] != "normal" {
 		s.Errorf("Expected to be in normal mode, got %q", rollbackVersions[reporters.CrossystemParamMainfwType])
 	}
 	if initialVersions[reporters.CrossystemParamRoFwid] != rollbackVersions[reporters.CrossystemParamRoFwid] {
-		s.Errorf("Expected AP RO unchanged, got %q want %q", rollbackVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamRoFwid])
+		s.Errorf("Expected AP RO at initial version, got %q want %q", rollbackVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamRoFwid])
 	}
 	if initialECRO != rollbackECRO {
-		s.Errorf("Expected EC RO unchanged, got %q want %q", rollbackECRO, initialECRO)
+		s.Errorf("Expected EC RO at initial version, got %q want %q", rollbackECRO, initialECRO)
 	}
 	if initialVersions[reporters.CrossystemParamTpmFwVer] != updatedVersions[reporters.CrossystemParamTpmFwVer] {
-		s.Log("Caution! New firmware sets anti-rollback version. Expect rollback to fail")
+		s.Logf("Caution! New firmware sets anti-rollback version (%s). Expect rollback to fail", updatedVersions[reporters.CrossystemParamTpmFwVer])
 		if updatedVersions[reporters.CrossystemParamFwid] != rollbackVersions[reporters.CrossystemParamFwid] {
 			s.Errorf("Expected AP RW unchanged, got %q want %q", rollbackVersions[reporters.CrossystemParamFwid], updatedVersions[reporters.CrossystemParamFwid])
 		}
