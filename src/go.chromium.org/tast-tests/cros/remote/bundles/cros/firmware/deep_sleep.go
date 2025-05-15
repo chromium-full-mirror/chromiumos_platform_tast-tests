@@ -110,7 +110,7 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			s.Fatal("Check for charger failed: ", err)
 		}
 
-		s.Log("Pressing power button to power off")
+		s.Log("Pressing power button to power off for ", h.Config.HoldPwrButtonPowerOff)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 			s.Fatal("Failed to set a KeypressControl by servo: ", err)
 		}
