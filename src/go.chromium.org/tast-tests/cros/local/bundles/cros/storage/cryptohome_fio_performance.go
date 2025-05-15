@@ -26,6 +26,7 @@ func init() {
 		Data:         util.Configs,
 		Timeout:      30 * time.Minute,
 		Fixture:      "chromeLoggedIn",
+		Attr:         []string{"group:crosbolt"},
 		Params: []testing.Param{{
 			Name: "unencrypted",
 			Val:  "/mnt/stateful_partition/unencrypted/",
