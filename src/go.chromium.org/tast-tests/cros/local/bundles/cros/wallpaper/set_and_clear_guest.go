@@ -84,7 +84,8 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("Enable light mode",
 		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleLightMode(ui))(ctx); err != nil {
+		personalization.ToggleLightMode(ui),
+		personalization.ClosePersonalizationHub(ui))(ctx); err != nil {
 		s.Fatal("Failed to enable light mode: ", err)
 	}
 
@@ -126,7 +127,7 @@ func verifyDefaultWallpaper(ui *uiauto.Context) uiauto.Action {
 	return uiauto.Combine("open wallpaper picker and verify default wallpaper",
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.WaitForWallpaperWithName(ui, "Default Wallpaper"),
-		wallpaper.CloseWallpaperPicker(),
+		personalization.ClosePersonalizationHub(ui),
 	)
 }
 
@@ -136,7 +137,7 @@ func selectAndVerifyWallpaper(ui *uiauto.Context) uiauto.Action {
 		wallpaper.SelectCollection(ui, constants.ElementCollection),
 		wallpaper.SelectImage(ui, constants.LightElementImage),
 		wallpaper.WaitForWallpaperWithName(ui, constants.LightElementImage),
-		wallpaper.CloseWallpaperPicker(),
+		personalization.ClosePersonalizationHub(ui),
 	)
 }
 
