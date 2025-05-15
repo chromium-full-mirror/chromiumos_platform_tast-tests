@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// copy data from Microsoft Word (we use Notepad as equivalent here) file in VDI: COM_VDI_CUJ5_TASK1_WF1

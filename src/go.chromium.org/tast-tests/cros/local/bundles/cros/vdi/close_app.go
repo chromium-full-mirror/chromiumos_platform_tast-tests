@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:1198148", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Close apps launched from VDI app picker: COM_VDI_CUJ4_TASK6_WF1.

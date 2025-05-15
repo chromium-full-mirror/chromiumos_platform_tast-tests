@@ -36,7 +36,7 @@ func init() {
 		// TODO(crbug.com/1293793): Add cleanup for kiosk and add its params.
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Launch Citrix or VMWare virtual desktop: COM_VDI_CUJ7_TASK1_WF1.

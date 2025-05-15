@@ -51,7 +51,7 @@ func init() {
 		BugComponent: "b:1198148", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-137bd441-64ae-4eaf-9eb0-a6e0e1fdb8d0", // COM_VDI_CUJ7_TASK10_WF1

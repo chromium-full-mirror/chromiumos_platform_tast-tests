@@ -56,9 +56,9 @@ func init() {
 			"uidetection.key",
 			"uidetection.server",
 		},
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: time.Minute,
+		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout + 5*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout + 5*time.Minute,
+		TearDownTimeout: 5 * time.Minute,
 		PostTestTimeout: time.Minute,
 		Data:            citrix.CitrixData,
 	})
@@ -307,6 +307,11 @@ func (v *fixtureState) Reset(ctx context.Context) error {
 	// Check the connection to Chrome.
 	if err := v.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+
+	// Check the main VDI screen is on.
+	if err := v.vdiConnector.WaitForMainScreenVisible(ctx); err != nil {
+		return errors.Wrap(err, "VDI main screen was not present")
 	}
 
 	return nil

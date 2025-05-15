@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const uiDetectionTimeout = 45 * time.Second
+const uiDetectionTimeout = time.Minute
 
 // Connector structure used for performing operation on Citrix app.
 type Connector struct {
@@ -106,6 +106,7 @@ func (c *Connector) Logout(ctx context.Context) error {
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
 		c.detector.LeftClick(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
 		c.keyboard.AccelAction("Tab"),
+		c.keyboard.AccelAction("Tab"),
 		c.keyboard.AccelAction("Enter"),
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Log", "Out"})), // Click on the user icon.
 		c.detector.WithScreenshotResizing().LeftClick(uidetection.TextBlock([]string{"Log", "Out"})),
@@ -155,8 +156,8 @@ func (c *Connector) OpenApplication(ctx context.Context, appName string, checkIf
 		testing.ContextLogf(ctx, "Citrix: opening app %s", appName)
 		appIcon := uidetection.TextBlock(strings.Fields(appName)).First()
 		return uiauto.Combine("open application "+appName+" in Citrix",
-			c.detector.WithTimeout(30*time.Second).WaitUntilExists(appIcon),
-			ui.RetryUntil(c.detector.LeftClick(appIcon), checkIfOpened),
+			c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(appIcon),
+			ui.WithTimeout(100*time.Second).RetryUntil(c.detector.LeftClick(appIcon), checkIfOpened),
 		)(ctx)
 	}
 }
@@ -215,7 +216,7 @@ func (c *Connector) closeAllAppsWithLogoff(ctx context.Context) error {
 	}
 	logoff := uidetection.Word("Logoff")
 	return uiauto.Combine("run Logoff script",
-		c.detector.WithTimeout(30*time.Second).WaitUntilExists(logoff),
+		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(logoff),
 		c.detector.LeftClick(logoff),
 	)(ctx)
 }

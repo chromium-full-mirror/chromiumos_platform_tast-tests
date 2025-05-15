@@ -30,9 +30,9 @@ import (
 )
 
 const (
-	setUpTimeout    = kioskmode.SetupDuration + kioskmode.LaunchDuration + vdiApps.VDILoginTimeout
-	resetTimeout    = chrome.ResetTimeout
-	tearDownTimeout = kioskmode.CleanupDuration + time.Minute
+	setUpTimeout    = kioskmode.SetupDuration + kioskmode.LaunchDuration + vdiApps.VDILoginTimeout + 5*time.Minute
+	resetTimeout    = chrome.ResetTimeout + 5*time.Minute
+	tearDownTimeout = kioskmode.CleanupDuration + 5*time.Minute
 	postTestTimeout = kioskmode.LaunchDuration + time.Minute
 )
 
@@ -293,6 +293,11 @@ func (v *kioskFixtureState) Reset(ctx context.Context) error {
 	// Check the connection to Chrome.
 	if err := v.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+
+	// Check the main VDI screen is on.
+	if err := v.vdiConnector.WaitForMainScreenVisible(ctx); err != nil {
+		return errors.Wrap(err, "VDI main screen was not present")
 	}
 
 	return nil

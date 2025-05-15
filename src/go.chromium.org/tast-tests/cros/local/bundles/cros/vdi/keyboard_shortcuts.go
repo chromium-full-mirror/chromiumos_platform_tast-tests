@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1198148", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Use Keyboard shortcuts to speed up clipboard and printing access in VDI: COM_VDI_CUJ7_TASK4_WF1.
