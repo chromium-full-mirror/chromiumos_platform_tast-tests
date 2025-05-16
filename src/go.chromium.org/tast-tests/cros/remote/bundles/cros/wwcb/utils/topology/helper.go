@@ -212,6 +212,9 @@ func (t *Helper) PathToDeviceByType(deviceType labapi.PasitHost_Device_Type) (st
 			deviceIds = append(deviceIds, deviceID)
 		}
 	}
+	if len(deviceIds) == 0 {
+		return "", nil, errors.Errorf("failed to find any device with type: %v", deviceType)
+	}
 	sort.Strings(deviceIds)
 
 	predicate := func(device *labapi.PasitHost_Device) bool {
