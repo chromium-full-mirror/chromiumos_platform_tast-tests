@@ -216,7 +216,7 @@ func verifyAppsPinnedByName(ctx context.Context, tconn *chrome.TestConn, apps []
 	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
 
 	for _, appName := range apps {
-		pinnedApp := nodewith.Role(role.Button).Name(appName)
+		pinnedApp := nodewith.Role(role.Button).HasClass("ShelfAppButton").Name(appName)
 		if err := ui.WaitUntilExists(pinnedApp)(ctx); err != nil {
 			return errors.Wrap(err, "Time out waiting for "+appName+
 				" app to appear in the shelf.")
