@@ -6,6 +6,7 @@ package gscdevboard
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -29,6 +30,19 @@ const (
 	pmuTriggerHardReset = 9
 	nmi                 = 10
 )
+
+var eventNames = map[int]string{
+	projectMain:         "projectMain",
+	pmuPreInit:          "pmuPreInit",
+	projectStart:        "projectStart",
+	projectRun:          "projectRun",
+	pmuNormalSleep:      "pmuNormalSleep",
+	pmuDeepSleep:        "pmuDeepSleep",
+	pmuResumeFromSleep:  "pmuResumeFromSleep",
+	pmuTriggerSoftReset: "pmuTriggerSoftReset",
+	pmuTriggerHardReset: "pmuTriggerHardReset",
+	nmi:                 "nmi",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -104,10 +118,6 @@ func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	expected = append(expected, pmuTriggerHardReset)
-	// On OpenTitan, HardReset is same as SoftReset and both breadcrumbs are present.
-	if b.GscProperties().ChipType() == ti50.GscOT {
-		expected = append(expected, pmuTriggerSoftReset)
-	}
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	// We keep the most recent 16 events (u64 / 4 bits per event).
 	expected = expected[len(expected)-16:]
@@ -134,6 +144,14 @@ func checkBreadcrumbs(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 		}
 	}
 	if !reflect.DeepEqual(got, expected) {
-		s.Fatalf("Expected %q, got %q", expected, got)
+		s.Fatalf("Expected %q, got %q", eventsToString(expected), eventsToString(got))
 	}
+}
+
+func eventsToString(events []int) []string {
+	var s []string
+	for _, e := range events {
+		s = append(s, fmt.Sprintf("%s (0x%x)", eventNames[e], e))
+	}
+	return s
 }
