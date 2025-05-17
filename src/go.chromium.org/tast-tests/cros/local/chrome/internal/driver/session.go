@@ -270,10 +270,12 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 	var err error
 	check := func(conn *Conn) bool {
 		if err := conn.WaitForExpr(ctx, extension.TastLibraryLoadedExpr); err != nil {
+			testing.ContextLog(ctx, "Test API extension unavailable: ", err)
 			return false
 		}
 		if autotestPrivateSupported {
 			if err := conn.Eval(ctx, "chrome.autotestPrivate.initializeEvents()", nil); err != nil {
+				testing.ContextLog(ctx, "chrome.autotestPrivate.initializeEvents evaluation failed: ", err)
 				return false
 			}
 		}
