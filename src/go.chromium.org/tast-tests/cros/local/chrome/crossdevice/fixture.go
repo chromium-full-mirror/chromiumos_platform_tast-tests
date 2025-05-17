@@ -5,8 +5,10 @@
 package crossdevice
 
 import (
+	"archive/zip"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -70,6 +72,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedAllFeatures",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with all Cross Device features enabled",
+		Data: []string{UIAutomatorZipName},
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -95,6 +98,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedAllFeaturesRerun",
 		Desc: "Temporary Re-run fixture for tests that fail initially on crossdeviceOnboardedAllFeatures fixture",
+		Data: []string{UIAutomatorZipName},
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -118,6 +122,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboarded",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled",
+		Data: []string{UIAutomatorZipName},
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -141,6 +146,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceNoSignIn",
 		Desc: "User is not signed in (with GAIA) to CrOS but fixture requires control of an Android phone. Does not skip OOBE",
+		Data: []string{UIAutomatorZipName},
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -165,6 +171,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossdeviceOnboardedNoLock",
 		Desc: "User is signed in (with GAIA) to CrOS and paired with an Android phone with default Cross Device features enabled. Doesn't lock the fixture before starting the test",
+		Data: []string{UIAutomatorZipName},
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
 			"hansenmichael@google.com",
@@ -361,6 +368,28 @@ func (f *crossdeviceFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "fixture")
 	}
 	f.tconn = tconn
+
+	// Ensure android-uiautomator-server directory and APKs are present on the DUT.
+	// This directory is used by go.chromium.org/tast-tests/cros/common/android/ui/device.go
+	// to find the APKs and install on the Android device. This is usually already
+	// present in the DUT, as long as the CrOS image contains ARC. However, ARC is
+	// removed from devices (boards) in extended support.
+	apkPath := filepath.Join(UIAutomatorServerHostPath, UIAutomatorApkName)
+	testApkPath := filepath.Join(UIAutomatorServerHostPath, UIAutomatorTestName)
+	s.Logf("Checking for UI Automator APKs (%s, %s) at %s", UIAutomatorApkName, UIAutomatorTestName, UIAutomatorServerHostPath)
+	_, statErrApk := os.Stat(apkPath)
+	_, statErrTestApk := os.Stat(testApkPath)
+	if statErrApk == nil && statErrTestApk == nil {
+		s.Logf("UI Automator APKs found at %s", UIAutomatorServerHostPath)
+	} else if os.IsNotExist(statErrApk) || os.IsNotExist(statErrTestApk) {
+		s.Logf("Copying UI Automator APKs to %s", UIAutomatorServerHostPath)
+		if err := unzipAndCopyFiles(s.DataPath(UIAutomatorZipName), UIAutomatorServerHostPath); err != nil {
+			s.Fatal("Failed to unzip and copy UIAutomator APKs: ", err)
+		}
+		s.Logf("UI Automator APKs copied to %s", UIAutomatorServerHostPath)
+	} else {
+		s.Logf("Error checking for UI Automator APKs: %v, %v", statErrApk, statErrTestApk)
+	}
 
 	// Capture a bug report on the Android phone if any onboarding/setup fails.
 	defer func() {
@@ -690,5 +719,43 @@ func DisconnectFromWifi(ctx context.Context) error {
 	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 3 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to disconnect from wifi")
 	}
+	return nil
+}
+
+// unzipAndCopyFiles extracts files specified from a given zip file to a
+// destination directory.
+func unzipAndCopyFiles(zipPath, destDir string) error {
+	// Ensure the destination directory exists.
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return errors.Wrap(err, "failed to create destination directory")
+	}
+
+	// Unzip the required APKs.
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to open zip file")
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		targetPath := filepath.Join(destDir, f.Name)
+
+		srcFile, err := f.Open()
+		if err != nil {
+			return errors.Wrap(err, "failed to open file for copying")
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.Create(targetPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to create file in destination directory")
+		}
+		defer dstFile.Close()
+
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			return errors.Wrap(err, "failed to copy file to destination directory")
+		}
+	}
+
 	return nil
 }
