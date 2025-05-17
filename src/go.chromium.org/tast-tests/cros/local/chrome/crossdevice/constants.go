@@ -13,6 +13,15 @@ const (
 	MultideviceSnippetMoblyPackage = "com.google.android.gmscore.integ.modules.auth.proximity.mobly.snippet"
 )
 
+// Constants used for installing the UIAutomator Snippet.
+const (
+	UIAutomatorZipName  = "android_uiautomator_server.zip"
+	UIAutomatorApkName  = "app-uiautomator.apk"
+	UIAutomatorTestName = "app-uiautomator-test.apk"
+	// UIAutomatorServerHostPath is the path on the CrOS host where UI Automator APKs are expected by common/android/ui/device.go.
+	UIAutomatorServerHostPath = "/usr/local/share/android-uiautomator-server"
+)
+
 // AccountUtilZip is the filename for the .zip containing the GoogleAccountUtil APK.
 const AccountUtilZip = "google_account_util.zip"
 
