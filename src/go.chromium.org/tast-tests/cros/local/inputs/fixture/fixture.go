@@ -48,6 +48,7 @@ const (
 	withoutAssistMultiword
 	scannerDogfood
 	japaneseSystemTyping
+	withoutJapaneseSystemTyping
 )
 
 // List of fixture names for inputs.
@@ -73,6 +74,7 @@ const (
 	ClamshellNonVKWithScannerDogfood                  = "clamshellNonVKWithScannerDogfood"
 	ClamshellNonVKWithoutMultiwordSuggest             = "clamshellNonVKWithoutMultiwordSuggest"
 	ClamshellNonVKRestartWithJapaneseSystemTyping     = "clamshellNonVKRestartWithJapaneseSystemTyping"
+	ClamshellNonVKRestartWithoutJapaneseSystemTyping  = "clamshellNonVKRestartWithoutJapaneseSystemTyping"
 	TabletVK                                          = "tabletVK"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
@@ -399,6 +401,21 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKRestartWithoutJapaneseSystemTyping,
+		Desc: "Clamshell mode with VK disabled and new Japanese system typing disabled",
+		Contacts: []string{
+			"shend@google.com",
+			"essential-inputs-team@google.com",
+		},
+		BugComponent:    "b:95887",
+		Impl:            inputsFixture(clamshellMode, false, true, withoutJapaneseSystemTyping),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: TabletVK,
 		Desc: "Tablet mode with VK enabled",
 		Contacts: []string{
@@ -530,6 +547,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--disable-features=AssistMultiWord"))
 		case japaneseSystemTyping:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=SystemJapanesePhysicalTyping"))
+		case withoutJapaneseSystemTyping:
+			opts = append(opts, chrome.ExtraArgs("--disable-features=SystemJapanesePhysicalTyping"))
 		}
 	}
 

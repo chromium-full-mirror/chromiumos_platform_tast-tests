@@ -33,7 +33,7 @@ func init() {
 			Val:     power.TimeParams{Total: 10 * time.Minute, Interval: 5 * time.Second},
 		}, {
 			Name:    "disabled",
-			Fixture: fixture.ClamshellNonVKRestart,
+			Fixture: fixture.ClamshellNonVKRestartWithoutJapaneseSystemTyping,
 			Val:     power.TimeParams{Total: 10 * time.Minute, Interval: 5 * time.Second},
 		},
 		},
