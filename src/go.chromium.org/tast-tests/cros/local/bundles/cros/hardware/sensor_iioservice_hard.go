@@ -109,9 +109,22 @@ func runSingleClient(ctx context.Context, s *testing.State, sn *iio.Sensor, i in
 	return nil
 }
 
+// ectoolCommand constructs an "ectool" command for the main EC.
+func ectoolCommand(ctx context.Context, args ...string) error {
+	cmd := testexec.CommandContext(ctx, "ectool", args...)
+	_, _, err := cmd.SeparatedOutput()
+	return err
+}
+
 // SensorIioserviceHard reads all devices' samples from daemon iioservice.
 func SensorIioserviceHard(ctx context.Context, s *testing.State) {
 	const nClientPerSensor = 3
+
+	// Stress the EC.
+	err := ectoolCommand(ctx, "kbpress", "3", "2", "1")
+	if err == nil {
+		defer ectoolCommand(ctx, "kbpress", "3", "2", "0")
+	}
 
 	sensors, err := iio.GetSensors(ctx)
 	if err != nil {
