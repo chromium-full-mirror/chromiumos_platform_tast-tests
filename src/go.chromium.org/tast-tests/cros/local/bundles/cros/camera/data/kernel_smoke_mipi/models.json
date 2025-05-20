@@ -104,6 +104,16 @@
     "format_arg": "",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "meliks-KC287b": {
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
+  },
+  "meliks-KCfa36": {
+    "bus_info": "PCI:0000:00:05.0",
+    "format_arg": "-s 3280x2464 -f SGRBG10",
+    "out_entity": "Intel IPU6 ISYS Capture 16"
+  },
   "nautilus": {
     "bus_info": "PCI:0000:00:14.3",
     "format_arg": "",

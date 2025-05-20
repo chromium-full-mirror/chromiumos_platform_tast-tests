@@ -54,6 +54,8 @@ func configFiles() []string {
 		"kernel_smoke_mipi/karis-CH3c6d.yaml",
 		"kernel_smoke_mipi/maglia-TC0003.yaml",
 		"kernel_smoke_mipi/magolor-TC0003.yaml",
+		"kernel_smoke_mipi/meliks-KC287b.yaml",
+		"kernel_smoke_mipi/meliks-KCfa36.yaml",
 		"kernel_smoke_mipi/nautilus.yaml",
 		"kernel_smoke_mipi/nautiluslte.yaml",
 		"kernel_smoke_mipi/nocturne.yaml",
