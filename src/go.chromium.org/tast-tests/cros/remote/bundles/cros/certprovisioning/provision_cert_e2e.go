@@ -162,12 +162,16 @@ func ProvisionCertE2E(ctx context.Context, s *testing.State) {
 	}
 	defer accManager.CleanUp(cleanupCtx)
 
+	if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.OrgUnitPath); err != nil {
+		s.Fatal("Failed to deprovision device at the beginning: ", err)
+	}
+
 	// Deprovision the DUT on the server/backend at the end of the test.
 	// As devices might get provisioned even when the enrollment fails we need to
 	// defer the deprovisioning before enrolling.
 	defer func(ctx context.Context) {
 		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.OrgUnitPath); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
+			s.Fatal("Failed to deprovision device at the end: ", err)
 		}
 	}(cleanupCtx)
 
