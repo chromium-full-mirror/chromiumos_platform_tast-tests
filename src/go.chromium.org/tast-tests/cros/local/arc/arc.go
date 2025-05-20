@@ -71,8 +71,9 @@ const (
 // --arc-play-store-auto-update=off - prevents Play Store and GMS Core from third party app update and prevents self-updates and downloadable content.
 // --arc-disable-locale-sync - don’t propagate locale sync for the account that might cause reconfiguration updates.
 // --arc-disable-media-store-maintenance - disables GMS scheduling of media store periodic indexing and corpora maintenance tasks.
+// --oobe-disable-pre-consent-metrics-for-testing - disables pre-consent for metric collection that triggers background statsd activities.
 func DisableSyncFlags() []string {
-	return []string{"--arc-disable-app-sync", "--arc-disable-play-auto-install", "--arc-disable-locale-sync", "--arc-play-store-auto-update=off", "--arc-disable-media-store-maintenance"}
+	return []string{"--arc-disable-app-sync", "--arc-disable-play-auto-install", "--arc-disable-locale-sync", "--arc-play-store-auto-update=off", "--arc-disable-media-store-maintenance", "--oobe-disable-pre-consent-metrics-for-testing"}
 }
 
 // InstallType is the type of ARC (Container or VM) available on the device.
