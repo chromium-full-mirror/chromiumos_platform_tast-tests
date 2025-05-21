@@ -314,11 +314,6 @@ func NewImageToFile(ctx context.Context, section ImageSection, flashromInstance 
 
 // WriteImageToFile writes image data to a file to use for flashrom command.
 func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath string) (string, error) {
-	dataRange, ok := i.Sections[sec]
-	if !ok {
-		return "", errors.Errorf("section %q is not recognized", string(sec))
-	}
-
 	fileDir := dirpath
 	if dirpath == "" {
 		fileDir = "/var/tmp"
@@ -328,7 +323,16 @@ func (i *Image) WriteImageToFile(ctx context.Context, sec ImageSection, dirpath 
 		return "", errors.Wrap(err, "creating tmpfile for image contents")
 	}
 
-	dataToWrite := i.Data[dataRange.Start : dataRange.Start+dataRange.Length]
+	var dataToWrite []byte
+	if sec != "" {
+		dataRange, ok := i.Sections[sec]
+		if !ok {
+			return "", errors.Errorf("section %q is not recognized", string(sec))
+		}
+		dataToWrite = i.Data[dataRange.Start : dataRange.Start+dataRange.Length]
+	} else {
+		dataToWrite = i.Data
+	}
 
 	if err := os.WriteFile(imgFile.Name(), dataToWrite, 0644); err != nil {
 		return "", errors.Wrap(err, "writing image contents to tmpfile")
@@ -363,8 +367,25 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 		return errors.Wrap(err, "reading image from file")
 	}
 
-	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
-	if out, err := flashromInstance.Write(ctx, "", true /* noVerifyAll= */, false, "", []string{fmt.Sprintf("%s:%s", sec, path)}); err != nil {
+	// Make copy of image, overwrite desired section, flash new image with updated section.
+	img, err := NewImage(ctx, "", flashromInstance)
+	if err != nil {
+		return errors.Wrap(err, "failed to read image")
+	}
+	// data for section (from path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return errors.Wrap(err, "could not read image section contents")
+	}
+	img.WriteSectionData(sec, 0, data)
+	imgTmp, err := img.WriteImageToFile(ctx, "", "")
+	if err != nil {
+		os.Remove(imgTmp)
+		return errors.Wrap(err, "writing image contents to tmpfile")
+	}
+	defer os.Remove(imgTmp)
+
+	if out, err := flashromInstance.Write(ctx, imgTmp, false /* noVerifyAll= */, false /* noVerify= */, "", []string{}); err != nil {
 		return errors.Wrapf(err, "could not write host image: %v", string(out))
 	}
 
@@ -447,6 +468,7 @@ func (i *Image) ReadSectionBytes(sec ImageSection, off, sz uint) ([]byte, error)
 }
 
 // WriteSectionData writes data to the specified section location.
+// offset refers to offset within section not offset of the section itself.
 func (i *Image) WriteSectionData(sec ImageSection, off uint, data interface{}) error {
 	var buf bytes.Buffer
 	if err := binary.Write(&buf, binary.LittleEndian, data); err != nil {
