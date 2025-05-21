@@ -853,11 +853,6 @@ func (i *bootModeImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 		i.origGBBFlags = nil
 	}(ctx)
 
-	// Disable software and hardware write protect here so we can update GBB flags if needed
-	if err := ensureWPDisabled(ctx, i.value.Helper); err != nil {
-		s.Fatal("Failed to ensure WP disabled: ", err)
-	}
-
 	// Close the servo to reset pd role, watchdogs, etc. unless we are booted from USB as resetting the pd role will make the dut reboot.
 	if i.value.BootMode != common.BootModeRecovery && i.value.BootMode != common.BootModeUSBDev {
 		i.value.Helper.CloseServo(ctx)
@@ -871,6 +866,15 @@ func (i *bootModeImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 
 	if i.disallowSSH {
 		return
+	}
+
+	if err := i.value.Helper.RequireServo(ctx); err != nil {
+		s.Fatal("Failed to connect to servod: ", err)
+	}
+
+	// Disable software and hardware write protect here so we can update GBB flags if needed
+	if err := ensureWPDisabled(ctx, i.value.Helper); err != nil {
+		s.Fatal("Failed to ensure WP disabled: ", err)
 	}
 
 	rebootRequired := false
