@@ -40,9 +40,10 @@ func init() {
 		},
 		BugComponent: "b:1445284",
 		Timeout:      constant.DefaultTestTimeout,
-		SoftwareDeps: []string{"chrome", "dlc"},
+		SoftwareDeps: []string{"chrome", "dlc", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
+		Attr:         []string{"group:cbx"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 		Params: []testing.Param{
 			{

@@ -29,10 +29,10 @@ func init() {
 		},
 		BugComponent: "b:1445284",
 		Timeout:      constant.DefaultTestTimeout,
-		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "dlc", "gaia"},
 		HardwareDeps: hwdep.D(hwdep.Model("navi")),
 		Data:         []string{constant.ImageTestFileName},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:cbx", "informational"},
 		Fixture:      fixture.LoggedInWithUpdateEngine,
 	})
 }
