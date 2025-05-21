@@ -135,7 +135,7 @@ func (i *CommandImage) getPrompt(ctx context.Context) (success bool, err error) 
 	if err := i.ClearInput(ctx); err != nil {
 		return false, err
 	}
-	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, 400*time.Millisecond)
 	defer cancel()
 	_, err = i.Command(ctx, "")
 	if err == nil {
