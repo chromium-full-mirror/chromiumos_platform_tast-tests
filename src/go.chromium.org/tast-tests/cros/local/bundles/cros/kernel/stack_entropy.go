@@ -22,7 +22,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-hardening@google.com",
 			"chromeos-kernel-test@google.com",
-			"swboyd@chromium.org",
+			"jeffxu@google.com",
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
