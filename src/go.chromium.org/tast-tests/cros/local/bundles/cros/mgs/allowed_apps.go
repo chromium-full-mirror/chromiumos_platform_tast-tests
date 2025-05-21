@@ -38,6 +38,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hw_agnostic",
 			"group:mainline",
+			"informational",
+			"group:criticalstaging",
 		},
 		Timeout: 3 * time.Minute,
 		Fixture: fixture.FakeDMSEnrolled,
