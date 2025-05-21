@@ -354,6 +354,8 @@ func (i *Image) WriteFlashrom(ctx context.Context, sec ImageSection, flashromIns
 }
 
 // WriteImageFromSingleSectionFile writes the provided single section file in the specified section.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec ImageSection, flashromInstance *flashrom.Instance) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
@@ -361,6 +363,7 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 		return errors.Wrap(err, "reading image from file")
 	}
 
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	if out, err := flashromInstance.Write(ctx, "", true /* noVerifyAll= */, false, "", []string{fmt.Sprintf("%s:%s", sec, path)}); err != nil {
 		return errors.Wrapf(err, "could not write host image: %v", string(out))
 	}
@@ -369,6 +372,8 @@ func WriteImageFromSingleSectionFile(ctx context.Context, path string, sec Image
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageSection, flashromInstance *flashrom.Instance) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return errors.Wrap(err, "file does not exist")
@@ -381,6 +386,7 @@ func WriteImageFromMultiSectionFile(ctx context.Context, path string, sec ImageS
 		regionName = string(sec)
 	}
 
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	if out, err := flashromInstance.Write(ctx, path, true /* -N */, false, "", []string{regionName}); err != nil {
 		return errors.Wrapf(err, "could not write image: %v", string(out))
 	}

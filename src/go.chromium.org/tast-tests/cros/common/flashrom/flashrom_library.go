@@ -39,6 +39,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -548,9 +549,14 @@ func (i *Instance) SoftwareWriteProtectDisable(ctx context.Context) ([]byte, err
 // If an error happened during write operation, a non-nil error is returned.
 // Returns the output from command line execution, so that the caller can handle it if needed,
 // for example store in log file.
+// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 func (i *Instance) Write(ctx context.Context, fullSizeFilePath string, noverifyAll, noverify bool, flashcontentsImage string, regionNames []string) ([]byte, error) {
 	if fullSizeFilePath == "" && len(regionNames) == 0 {
 		return nil, errors.New("Flashrom cannot do write: both fullSizeFilePath and regionNames are empty")
+	}
+
+	if len(regionNames) > 0 {
+		testing.ContextLogf(ctx, "DANGER: DO NOT USE FLASHROM TO WRITE INDIVIDUAL REGIONS, THIS WILL CORRUPT YOUR FLASH: %s", debug.Stack())
 	}
 
 	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-w"}

@@ -153,11 +153,15 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Restore EC_RW firmware with backup from: ", ecrwPath.Path)
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecrwPath); err != nil {
 			s.Fatal("Failed to restore EC_RW firmware: ", err)
 		}
 
 		s.Log("Restore EC_RW_B firmware with backup from: ", ecrwbPath.Path)
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecrwbPath); err != nil {
 			s.Fatal("Failed to restore EC_RW_B firmware: ", err)
 		}
@@ -302,6 +306,7 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) (re
 
 	testing.ContextLog(ctx, "Write random file to section")
 
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	if out, err := flashromInstance.Write(ctx, "", false, false, "", []string{fmt.Sprintf("%s:%s", section, sectionPath)}); err != nil {
 		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
 	}

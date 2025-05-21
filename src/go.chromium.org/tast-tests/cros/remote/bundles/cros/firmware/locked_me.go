@@ -104,8 +104,11 @@ func checkManufacturingMode(ctx context.Context, s *testing.State) {
 	}
 }
 
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func restoreBiosImage(ctx context.Context, s *testing.State, flashromInstance *flashrom.Instance) {
 	biosImagePath := path.Join(lockedMELocalDir, lockedMEBiosFilename)
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	_, err := flashromInstance.Write(ctx,
 		"",
 		true,  // --noverify-all
@@ -155,6 +158,7 @@ func checkRegionInaccessible(ctx context.Context, s *testing.State,
 	// Noticed that flashrom_library doesn't return an error when Write fails.
 	// We check in this test if data was changed in these regions.
 
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	_, _ = flashromInstance.Write(ctx,
 		"",
 		true,  // --noverify-all
@@ -168,6 +172,8 @@ func checkRegionInaccessible(ctx context.Context, s *testing.State,
 		[]string{fmt.Sprintf("%s:%s", sectname, flashedPath)})
 	if err != nil {
 		// in case we were able to write, restore from backup
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		restoreBiosImage(ctx, s, flashromInstance)
 		s.Fatalf("Failed to read %s: %s", sectname, err)
 	}
@@ -176,6 +182,8 @@ func checkRegionInaccessible(ctx context.Context, s *testing.State,
 	md5sumFlashed := md5sum(ctx, s, flashedPath)
 	if md5sumBackup != md5sumFlashed {
 		s.Log("Oops, it worked! Put it back")
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		restoreBiosImage(ctx, s, flashromInstance)
 		s.Fatalf("MD5s are different - that means we were able to region %s", sectname)
 	} else {

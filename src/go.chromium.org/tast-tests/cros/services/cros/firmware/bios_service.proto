@@ -15,14 +15,20 @@ service BiosService {
   // SetAPSoftwareWriteProtect sets the software AP write protect.
   rpc SetAPSoftwareWriteProtect(WPRequest) returns (google.protobuf.Empty) {}
   // CorruptFWSection writes garbage bytes to the entire section specified.
+  // DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+  // WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
   rpc CorruptFWSection(FWSectionInfo) returns (FWSectionInfo) {}
   // BackupImageSection backs up the current fw region locally and returns its
   // path.
   rpc BackupImageSection(FWSectionInfo) returns (FWSectionInfo) {}
   // RestoreImageSection restores the fw region from path.
+  // DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+  // WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
   rpc RestoreImageSection(FWSectionInfo) returns (google.protobuf.Empty) {}
   // WriteImageFromMultiSectionFile writes the provided multi section file in
   // the specified section.
+  // DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+  // WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
   rpc WriteImageFromMultiSectionFile(FWSectionInfo)
       returns (google.protobuf.Empty) {}
   // ChromeosFirmwareUpdate will perform the firmware update in the desired
@@ -32,6 +38,8 @@ service BiosService {
   // ParseFMAP reads and parses FMAP section for given programmer.
   rpc ParseFMAP(FMAP) returns (FMAP) {}
   // CorruptCBFSFWSection corrupts CBFS file in specified section in chosen way.
+  // DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+  // WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
   rpc CorruptCBFSFWSection(CBFSCorruptInfo) returns (FWSectionInfo) {}
 }
 

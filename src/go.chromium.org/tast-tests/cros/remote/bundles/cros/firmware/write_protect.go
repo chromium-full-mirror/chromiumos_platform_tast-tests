@@ -192,6 +192,8 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to require BiosServiceClient: ", err)
 			}
 			s.Log("Fw may have been modified, restore original fw from backup: ", roBefore.Path)
+			// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+			// DO NOT USE THIS FUNCTION
 			if _, err := h.BiosServiceClient.RestoreImageSection(ctx, roBefore); err != nil {
 				s.Fatal("Failed to restore fw image: ", err)
 			}
@@ -209,6 +211,8 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 	}
 	needsRestore = true // In case flashrom completes a partial write but still has errors.
 	s.Log("Attempting to overwrite fw with write protect enabled")
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{
 		Section:    wpTargetToRegion[target],
 		Programmer: wpTargetToProg[target],

@@ -95,6 +95,8 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
 		}
 
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecPath); err != nil {
 			s.Error("Failed to restore EC image: ", err)
 		}

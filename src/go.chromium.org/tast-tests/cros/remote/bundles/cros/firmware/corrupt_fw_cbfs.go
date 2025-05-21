@@ -274,6 +274,8 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 		} else {
 			fwBackup.Path = "/tmp/fwMainB.bin"
 		}
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, fwBackup); err != nil {
 			s.Fatalf("Failed to restore firmware section: %v. %v", fwVariant, err)
 		}
@@ -320,6 +322,8 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Corrupt firmware body")
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if _, err := h.BiosServiceClient.CorruptCBFSFWSection(ctx, &pb.CBFSCorruptInfo{
 		Filename:    testConfig.Filename,
 		Type:        testConfig.CorruptType,

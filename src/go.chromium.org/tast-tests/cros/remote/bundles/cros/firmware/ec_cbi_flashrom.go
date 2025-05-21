@@ -101,6 +101,8 @@ func ECCbiFlashrom(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Corrupting CBI section through Flashrom")
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if err := corruptSectionCbi(ctx, h, workPath, cbiSectionName); err != nil {
 		s.Fatal("Expected a successful attempt to corrupt CBI section: ", err)
 	}
@@ -213,6 +215,8 @@ func verifySection(ctx context.Context, h *firmware.Helper, workPath, section st
 	return nil
 }
 
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func corruptSectionCbi(ctx context.Context, h *firmware.Helper, workPath, section string) (retErr error) {
 	_, sectionSize, err := getSectionInfo(ctx, h, workPath, section)
 	if err != nil {
@@ -260,6 +264,7 @@ func corruptSectionCbi(ctx context.Context, h *firmware.Helper, workPath, sectio
 
 	testing.ContextLog(ctx, "Write random file to section")
 
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	if out, err := flashromInstance.Write(ctx, "", false, true, "", []string{fmt.Sprintf("%s:%s", section, sectionPath)}); err != nil {
 		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
 	}

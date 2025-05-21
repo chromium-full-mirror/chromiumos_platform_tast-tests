@@ -128,6 +128,8 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Restoring RECOVERY_MRC_CACHE image")
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, mrcPath); err != nil {
 			s.Error("Failed to restore MRC_RECOVERY_CACHE image: ", err)
 		}
@@ -152,6 +154,8 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	}(cleanupContext)
 
 	s.Log("Corrupting RECOVERY_MRC_CACHE section")
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx,
 		&pb.FWSectionInfo{
 			Section:    pb.ImageSection_RECOVERYMRCCACHEImageSection,

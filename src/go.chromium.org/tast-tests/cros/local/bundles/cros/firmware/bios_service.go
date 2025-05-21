@@ -140,6 +140,8 @@ func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInf
 }
 
 // RestoreImageSection restores image region from temporary file locally and restores fw with it.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectionInfo) (ret *empty.Empty, retErr error) {
 	var flashromConfig flashrom.Config
 	flashromInstance, ctx, shutdown, _, err := flashromConfig.
@@ -161,10 +163,14 @@ func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectio
 	}
 
 	if req.Section != pb.ImageSection_EmptyImageSection {
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if err := bios.WriteImageFromSingleSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 		}
 	} else {
+		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+		// DO NOT USE THIS FUNCTION
 		if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 			return nil, errors.Wrapf(err, "could not restore %q region with programmer %q from path %q", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 		}
@@ -180,6 +186,8 @@ func (bs *BiosService) SetAPSoftwareWriteProtect(ctx context.Context, req *pb.WP
 	return &empty.Empty{}, nil
 }
 
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func copyAndFlash(ctx context.Context, img *bios.Image, req *pb.FWSectionInfo, flashromInstance *flashrom.Instance) (*pb.FWSectionInfo, error) {
 	// Save copy of data to file before writing.
 	imgPath, err := img.WriteImageToFile(ctx, sectionEnumToSection[req.Section], req.Path)
@@ -192,6 +200,8 @@ func copyAndFlash(ctx context.Context, img *bios.Image, req *pb.FWSectionInfo, f
 	}
 
 	// Write image with flashrom.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	err = bios.WriteImageFromSingleSectionFile(ctx, imgPath, sectionEnumToSection[req.Section], flashromInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not write firmware")
@@ -206,6 +216,8 @@ func copyAndFlash(ctx context.Context, img *bios.Image, req *pb.FWSectionInfo, f
 
 // CorruptFWSection writes garbage over part of the specified firmware section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionInfo) (ret *pb.FWSectionInfo, retErr error) {
 	var flashromConfig flashrom.Config
 	flashromInstance, ctx, shutdown, _, err := flashromConfig.
@@ -238,6 +250,8 @@ func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionIn
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func (bs *BiosService) WriteImageFromMultiSectionFile(ctx context.Context, req *pb.FWSectionInfo) (ret *empty.Empty, retErr error) {
 	var flashromConfig flashrom.Config
 	flashromInstance, ctx, shutdown, _, err := flashromConfig.
@@ -258,6 +272,8 @@ func (bs *BiosService) WriteImageFromMultiSectionFile(ctx context.Context, req *
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
 
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if err := bios.WriteImageFromMultiSectionFile(ctx, req.Path, sectionEnumToSection[req.Section], flashromInstance); err != nil {
 		return nil, errors.Wrapf(err, "could not write %s region with programmer %s from path %s", sectionEnumToSection[req.Section], programmerEnumToProgrammer[req.Programmer], req.Path)
 	}
@@ -309,6 +325,8 @@ func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (ret *pb.FMA
 
 // CorruptCBFSFWSection corrupts CBFS file in the specified way and in specified section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
+// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+// DO NOT USE THIS FUNCTION
 func (bs *BiosService) CorruptCBFSFWSection(ctx context.Context, req *pb.CBFSCorruptInfo) (ret *pb.FWSectionInfo, retErr error) {
 	if req.Type == pb.CBFSCorruptType_NONE {
 		return nil, errors.New("NONE corruption type is not allowed")

@@ -145,6 +145,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 	// the region will sneak through as an error here, but will be caught by the
 	// verify step at the end of this test.
 	s.Log("Attempting to flash AP, this should fail")
+	// DANGER DON'T USE THE regionNames PARAM, THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
 	out, err = flash.Write(ctx, randomDataFile, true, true, "", []string{region})
 	if err == nil {
 		s.Log(string(out))

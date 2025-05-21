@@ -217,9 +217,13 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to require BiosServiceClient: ", err)
 	}
 	s.Log("Corrupt firmware A/B signatures")
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: pb.ImageSection_FWSignAImageSection, Programmer: pb.Programmer_BIOSProgrammer}); err != nil {
 		s.Fatal("Failed to corrupt Firmware A Sign (VBOOTA) section: ", err)
 	}
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
+	// DO NOT USE THIS FUNCTION
 	if _, err := h.BiosServiceClient.CorruptFWSection(ctx, &pb.FWSectionInfo{Section: pb.ImageSection_FWSignBImageSection, Programmer: pb.Programmer_BIOSProgrammer}); err != nil {
 		s.Fatal("Failed to corrupt Firmware B Sign (VBOOTB) section: ", err)
 	}
