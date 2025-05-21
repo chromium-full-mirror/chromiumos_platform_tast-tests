@@ -530,7 +530,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 					linuxssh.PreserveSymlinks); err != nil {
 					s.Fatal("Failed to copy files to dut: ", err)
 				}
-				if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(testexec.DumpLogOnError); err != nil {
+				if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), "--quirks", "ec_partial_recovery").Run(testexec.DumpLogOnError); err != nil {
 					s.Log("Failed to flash backup firmware bin file: ", err)
 				} else {
 					s.Log("Completed flashing of backup AP fw")
@@ -559,7 +559,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 
 	s.Log("Flashing DUT AP with downloaded firmware file")
-	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, firmware.APFirmwareFileToFlash)).Run(testexec.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-v", "-i", fmt.Sprintf("%s/%s", dutTmpDir, firmware.APFirmwareFileToFlash), "--quirks", "ec_partial_recovery").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to flash firmware bin file: ", err)
 	}
 
