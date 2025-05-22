@@ -498,10 +498,20 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 	defer meetHelper.Close(closeCtx)
 
+	var meetWindow *ash.Window
 	// Match window titles `Google Meet` and `meet.google.com`.
 	meetRE := regexp.MustCompile(`\bMeet\b|\bmeet\.\b`)
-	meetWindow, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return meetRE.MatchString(w.Title) })
-	if err != nil {
+	maxRetry := 2
+	for i := 0; i < maxRetry; i++ {
+		meetWindow, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return meetRE.MatchString(w.Title) })
+		if err == nil {
+			break
+		}
+		if err := meetHelper.Reload(ctx); err != nil {
+			return pv, errors.Wrap(err, "failed to reload page")
+		}
+	}
+	if meetWindow == nil {
 		return pv, errors.Wrap(err, "failed to find the Meet window")
 	}
 
