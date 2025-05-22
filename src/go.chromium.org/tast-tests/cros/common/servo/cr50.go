@@ -149,7 +149,7 @@ func (s *Servo) SetTestlab(ctx context.Context, option TestlabState) error {
 		return errors.Wrapf(err, "failed setting testlab to %q", option)
 	}
 
-	// Waiting 1 second before starting the power pressing sequence.
+	// GoBigSleepLint: Waiting 1 second before starting the power pressing sequence.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait 1 second before the power pressing sequence")
 	}
