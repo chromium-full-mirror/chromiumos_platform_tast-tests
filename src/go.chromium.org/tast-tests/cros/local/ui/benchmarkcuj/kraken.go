@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const krakenPrefix = "Kraken."
@@ -44,8 +46,7 @@ func RunKraken(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Conte
 // RetrieveKrakenScore retrieves the score after Kraken finished.
 func RetrieveKrakenScore(ctx context.Context, benchmarkConn *chrome.Conn, scores map[string]Score) error {
 	benchmarkScores := make(map[string]float64)
-	if err := benchmarkConn.Eval(ctx, `
-	new Promise(resolve => {
+	retrieveKrakenScoresScript := `new Promise(resolve => {
 		let scoreMap = new Map();
 		if (!mean || !categoryMeans || !testMeansByCategory) {
 			resolve(scoreMap);
@@ -58,9 +59,25 @@ func RetrieveKrakenScore(ctx context.Context, benchmarkConn *chrome.Conn, scores
 			}
 		}
 		resolve(scoreMap);
-	})`, &benchmarkScores); err != nil {
-		return errors.Wrap(err, "failed to retrieve Kraken scores")
+	})`
+	retrieveKrakenScores := func(ctx context.Context) error {
+		if err := webutil.WaitForQuiescence(ctx, benchmarkConn, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for benchmark page to be loaded and achieve quiescence")
+		}
+		if err := benchmarkConn.Eval(ctx, retrieveKrakenScoresScript, &benchmarkScores); err != nil {
+			testing.ContextLog(ctx, "Reload the page to retrieve Kraken scores")
+			if err := benchmarkConn.Eval(ctx, "location.reload()", nil); err != nil {
+				return errors.Wrap(err, "failed to reload the benchmark page")
+			}
+			return errors.Wrap(err, "failed to retrieve Kraken scores")
+		}
+		return nil
 	}
+
+	if err := uiauto.Retry(2, retrieveKrakenScores)(ctx); err != nil {
+		return err
+	}
+
 	if len(benchmarkScores) == 0 {
 		return errors.New("Kraken crashed during the test")
 	}
