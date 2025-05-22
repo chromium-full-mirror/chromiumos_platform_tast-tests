@@ -64,7 +64,7 @@ func CreateEmptyStateFile() error {
 func CreateStateFile(state string) error {
 	uid, err := getRmadUID()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get rmad UID")
 	}
 
 	// Deletes the state file, if it exists.
@@ -72,15 +72,18 @@ func CreateStateFile(state string) error {
 
 	f, err := os.Create(stateFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create state file %q", stateFile)
 	}
 	defer f.Close()
 	l, err := f.WriteString(state)
-	if err != nil || l < 3 {
-		return err
+	if err != nil {
+		return errors.Wrapf(err, "failed to write state to file %q", stateFile)
+	}
+	if l < 3 {
+		return errors.Errorf("State written to file %q is too short: expected at least 3 bytes, got %d", stateFile, l)
 	}
 	if err := f.Chown(uid, -1); err != nil {
-		return err
+		return errors.Wrapf(err, "failed to change ownership of state file %q to UID %d", stateFile, uid)
 	}
 	return nil
 }
@@ -94,7 +97,7 @@ func RemoveStateFile() error {
 func CreateTestFile() error {
 	f, err := os.Create(testFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create test file %q", testFile)
 	}
 	defer f.Close()
 	return nil
@@ -112,15 +115,15 @@ func RemoveTestFile() error {
 func Launch(ctx context.Context, tconn *chrome.TestConn) (*RMAApp, error) {
 	// Launch the Shimless RMA App.
 	if err := apps.Launch(ctx, tconn, apps.ShimlessRMA.ID); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to launch Shimless RMA app")
 	}
 	r, err := App(ctx, tconn)
 	if err != nil {
-		return r, err
+		return r, errors.Wrap(err, "failed to get app instance after launch")
 	}
 	// Find the main Shimless RMA window
 	if err := r.ui.WithTimeout(waitUITimeout).WaitUntilExists(rootNode)(ctx); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to find Shimless RMA window after launch")
 	}
 	r.launched = true
 	return r, nil
@@ -138,11 +141,14 @@ func App(ctx context.Context, tconn *chrome.TestConn) (*RMAApp, error) {
 func (r *RMAApp) Close(ctx context.Context) error {
 	// Close the Shimless RMA App.
 	if err := apps.Close(ctx, r.tconn, apps.ShimlessRMA.ID); err != nil {
-		return err
+		return errors.Wrap(err, "failed to close Shimless RMA app")
 	}
 
 	// Wait for window to close.
-	return r.ui.WithTimeout(time.Minute).WaitUntilGone(rootNode)(ctx)
+	if err := r.ui.WithTimeout(time.Minute).WaitUntilGone(rootNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for Shimless RMA window to close")
+	}
+	return nil
 }
 
 // WaitForStateFileDeleted returns a function that waits for the state file to be deleted.
@@ -205,18 +211,28 @@ func (r *RMAApp) LeftClickLink(label string) uiauto.Action {
 
 // RetrieveTextByPrefix returns a text which has a certain prefix.
 func (r *RMAApp) RetrieveTextByPrefix(ctx context.Context, prefix string) (*uiauto.NodeInfo, error) {
-	return r.ui.Info(ctx, nodewith.NameStartingWith(prefix).Role(role.StaticText))
+	node, err := r.ui.Info(ctx, nodewith.NameStartingWith(prefix).Role(role.StaticText))
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to retrieve text node with prefix %q", prefix)
+	}
+	return node, nil
 }
 
 // EnterIntoTextInput enters text into text input.
-func (r *RMAApp) EnterIntoTextInput(ctx context.Context, textInputName, content string) uiauto.Action {
-	keyboard, _ := input.Keyboard(ctx)
-	var textInputFinder = nodewith.Role(role.TextField)
-	defer keyboard.Close(ctx)
+func (r *RMAApp) EnterIntoTextInput(textInputName, content string) uiauto.Action {
+	var textInputFinder = nodewith.Role(role.TextField).Name(textInputName)
 
 	return uiauto.Combine("type keyword to enter content to text input",
 		r.ui.LeftClickUntil(textInputFinder, r.ui.WaitUntilExists(textInputFinder.Focused())),
-		keyboard.TypeAction(content),
+		func(ctx context.Context) error {
+			keyboard, err := input.Keyboard(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get keyboard")
+			}
+			defer keyboard.Close(ctx)
+
+			return keyboard.Type(ctx, content)
+		},
 	)
 }
 
@@ -228,11 +244,11 @@ func (r *RMAApp) LeftClickGenericContainer(label string) uiauto.Action {
 func getRmadUID() (int, error) {
 	u, err := user.Lookup("rmad")
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "failed to lookup user 'rmad'")
 	}
 	uid, err := strconv.Atoi(u.Uid)
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrapf(err, "failed to convert rmad UID %q to integer", u.Uid)
 	}
 	return uid, nil
 }
@@ -246,11 +262,11 @@ func (r *RMAApp) waitUntilEnabled(button *nodewith.Finder, timeout time.Duration
 		func(ctx context.Context) error {
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if err := r.ui.CheckRestriction(button, restriction.Disabled)(ctx); err == nil {
-					return errors.Errorf("Button state %s", restriction.Disabled)
+					return errors.Errorf("Button is still in %s state", restriction.Disabled)
 				}
 				return nil
 			}, &testing.PollOptions{Timeout: timeout, Interval: pollingInterval}); err != nil {
-				return errors.Wrap(err, "Button failed to become enabled")
+				return errors.Wrap(err, "Button failed to become enabled within timeout")
 			}
 			return nil
 		})
@@ -266,11 +282,11 @@ func (r *RMAApp) leftClickButton(button *nodewith.Finder) uiauto.Action {
 		func(ctx context.Context) error {
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if err := r.ui.CheckRestriction(button, restriction.Disabled)(ctx); err == nil {
-					return errors.Errorf("Button state %s", restriction.Disabled)
+					return errors.Errorf("Button is still in %s state", restriction.Disabled)
 				}
 				return nil
 			}, &testing.PollOptions{Timeout: pollingTimeout, Interval: pollingInterval}); err != nil {
-				return errors.Wrap(err, "Button failed to become enabled")
+				return errors.Wrap(err, "Button failed to become enabled within timeout")
 			}
 			return nil
 		},
@@ -279,7 +295,7 @@ func (r *RMAApp) leftClickButton(button *nodewith.Finder) uiauto.Action {
 			// Keyboard to input key inputs.
 			keyboard, err := input.Keyboard(ctx)
 			if err != nil {
-				return errors.Wrap(err, "failed to get keyboard")
+				return errors.Wrap(err, "failed to get keyboard for button click")
 			}
 			defer keyboard.Close(ctx)
 
@@ -292,13 +308,13 @@ func (r *RMAApp) waitForFileDeleted(fileName string) uiauto.Action {
 	return func(ctx context.Context) error {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if _, err := os.Stat(fileName); err == nil {
-				return errors.Errorf("File %s was not deleted", fileName)
+				return errors.Errorf("File %s was not deleted; it still exists", fileName)
 			} else if !os.IsNotExist(err) {
-				return err
+				return errors.Wrapf(err, "error checking file %q existence", fileName)
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: pollingTimeout, Interval: pollingInterval}); err != nil {
-			return errors.Wrap(err, "File was not deleted")
+			return errors.Wrapf(err, "File %q was not deleted within timeout", fileName)
 		}
 		return nil
 	}

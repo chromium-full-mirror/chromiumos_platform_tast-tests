@@ -282,7 +282,7 @@ func (shimlessRMA *AppService) RetrieveTextByPrefix(ctx context.Context,
 func (shimlessRMA *AppService) EnterIntoTextInput(ctx context.Context,
 	req *pb.EnterIntoTextInputRequest) (*empty.Empty, error) {
 
-	if err := shimlessRMA.app.EnterIntoTextInput(ctx, req.TextInputName, req.Content)(ctx); err != nil {
+	if err := shimlessRMA.app.EnterIntoTextInput(req.TextInputName, req.Content)(ctx); err != nil {
 		return nil, errors.Wrapf(err, "failed to enter content %s into text input", req.Content)
 	}
 	return &empty.Empty{}, nil

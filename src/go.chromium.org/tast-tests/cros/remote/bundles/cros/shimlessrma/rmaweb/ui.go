@@ -391,7 +391,7 @@ func (uiHelper *UIHelper) RSUPageOperation(ctx context.Context) error {
 
 	return action.Combine("enter unlock code and click Next",
 		uiHelper.clickButton("Done"),
-		uiHelper.enterIntoTextInput(authCode, "Enter the 8-character unlock code"),
+		uiHelper.enterIntoTextInput("Enter the 8-character unlock code", authCode),
 		uiHelper.clickButton("Next"),
 	)(ctx)
 
@@ -741,7 +741,7 @@ func (uiHelper *UIHelper) parseAuthCode(raw string) (string, error) {
 	return match[1], nil
 }
 
-func (uiHelper *UIHelper) enterIntoTextInput(content, textInputName string) action.Action {
+func (uiHelper *UIHelper) enterIntoTextInput(textInputName, content string) action.Action {
 	return func(ctx context.Context) error {
 		_, err := uiHelper.Client.EnterIntoTextInput(ctx, &pb.EnterIntoTextInputRequest{
 			TextInputName: textInputName,
