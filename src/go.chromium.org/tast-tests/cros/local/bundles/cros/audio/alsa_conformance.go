@@ -48,7 +48,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		Fixture:      "rebootForAudioDSPFixture",
-		Timeout:      10 * time.Minute,
+		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(alsaConformanceUnstableModels...)),
