@@ -185,9 +185,9 @@ func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
 		// Consecutive logins allow the user to skip selecting a different
 		// third-party login option.
 		case continueWithGoogleLink:
-			if err := e.ui.WithTimeout(longUITimeout).DoDefaultUntil(
+			if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
 				continueWithGoogleLink,
-				e.ui.WithTimeout(shortUITimeout).WaitUntilGone(continueWithGoogleLink),
+				e.ui.WithTimeout(longUITimeout).WaitUntilGone(continueWithGoogleLink),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to click on the continue with google link")
 			}
