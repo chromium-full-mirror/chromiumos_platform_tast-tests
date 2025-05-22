@@ -39,7 +39,6 @@ func init() {
 		Desc: "Verifies that the DUT responds properly to beacon report requests",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"matthewmwang@chromium.org",       // Test author
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},

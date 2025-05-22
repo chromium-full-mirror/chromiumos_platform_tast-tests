@@ -21,7 +21,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
-			"matthewmwang@chromium.org",
+			"hugobenichi@chromium.org",
 		},
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr:    []string{"group:mainline", "informational"},

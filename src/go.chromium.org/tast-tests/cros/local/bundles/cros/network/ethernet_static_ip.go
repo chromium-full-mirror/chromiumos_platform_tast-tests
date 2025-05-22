@@ -25,7 +25,7 @@ func init() {
 		Desc: "Test whether static IP configurations behave as they should between profile changes",
 		Contacts: []string{
 			"cros-networking@google.com",
-			"matthewmwang@chromium.org",
+			"hugobenichi@chromium.org",
 		},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
