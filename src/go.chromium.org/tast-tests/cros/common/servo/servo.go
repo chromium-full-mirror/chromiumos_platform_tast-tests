@@ -15,7 +15,6 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
-
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -24,16 +23,17 @@ type Servo struct {
 	xmlrpc *xmlrpc.XMLRpc
 
 	// Cache queried attributes that won't change.
-	version            string
-	dutConnType        DUTConnTypeValue
-	dutCCDController   DUTController
-	dutDebugController DUTController
-	servoType          string
-	hasCCD             bool
-	hasServoMicro      bool
-	hasC2D2            bool
-	isDualV4           bool
-	isPDTester         bool
+	version                  string
+	dutConnType              DUTConnTypeValue
+	dutCCDController         DUTController
+	dutDebugController       DUTController
+	servoType                string
+	hasCCD                   bool
+	hasServoMicro            bool
+	hasC2D2                  bool
+	isDualV4                 bool
+	isPDTester               bool
+	ti50WPEventPendingReboot bool
 
 	// For PD tests, this caches the information about the PD port on the DUT.
 	dutPDInfo *DUTPDInfo

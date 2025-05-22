@@ -1150,11 +1150,15 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	// we first set the normal FWWPState otherwise we can get into a mismatch
 	// between servo_micro asserting WP externally and what Ti50 things WP should
 	// be.
-	if isTi50, err := s.IsTi50BasedDevice(ctx); err != nil {
+	if ti50HasWPRebootFeature, err := s.GSCHasFeature(ctx, GSCAPROVerificationWPReboot); err != nil {
 		return errors.Wrap(err, "failed to determine if ti50-based device")
-	} else if isTi50 {
+	} else if ti50HasWPRebootFeature {
 		if err := s.SetCCDFWWPAtBootState(ctx, value); err != nil {
 			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
+		}
+
+		if err := s.Ti50CheckPendingWPEvent(ctx); err != nil {
+			return errors.Wrap(err, "failed to check Ti50 WP event")
 		}
 	}
 	return nil
@@ -1636,20 +1640,6 @@ func (s *Servo) IsServoTypeC(ctx context.Context) (bool, error) {
 		}
 	}
 	return connectionType == string(DUTConnTypeC), nil
-}
-
-// IsTi50BasedDevice checks if the dut has a ti50-based GSC.
-func (s *Servo) IsTi50BasedDevice(ctx context.Context) (bool, error) {
-	gscChip := ""
-	if hasGSCChip, err := s.HasControl(ctx, string(GSCChip)); err != nil {
-		return false, errors.Wrap(err, "failed to check gsc_chip control")
-	} else if hasGSCChip {
-		gscChip, err = s.GetString(ctx, GSCChip)
-		if err != nil {
-			return false, errors.Wrap(err, "failed to get gsc_chip")
-		}
-	}
-	return strings.Contains(gscChip, "ti50"), nil
 }
 
 // CheckECActiveCopyMatch polls to check if the EC active copy matches the expected one.

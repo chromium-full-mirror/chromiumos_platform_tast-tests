@@ -7,6 +7,7 @@ package servo
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,12 @@ const (
 	// on single and dual_v4 setups.
 	WatchdogCCDConnected    StringControl = "ccd_gsc.watchdog_ccd_connected"
 	WatchdogCCDConnectedYes string        = "yes"
+)
+
+// Regexes for GSC console commands
+var (
+	// Regex to check if there's a pending reboot from a WP event
+	ti50APROVerifyRebootPendingRE = regexp.MustCompile(`Reboot pending at next AP power event: (Yes|No)`)
 )
 
 // These controls accept only "on" and "off" as values.
@@ -424,6 +431,20 @@ type GSCFeature struct {
 	IsTi50 bool
 }
 
+// GSCAPROVerificationWPReboot contains the information for when Ti50 starts
+// rebooting to run verification. It'll run verification after the AP resets if
+// it detects one of these WP events.
+// - after WP goes from disabled to enabled or if
+// - it detects WP is disabled externally when it's enabling it internally.
+var GSCAPROVerificationWPReboot GSCFeature = GSCFeature{
+	Desc:   "reboot after WP enable",
+	Epoch:  0,
+	Major:  23,
+	Minor:  180,
+	IsTi50: true,
+	IsCr50: false,
+}
+
 // gscFeatures is used to cache GSC feature states
 var gscFeatures = make(map[string]bool)
 
@@ -606,6 +627,7 @@ func (s *Servo) WaitForGSCStartup(ctx context.Context, timeout time.Duration) er
 
 // WaitForGSCReset waits until the GSC resets. Wait for CCD to come back up if applicable.
 func (s *Servo) WaitForGSCReset(ctx context.Context, timeout time.Duration) error {
+	s.ClearExpectWPEventReboot()
 	testing.ContextLogf(ctx, "Wait %.2fs for GSC Reset", timeout.Seconds())
 	if s.canCheckCCDConnected(ctx) {
 		return s.WaitForCCDDisconnectAndReconnect(ctx, timeout)
@@ -618,5 +640,35 @@ func (s *Servo) WaitForGSCReset(ctx context.Context, timeout time.Duration) erro
 	if !s.gscIsResponsive(ctx) {
 		return errors.New("GSC is unresponsive after reset")
 	}
+	return nil
+}
+
+// ExpectTi50WPEventReboot returns True if Ti50 is going to reset the next time
+// the AP reboots
+func (s *Servo) ExpectTi50WPEventReboot(ctx context.Context) bool {
+	return s.ti50WPEventPendingReboot
+}
+
+// ClearExpectWPEventReboot resets the expectedTi50APROReboot value to false
+func (s *Servo) ClearExpectWPEventReboot() {
+	s.ti50WPEventPendingReboot = false
+}
+
+// Ti50CheckPendingWPEvent after a WP change, check if there's a penging WP event
+// that will cause GSC to reset the next time the AP resets.
+func (s *Servo) Ti50CheckPendingWPEvent(ctx context.Context) error {
+	output, err := s.RunGSCCommandGetOutput(ctx, "ap_ro_verify", []string{`.*>`})
+	if err != nil {
+		return errors.Wrap(err, "failed to get ap_ro_verify output")
+	}
+
+	match := ti50APROVerifyRebootPendingRE.FindStringSubmatch(output[0][0])
+	if len(match) != 0 {
+		s.ti50WPEventPendingReboot = match[1] == "Yes"
+		return nil
+	}
+	// If Ti50 doesn't have the expect reboot event output, it isn't going to reboot
+	// for WP events.
+	s.ti50WPEventPendingReboot = false
 	return nil
 }
