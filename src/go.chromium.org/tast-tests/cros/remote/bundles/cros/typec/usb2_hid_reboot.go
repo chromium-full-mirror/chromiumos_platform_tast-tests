@@ -180,7 +180,8 @@ func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut
 	hidDevicesAfterReboot, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external HID device list after reboot")
-	} else if len(hidDevicesAfterReboot) < len(hidDevicesBeforeReboot) {
+	}
+	if len(hidDevicesAfterReboot) < len(hidDevicesBeforeReboot) {
 		return errors.New("external HID device failed to enumerate after reboot")
 	}
 

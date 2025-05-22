@@ -155,7 +155,8 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after hotplug")
-		} else if len(devicesWhenOff) >= len(devices) {
+		}
+		if len(devicesWhenOff) >= len(devices) {
 			return errors.New("failed to enumerate new USB storage device")
 		}
 		return nil

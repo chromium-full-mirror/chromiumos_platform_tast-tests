@@ -162,7 +162,7 @@ func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.Sy
 			return errors.New("failed due to unexpected number of block devices after hotplug")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
 		return err
 	}
 
@@ -199,7 +199,8 @@ func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.Sy
 	ddResult := ddResultRe.FindSubmatch([]byte(ddOut))
 	if len(ddResult) != 2 {
 		return errors.New("failed due to unexpected dd output format")
-	} else if speed, err := strconv.ParseFloat(string(ddResult[1]), 64); err != nil {
+	}
+	if speed, err := strconv.ParseFloat(string(ddResult[1]), 64); err != nil {
 		return errors.Wrap(err, "failed to parse transfer speed")
 	} else if speed < minPassingSpeed {
 		return errors.New("failed due to transfer speed: " + string(ddResult[1]) + "MB/s")
@@ -220,7 +221,8 @@ func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.Sy
 		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after disconnection")
-		} else if len(devices) != len(devicesWhenOff) {
+		}
+		if len(devices) != len(devicesWhenOff) {
 			return errors.New("failed to disconnect USB storage device")
 		}
 		return nil

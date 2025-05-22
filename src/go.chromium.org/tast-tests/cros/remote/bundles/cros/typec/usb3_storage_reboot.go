@@ -151,7 +151,8 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after hotplug")
-		} else if len(devicesWhenOff) >= len(devices) {
+		}
+		if len(devicesWhenOff) >= len(devices) {
 			return errors.New("failed to enumerate new USB storage device")
 		}
 		return nil
@@ -184,7 +185,8 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list after reboot")
-	} else if len(externalStorageAfter) < len(externalStorageBefore) {
+	}
+	if len(externalStorageAfter) < len(externalStorageBefore) {
 		return errors.New("external storage device failed to enumerate after reboot")
 	}
 
@@ -203,7 +205,8 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after disconnection")
-		} else if len(devices) != len(devicesWhenOff) {
+		}
+		if len(devices) != len(devicesWhenOff) {
 			return errors.New("failed to disconnect USB storage device")
 		}
 		return nil
