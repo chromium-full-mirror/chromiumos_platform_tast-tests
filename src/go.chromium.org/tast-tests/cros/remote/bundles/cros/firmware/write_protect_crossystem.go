@@ -103,6 +103,9 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	if err := rebootFunc(ctx, h, fromMode); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
+	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+		return errors.Wrap(err, "failed to recover from ti50 reset")
+	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
 		return errors.Wrap(err, "failed to confirm WP is off")
 	}
@@ -111,6 +114,9 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	}
 	if err := rebootFunc(ctx, h, fromMode); err != nil {
 		return errors.Wrap(err, "failed to reboot")
+	}
+	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+		return errors.Wrap(err, "failed to recover from ti50 reset")
 	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 1); err != nil {
 		return errors.Wrap(err, "failed to confirm WP is on")
@@ -180,6 +186,16 @@ func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper, fromM
 		return errors.Wrap(err, "failed to run shutdown command")
 	}
 
+	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+		return errors.Wrap(err, "failed to recover from ti50 reset")
+	} else if gscReset {
+		// If Ti50 resets to do AP RO verification, run the shutdown command again.
+		testing.ContextLog(ctx, "Run shutdown again to power off the DUT after Ti50 reset")
+		if err := h.DUT.Conn().CommandContext(ctx, "shutdown", "-P", "now").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+			return errors.Wrap(err, "failed to run shutdown command")
+		}
+	}
+
 	testing.ContextLog(ctx, "Waiting for the G3 power state")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
 		return errors.Wrap(err, "failed to get G3 power state")
@@ -211,6 +227,16 @@ func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper, fromMode
 	testing.ContextLog(ctx, "Pressing the power button to power off the DUT")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 		return errors.Wrapf(err, "failed to power off the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOff)
+	}
+
+	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+		return errors.Wrap(err, "failed to recover from ti50 reset")
+	} else if gscReset {
+		// If Ti50 resets to do AP RO verification, run the power button press to turn off the DUT again.
+		testing.ContextLog(ctx, "Pressing the power button to power off the DUT after Ti50 reset")
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
+			return errors.Wrapf(err, "failed to power off the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOff)
+		}
 	}
 
 	testing.ContextLog(ctx, "Waiting for G3 power state")
@@ -254,4 +280,26 @@ func performModeAwareReboot(ctx context.Context, h *firmware.Helper, fromMode fw
 		return errors.Wrap(err, "failed to perform mode aware reboot")
 	}
 	return nil
+}
+
+// waitForTi50Reset waits for Ti50 to reset. Return true if GSC reset. False if it didn't
+func waitForTi50Reset(ctx context.Context, h *firmware.Helper, reconnectTimeout time.Duration) (bool, error) {
+	// Don't do anything if the board isn't running a Ti50 image that resets
+	// after WP is enabled.
+	if !h.Servo.ExpectTi50WPEventReboot(ctx) {
+		return false, nil
+	}
+
+	h.Servo.WaitForGSCReset(ctx, 10*time.Second)
+
+	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
+	defer cancel()
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			return false, errors.Wrap(stateErr, "failed to reconnect to DUT, failed to check powerstate")
+		}
+		return false, errors.Wrapf(err, "failed to reconnect to DUT, got power state: %v", currPowerState)
+	}
+	return true, nil
 }
