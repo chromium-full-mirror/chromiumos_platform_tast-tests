@@ -16,7 +16,12 @@ import (
 	"go.chromium.org/tast/core/autocaps"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var oldUnsupportedModel = []string{
+	"basking", "electro", "pyro", "sand", "alan", "bigdaddy", "snappy", // reef-based (b/414641316)
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -26,6 +31,7 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "group:camera", "camera_config"},
 		SoftwareDeps: []string{caps.BuiltinCamera},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel(oldUnsupportedModel...)),
 	})
 }
 
