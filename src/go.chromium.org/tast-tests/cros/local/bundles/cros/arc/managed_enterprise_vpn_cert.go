@@ -48,7 +48,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     EnterpriseVpnCert,
+		Func:     ManagedEnterpriseVpnCert,
 		Desc:     "Verify Enterprise VPN works",
 		Contacts: []string{"arc-commercial@google.com", "batoon@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
@@ -61,7 +61,7 @@ func init() {
 	})
 }
 
-func EnterpriseVpnCert(ctx context.Context, s *testing.State) {
+func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
