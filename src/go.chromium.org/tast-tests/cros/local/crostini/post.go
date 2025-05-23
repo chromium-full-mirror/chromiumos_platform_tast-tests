@@ -73,6 +73,32 @@ func RunCrostiniPostTest(ctx context.Context, p PreData) {
 	}
 }
 
+// RunBaguettePostTest runs hooks that should run after every test but before
+// the precondition closes (if it's going to) e.g. collecting logs from the
+// guest.
+func RunBaguettePostTest(ctx context.Context, p PreData) {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok || dir == "" {
+		testing.ContextLog(ctx, "Failed to get name of directory")
+		return
+	}
+
+	// If we haven't connected to chrome successfully, then the
+	// test didn't get to do anything with the VM that could
+	// possibly have generated logs, and even if it did we
+	// couldn't access them, so bail out here.
+	if p.Chrome == nil {
+		testing.ContextLog(ctx, "Failed before connecting to chrome, no logs generated")
+		return
+	}
+
+	// VM logs are stored on the host, so we don't need the VM to
+	// be running at all to get them.
+	if err := vm.TrySaveAllVMLogs(ctx, p.Chrome.NormalizedUser(), dir); err != nil {
+		testing.ContextLog(ctx, "Failed to save VM logs: ", err)
+	}
+}
+
 // When we run trySaveContainerLogs we only want to capture logs since we last
 // ran i.e. from the test that just finished, not all logs since the start of
 // the suite. Sadly, Debian's journalctl in stable is too old to support cursor

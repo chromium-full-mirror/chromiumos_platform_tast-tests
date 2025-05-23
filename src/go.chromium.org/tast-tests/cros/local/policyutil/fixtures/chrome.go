@@ -116,6 +116,27 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromePolicyLoggedInBaguette,
+		Desc:         "Logged into a user session with Baguette support",
+		Contacts:     []string{"clumptini+oncall@google.com"},
+		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{
+					chrome.EnableFeatures("CrostiniContainerless"),
+					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
+					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+				}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromePolicyLoggedInBruschetta,
 		Desc:         "Logged into a user session with Bruschetta support",
 		Contacts:     []string{"clumptini+oncall@google.com"},

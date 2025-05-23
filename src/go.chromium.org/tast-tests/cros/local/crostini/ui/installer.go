@@ -210,6 +210,47 @@ func startLxdServer(ctx context.Context, containerMetadata, containerRootfs stri
 	return server, addr, nil
 }
 
+// InstallBaguette prepares image and installs containerless Crostini from UI.
+func InstallBaguette(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, iOptions *InstallationOptions) (uint64, error) {
+	// Check for /dev/kvm before we do anything else.
+	if _, err := os.Stat("/dev/kvm"); err != nil {
+		return 0, errors.Wrap(err, "cannot install crostini: cannot stat /dev/kvm")
+	}
+
+	testing.ContextLog(ctx, "Installing crostini (baguette)")
+
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	installer := New(tconn)
+
+	if err := settings.OpenLinuxInstallerAndClickNext(ctx, tconn, cr); err != nil {
+		if message, _ := installer.checkErrorMessage(ctx); message != "" {
+			return 0, errors.Errorf("error in installer dialog: %s", message)
+		}
+		return 0, errors.Wrap(err, "failed to launch crostini installation from Settings")
+	}
+
+	var resultDiskSize uint64
+	var err error
+	if iOptions.MinDiskSize != 0 {
+		resultDiskSize, err = installer.SetDiskSize(ctx, cr, iOptions.MinDiskSize, iOptions.IsSoftMinimum)
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to set disk size in installation dialog")
+		}
+	}
+	if err := installer.Install(ctx, iOptions.DebianVersion); err != nil {
+		return 0, errors.Wrap(err, "failed to install Crostini from UI")
+	}
+
+	// The VM should now be running, check that all the host daemons are also running to catch any errors in our init scripts etc.
+	if err = checkDaemonsRunning(ctx); err != nil {
+		return 0, errors.Wrap(err, "failed to check VM host daemons state")
+	}
+
+	return resultDiskSize, nil
+}
+
 // InstallCrostini prepares image and installs Crostini from UI.
 func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, iOptions *InstallationOptions) (uint64, error) {
 	// Check for /dev/kvm before we do anything else.

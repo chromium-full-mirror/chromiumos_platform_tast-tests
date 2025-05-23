@@ -325,6 +325,20 @@ func init() {
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "baguettePolicy",
+		Desc:            "Install Baguette, with Chrome logged in with policy",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &baguetteFixture{preData: &preTestData{}},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          fixture.ChromePolicyLoggedInBaguette,
+		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
+	})
 }
 
 // preTestData contains the data to set up the fixture.
@@ -677,6 +691,222 @@ func (f *crostiniFixture) launchExitTerminal(ctx context.Context) error {
 		return errors.Wrap(err, "failed to exit Terminal window")
 	}
 	return nil
+}
+
+type baguetteFixture struct {
+	cr            *chrome.Chrome
+	tconn         *chrome.TestConn
+	cont          *vm.Container
+	kb            *input.KeyboardEventWriter
+	preData       *preTestData
+	postData      *PostTestData
+	values        *perf.Values
+	logDir        string
+	extraOptsFunc chrome.OptionsCallback
+}
+
+func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	f.postData = &PostTestData{}
+	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
+	f.logDir = s.OutDir()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, uninstallationTimeout)
+	defer cancel()
+
+	shouldClose := true
+	defer func() {
+		if shouldClose {
+			// TODO (jinrongwu): use FixtureData instead of PreData and modify RunCrostiniPostTest when deprecating pre.go.
+			RunBaguettePostTest(cleanupCtx, PreData{f.cr, f.tconn, f.cont, f.kb, f.postData})
+			f.cleanUp(cleanupCtx, s)
+		}
+	}()
+
+	// To help identify sources of flake, we report disk usage before the test.
+	if err := reportDiskUsage(ctx); err != nil {
+		s.Log("Failed to gather disk usage: ", err)
+	}
+
+	var err error
+	if f.tconn, err = f.cr.TestAPIConn(ctx); err != nil {
+		s.Fatal("Failed to create test API connection: ", err)
+	}
+	ownerID, err := cryptohome.UserHash(ctx, f.cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get owner ID: ", err)
+	}
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, f.tconn)
+
+	if f.kb, err = input.Keyboard(ctx); err != nil {
+		s.Fatal("Failed to create keyboard device: ", err)
+	}
+
+	if err := guestos.SetSolidColorWallpaper(ctx, f.tconn); err != nil {
+		s.Log("Failed to change wallpaper: ", err)
+	}
+
+	// Setup the screen recorder.
+	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, f.tconn, f.cr)
+
+	if screenRecorder == nil {
+		faillog.SaveScreenshotToFile(ctx, f.tconn, s.OutDir(), "screenshot_for_screen_recorder_failure.png")
+		faillog.DumpUITreeToFile(ctx, s.OutDir(), f.tconn, "uitree_for_screen_recorder_failure.txt")
+	}
+	defer func(ctx context.Context) {
+		if screenRecorder == nil {
+			return
+		}
+		screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}(cleanupCtx)
+
+	// Setup the perf recorder.
+	perfRecorder, err := StartRecording(ctx, f.tconn, "baguette_restart", RestartStages)
+	if err != nil {
+		s.Log("Can't record initial restart metrics: ", err)
+	}
+	// TODO(b/377351450): is terminaDiskExists going to carry over for baguette? probably but need to check
+	if checkKeepState(s) && terminaDiskExists(ownerID) {
+		s.Log("keepState attempting to start the existing VM and container by launching Terminal")
+	} else {
+		// Install Baguette.
+		iOptions := &cui.InstallationOptions{UserName: f.cr.NormalizedUser()}
+		if _, err := cui.InstallBaguette(ctx, f.tconn, f.cr, iOptions); err != nil {
+			// Try to retrieve crostini_journalctl if the container is starting
+			// but the installation fails.
+			if termina, err := vm.GetRunningVM(ctx, f.cr.NormalizedUser(), vm.Termina); err != nil {
+				s.Log("Cannot get running VM: ", err)
+			} else if termina != nil {
+				termina.TrySaveContainerLogs(ctx, s.OutDir())
+			}
+			s.Fatal("Failed to install Crostini: ", err)
+		}
+	}
+
+	if f.values, err = perfRecorder.UpdateValues(ctx, f.tconn); err != nil {
+		s.Log("Can't update perf values: ", err)
+	} else {
+		f.values.Save(s.OutDir())
+	}
+
+	f.cont, err = vm.DefaultContainer(ctx, f.cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to connect to running container: ", err)
+	}
+
+	// Report disk size again after successful install.
+	if err := reportDiskUsage(ctx); err != nil {
+		s.Log("Failed to gather disk usage: ", err)
+	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user's Downloads path: ", err)
+	}
+
+	if err := f.cr.ResetState(ctx); err != nil {
+		s.Fatal("Failed to reset chrome's state: ", err)
+	}
+
+	f.preData.startedOK = true
+	vm.Lock()
+	shouldClose = false
+
+	var fakeDMS *fakedms.FakeDMS
+	hasFakeDMS, ok := s.ParentValue().(fakedms.HasFakeDMS)
+	if ok {
+		fakeDMS = hasFakeDMS.FakeDMS()
+	}
+
+	return FixtureData{
+		Chrome:        f.cr,
+		Tconn:         f.tconn,
+		Cont:          f.cont,
+		KB:            f.kb,
+		PostData:      f.postData,
+		StartupValues: f.values,
+		Screendiffer:  nil,
+		DownloadsPath: downloadsPath,
+		FakeDMS:       fakeDMS,
+	}
+}
+
+func (f *baguetteFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *baguetteFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	RunBaguettePostTest(ctx, PreData{f.cr, f.tconn, f.cont, f.kb, f.postData})
+}
+
+func (f *baguetteFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	f.close(ctx, s)
+}
+
+func (f *baguetteFixture) Reset(ctx context.Context) error {
+	resetSucceeds := false
+	defer func() {
+		f.preData.startedOK = resetSucceeds
+	}()
+
+	// TODO(b/377351450): need to look into snapshotting - not as quick/simple without lxc snapshots?
+
+	// Make sure the clipboard is empty.
+	if err := ash.SetClipboard(ctx, f.tconn, ""); err != nil {
+		return errors.Wrap(err, "failed to clear clipboard")
+	}
+
+	return nil
+}
+
+func (f *baguetteFixture) close(ctx context.Context, s *testing.FixtState) {
+	vm.Unlock()
+	f.cleanUp(ctx, s)
+}
+
+// cleanUp de-initializes the fixture by closing/cleaning-up the relevant
+// fields and resetting the struct's fields.
+func (f *baguetteFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
+	if f.kb != nil {
+		if err := f.kb.Close(ctx); err != nil {
+			s.Log("Failure closing keyboard: ", err)
+		}
+		f.kb = nil
+	}
+
+	if f.postData.vmLogReader != nil {
+		if err := f.postData.vmLogReader.Close(); err != nil {
+			s.Log("Failed to close VM log reader: ", err)
+		}
+	}
+
+	// Don't uninstall baguette or delete the image for keepState so that
+	// baguette is still running after the test, and the image can be reused.
+	if checkKeepState(s) && f.preData.startedOK {
+		s.Log("keepState not uninstalling Crostini and deleting image in cleanUp")
+	} else {
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
+
+		if f.cont != nil {
+			if err := uninstallLinux(ctx, f.tconn); err != nil {
+				s.Log("Failed to uninstall Linux: ", err)
+			}
+			f.cont = nil
+		}
+
+		// Unmount the VM image to prevent later tests from
+		// using it by accident. Otherwise we may have a dlc
+		// test use the component or vice versa.
+		if err := vm.DeleteImages(); err != nil {
+			s.Log("Error deleting images: ", err)
+		}
+	}
+	f.preData.startedOK = false
+
+	// Nothing special needs to be done to close the test API connection.
+	f.tconn = nil
+
+	f.cr = nil
 }
 
 // checkKeepState returns whether the fixture should keep state from the
