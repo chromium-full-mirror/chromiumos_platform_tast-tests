@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/retry"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -78,28 +79,60 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	performSecondLoginFlag := s.Param().(managedEntVpnCertTestParam).performSecondLoginFlag
-	cr, a, tconn, err := logInAndStartArc(
-		ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError, performSecondLoginFlag)
-	if err != nil {
-		s.Fatal("Failed to prepare device for testing: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-	defer a.Close(ctx)
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Errorf:      s.Errorf,
+		Logf:        s.Logf}
 
-	// Wait for Chrome logs to show ARC Certs installed.
-	s.Log("Waiting for ARC Certs to be installed")
-	if err := waitForArcCertsInstallationInChromeLog(ctx, cr); err != nil {
-		s.Fatal("Failed to see the ARC Certs installed in Chrome logs: ", err)
-	}
-	s.Log("ARC Certs successfully installed")
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		performSecondLoginFlag := s.Param().(managedEntVpnCertTestParam).performSecondLoginFlag
+		cr, a, tconn, err := logInAndStartArc(
+			ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError, performSecondLoginFlag)
+		if err != nil {
+			return rl.Retry("prepare device for testing", err)
+		}
+		defer cr.Close(cleanupCtx)
+		defer a.Close(ctx)
+		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// Connect with Global VPN Protect.
-	if err := connectToVpnWithGlobalProtect(ctx, tconn, cr, a); err != nil {
-		s.Fatal("Failed to connect to VPN: ", err)
+		// Wait for Chrome logs to show ARC Certs installed.
+		s.Log("Waiting for ARC Certs to be installed")
+		if err := waitForArcCertsInstallationInChromeLog(ctx, cr); err != nil {
+			return rl.Retry("see the ARC Certs installed in Chrome logs", err)
+		}
+		s.Log("ARC Certs successfully installed")
+
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return rl.Retry("initialize UI Automator", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return rl.Retry("get keyboard controller", err)
+		}
+		defer kb.Close(cleanupCtx)
+
+		testing.ContextLog(ctx, "Launching GlobalProtect")
+		app, err := apputil.NewApp(ctx, kb, tconn, a, d, vpnAppName, vpnPackage)
+		if err != nil {
+			return rl.Retry("create the instance of GlobalProtect app", err)
+		}
+		if _, err := app.Launch(ctx); err != nil {
+			return rl.Retry("launch GlobalProtect app", err)
+		}
+
+		// Connect with Global VPN Protect.
+		if err := connectToVpnWithGlobalProtect(ctx, tconn, cr, a, d); err != nil {
+			return rl.Exit("connect to VPN", err)
+		}
+		s.Log("Global Protect VPN successfully connected")
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Enterprise VPN cert test failed: ", err)
 	}
-	s.Log("Global Protect VPN successfully connected")
 }
 
 // logInAndStartArc logs into the device with credentials from the specified pool and starts ARC.
@@ -247,31 +280,7 @@ func waitForArcCertsInstallationInChromeLog(ctx context.Context, cr *chrome.Chro
 
 // connectToVpnWithGlobalProtect launches the GlobalProtect app and completes the UI flow to connect to VPN.
 func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
-	cr *chrome.Chrome, a *arc.ARC) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to initialize UI Automator")
-	}
-	defer d.Close(cleanupCtx)
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get keyboard controller")
-	}
-	defer kb.Close(cleanupCtx)
-
-	testing.ContextLog(ctx, "Launching GlobalProtect")
-	app, err := apputil.NewApp(ctx, kb, tconn, a, d, vpnAppName, vpnPackage)
-	if err != nil {
-		return errors.Wrap(err, "failed to create the instance of GlobalProtect app")
-	}
-	if _, err := app.Launch(ctx); err != nil {
-		return errors.Wrap(err, "failed to launch GlobalProtect app")
-	}
-
+	cr *chrome.Chrome, a *arc.ARC, d *ui.Device) error {
 	testing.ContextLog(ctx, "Using GlobalProtect app to connect to VPN")
 	if err := apputil.DismissMobilePrompt(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to dismiss 'designed for mobile' prompt")
