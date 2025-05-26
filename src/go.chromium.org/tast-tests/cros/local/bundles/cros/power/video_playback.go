@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/power"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -272,6 +274,20 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 
 	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
+	withAudio := s.FixtValue().(setup.PowerUIFixtureData).WithAudio
+
+	// Setup audio if needed.
+	if withAudio {
+		cras, err := audio.RestartCras(ctx)
+		if err != nil {
+			s.Fatal("Failed to restart CRAS: ", err)
+		}
+
+		err = selectInternalSpeakerWithFixedVolume(ctx, cras)
+		if err != nil {
+			s.Fatal("Failed to select internal speaker: ", err)
+		}
+	}
 
 	// Open a window with about:blank tab on the target browser.
 	conn, err := cr.NewConn(ctx, "about:blank")
@@ -368,4 +384,22 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	if err := testexec.CommandContext(ctx, "rm", "-f", filePathOnRAM).Run(); err != nil {
 		s.Fatalf("Can't delete %s : %v", filePathOnRAM, err)
 	}
+}
+
+func selectInternalSpeakerWithFixedVolume(ctx context.Context, cras *audio.Cras) error {
+	const FixedVolume = 30
+
+	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+		return errors.Wrap(err, "failed to set internal speaker active")
+	}
+
+	node, err := cras.SelectedOutputNode(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get active node")
+	}
+
+	if err := cras.SetOutputNodeVolume(ctx, *node, FixedVolume); err != nil {
+		return errors.Wrap(err, "failed to set volume")
+	}
+	return nil
 }

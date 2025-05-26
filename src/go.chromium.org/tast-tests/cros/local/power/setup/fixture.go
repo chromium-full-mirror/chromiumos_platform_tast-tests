@@ -151,6 +151,15 @@ var keepPowerdVar = testing.RegisterVarString(
 	"keep_powerd decides whether to keep powerd running during the test",
 )
 
+// When true, the PowerTestOptions will be overridden with
+// powerTestOptions.Audio = DoNotChangeAudio.
+// Usage: tast run -var=setup.keep_audio=true <dut> <tests>
+var keepAudioVar = testing.RegisterVarString(
+	"setup.keep_audio",
+	"false",
+	"keep_audio decides whether to keep audio unchanged when setting up the test",
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:         PowerNoUINoWiFi,
@@ -1068,6 +1077,7 @@ type PowerUIFixtureData struct {
 	Cr        *chrome.Chrome
 	ARC       *arc.ARC
 	Fdms      *fakedms.FakeDMS
+	WithAudio bool
 }
 
 // Chrome returns Chrome. This adds support for chrome.HasChrome interface.
@@ -1104,6 +1114,11 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		chrome.DisableFeatures("ArcExternalStorageAccess"),
 	}
 	opts = append(opts, f.powerFixtureOption.BrowserExtraOpts...)
+	if keepAudioVar.Value() == "true" {
+		// Prevent interference of audio preferences.
+		// See go/tast-fakecrasaudioclient.
+		opts = append(opts, chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"))
+	}
 
 	if f.powerFixtureOption.EnableGAIALogin {
 		gaiaLoginOpt, err := gaiaLoginOption(ctx)
@@ -1193,6 +1208,10 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if keepPowerd == "true" {
 		powerTestOptions.Powerd = DoNotChangePowerd
 	}
+	if keepAudioVar.Value() == "true" {
+		powerTestOptions.Audio = DoNotChangeAudio
+	}
+	withAudio := powerTestOptions.Audio == DoNotChangeAudio
 
 	// Set up the testing environment.
 	cleanup, discharge, err := PowerTestSetup(ctx, "powerUIFixture", tconn, powerTestOptions)
@@ -1213,7 +1232,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	fdms, _ := s.ParentValue().(*fakedms.FakeDMS)
 	f.fdms = fdms
 
-	return PowerUIFixtureData{Discharge: discharge, Cr: f.cr, ARC: f.arc, Fdms: f.fdms}
+	return PowerUIFixtureData{Discharge: discharge, Cr: f.cr, ARC: f.arc, Fdms: f.fdms, WithAudio: withAudio}
 }
 
 func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
