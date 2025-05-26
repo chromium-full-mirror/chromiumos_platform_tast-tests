@@ -123,7 +123,7 @@ func init() {
 		Impl:            &bootModeImpl{value: &Value{}},
 		Vars:            []string{"servo", "dutHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
+		PreTestTimeout:  30 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
