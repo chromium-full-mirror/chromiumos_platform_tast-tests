@@ -390,20 +390,21 @@ func DeleteCACertNewUI(ctx context.Context, ui *uiauto.Context, conn *chrome.Con
 
 	deleteNamePrefix := "Delete certificate " + userCaCertName
 	deleteButton := nodewith.NameStartingWith(deleteNamePrefix)
-	popupDialogPrefix := nodewith.NameStartingWith("Delete ")
 	dialogMessage := nodewith.NameStartingWith("If you delete a server")
-	if err := uiauto.Combine("delete CA cert",
+	deletePopupDialog := nodewith.NameStartingWith("Delete ").Role(role.Dialog)
+	if err := uiauto.Combine("delete CA cert dialog start",
 		ui.WaitUntilExists(deleteButton.Role(role.Button)),
 		ui.DoDefault(deleteButton.Role(role.Button)),
-		ui.WaitUntilExists(popupDialogPrefix.Role(role.Dialog)),
+		ui.WaitUntilExists(deletePopupDialog),
 		ui.WaitUntilExists(dialogMessage.Role(role.StaticText)),
-		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
-		ui.WaitUntilGone(popupDialogPrefix.Role(role.Dialog)),
+		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button).Ancestor(deletePopupDialog)),
+		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button).Ancestor(deletePopupDialog)),
+		ui.DoDefault(nodewith.Name("OK").Role(role.Button).Ancestor(deletePopupDialog)),
+		ui.WaitUntilGone(deletePopupDialog),
 	)(ctx); err != nil {
 		return errors.Wrap(err, failedToDeleteCertErr)
 	}
+
 	return nil
 }
 
