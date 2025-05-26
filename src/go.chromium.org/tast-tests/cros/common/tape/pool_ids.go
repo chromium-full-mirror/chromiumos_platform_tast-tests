@@ -41,10 +41,11 @@ const (
 
 // PoolIds for DMA owned test accounts.
 const (
-	DmaDefaultManaged                 = "dma_default_managed"
-	DmaBuiltInCertProvisioningTesting = "dma_built_in_cert_provisioning_testing"
-	DmaDeviceTrustDisabled            = "dma_device_trust_disabled"
-	DmaDeviceTrustEnabled             = "dma_device_trust_enabled"
+	DmaDefaultManaged                    = "dma_default_managed"
+	DmaBuiltInCertProvisioningTesting    = "dma_built_in_cert_provisioning_testing"
+	DmaBuiltInCertProvisioningAPITesting = "dma_built_in_cert_provisioning_api_testing"
+	DmaDeviceTrustDisabled               = "dma_device_trust_disabled"
+	DmaDeviceTrustEnabled                = "dma_device_trust_enabled"
 )
 
 // PoolIds for unmanaged owned test accounts.

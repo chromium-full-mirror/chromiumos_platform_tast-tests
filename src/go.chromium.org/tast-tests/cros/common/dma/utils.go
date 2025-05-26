@@ -139,10 +139,11 @@ func pools() (map[string]string, map[string]string) {
 // tapePools returns pool->pool mapping from  non-dma account pools to dma account pools.
 func tapePools() map[string]string {
 	return map[string]string{
-		tape.DefaultManaged:                 tape.DmaDefaultManaged,
-		tape.BuiltInCertProvisioningTesting: tape.DmaBuiltInCertProvisioningTesting,
-		tape.DeviceTrustDisabled:            tape.DmaDeviceTrustDisabled,
-		tape.DeviceTrustEnabled:             tape.DmaDeviceTrustEnabled,
+		tape.DefaultManaged:                    tape.DmaDefaultManaged,
+		tape.BuiltInCertProvisioningTesting:    tape.DmaBuiltInCertProvisioningTesting,
+		tape.BuiltInCertProvisioningAPITesting: tape.DmaBuiltInCertProvisioningAPITesting,
+		tape.DeviceTrustDisabled:               tape.DmaDeviceTrustDisabled,
+		tape.DeviceTrustEnabled:                tape.DmaDeviceTrustEnabled,
 	}
 }
 
