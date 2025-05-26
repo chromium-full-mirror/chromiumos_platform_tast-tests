@@ -166,6 +166,7 @@ func (ms *Ms365) StaySignedIn() uiauto.Action {
 
 	return uiauto.Combine("MS Stay Signed In",
 		ms.ui.WaitUntilExists(msStaySignedInButton),
+		ms.ui.ScrollToVisible(msStaySignedInButton),
 		ms.ui.LeftClickUntil(msStaySignedInButton, ms.ui.Gone(msStaySignedInButton)),
 	)
 }
