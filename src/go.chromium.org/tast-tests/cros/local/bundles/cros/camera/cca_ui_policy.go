@@ -148,8 +148,8 @@ func testCameraAppWork(ctx context.Context, cr *chrome.Chrome, outDir string) er
 	return app.Close(ctx)
 }
 
-// testCameraAppBlocked tests whether the camera app is blocked and a message
-// box "Camera is blocked" will show when launching CCA through the launcher.
+// testCameraAppBlocked tests whether the camera app is correctly blocked by policy,
+// preventing its launch via the launcher.
 func testCameraAppBlocked(ctx context.Context, cr *chrome.Chrome, outDir string) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -169,23 +169,8 @@ func testCameraAppBlocked(ctx context.Context, cr *chrome.Chrome, outDir string)
 	}
 	defer kb.Close(cleanupCtx)
 
-	if err := launcher.SearchAndLaunch(tconn, kb, apps.Camera.Name)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find camera app in the launcher")
-	}
-
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	blockedWindowFinder := nodewith.Name("Camera is blocked").First()
-
-	if err = ui.WaitUntilExists(blockedWindowFinder)(ctx); err != nil {
-		return errors.Wrap(err, "failed to check and close blocked window")
-	}
-
-	if err = kb.Accel(ctx, "Enter"); err != nil {
-		return errors.Wrap(err, "failed to press Enter to close camera warning dialog")
-	}
-
-	if err = ui.WaitUntilGone(blockedWindowFinder)(ctx); err != nil {
-		return errors.Wrap(err, "failed to close camera warning dialog. This might potentially effect later tests")
+	if err := verifyCCANotInLauncher(ctx, tconn, kb); err != nil {
+		return errors.Wrap(err, "CCA was found in launcher or an error occurred during verification")
 	}
 
 	return nil
@@ -252,6 +237,27 @@ func testVideoCaptureShowPrompt(ctx context.Context, cr *chrome.Chrome, outDir, 
 		if err := ui.EnsureGoneFor(allowButton, 10*time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to make sure no video capture prompt dialog shows")
 		}
+	}
+	return nil
+}
+
+// verifyCCANotInLauncher checks if CCA is not found in the launcher.
+// Return error when CCA is found or an error occurred during searching.
+func verifyCCANotInLauncher(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+	ui := uiauto.New(tconn)
+
+	if err := launcher.Open(tconn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open launcher")
+	}
+
+	if err := launcher.Search(tconn, kb, apps.Camera.Name)(ctx); err != nil {
+		return errors.Wrap(err, "failed to use launcher search bar to search CCA")
+	}
+
+	cameraAppResult := launcher.CreateAppSearchFinder(ctx, tconn, apps.Camera.Name)
+
+	if err := ui.EnsureGoneFor(cameraAppResult, 3*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "CCA was unexpectedly found in launcher while it should be blocked")
 	}
 	return nil
 }
