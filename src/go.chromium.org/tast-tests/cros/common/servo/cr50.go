@@ -21,10 +21,15 @@ const (
 	GSCECReset      StringControl = "gsc_ec_reset"
 	GSCECResetPulse StringControl = "gsc_ecrst_pulse"
 	GSCTestlab      StringControl = "gsc_testlab"
+	GSCResetCount   StringControl = "gsc_reset_count"
 	GSCUARTCmd      StringControl = "gsc_uart_cmd"
 	GSCUARTRegexp   StringControl = "gsc_uart_regexp"
 	GSCUARTStream   StringControl = "gsc_uart_stream"
 	GSCVersion      StringControl = "gsc_version"
+	// Add the ccd_gsc prefix to the watchdog connected control, so it works
+	// on single and dual_v4 setups.
+	WatchdogCCDConnected    StringControl = "ccd_gsc.watchdog_ccd_connected"
+	WatchdogCCDConnectedYes string        = "yes"
 )
 
 // These controls accept only "on" and "off" as values.
@@ -476,4 +481,142 @@ func (s *Servo) GSCHasFeature(ctx context.Context, feature GSCFeature) (bool, er
 	gscFeatures[feature.Desc] = hasFeature
 	testing.ContextLogf(ctx, "GSC feature: %s: %t", feature.Desc, hasFeature)
 	return hasFeature, nil
+}
+
+// canCheckCCDConnected returns True if the device has the watchdog_ccd_connected control
+func (s *Servo) canCheckCCDConnected(ctx context.Context) bool {
+	hasControl, err := s.HasControl(ctx, string(WatchdogCCDConnected))
+	if err != nil {
+		testing.ContextLogf(ctx, "Unable to check for %s. Returning false", WatchdogCCDConnected)
+		return false
+	}
+	return hasControl
+}
+
+// CCDConnected returns true if CCD is connected.
+func (s *Servo) CCDConnected(ctx context.Context) (bool, error) {
+	connected, err := s.GetString(ctx, WatchdogCCDConnected)
+	if err != nil {
+		return false, err
+	}
+	return connected == WatchdogCCDConnectedYes, nil
+}
+
+// WaitForCCDState wait until CCD is connected or disconnected.
+func (s *Servo) WaitForCCDState(ctx context.Context, connected bool, timeout time.Duration) error {
+	var expectedState string
+	if connected {
+		expectedState = "connect"
+	} else {
+		expectedState = "disconnect"
+	}
+	testing.ContextLogf(ctx, "Wait %.2fs for CCD %s", timeout.Seconds(), expectedState)
+
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: timeout}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		isConnected, err := s.CCDConnected(ctx)
+		if err != nil {
+			return err
+		}
+		testing.ContextLogf(ctx, "CCD connected: %t", isConnected)
+		if isConnected == connected {
+			return nil
+		}
+		return errors.Errorf("CCD did not %s", expectedState)
+	}, &pOpts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// WaitForCCDConnect wait until CCD connected.
+func (s *Servo) WaitForCCDConnect(ctx context.Context, timeout time.Duration) error {
+	return s.WaitForCCDState(ctx, true, timeout)
+}
+
+// WaitForCCDDisconnect wait until CCD disconnected.
+func (s *Servo) WaitForCCDDisconnect(ctx context.Context, timeout time.Duration) error {
+	return s.WaitForCCDState(ctx, false, timeout)
+}
+
+// WaitForCCDDisconnectAndReconnect wait for CCD to disconnect and reconnect.
+func (s *Servo) WaitForCCDDisconnectAndReconnect(ctx context.Context, timeout time.Duration) error {
+	start := time.Now()
+	if err := s.WaitForCCDDisconnect(ctx, timeout); err != nil {
+		return err
+	}
+	now := time.Now()
+	elapsedTime := now.Sub(start)
+	secondTimeout := 3 * time.Second
+	if elapsedTime+secondTimeout > timeout {
+		testing.ContextLog(ctx, "took a long time to detect CCD disconnect")
+		testing.ContextLog(ctx, "Increasing the overall timeout")
+	} else {
+		secondTimeout = timeout - elapsedTime
+	}
+	if err := s.WaitForCCDConnect(ctx, secondTimeout); err != nil {
+		return err
+	}
+	return nil
+}
+
+// gscIsResponsive returns true if the GSC console is responsive
+func (s *Servo) gscIsResponsive(ctx context.Context) bool {
+	if !s.HasGSC(ctx) {
+		return false
+	}
+	testing.ContextLog(ctx, "Sending an GSC command to check if GSC is responsive")
+	version, err := s.GetString(ctx, GSCVersion)
+	if err != nil {
+		return false
+	}
+	// All valid GSC version strings contain 50
+	if strings.Contains(version, "50") {
+		testing.ContextLog(ctx, "GSC is active ")
+		return true
+	}
+	testing.ContextLog(ctx, "GSC is not active")
+	return false
+}
+
+// WaitForGSCStartup wait for the GSC startup message
+func (s *Servo) WaitForGSCStartup(ctx context.Context, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: timeout}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := s.RunGSCCommandGetOutput(ctx, "\n\n", []string{`.*(ti50_common|Console is enabled)`})
+		if err != nil {
+			// If servod didn't detect the startup message, check the reset
+			// count to see if GSC reset.
+			resetCount, resetCountErr := s.GetString(ctx, GSCResetCount)
+			if resetCountErr == nil && resetCount == "1" {
+				testing.ContextLog(ctx, "GSC reset")
+				return nil
+			}
+			return err
+		}
+		testing.ContextLog(ctx, "detected GSC console startup message")
+		return nil
+	}, &pOpts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// WaitForGSCReset waits until the GSC resets. Wait for CCD to come back up if applicable.
+func (s *Servo) WaitForGSCReset(ctx context.Context, timeout time.Duration) error {
+	testing.ContextLogf(ctx, "Wait %.2fs for GSC Reset", timeout.Seconds())
+	if s.canCheckCCDConnected(ctx) {
+		return s.WaitForCCDDisconnectAndReconnect(ctx, timeout)
+	}
+
+	// It's possible GSC reset before this was called. That's fine. Log the error
+	if err := s.WaitForGSCStartup(ctx, timeout); err != nil {
+		return errors.Errorf("did not detect reset on the GSC console: %s", err)
+	}
+	if !s.gscIsResponsive(ctx) {
+		return errors.New("GSC is unresponsive after reset")
+	}
+	return nil
 }
