@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Runs a webrtc playback-only connection to get performance numbers",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
-			"chromeos-gfx@google.com",
+			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
