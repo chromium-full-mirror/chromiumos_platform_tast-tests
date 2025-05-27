@@ -92,3 +92,12 @@ func DeleteDocsOrSlidesContent(ctx context.Context, tconn *chrome.TestConn, appT
 	}
 	return nil
 }
+
+// clickGotItIfExists clicks "Got it" button if it exists.
+func clickGotItIfExists(ui *uiauto.Context) action.Action {
+	gotIt := nodewith.Name("Got it").First()
+	return ui.RetryUntil(
+		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(gotIt),
+	)
+}

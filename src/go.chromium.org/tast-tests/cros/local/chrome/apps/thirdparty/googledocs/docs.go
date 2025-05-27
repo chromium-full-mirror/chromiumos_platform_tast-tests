@@ -233,6 +233,7 @@ func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) acti
 		ui.WaitUntilExists(modeAndViewToolBar),
 	)
 	return uiauto.Combine("show the doc menus",
+		clickGotItIfExists(ui),
 		uiauto.IfFailThen(ui.Exists(DocsWebArea),
 			ui.DoDefaultUntil(DocsWindow,
 				ui.WithTimeout(5*time.Second).WaitUntilExists(DocsWebArea),

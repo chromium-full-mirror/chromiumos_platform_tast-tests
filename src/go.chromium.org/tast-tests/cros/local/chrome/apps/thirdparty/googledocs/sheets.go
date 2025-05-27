@@ -122,26 +122,32 @@ func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 // ClickOnSheetsWebArea clicks on sheets's web area.
 func ClickOnSheetsWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	return ui.LeftClick(SheetsWebArea)
+	return uiauto.Combine("click on sheet web area",
+		clickGotItIfExists(ui),
+		ui.LeftClick(SheetsWebArea),
+	)
 }
 
 // ClickOnSheetsCanvas clicks on sheets's canvas to focus on the sheet cell.
 func ClickOnSheetsCanvas(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	sheetsCanvas := nodewith.Role(role.Canvas).Ancestor(SheetsWebArea)
-	return ui.LeftClick(sheetsCanvas)
+	return uiauto.Combine("click on sheet canvas",
+		clickGotItIfExists(ui),
+		ui.LeftClick(sheetsCanvas),
+	)
 }
 
 // ShowTheSheetMenus shows the hidden Sheet menu.
 func ShowTheSheetMenus(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("show the sheet menus",
+		clickGotItIfExists(ui),
 		uiauto.IfFailThen(ui.Exists(SheetsWebArea),
 			ui.DoDefaultUntil(SheetsWindow,
 				ui.WithTimeout(5*time.Second).WaitUntilExists(SheetsWebArea),
 			),
 		),
-		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
 		showTheMenus(ui),
 	)
 }

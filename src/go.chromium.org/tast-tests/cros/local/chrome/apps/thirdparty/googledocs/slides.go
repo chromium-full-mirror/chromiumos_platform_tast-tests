@@ -34,7 +34,6 @@ var (
 	// SlidesWebArea represents the web area of the Google Slides.
 	SlidesWebArea = nodewith.NameContaining(slidesName).Role(role.RootWebArea).First()
 	navigation    = nodewith.Role(role.Navigation).Ancestor(SlidesWebArea)
-	gotIt         = nodewith.Name("Got it").First()
 )
 
 // NewGoogleSlides returns an action that creates a new google slides from web.
@@ -52,7 +51,7 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("confirm to enter Google Slides",
 		ui.WithTimeout(longUITimeout).WaitUntilExists(navigation),
-		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
+		clickGotItIfExists(ui),
 	)(ctx)
 }
 
@@ -194,12 +193,12 @@ func waitForSlideSaved(tconn *chrome.TestConn) action.Action {
 func ShowTheSlideMenus(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("show the slide menus",
+		clickGotItIfExists(ui),
 		uiauto.IfFailThen(ui.Exists(SlidesWebArea),
 			ui.DoDefaultUntil(SlidesWindow,
 				ui.WithTimeout(5*time.Second).WaitUntilExists(SlidesWebArea),
 			),
 		),
-		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
 		showTheMenus(ui),
 	)
 }
@@ -216,5 +215,8 @@ func ActivateTitleField(tconn *chrome.TestConn) action.Action {
 // ClickOnSlidesWebArea clicks on slide's web area.
 func ClickOnSlidesWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	return ui.LeftClick(SlidesWebArea)
+	return uiauto.Combine("click on slide web area",
+		clickGotItIfExists(ui),
+		ui.LeftClick(SlidesWebArea),
+	)
 }
