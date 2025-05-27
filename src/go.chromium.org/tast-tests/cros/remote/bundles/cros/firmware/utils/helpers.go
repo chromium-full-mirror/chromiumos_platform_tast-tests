@@ -296,7 +296,7 @@ func WaitForDUTReboot(ctx context.Context, h *firmware.Helper, bootID string) er
 	connectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancel()
 	if err := h.WaitConnect(connectCtx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
+		return errors.Wrap(err, "failed to WaitConnect")
 	}
 	newBootID, err := h.Reporter.BootID(ctx)
 	if err != nil {

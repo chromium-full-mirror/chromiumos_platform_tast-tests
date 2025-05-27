@@ -104,7 +104,7 @@ func CorruptFWSectionTest(ctx context.Context, backupManager *fixture.FirmwareBa
 			return errors.Wrap(err, "failed to reset after restoring firmware")
 		}
 		if err := h.WaitConnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect to DUT")
+			return errors.Wrap(err, "failed to WaitConnect after reset")
 		}
 		shouldRestoreFirmware = false
 		return nil
@@ -171,7 +171,7 @@ func CorruptFWSectionTest(ctx context.Context, backupManager *fixture.FirmwareBa
 		return errors.Wrap(err, "DUT is unexpectedly up, corruption failed")
 	}
 	if err := restoreFirmware(ctx); err != nil {
-		return err
+		return errors.Wrap(err, "restoreFirmware failed")
 	}
 
 	testing.ContextLog(ctx, "Checking eventlog for evidence of broken screen")

@@ -1131,7 +1131,7 @@ func (h *Helper) GetCCDLevel(ctx context.Context) (string, error) {
 	if ccdLevel == "" {
 		if !h.DUT.Connected(ctx) {
 			if err := h.DUT.Connect(ctx); err != nil {
-				return "", errors.Wrap(err, "failed to connect to DUT")
+				return "", errors.Wrap(err, "failed to connect before gsctool")
 			}
 		}
 		out, err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-I").Output(ssh.DumpLogOnError)

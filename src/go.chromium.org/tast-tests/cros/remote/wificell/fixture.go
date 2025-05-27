@@ -338,7 +338,7 @@ func (f *tastFixtureImpl) recoverUnhealthyDUT(ctx context.Context, d *dut.DUT, s
 		testing.ContextLog(ctx, "DUT found to not be connected before health check; reconnecting to DUT")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := d.WaitConnect(ctx); err != nil {
-				return errors.Wrap(err, "failed to connect to DUT")
+				return errors.Wrap(err, "failed to WaitConnect before health check")
 			}
 			return nil
 		}, &testing.PollOptions{
