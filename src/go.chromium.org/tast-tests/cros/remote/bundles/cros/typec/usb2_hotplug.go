@@ -20,7 +20,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Usb2HidHotplug,
+		Func:     Usb2Hotplug,
 		Desc:     "Check that a USB 2 device enumerates successfully on hotplug",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
@@ -55,7 +55,7 @@ func init() {
 //	Host -------- DUT ----- MCCI (`portUsed`) ---- USB device (can be connected via dock or adapter).
 //	|                              |
 //	|______________________________|
-func Usb2HidHotplug(ctx context.Context, s *testing.State) {
+func Usb2Hotplug(ctx context.Context, s *testing.State) {
 
 	numIterations := s.Param().(int)
 	d := s.DUT()
