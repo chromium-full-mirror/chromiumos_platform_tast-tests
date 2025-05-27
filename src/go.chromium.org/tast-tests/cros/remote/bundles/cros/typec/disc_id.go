@@ -71,6 +71,7 @@ var hpG4DiscIDParams = discIDParams{
 	partnerModes: []modeParams{
 		{svid: "ff01", vdo: "0x001c0045"},
 		{svid: "8087", vdo: "0x04000001"},
+		{svid: "03f0", vdo: "0x60000000"},
 	},
 	cableIdentity: identityParams{
 		certStat:        "0x00000000",
