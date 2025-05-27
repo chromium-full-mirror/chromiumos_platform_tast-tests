@@ -126,7 +126,11 @@ func collectLogCat(ctx context.Context, outDir string, startTime time.Time) erro
 // ExtractFileName extracts source file name from Entry.
 // If there are multiple file names, it extracts the last one.
 func ExtractFileName(entry Entry) string {
-	r := regexp.MustCompile(`^.*!?\[(?P<filename>\S+)\([-]?\d+\)\].*$`)
+	// Match old and new formats of filename in the log
+	// old format: [file.cc(123)]
+	// new format: [../relative/path/to/file.cc:123]
+	// filename will match just file.cc for both cases
+	r := regexp.MustCompile(`^.*!?\[(?:.*/)?(?P<filename>[^/\]]+?)[(:]\d+\)\].*$`)
 	m := r.FindStringSubmatch(entry.Content)
 	if len(m) < 2 {
 		return ""
