@@ -393,30 +393,25 @@ func Usb3GetExternalStorageList(ctx context.Context, cl usb.SysfsServiceClient) 
 	return externalStorageList, nil
 }
 
-// Usb2GetHidDeviceList returns a list of currently connected external USB HID devices. The returned
+// Usb2GetDeviceList returns a list of currently connected external USB 2.0 devices. The returned
 // value is an array of strings containing each devices address (example: "3-2.1.3").
-func Usb2GetHidDeviceList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
-	var hidDeviceList []string
+func Usb2GetDeviceList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
+	var deviceList []string
 
 	deviceMap, err := cl.GetDevices(ctx, &empty.Empty{})
 	if err != nil {
-		return hidDeviceList, errors.Wrap(err, "unable to get USB device map")
+		return deviceList, errors.Wrap(err, "unable to get USB device map")
 	}
 
 	for addr, device := range deviceMap.Devices {
 		if device.Removable == usb.RemovableAttribute_REMOVABLE_ATTRIBUTE_FIXED || device.Speed > 480 {
 			continue
 		}
+		deviceList = append(deviceList, addr)
 
-		for _, interf := range device.Interfaces {
-			if interf.InterfaceClass == ClassHid {
-				hidDeviceList = append(hidDeviceList, addr)
-				break
-			}
-		}
 	}
 
-	return hidDeviceList, nil
+	return deviceList, nil
 }
 
 // CheckPowerRole verifies that the power role on a specified port is the expected one.

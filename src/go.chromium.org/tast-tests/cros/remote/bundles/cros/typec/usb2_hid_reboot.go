@@ -6,14 +6,14 @@ package typec
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,15 +21,15 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Usb2HidReboot,
-		Desc:     "Check that a USB HID device enumerates successfully when rebooting",
+		Desc:     "Check that a USB 2 device enumerates successfully when rebooting",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_usb_bringup"},
+			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
 			Val:       5,
 			Timeout:   12 * time.Minute,
 		}, {
@@ -40,19 +40,19 @@ func init() {
 	})
 }
 
-// Usb2HidReboot does the following:
+// Usb2Reboot does the following:
 //
-// - Toggle USB HID device connectivity via the MCCI switch.
-// - Count the number of currently connected USB HID devices.
+// - Toggle USB device connectivity via the MCCI switch.
+// - Count the number of currently connected USB devices.
 // - Reboot the DUT.
-// - Check that there is the same number of USB HID devices as there were before rebooting.
+// - Check that there is the same number of USB devices as there were before rebooting.
 //
 // This test expects the following hardware topology:
 //
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB HID (can be connected via dock or adapter).
+//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB device (can be connected via dock or adapter).
 //	|                              |
 //	|______________________________|
 func Usb2HidReboot(ctx context.Context, s *testing.State) {
@@ -62,17 +62,20 @@ func Usb2HidReboot(ctx context.Context, s *testing.State) {
 
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
 
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
+	sw, err := typecswitch.GetSwitch(ctx, s)
 	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
+		s.Fatal("Failed to get switch handle: ", err)
 	}
-	defer sw.Close(ctx)
+	defer sw.Close(cleanupCtx)
+
+	if err = sw.EnterUsb2Mode(ctx); err != nil {
+		s.Fatal("Failed to enter USB2 mode: ", err)
+	}
+	defer sw.EnterUsb3Mode(cleanupCtx)
 
 	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
@@ -82,21 +85,25 @@ func Usb2HidReboot(ctx context.Context, s *testing.State) {
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Make sure the device is disconnected before testing
-	if port, err := sw.TestPort(ctx); err != nil {
+	testPort, err := sw.TestPort(ctx)
+	if err != nil {
+		s.Fatal("Could not get active port before testing: ", err)
+	}
+	if devicePort, err := sw.DevicePort(ctx); err != nil {
 		s.Fatal("Could not get used port before testing: ", err)
-	} else if port == portUsed {
-		hidDevicesWhenOn, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+	} else if devicePort == testPort {
+		devicesWhenOn, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 		if err != nil {
-			s.Fatal("Could not get HID device list before testing: ", err)
+			s.Fatal("Could not get USB2 device list before testing: ", err)
 		}
 		if err := sw.DisablePorts(ctx); err != nil {
 			s.Fatal("Could not disable the port before testing: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if hidDevices, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient); err != nil {
-				return errors.Wrap(err, "could not get HID device list before testing")
-			} else if len(hidDevices) >= len(hidDevicesWhenOn) {
-				return errors.New("failed to disconnect new USB HID device")
+			if devices, err := typecutils.Usb2GetDeviceList(ctx, usbClient); err != nil {
+				return errors.Wrap(err, "could not get USB2 device list before testing")
+			} else if len(devices) >= len(devicesWhenOn) {
+				return errors.New("failed to disconnect new USB2 device")
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
@@ -111,14 +118,14 @@ func Usb2HidReboot(ctx context.Context, s *testing.State) {
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
-		if err := performUsb2HidRebootIteration(ctx, s, d, sw); err != nil {
+		if err := performUsb2RebootIteration(ctx, s, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)
 		}
 	}
 }
 
-// performUsb2HidRebootIteration runs 1 iteration of the USB 2.0 HID reboot test.
-func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw *mcci.Switch) error {
+// performUsb2RebootIteration runs 1 iteration of the USB 2.0 reboot test.
+func performUsb2RebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw typecswitch.Switch) error {
 
 	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
@@ -129,9 +136,9 @@ func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get the device count when switch is off
-	hidDevicesWhenOff, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+	devicesWhenOff, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 	if err != nil {
-		return errors.Wrap(err, "could not get HID device list before hotplug")
+		return errors.Wrap(err, "could not get USB2 device list before hotplug")
 	}
 
 	// Enable the switch.
@@ -141,22 +148,22 @@ func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut
 
 	// Get the device count when switch is on
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		hidDevices, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+		devices, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 		if err != nil {
-			return errors.Wrap(err, "could not get HID device list after hotplug")
+			return errors.Wrap(err, "could not get USB2 device list after hotplug")
 		}
 
-		if len(hidDevicesWhenOff) >= len(hidDevices) {
-			return errors.New("failed to enumerate new USB HID device")
+		if len(devicesWhenOff) >= len(devices) {
+			return errors.New("failed to enumerate new USB device")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
 		return err
 	}
 
-	hidDevicesBeforeReboot, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+	devicesBeforeReboot, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 	if err != nil {
-		return errors.Wrap(err, "could not get HID device list before reboot")
+		return errors.Wrap(err, "could not get USB2 device list before reboot")
 	}
 
 	// Reboot the DUT.
@@ -177,12 +184,12 @@ func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut
 	usbClient = usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get device count after rebooting.
-	hidDevicesAfterReboot, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+	devicesAfterReboot, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 	if err != nil {
-		return errors.Wrap(err, "could not get external HID device list after reboot")
+		return errors.Wrap(err, "could not get external USB2 device list after reboot")
 	}
-	if len(hidDevicesAfterReboot) < len(hidDevicesBeforeReboot) {
-		return errors.New("external HID device failed to enumerate after reboot")
+	if len(devicesAfterReboot) < len(devicesBeforeReboot) {
+		return errors.New("external USB2 device failed to enumerate after reboot")
 	}
 
 	// Disable the switch.
@@ -192,12 +199,12 @@ func performUsb2HidRebootIteration(ctx context.Context, s *testing.State, d *dut
 
 	// Check for device disconnection
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		hidDevices, err := typecutils.Usb2GetHidDeviceList(ctx, usbClient)
+		devices, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
 		if err != nil {
-			return errors.Wrap(err, "could not get HID device list after disconnection")
+			return errors.Wrap(err, "could not get USB2 device list after disconnection")
 		}
-		if len(hidDevices) != len(hidDevicesWhenOff) {
-			return errors.New("failed to disconnect USB HID device")
+		if len(devices) != len(devicesWhenOff) {
+			return errors.New("failed to disconnect USB2 device")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {

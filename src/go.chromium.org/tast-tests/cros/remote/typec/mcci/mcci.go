@@ -105,6 +105,21 @@ func (sw Switch) GetType() string {
 	return "MCCI"
 }
 
+// EnterUsb2Mode does nothing for MCCI, appropriate device should be connected to MCCI.
+func (sw Switch) EnterUsb2Mode(_ context.Context) error {
+	return nil
+}
+
+// EnterUsb3Mode does nothing for MCCI, appropriate device should be connected to MCCI.
+func (sw Switch) EnterUsb3Mode(_ context.Context) error {
+	return nil
+}
+
+// EnterDpMode does nothing for MCCI, appropriate device should be connected to MCCI.
+func (sw Switch) EnterDpMode(_ context.Context) error {
+	return nil
+}
+
 // checkPort is a helper function that checks if the MCCI switch (represented by its serial port `port` matches the supplied serial number.
 func checkPort(port serial.Port, serialNum string) bool {
 	if err := writeSerial("sn\r", port); err != nil {

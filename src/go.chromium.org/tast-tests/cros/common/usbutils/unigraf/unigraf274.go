@@ -461,3 +461,19 @@ func (s *UsbTester) DevicePort(_ context.Context) (int, error) {
 func (s *UsbTester) GetType() string {
 	return "UTC274"
 }
+
+// EnterUsb2Mode sets the USB channel to USB2.
+func (s *UsbTester) EnterUsb2Mode(ctx context.Context) error {
+	return s.SetUsbChannel(ctx, UsbChannelUSB2)
+}
+
+// EnterUsb3Mode sets the USB channel to USB3.
+func (s *UsbTester) EnterUsb3Mode(ctx context.Context) error {
+	return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
+}
+
+// EnterDpMode enabled DP on Unigraf.
+func (s *UsbTester) EnterDpMode(ctx context.Context) error {
+	// TODO(bszpila): Implement this.
+	return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
+}

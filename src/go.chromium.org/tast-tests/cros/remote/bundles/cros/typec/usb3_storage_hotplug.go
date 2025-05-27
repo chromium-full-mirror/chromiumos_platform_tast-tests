@@ -73,6 +73,10 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(cleanupCtx)
 
+	if err = sw.EnterUsb3Mode(ctx); err != nil {
+		s.Fatal("Failed to enter USB3 mode: ", err)
+	}
+
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
 		s.Fatal("Unable to connect to the RPC service on the DUT: ", err)

@@ -75,8 +75,8 @@ func Usb3StorageSuspend(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(cleanupCtx)
 
-	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
-		s.Fatal("Failed to unmount removable media: ", err)
+	if err = sw.EnterUsb3Mode(ctx); err != nil {
+		s.Fatal("Failed to enter USB3 mode: ", err)
 	}
 
 	// Dial rpc
@@ -85,6 +85,10 @@ func Usb3StorageSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to connect to the RPC service on the DUT: ", err)
 	}
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
+
+	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
+		s.Fatal("Failed to unmount removable media: ", err)
+	}
 
 	// Make sure the device is disconnected before testing
 	testPort, err := sw.TestPort(ctx)
