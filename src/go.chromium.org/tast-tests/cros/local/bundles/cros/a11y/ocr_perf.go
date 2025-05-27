@@ -13,18 +13,23 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 const exec = "screen_ai_ocr_perf_test"
 const dlcID = "screen-ai"
 
-var images = []string{"no_text_3264x2448_20240320.jpg", "one_line_3264x2448_20240320.jpg", "full_of_text_3264x2448_20240320.jpg"}
+var images = []string{"no_text_3264x2448_20240320.jpg", "one_line_3264x2448_20240320.jpg", "full_of_text_3264x2448_20240320.jpg", "multi_script_850_460_20250527.jpg"}
+
+const imageZipFile = "batch_images_20250527.zip"
+const tmpPath = "/tmp"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -36,11 +41,11 @@ func init() {
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Data:         images,
+		Data:         append(images, imageZipFile),
 		// Some devices took 10 seconds to perform OCR on an image with full of
 		// text, and the test binary performs OCR for 8 times on an image. Set
-		// total timeout to 10 * 8 * 3 (images) = 240 seconds.
-		Timeout: 4 * time.Minute,
+		// total timeout to 10 * 8 * 14 (images) = 1120 seconds.
+		Timeout: 20 * time.Minute,
 	})
 }
 
@@ -70,6 +75,29 @@ func OCRPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to parse and set metrics: ", err)
 		}
 	}
+
+	// Batch images
+	imageFileLocation := filepath.Join(tmpPath, imageZipFile)
+	if err := fsutil.CopyFile(s.DataPath(imageZipFile), imageFileLocation); err != nil {
+		s.Fatal("Failed to copy the test image zip file to Downloads: ", err)
+	}
+	defer os.Remove(imageFileLocation)
+
+	imageFolderName := strings.Split(imageZipFile, ".")[0]
+	imageUnzipLocation := filepath.Join(tmpPath, imageFolderName)
+	if err := testexec.CommandContext(ctx, "unzip", imageFileLocation, "-d", imageUnzipLocation).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to unzip the images: ", err)
+	}
+	defer os.RemoveAll(imageUnzipLocation)
+
+	s.Log("Run performance test on batch images")
+	if err := runBatchOcrPerformanceTest(ctx, outputDir, reportPath, imageUnzipLocation, p); err != nil {
+		s.Fatal("Failed to run performance test on batch images: ", err)
+	}
+	if err := parseReportAndRecordMetrics(ctx, reportPath, imageFolderName, p); err != nil {
+		s.Fatal("Failed to parse and set metrics: ", err)
+	}
+
 	if err := p.Save(outputDir); err != nil {
 		s.Fatal("Failed to save perf data: ", err)
 	}
@@ -82,6 +110,26 @@ func runOcrPerformanceTest(ctx context.Context, outputDir, reportPath, imagePath
 		gtest.ExtraArgs(
 			"--output_path="+reportPath,
 			"--jpeg_image="+imagePath,
+		),
+	).Run(ctx)
+	if err != nil {
+		if report != nil {
+			for _, name := range report.FailedTestNames() {
+				testing.ContextLogf(ctx, "Failed test name: %s", name)
+			}
+		}
+		return errors.Wrap(err, "failed to run test binary")
+	}
+	return nil
+}
+
+func runBatchOcrPerformanceTest(ctx context.Context, outputDir, reportPath, imageFolder string, p *perf.Values) error {
+	report, err := gtest.New(
+		filepath.Join(chrome.BinTestDir, exec),
+		gtest.Logfile(filepath.Join(outputDir, exec+".log")),
+		gtest.ExtraArgs(
+			"--output_path="+reportPath,
+			"--image_folder="+imageFolder,
 		),
 	).Run(ctx)
 	if err != nil {
