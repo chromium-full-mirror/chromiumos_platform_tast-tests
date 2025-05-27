@@ -345,3 +345,135 @@ func (s *Servo) GetGscUSBSerialNumberDescriptor(ctx context.Context) (string, er
 
 	return "", errors.New("failed to get the correct regex match from `sysinfo` command output")
 }
+
+// GSCVersionInfoStruct stores the GSC version information
+type GSCVersionInfoStruct struct {
+	// Version is the Epoch.Major.Minor version string
+	Version string
+	// Minor is the running minor version
+	Minor int
+	// Major is the running major version
+	Major int
+	// Epoch is the running epoch version
+	Epoch int
+	// IsTi50 is true if the device is running Ti50 firmware
+	IsTi50 bool
+	// IsCr50 is true if the device is running Cr50 firmware
+	IsCr50 bool
+	// Str is the version string containing the fw name and git sha
+	Str string
+}
+
+// GSCVersionInfo returns the GSC version
+func (s *Servo) GSCVersionInfo(ctx context.Context) (GSCVersionInfoStruct, error) {
+	version := GSCVersionInfoStruct{}
+	output, err := s.RunGSCCommandGetOutput(ctx, "version",
+		[]string{`RW_[AB]: *\* *(\d+).(\d+).(\d+)/(\S+)[\r\n]`})
+	if err != nil {
+		return version, errors.Wrap(err, "failed to get version")
+	}
+	epoch, err := strconv.Atoi(output[0][1])
+	if err != nil {
+		return version, errors.Wrapf(err, "invalid epoch ver %s", output[0][1])
+	}
+
+	major, err := strconv.Atoi(output[0][2])
+	if err != nil {
+		return version, errors.Wrapf(err, "invalid major ver %s", output[0][2])
+	}
+
+	minor, err := strconv.Atoi(output[0][3])
+	if err != nil {
+		return version, errors.Wrapf(err, "invalid minor ver %s", output[0][3])
+	}
+
+	version.Minor = minor
+	version.Major = major
+	version.Epoch = epoch
+	version.Str = output[0][4]
+	version.Version = fmt.Sprintf("%d.%d.%d", version.Epoch, version.Major, version.Minor)
+	version.IsTi50 = strings.Contains(version.Str, "ti50")
+	version.IsCr50 = strings.Contains(version.Str, "cr50")
+	if version.IsTi50 == version.IsCr50 {
+		return GSCVersionInfoStruct{}, errors.Errorf("could not determine cr50 vs ti50: cr50 %t ti50 %t",
+			version.IsCr50, version.IsTi50)
+	}
+
+	return version, nil
+}
+
+// GSCFeature stores the information about when a GSC feature was added
+type GSCFeature struct {
+	// Desc is a short string describing the feature
+	Desc string
+	// Epoch is the epoch of the version the feature was added in
+	Epoch int
+	// Major is the major of the version the feature was added in. Use the
+	// prod major version.
+	Major int
+	// Minor is the minor of the version the feature was added in.
+	Minor int
+	// IsCr50 is true if the device is using cr50 firmware
+	IsCr50 bool
+	// IsTi50 is true if the device is using ti50 firmware
+	IsTi50 bool
+}
+
+// gscFeatures is used to cache GSC feature states
+var gscFeatures = make(map[string]bool)
+
+// standardizeMajorVersion converts the major version to a standard value
+func standardizeMajorVersion(major int) int {
+	// PrePVT and MP minor versions are equivalent. Convert a PrePVT major
+	// value to the equivalent MP value.
+	if major%2 == 0 {
+		major = major - 1
+	}
+	// GSC chips are released 10 versions apart.ex 33 on NT is the same as 23 on DT.
+	// Use major version mod 10 to standardize the major version across chips.
+	return major % 10
+}
+
+// HasGSC returns true if servod has GSC controls
+func (s *Servo) HasGSC(ctx context.Context) bool {
+	hasControl, err := s.HasControl(ctx, string(GSCVersion))
+	if err != nil {
+		return false
+	}
+	return hasControl
+}
+
+// GSCHasFeature checks if the running GSC image has the given GSC feature
+func (s *Servo) GSCHasFeature(ctx context.Context, feature GSCFeature) (bool, error) {
+	value, ok := gscFeatures[feature.Desc]
+	if ok {
+		return value, nil
+	}
+
+	// Return false if the setup doesn't have GSC.
+	if !s.HasGSC(ctx) {
+		testing.ContextLog(ctx, "GSCHasFeature: no GSC")
+		gscFeatures[feature.Desc] = false
+		return false, nil
+	}
+
+	version, err := s.GSCVersionInfo(ctx)
+	if err != nil {
+		return false, err
+	}
+	hasFeature := false
+	featureMajor := standardizeMajorVersion(feature.Major)
+	testing.ContextLogf(ctx, "converted feature major version %d to %d", feature.Major, featureMajor)
+	major := standardizeMajorVersion(version.Major)
+	testing.ContextLogf(ctx, "converted running major version %d to %d", version.Major, major)
+	versionOk := major > featureMajor || (major == featureMajor && version.Minor >= feature.Minor)
+
+	if feature.IsTi50 && version.IsTi50 {
+		hasFeature = versionOk
+	} else if feature.IsCr50 && version.IsCr50 {
+		hasFeature = versionOk
+	}
+	gscFeatures[feature.Desc] = hasFeature
+	testing.ContextLogf(ctx, "GSC feature: %s: %t", feature.Desc, hasFeature)
+	return hasFeature, nil
+}
