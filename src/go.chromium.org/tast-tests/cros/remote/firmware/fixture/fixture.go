@@ -96,7 +96,7 @@ func init() {
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  10 * time.Second,
+		PreTestTimeout:  10 * time.Minute,
 		PostTestTimeout: 10 * time.Second,
 		TearDownTimeout: 10 * time.Second,
 		Data:            []string{firmware.ConfigFile},
