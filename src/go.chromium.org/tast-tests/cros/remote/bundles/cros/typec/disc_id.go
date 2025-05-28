@@ -189,14 +189,19 @@ func performDiscIDIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Swit
 		return errors.Wrap(err, "port check failed")
 	}
 
-	// Check partner.
-	if err := checkPartner(ctx, d, params.partnerIdentity, params.partnerModes); err != nil {
-		return errors.Wrap(err, "partner check failed")
-	}
-
-	// Check cable.
-	if err := checkCable(ctx, d, params.cableIdentity, params.cableModes); err != nil {
-		return errors.Wrap(err, "cable check failed")
+	// Some fields need extra time to be filed
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Check partner.
+		if err := checkPartner(ctx, d, params.partnerIdentity, params.partnerModes); err != nil {
+			return errors.Wrap(err, "partner check failed")
+		}
+		// Check cable.
+		if err := checkCable(ctx, d, params.cableIdentity, params.cableModes); err != nil {
+			return errors.Wrap(err, "cable check failed")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 6 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		return err
 	}
 
 	// Disable the port.
