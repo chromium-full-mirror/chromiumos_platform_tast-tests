@@ -441,7 +441,7 @@ var GSCAPROVerificationWPReboot GSCFeature = GSCFeature{
 	Desc:   "reboot after WP enable",
 	Epoch:  0,
 	Major:  23,
-	Minor:  180,
+	Minor:  172,
 	IsTi50: true,
 	IsCr50: false,
 }
@@ -657,7 +657,7 @@ func (s *Servo) ClearExpectWPEventReboot() {
 
 // Ti50CheckPendingWPEvent after a WP change, check if there's a penging WP event
 // that will cause GSC to reset the next time the AP resets.
-func (s *Servo) Ti50CheckPendingWPEvent(ctx context.Context) error {
+func (s *Servo) Ti50CheckPendingWPEvent(ctx context.Context, value FWWPStateValue) error {
 	output, err := s.RunGSCCommandGetOutput(ctx, "ap_ro_verify", []string{`.*>`})
 	if err != nil {
 		return errors.Wrap(err, "failed to get ap_ro_verify output")
@@ -668,8 +668,19 @@ func (s *Servo) Ti50CheckPendingWPEvent(ctx context.Context) error {
 		s.ti50WPEventPendingReboot = match[1] == "Yes"
 		return nil
 	}
-	// If Ti50 doesn't have the expect reboot event output, it isn't going to reboot
-	// for WP events.
-	s.ti50WPEventPendingReboot = false
+	if hasFeature, err := s.GSCHasFeature(ctx, GSCAPROVerificationWPReboot); err != nil {
+		return errors.Wrap(err, "failed to check for feature")
+	} else if !hasFeature {
+		s.ti50WPEventPendingReboot = false
+		return nil
+	}
+	// If Ti50 doesn't print pending WP events in the ap_ro_verify output,
+	// manually track expected reboots
+	if s.ti50LastFWWPState == "" || !s.ti50WPEventPendingReboot {
+		if s.ti50LastFWWPState != value {
+			s.ti50WPEventPendingReboot = value == FWWPStateOn
+			s.ti50LastFWWPState = value
+		}
+	}
 	return nil
 }

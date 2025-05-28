@@ -33,6 +33,7 @@ type Servo struct {
 	hasC2D2                  bool
 	isDualV4                 bool
 	isPDTester               bool
+	ti50LastFWWPState        FWWPStateValue
 	ti50WPEventPendingReboot bool
 
 	// For PD tests, this caches the information about the PD port on the DUT.

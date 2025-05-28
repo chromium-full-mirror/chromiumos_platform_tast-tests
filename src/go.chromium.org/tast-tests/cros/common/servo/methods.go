@@ -1169,7 +1169,7 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
 		}
 
-		if err := s.Ti50CheckPendingWPEvent(ctx); err != nil {
+		if err := s.Ti50CheckPendingWPEvent(ctx, value); err != nil {
 			return errors.Wrap(err, "failed to check Ti50 WP event")
 		}
 	}
