@@ -6,6 +6,7 @@ package gscdevboard
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"regexp"
@@ -152,10 +153,10 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 
 	// Start out by sending some initial data on all three UARTS, to fill up the buffers.
 
-	var sendBlockNo = 0
-	var recvBlockNo = 0
+	var sendBlockNo uint32
+	var recvBlockNo uint32
 
-	for ; sendBlockNo < uartThroughputNumWarmupBlocks; sendBlockNo++ {
+	for ; sendBlockNo < uint32(uartThroughputNumWarmupBlocks); sendBlockNo++ {
 		// Transmit block on each UART.
 		for _, console := range consoles {
 			sendIteration(ctx, s, th, console.uart, console.magic, sendBlockNo)
@@ -188,7 +189,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	// followed by transmitting yet another block on each UART.  This way, we ensure that the
 	// amount of in-transit data is bounded.
 	start := time.Now()
-	for ; recvBlockNo < uartThroughputNumWarmupBlocks+uartThroughputNumMeasurementBlocks; recvBlockNo, sendBlockNo = recvBlockNo+1, sendBlockNo+1 {
+	for ; recvBlockNo < uint32(uartThroughputNumWarmupBlocks+uartThroughputNumMeasurementBlocks); recvBlockNo, sendBlockNo = recvBlockNo+1, sendBlockNo+1 {
 		// Read a block from each console USB endpoint.
 		for _, console := range consoles {
 			recvIteration(ctx, s, th, console.ccd, console.magic, recvBlockNo, console.name)
@@ -236,17 +237,15 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 }
 
 // recvIteration receives a block of data from one specific UART, verifying that it was as expected.
-func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration int, name ti50.UartName) {
+func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration uint32, name ti50.UartName) {
 	databuf, err := ccd.ReadSerialBytes(ctx, uartThroughputBlockSize)
 	th.MustSucceed(err, "Read error")
 
 	// All validation errors reported as "Fatal", in order to avoid thousands of lines of
 	// error messages, as all future data would fail validation in case of a dropped sequence.
-	if databuf[0] != byte(iteration) ||
-		databuf[1] != byte(iteration>>8) ||
-		databuf[2] != byte(iteration>>16) ||
-		databuf[3] != byte(iteration>>24) {
-		s.Fatalf("Incorrect sequence number for %q: %d != %v", name, iteration, databuf[0:4])
+	gotIter := binary.LittleEndian.Uint32(databuf[:4])
+	if gotIter != iteration {
+		s.Fatalf("Incorrect sequence number for %q: %d != %d", name, gotIter, iteration)
 	}
 	if databuf[4] != magic {
 		s.Fatalf("Incorrect magic for %q", name)
@@ -261,18 +260,14 @@ func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTesti
 }
 
 // sendIteration sends a block of data on one specific UART.
-func sendIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, uart ti50.SerialChannel, magic byte, iteration int) {
+func sendIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, uart ti50.SerialChannel, magic byte, iteration uint32) {
 	databuf := make([]byte, uartThroughputBlockSize)
 	var idx = 0
 	for idx < uartThroughputBlockSize {
 		databuf[idx] = byte(idx)
 		idx = idx + 1
 	}
-	databuf[0] = byte(iteration)
-	databuf[1] = byte(iteration >> 8)
-	databuf[2] = byte(iteration >> 16)
-	databuf[3] = byte(iteration >> 24)
-
+	binary.LittleEndian.PutUint32(databuf[:4], iteration)
 	databuf[4] = magic
 	th.MustSucceed(uart.WriteSerial(ctx, databuf), "Write error")
 }
