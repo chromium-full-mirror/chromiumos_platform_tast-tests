@@ -121,16 +121,12 @@ func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.S
 		return errors.Wrap(err, "failed DP presence check before suspend")
 	}
 
-	// GoBigSleepLint: If we sleep immediately, power_manager nixes the attempt to enter suspend. So wait for a little while.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for display unplug modeset")
-	}
-
 	// Suspend DUT. Run in a separate thread since this function blocks until resume.
 	done := make(chan error, 1)
 	go func(ctx context.Context) {
 		defer close(done)
-		out, err := d.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--timeout=120", "--suspend_for_sec="+strconv.Itoa(suspendDurationS)).CombinedOutput()
+		// Delay suspend as power_manager nixes the attempt to enter suspend.
+		out, err := d.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--timeout=120", "--delay=5", "--suspend_for_sec="+strconv.Itoa(suspendDurationS)).CombinedOutput()
 		testing.ContextLog(ctx, "powerd_dbus_suspend output: ", string(out))
 		done <- err
 	}(ctx)
