@@ -49,13 +49,9 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-47bb4826-69df-4c03-aaf2-e9a8a0f0f636",
 		}},
-		SoftwareDeps: []string{
-			"chrome",
-			// Disabled by TORA.  See:b/343060560.
-			// "gaia"
-		},
-		Timeout: 5 * time.Minute,
-		Fixture: personalization.GooglePhotosFixture,
+		SoftwareDeps: []string{"chrome", "gaia"},
+		Timeout:      5 * time.Minute,
+		Fixture:      personalization.GooglePhotosFixture,
 		Params: []testing.Param{{
 			Name: "from_album",
 			Val: dailyRefreshGooglePhotosWallpaperParams{
