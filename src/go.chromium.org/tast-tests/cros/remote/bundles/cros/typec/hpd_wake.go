@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

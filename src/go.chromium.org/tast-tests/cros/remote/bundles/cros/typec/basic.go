@@ -13,7 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/fixture"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecservo"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -58,7 +58,7 @@ func Basic(ctx context.Context, s *testing.State) {
 		s.Fatal("DUT didn't return a valid uptime")
 	}
 
-	svo := s.FixtValue().(*fixture.Value).Servo()
+	svo := s.FixtValue().(*typecservo.Value).Servo()
 
 	s.Log("Checking DP pin C")
 	if err := runDPTest(ctx, svo, d, s, "c"); err != nil {

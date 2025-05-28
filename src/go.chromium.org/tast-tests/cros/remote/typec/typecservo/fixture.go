@@ -1,9 +1,9 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2025 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package fixture contains fixtures which can be used while running Type C tests.
-package fixture
+// Package typecservo contains fixtures which can be used while running Type C tests.
+package typecservo
 
 import (
 	"context"

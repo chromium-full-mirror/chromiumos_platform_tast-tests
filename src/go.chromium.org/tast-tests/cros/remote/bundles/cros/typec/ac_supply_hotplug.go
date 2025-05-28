@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecswitch"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
