@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -93,11 +94,21 @@ func (ds *thermalDataSource) Start(ctx context.Context) error {
 // Snapshot implements perf.TimelineDatasource.Snapshot.
 func (ds *thermalDataSource) Snapshot(ctx context.Context, values *perf.Values) error {
 	for _, metric := range ds.metrics {
-		var sum float64
+		var (
+			sum float64
+			bs  []byte
+			err error
+		)
 		for _, path := range metric.paths {
-			bs, err := os.ReadFile(path)
-			if err != nil {
-				return errors.Wrapf(err, "failed to read %s", path)
+			readFile := func(ctx context.Context) error {
+				bs, err = os.ReadFile(path)
+				if err != nil {
+					return errors.Wrapf(err, "failed to read %s", path)
+				}
+				return nil
+			}
+			if err := uiauto.Retry(3, readFile)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to read %s after 3 retries", path)
 			}
 			temp, err := strconv.ParseFloat(strings.TrimSpace(string(bs)), 64)
 			if err != nil {
