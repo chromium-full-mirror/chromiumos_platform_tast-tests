@@ -500,9 +500,13 @@ func (s *RemoteCellularService) QuerySignalBars(ctx context.Context, _ *empty.Em
 	return &cellular_pb.QuerySignalBarsResponse{Count: int32(count)}, err
 }
 
-// QueryTearDownFailure returns true if there was a failure executing the TearDown of the last fixture.
-func (s *RemoteCellularService) QueryTearDownFailure(ctx context.Context, _ *empty.Empty) (*cellular_pb.QueryTearDownFailureResponse, error) {
-	_, tearDownFailureFileStatErr := os.Stat(cellular.TearDownFailureFlagPath)
+// QueryLocalFixtureFlags returns a list of flags indicating the current status of the local fixture .
+func (s *RemoteCellularService) QueryLocalFixtureFlags(ctx context.Context, _ *empty.Empty) (*cellular_pb.QueryLocalFixtureFlagsResponse, error) {
+	_, rebootOnResetRequestedStatErr := os.Stat(cellular.RebootOnResetRequestedFlagPath)
+	_, rebootOnTearDownRequestedStatErr := os.Stat(cellular.RebootOnTearDownRequestedFlagPath)
 	// os.Stat() returns err == nil when the file exists.
-	return &cellular_pb.QueryTearDownFailureResponse{TearDownFailed: (tearDownFailureFileStatErr == nil)}, nil
+	return &cellular_pb.QueryLocalFixtureFlagsResponse{
+		RebootOnResetRequested:    (rebootOnResetRequestedStatErr == nil),
+		RebootOnTearDownRequested: (rebootOnTearDownRequestedStatErr == nil),
+	}, nil
 }

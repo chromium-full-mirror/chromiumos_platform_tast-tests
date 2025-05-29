@@ -69,9 +69,10 @@ service RemoteCellularService {
   rpc QuerySignalBars(google.protobuf.Empty) returns (QuerySignalBarsResponse) {
   }
 
-  // QueryTearDownFailure returns whether the last TearDown failed or not.
-  rpc QueryTearDownFailure(google.protobuf.Empty)
-      returns (QueryTearDownFailureResponse) {}
+  // QueryLocalFixtureFlags returns the current state of flags set by the local
+  // fixture.
+  rpc QueryLocalFixtureFlags(google.protobuf.Empty)
+      returns (QueryLocalFixtureFlagsResponse) {}
 }
 
 message EnableResponse { int64 enable_time = 1; }
@@ -124,4 +125,7 @@ message VerifyIPConnectivityResponse {
 
 message QuerySignalBarsResponse { int32 count = 1; }
 
-message QueryTearDownFailureResponse { bool tearDown_failed = 1; }
+message QueryLocalFixtureFlagsResponse {
+  bool reboot_on_reset_requested = 1;
+  bool reboot_on_tearDown_requested = 2;
+}

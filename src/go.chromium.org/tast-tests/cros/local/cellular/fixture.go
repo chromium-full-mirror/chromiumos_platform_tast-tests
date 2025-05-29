@@ -35,14 +35,18 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 const (
 	uiJobName    = "ui"
 	tearDownTime = 5 * time.Minute
-	// TearDownFailureFlagPath is set when a step in the TearDown fails. All contents of /run get
-	// erased on reboot.
-	TearDownFailureFlagPath = "/run/cellularTearDownFailureFlag"
+	// RebootOnResetRequestedFlagPath is set when we want the remote cellular
+	// fixture to reboot the DUT on Reset(). All contents of /run get erased on reboot.
+	RebootOnResetRequestedFlagPath = "/run/cellularRebootOnResetRequestedFlagPath"
+	// RebootOnTearDownRequestedFlagPath is set when we want the remote cellular
+	// fixture to reboot the DUT on TearDown(). All contents of /run get erased on reboot.
+	RebootOnTearDownRequestedFlagPath = "/run/cellularRebootOnTearDownRequestedFlagPath"
 )
 
 // The Cellular test fixture ensures that modemfwd is stopped.
@@ -58,7 +62,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -72,7 +76,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -184,7 +188,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setUseTestESIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -199,7 +203,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true),
-		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with fixture.FakeDMSEnrolled
 		Parent: fixture.FakeDMSEnrolled,
 		Vars:   []string{"autotest_host_info_labels"},
 	})
@@ -214,7 +218,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setUseTestESIM(true),
-		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with fixture.FakeDMSEnrolled
 		Parent: fixture.FakeDMSEnrolled,
 		Vars:   []string{"autotest_host_info_labels"},
 	})
@@ -229,7 +233,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setClearSIMLock(true),
-		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with fixture.FakeDMSEnrolled
+		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with fixture.FakeDMSEnrolled
 		Parent: fixture.FakeDMSEnrolled,
 		Vars:   []string{"autotest_host_info_labels"},
 	})
@@ -246,7 +250,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -263,7 +267,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -280,7 +284,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -295,7 +299,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setHasArc(true),
-		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with arcBooted
+		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with arcBooted
 		Parent: "arcBooted",
 		Vars:   []string{"autotest_host_info_labels"},
 	})
@@ -309,7 +313,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setUseRoaming(true).setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -323,7 +327,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setCheckSIM(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -338,7 +342,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
 		Impl:            newCellularFixture().setCheckSIM(true),
-		// TODO: Create parent fixture to combine cellularEnsureCleanTearDownRemote with powerMetricsNoUI
+		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with powerMetricsNoUI
 		Parent: "powerMetricsNoUI",
 		Vars:   []string{"autotest_host_info_labels"},
 	})
@@ -352,7 +356,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: tearDownTime,
-		Parent:          "cellularEnsureCleanTearDownRemote",
+		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setClearSIMLock(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
@@ -422,15 +426,16 @@ type cellularFixture struct {
 	systemUptimeBeforeTest      time.Duration
 	disableCellularInShill      bool
 	// Fixture variables
-	crashFilesTracker   []string
-	helper              *Helper
-	modemfwdStopped     bool
-	modemLoggingStarted bool
-	sf                  *starfish.Starfish
-	cr                  *chrome.Chrome
-	netUnlock           func()
-	uiStopped           bool
-	fixtureFailure      bool
+	crashFilesTracker    []string
+	helper               *Helper
+	modemfwdStopped      bool
+	modemLoggingStarted  bool
+	sf                   *starfish.Starfish
+	cr                   *chrome.Chrome
+	netUnlock            func()
+	uiStopped            bool
+	fixtureFailure       bool
+	dutBrokenUntilReboot error
 	// Per-test logging marker
 	logMarker       *logsaver.Marker
 	cleanupPolicies func(ctx context.Context) error
@@ -790,7 +795,18 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	return &FixtData{helper, fdms, a, cr}
 }
 
-func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
+func (f *cellularFixture) Reset(ctx context.Context) error {
+	if f.dutBrokenUntilReboot != nil {
+		// When an error is returned on Reset, a full TearDown and SetUp is executed. This is
+		// desired when rebooting the DUT using the remote fixture, since the DUT state after a
+		// reboot is not the same as after SetUp.
+		err := f.dutBrokenUntilReboot
+		f.dutBrokenUntilReboot = nil
+		testing.ContextLog(ctx, "Reset() detected a failure. Trigger a fixture TearDown and SetUp")
+		return err
+	}
+	return nil
+}
 
 func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Start tracking per-test logs.
@@ -958,11 +974,29 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			testing.ContextLogf(ctx, "Failed to restart job: shill, %s", errs)
 		}
 	}
-	modem, err := modemmanager.NewModem(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to create modem object: ", err)
+	modem, waitForModemErr := modemmanager.NewModem(ctx)
+	if waitForModemErr != nil {
+		testing.ContextLog(ctx, "Failed to create modem object: ", waitForModemErr)
+		// We cannot use TagKnownBugOnModem to detect the modem type and FW version because
+		// TagKnownBugOnModem requires a live modem to query the modem FW version. If MR9 is ever
+		// released, we need to change this logic to exclude it.
+		modemType, err := GetModemType(ctx)
+		if err != nil {
+			s.Fatalf("Failed to get modem type: %s", err)
+		}
+		// b/407604639 :  When the L850 modem doesn't come back after reset, we need to reboot the
+		// device using the remote fixture. Since a reboot doesn't necessarily put the DUT into its
+		// previous clean state, run the TearDown/SetUp by returning an error on Reset(). We use
+		// dutBrokenUntilReboot to trigger a fixture TearDown/SetUp on Reset().
+		if modemType == cellularconst.ModemTypeL850 {
+			f.dutBrokenUntilReboot = waitForModemErr
+			testing.ContextLog(ctx, "PostTest: L850 Modem not detected. Requesting a DUT reboot from remote fixture")
+			if err := os.WriteFile(RebootOnResetRequestedFlagPath, []byte("1"), 0666); err != nil {
+				testing.ContextLogf(ctx, "Could not write to %s: %s", RebootOnResetRequestedFlagPath, err)
+			}
+		}
 	} else {
-		if err = RebootL850VerizonIfModemCanNoLongerConnect(ctx, &modem); err != nil {
+		if err := RebootL850VerizonIfModemCanNoLongerConnect(ctx, &modem); err != nil {
 			testing.ContextLog(ctx, "Failed to restart modem: ", err)
 		}
 	}
@@ -1098,8 +1132,8 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	if teardownFailure {
 		testing.ContextLog(ctx, "Teardown failed")
-		if err := os.WriteFile(TearDownFailureFlagPath, []byte("1"), 0666); err != nil {
-			testing.ContextLogf(ctx, "Could not write to %s: %s", TearDownFailureFlagPath, err)
+		if err := os.WriteFile(RebootOnTearDownRequestedFlagPath, []byte("1"), 0666); err != nil {
+			testing.ContextLogf(ctx, "Could not write to %s: %s", RebootOnTearDownRequestedFlagPath, err)
 		}
 
 	}
