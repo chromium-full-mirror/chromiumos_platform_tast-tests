@@ -43,6 +43,7 @@ type Recorder struct {
 	enableDischargeWatchdog bool
 	isRecording             bool
 	perfValues              *perf.Values
+	cooldownDuration        float64
 
 	// Fields used for perfetto tracing.
 	traceEnabled    bool
@@ -76,11 +77,15 @@ func DischargeWatchdogOption(discharge bool) OptionalRecorderArg {
 // ctx: context for the test.
 // Out:
 // error: propagate back to the test.
-// TODO(b/321173687):Since Cooldown does not interact with Recorder, it should
-// be able to run without a Recorder. Recommend using Cooldown() without a
-// struct. Recorder.Cooldown() should be removed gradually.
+// If you want to record the cooldown duration, please use *Recorder.Cooldown()
+// instead of power.Cooldown().
 func (r *Recorder) Cooldown(ctx context.Context) error {
-	return Cooldown(ctx)
+	st := time.Now()
+	// The duration should be recorded even if the device cooldown fails.
+	err := Cooldown(ctx)
+	r.cooldownDuration = time.Since(st).Seconds()
+
+	return err
 }
 
 // Start collecting power metrics.
@@ -189,6 +194,15 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		}
 	}
 
+	if r.cooldownDuration >= 0 {
+		r.perfValues.Set(perf.Metric{
+			Name:      cp.GeneralPerfMetricType + "cooldown_time",
+			Unit:      "s",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false,
+		}, r.cooldownDuration)
+	}
+
 	r.checkpoints.Save(r.outDir)
 
 	if len(strings.TrimSpace(pdashNoteVar.Value())) != 0 {
@@ -220,6 +234,7 @@ func (r *Recorder) Record(ctx context.Context, f func(context.Context) error) er
 	if err := r.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed to cool down")
 	}
+
 	if err := r.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start the recorder")
 	}
@@ -339,6 +354,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		dataSources:             metrics.TestMetrics(),
 		enableDischargeWatchdog: discharge,
 		isRecording:             false,
+		cooldownDuration:        -1,
 
 		traceEnabled:    false,
 		traceSession:    nil,
