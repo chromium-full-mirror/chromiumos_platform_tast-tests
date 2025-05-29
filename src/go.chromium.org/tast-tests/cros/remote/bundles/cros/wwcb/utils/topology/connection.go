@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Connection is a directed connection between two components in the PASIT topology.
@@ -65,6 +66,7 @@ func (c ConnectionPath) Activate(ctx context.Context) error {
 			SwitchId: con.connection.GetParentId(),
 			PortId:   con.connection.GetParentPort(),
 		}
+		testing.ContextLogf(ctx, "Set fixture %q to enabled", con.connection.GetParentId())
 		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
@@ -84,6 +86,7 @@ func (c ConnectionPath) DisableAll(ctx context.Context) error {
 			State:    passport.SwitchPortState_SWITCH_PORT_DISABLED,
 			SwitchId: con.connection.GetParentId(),
 		}
+		testing.ContextLogf(ctx, "Set fixture %q to disabled", con.connection.GetParentId())
 		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
@@ -110,6 +113,7 @@ func (c ConnectionPath) DisableLast(ctx context.Context) error {
 			State:    passport.SwitchPortState_SWITCH_PORT_DISABLED,
 			SwitchId: con.connection.GetParentId(),
 		}
+		testing.ContextLogf(ctx, "Set fixture %q to disabled", con.connection.GetParentId())
 		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to enable connection")
 		}
@@ -133,6 +137,7 @@ func (c ConnectionPath) FlipLast(ctx context.Context) error {
 			State:    passport.SwitchPortState_SWITCH_PORT_FLIP,
 			SwitchId: con.connection.GetParentId(),
 		}
+		testing.ContextLogf(ctx, "Set fixture %q to flip", con.connection.GetParentId())
 		if _, err := con.manager.ConfigureSwitchPort(ctx, req); err != nil {
 			return errors.Wrap(err, "failed to flip connection")
 		}

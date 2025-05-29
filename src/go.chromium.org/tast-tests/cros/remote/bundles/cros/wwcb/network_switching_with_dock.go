@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Test wired network when connecting/disconnecting over a Dock",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"group:release-health",
@@ -81,6 +81,9 @@ func NetworkSwitchingWithDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find Dock Ethernet: ", err)
 	}
 	testing.ContextLog(ctx, "Found the Dock Ethernet: ", dockEth)
+	if err := utils.VerifyEthernetState(ctx, s.DUT(), true); err != nil {
+		s.Fatal("Failed to verify ethernet network state: ", err)
+	}
 
 	server := "www.google.com"
 	if err := pingNetwork(ctx, s.DUT(), dockEth, server); err != nil {
