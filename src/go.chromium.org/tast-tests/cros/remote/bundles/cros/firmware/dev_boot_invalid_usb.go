@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -144,6 +143,11 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("USBKey not working: ", err)
 	}
 
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Creating mode switcher: ", err)
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
 	defer cancel()
@@ -155,8 +159,8 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 				s.Error("Failed to save firmware log: ", err)
 			}
 		}
-		if err := devModeResetDUT(ctx, h, &state); err != nil {
-			s.Error("Failed to reboot the DUT: ", err)
+		if err := ms.RebootToMode(ctx, fwCommon.BootModeDev, firmware.WaitSoftwareSync); err != nil {
+			s.Error("Failed to switch to dev mode: ", err)
 		}
 		if err := h.DisableDevBootUSB(ctx); err != nil {
 			s.Error("Failed to disable dev boot from USB: ", err)
@@ -431,39 +435,6 @@ func ctrlDBootFromInternal(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Pressing Ctrl-D")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press Ctrl-D")
-	}
-	return nil
-}
-
-func devModeResetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger *firmware.CheckAndSetServoCharger) error {
-	if h.DUT.Connected(ctx) && !removeServoCharger.IsServoChargerConnected && removeServoCharger.RemoveServoChargerRequired {
-		// Applying cold reset with the function h.Servo.SetPowerState could lead to the
-		// 'EC: No data was sent from the pty' error. Call a reboot command instead.
-		testing.ContextLog(ctx, "Rebooting the DUT")
-		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(ssh.DumpLogOnError); err != nil && !errors.As(err, &context.DeadlineExceeded) {
-			return errors.Wrap(err, "failed to run reboot command")
-		}
-		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancelWaitUnreachable()
-		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
-		}
-	} else {
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			return errors.Wrap(err, "failed to reboot the DUT")
-		}
-	}
-
-	waitConnectTimeout := h.Config.FirmwareScreen + firmware.DevScreenTimeout + h.Config.DelayRebootToPing
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, waitConnectTimeout)
-	defer cancelWaitConnect()
-
-	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
-		if stateErr != nil {
-			return errors.Join(errors.Wrap(stateErr, "failed to get power state"), err)
-		}
-		return errors.Wrapf(err, "failed to reconnect to the DUT, got %v power state", currPowerState)
 	}
 	return nil
 }
