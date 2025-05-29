@@ -1347,11 +1347,12 @@ func runningPackages(ctx context.Context, a *arc.ARC) (map[string]struct{}, erro
 // chargeBatteryCapacity allows charging of the battery for 8 minutes if battery capacity
 // is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
-	if err := setup.AllowBatteryCharging(ctx); err != nil {
-		return err
-	}
+	// Check if there is a battery first.
 	devPath, err := pm.SysfsBatteryPath(ctx)
 	if err != nil {
+		return err
+	}
+	if err := setup.AllowBatteryCharging(ctx); err != nil {
 		return err
 	}
 	lowBatteryShutdownPercent, err := pm.LowBatteryShutdownPercent(ctx)
