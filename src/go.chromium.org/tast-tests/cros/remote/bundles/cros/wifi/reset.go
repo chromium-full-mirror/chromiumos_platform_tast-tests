@@ -54,6 +54,8 @@ func init() {
 func Reset(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
+	tf.CollectIntelFirmwareDumpOnError = true
+
 	var errReset error
 	defer func(ctx context.Context) {
 		if errReset != nil {
