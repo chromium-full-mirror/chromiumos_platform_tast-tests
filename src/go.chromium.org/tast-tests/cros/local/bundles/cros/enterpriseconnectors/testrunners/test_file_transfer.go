@@ -433,14 +433,20 @@ func launchFilesAppWithFormattedUsb(ctx context.Context, tconn *chrome.TestConn)
 	success := false
 
 	cleanupFunc := func(ctx context.Context) error {
-		// Eject all USB devices before force-unmounting.
-		if err := filesApp.EjectAll()(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to eject: ", err)
+		defer cleanupVirtualUSBDevice(ctx)
+
+		// The cleanup is best-effort and uses a fresh FilesApp instance
+		// to avoid acting on a stale or closed window from the main test logic.
+		fa, err := filesapp.Launch(ctx, tconn)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to launch FilesApp for cleanup, skipping UI cleanup: ", err)
+			return nil
 		}
-		if err := filesApp.Close(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to close files app: ", err)
+		defer fa.Close(ctx)
+
+		if err := fa.EjectAll()(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to eject disks during cleanup: ", err)
 		}
-		cleanupVirtualUSBDevice(ctx)
 		return nil
 	}
 	defer func(ctx context.Context) {
