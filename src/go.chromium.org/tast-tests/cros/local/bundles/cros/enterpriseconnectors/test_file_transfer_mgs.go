@@ -89,7 +89,7 @@ func init() {
 }
 
 func TestFileTransferMGS(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx, chrome.KeepEnrollment(), chrome.NoLogin(), chrome.DisableFeatures("InternalOnlyUisPref"))
+	cr, err := chrome.New(ctx, chrome.KeepEnrollment(), chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

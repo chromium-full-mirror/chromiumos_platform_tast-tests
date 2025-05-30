@@ -172,6 +172,10 @@ func WaitForFCMTokenRegistered(ctx context.Context, cr *chrome.Chrome, tconn *ch
 // checkFCMTokenRegistered checks that a fcm token is registered.
 // Returns a bool and an error. The bool indicates whether the check can be retried.
 func checkFCMTokenRegistered(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, server *httptest.Server, downloadsPath string, retryNumber int) (bool, error) {
+	if err := EnableInternalDebuggingPages(ctx, cr); err != nil {
+		return false, errors.Wrap(err, "failed to enable internal debugging pages")
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -426,6 +430,10 @@ func VerifyDeepScanningVerdict(ctx context.Context, dconnSafebrowsing *chrome.Co
 
 // GetCleanDconnSafebrowsing returns a Dconn to chrome://safe-browsing/#tab-deep-scan for which it is ensured that there is no prior deep scanning verdict.
 func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, error) {
+	if err := EnableInternalDebuggingPages(ctx, cr); err != nil {
+		return nil, errors.Wrap(err, "failed to enable internal debugging pages")
+	}
+
 	var dconnSafebrowsing *chrome.Conn
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		cleanupCtx := ctx
@@ -473,4 +481,50 @@ func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome) (*chrome.
 		return nil, errors.Wrap(err, "failed to wait for empty safe browsing site")
 	}
 	return dconnSafebrowsing, nil
+}
+
+// EnableInternalDebuggingPages opens chrome://chrome-urls, finds the section for
+// internal debug pages, and enables them if they are not already.
+func EnableInternalDebuggingPages(ctx context.Context, cr *chrome.Chrome) error {
+	dconn, err := cr.NewConn(ctx, "chrome://chrome-urls/#internal-debug-pages")
+	if err != nil {
+		return errors.Wrap(err, "failed to navigate to chrome://chrome-urls")
+	}
+	defer dconn.Close()
+	defer dconn.CloseTarget(ctx)
+
+	var clicked bool
+	const clickScript = `
+		(() => {
+			// 1. Get the shadow root of the main app component.
+			const shadowRoot = document.querySelector('chrome-urls-app').shadowRoot;
+			if (!shadowRoot) {
+				return false; // Component or shadow root not found.
+			}
+
+			// 2. Find all cr-buttons within that shadow root.
+			const buttons = Array.from(shadowRoot.querySelectorAll('cr-button'));
+
+			// 3. Find the specific button by its text content.
+			const targetButton = buttons.find(b => b.textContent.includes('Enable internal debugging pages'));
+
+			// 4. If we found it, click it and report success.
+			if (targetButton) {
+				targetButton.click();
+				return true;
+			}
+
+			return false;
+		})();`
+
+	if err := dconn.Eval(ctx, clickScript, &clicked); err != nil {
+		return errors.Wrap(err, "failed to execute script to click 'Enable' button")
+	}
+
+	if clicked {
+		testing.ContextLog(ctx, "Clicked 'Enable internal debugging pages' button")
+	} else {
+		testing.ContextLog(ctx, "The 'Enable internal debugging pages' button was not found, assuming pages are already enabled")
+	}
+	return nil
 }
