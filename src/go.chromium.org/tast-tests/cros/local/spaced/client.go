@@ -66,3 +66,22 @@ func (c *Client) RootDeviceSize(ctx context.Context) (int64, error) {
 	}
 	return result, nil
 }
+
+// DiskIOStatsForPathsPrettyPrint fetches disk I/O stats for the specified path's
+// underlying block device.
+func (c *Client) DiskIOStatsForPathsPrettyPrint(ctx context.Context, path string) (string, error) {
+	var result string
+	if err := c.call(ctx, "GetDiskIOStatsForPathsPrettyPrint", path).Store(&result); err != nil {
+		return "", errors.Wrap(err, "failed to call method GetDiskIOStatsForPathsPrettyPrint")
+	}
+	return result, nil
+}
+
+// DiskIOStats fetches disk I/O stats for all block devices.
+func (c *Client) DiskIOStats(ctx context.Context) (string, error) {
+	var result string
+	if err := c.call(ctx, "GetDiskIOStats").Store(&result); err != nil {
+		return "", errors.Wrap(err, "failed to call method GetDiskIOStats")
+	}
+	return result, nil
+}

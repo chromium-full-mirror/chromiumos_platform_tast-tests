@@ -5,12 +5,14 @@
 package platform
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"golang.org/x/sys/unix"
 
@@ -75,6 +77,118 @@ func statTotalDiskSpace(ctx context.Context, path string) (int64, error) {
 	return int64(stat.Blocks) * int64(stat.Bsize), nil
 }
 
+// parseDiskIOStatsForPathsPrettyPrintResponse Parses a response from
+// spaced.DiskIOStatsForPathsPrettyPrint() which should look like:
+// <empty line>
+// Disk I/O stats for <path>:
+// Read Merges: 0
+// Read Sectors: 3139112
+// Read Ticks: 19255
+// Writes IOs: 0
+// Write Merges: 0
+// Write Sectors: 0
+// Write Ticks: 0
+// In Flight: 0
+// IO Ticks: 6790
+// Time In Queue: 19255
+// Discard IOs: 0
+// Discard Merges: 0
+// Discard Sectors: 0
+// Discard Ticks: 0
+// Flush IOs: 0
+// Flush Ticks: 0
+// <empty line>
+func parseDiskIOStatsForPathsPrettyPrintResponse(dir, response string) error {
+	scanner := bufio.NewScanner(strings.NewReader(response))
+	// Skip an empty line.
+	scanner.Scan()
+	// Next, grab and validate the opening line.
+	scanner.Scan()
+	openingLine := scanner.Text()
+	expectedOpeningLine := "Disk I/O stats for " + dir + ":"
+	if openingLine != expectedOpeningLine {
+		return errors.Errorf("invalid opening line in response from spaced.DiskIOStatsForPathsPrettyPrint: %s", openingLine)
+	}
+	count := 0
+	// Inspect each non-empty line, ensuring a key/value pair holding a valid value.
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.SplitN(line, ": ", 2)
+		if len(parts) != 2 {
+			return errors.Errorf("badly formatted line in response from spaced.DiskIOStatsForPathsPrettyPrint: %s", line)
+		}
+		keyStr := strings.TrimSpace(parts[0])
+		valueStr := strings.TrimSpace(parts[1])
+		_, err := strconv.Atoi(valueStr)
+		if err != nil {
+			return errors.Errorf("invalid value found in response from spaced.DiskIOStatsForPathsPrettyPrint: %s:%s", keyStr, valueStr)
+		}
+		count++
+	}
+	// There should be exactly 17 key/value pairs in the response.
+	if count != 17 {
+		return errors.Errorf("incorrect number of key/value pairs in response from spaced.DiskIOStatsForPathsPrettyPrint: %s", response)
+	}
+	return nil
+}
+
+// parseDiskIOStats parses a response from spaced.DiskIOStats() which should look like:
+// <empty line>
+// I/O stats for all block devices:
+//
+//	254      16 dm-16 595 0 54272 997 10217 0 81736 243477 0 267 244474 0 0 0 0 0 0
+//	254      17 dm-17 18 0 2304 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//	  7       9 loop9 333 100 32000 201 0 0 0 0 0 201 201 0 0 0 0 0 0
+//
+// ...
+// <empty line>
+func parseDiskIOStats(response string) error {
+	scanner := bufio.NewScanner(strings.NewReader(response))
+	// Skip an empty line.
+	scanner.Scan()
+	// Next, grab and validate the opening line.
+	scanner.Scan()
+	openingLine := scanner.Text()
+	expectedOpeningLine := "I/O stats for all block devices:"
+	if openingLine != expectedOpeningLine {
+		return errors.Errorf("invalid opening line in response from spaced.DiskIOStats: %s", openingLine)
+	}
+	count := 0
+	// Inspect each non-empty line, ensuring the correct number of fields and type of each field.
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) != 20 {
+			return errors.Errorf("badly formatted line in response from spaced.DiskIOStats: %s", line)
+		}
+		for i := 0; i < len(parts); i++ {
+			if i == 2 {
+				if unicode.IsDigit(rune(parts[i][0])) {
+					return errors.Errorf("invalid device name in response from spaced.DiskIOStats: %s", line)
+				}
+				continue
+			}
+			valueStr := strings.TrimSpace(parts[i])
+			_, err := strconv.Atoi(valueStr)
+			if err != nil {
+				return errors.Errorf("invalid value found in response from spaced.DiskIOStats: %s", valueStr)
+			}
+		}
+		count++
+	}
+	// There should be at least one non-empty, valid, line in the response.
+	if count == 0 {
+		return errors.Errorf("found no valid entries in response from spaced.DiskIOStats: %s", response)
+	}
+	return nil
+}
+
 func Spaced(ctx context.Context, s *testing.State) {
 	const (
 		// Path to check disk space queries on.
@@ -129,5 +243,23 @@ func Spaced(ctx context.Context, s *testing.State) {
 
 	if totalDiskSpace <= 0 || totalDiskSpace > expectedTotalDiskSpace+spaceMarginBytes {
 		s.Fatalf("Invalid total disk space;  got %d, want: 0 < size < %d", totalDiskSpace, expectedTotalDiskSpace+spaceMarginBytes)
+	}
+
+	response, err := spaced.DiskIOStatsForPathsPrettyPrint(ctx, "/")
+	if err != nil {
+		s.Fatal("Failed to get disk I/O stats for /: ", err)
+	}
+	err = parseDiskIOStatsForPathsPrettyPrintResponse("/", response)
+	if err != nil {
+		s.Fatal("Error parsing response from spaced.DiskIOStatsForPathsPrettyPrint: ", err)
+	}
+
+	response, err = spaced.DiskIOStats(ctx)
+	if err != nil {
+		s.Fatal("Failed to get disk I/O stats for all block devices: ", err)
+	}
+	err = parseDiskIOStats(response)
+	if err != nil {
+		s.Fatal("Error parsing response from spaced.DiskIOStats: ", err)
 	}
 }
