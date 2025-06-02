@@ -33,10 +33,10 @@ func init() {
 		Func: VPNAreUserSpecified,
 		Desc: "Verify VPN networks added are user specific",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:network", "network_e2e"},
 		SoftwareDeps:   []string{"chrome"},

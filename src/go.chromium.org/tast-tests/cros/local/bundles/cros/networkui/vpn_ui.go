@@ -38,8 +38,8 @@ func init() {
 		Contacts: []string{
 			// These contacts are commented out so that they can be added back in once the tests are stabilized.
 			// These are commented out instead of removed outright to avoid losing any contacts in the process.
-			// "cros-networking@google.com",
-			// "jiejiang@google.com",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 			// "cros-device-enablement@google.com",
 			// "chromeos-connectivity-engprod@google.com",
 			// "shijinabraham@google.com",
@@ -47,7 +47,7 @@ func init() {
 			"ryan.liu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:mainline", "informational"},
 		SoftwareDeps:   []string{"chrome"},

@@ -35,12 +35,10 @@ func init() {
 		Func: VPNIncorrectCreds,
 		Desc: "Verify that device fails to connect to VPN with incorrect credentials",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		BugComponent:   "b:1131913", // ChromeOS > Software > System Services > Connectivity > VPN
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:network", "network_e2e"},
 		SoftwareDeps:   []string{"chrome"},
