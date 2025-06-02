@@ -38,7 +38,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     PasspointKnownNetworkUI,
 		Desc:     "Wi-Fi Passpoint known network UI test",
-		Contacts: []string{"cros-networking@google.com", "damiendejean@google.com", "jiajunz@google.com"},
+		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
