@@ -39,12 +39,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verifies that the proxy settings will be retained after login or across different users",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
 		Attr:         []string{"group:network", "network_e2e", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},

@@ -29,12 +29,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests that the proxy values remain the same after DUT reboots",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
 		// TODO(b/275127708): Move this test to network suite.
 		Attr:        []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
 		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},

@@ -26,11 +26,10 @@ func init() {
 		Func: ProxySettingsUI,
 		Desc: "Verify the UI for proxy settings",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		BugComponent: "b:1578688",
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
