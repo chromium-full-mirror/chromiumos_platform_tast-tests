@@ -33,13 +33,13 @@ import (
 // Timeout for methods of Tast fixture.
 const (
 	// Give long enough timeout for SetUp() and TearDown() as they might need
-	// to reboot a broken DUT. SetUp() and Reset() have additional time allotted
-	// to reboot routers as well.
+	// to reboot a broken DUT. PostTest() have additional time allotted
+	// to reboot routers if test failed.
 	setUpTimeout         = 17 * time.Minute
 	tearDownTimeout      = 5 * time.Minute
 	resetTimeout         = 11 * time.Minute
 	preTestTimeout       = 30 * time.Second
-	postTestTimeout      = 90 * time.Second
+	postTestTimeout      = 4 * time.Minute
 	enrollmentRunTimeout = 4 * time.Minute
 	enrollRetry          = 3
 	idlePowerSleepTime   = 50 * time.Second
@@ -801,6 +801,11 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 			if err := dev.P2PDeviceLogcat(ctx, filepath.Join(s.OutDir(), fileName)); err != nil {
 				s.Error("Failed to save the Android Device Logs: ", err)
 			}
+		}
+	}
+	if s.HasError() {
+		if err := f.tf.RebootRouters(ctx); err != nil {
+			s.Error("Failed to reboot routers: ", err)
 		}
 	}
 

@@ -313,7 +313,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, options *TFOptions) (ret
 	}
 
 	// Reinitialize state of routers (including the pcap).
-	if err := tf.ReinitRouters(ctx, true); err != nil {
+	if err := tf.ReinitRouters(ctx); err != nil {
 		return nil, err
 	}
 
@@ -725,7 +725,7 @@ func (tf *TestFixture) Reinit(ctx context.Context) error {
 	if err := tf.ReinitDUT(ctx); err != nil {
 		return errors.Wrap(err, "failed to reinit DUT")
 	}
-	if err := tf.ReinitRouters(ctx, false); err != nil {
+	if err := tf.ReinitRouters(ctx); err != nil {
 		return errors.Wrap(err, "failed to reinit routers")
 	}
 	return nil
@@ -749,16 +749,8 @@ func (tf *TestFixture) ReinitDUT(ctx context.Context) error {
 	return nil
 }
 
-// ReinitRouters re-initializes the routers. The APs are all deconfigured and
-// any OpenWrt routers are rebooted (for stability).
-//
-// The pcap is only rebooted if it is an OpenWrt router and is also being used
-// as a router or doPcapReboot is set to true. In most cases (such as between
-// tests), the pcap does not need to be rebooted for stability like the routers
-// need, as less is done to them to make them unstable. However, it can be
-// useful to reboot them during SetUp to ensure they are not in a bad state from
-// previous test runs.
-func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) error {
+// ReinitRouters re-initializes the routers. The APs are all deconfigured.
+func (tf *TestFixture) ReinitRouters(ctx context.Context) error {
 	ctx, t := timing.Start(ctx, "ReinitRouters")
 	defer t.End()
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
@@ -766,27 +758,20 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	testing.ContextLog(ctx, "[WIFICELL_FIXTURE] ReinitRouters :: START")
 	defer testing.ContextLog(ctx, "[WIFICELL_FIXTURE] ReinitRouters :: END")
 
+	if tf.options.EnableBridgeAndVeth {
+		for i, rd := range tf.routers {
+			// Configure bridges and veth on routers except pcap.
+			if rd != tf.pcap || tf.pcapIsRouter {
+				if err := tf.deinitializeBridgeAndVethOnRouter(ctx, rd); err != nil {
+					return errors.Wrapf(err, "failed to deinitialize bridges and veths on router %d", i)
+				}
+			}
+		}
+	}
+
 	// Deconfigure all routers.
 	if err := tf.DeconfigAllAPs(ctx); err != nil {
 		return errors.Wrap(err, "failed to deconfig all APs")
-	}
-
-	// Reboot routers.
-	var routersToReboot []*RouterData
-	if doPcapReboot && !tf.pcapIsRouter {
-		routersToReboot = append(routersToReboot, tf.pcap)
-	}
-	routersToReboot = append(routersToReboot, tf.routers...)
-	if len(routersToReboot) > 0 {
-		testing.ContextLogf(ctx, "Rebooting %d routers", len(routersToReboot))
-		for _, rd := range routersToReboot {
-			if err := tf.rebootRouter(ctx, rd); err != nil {
-				return err
-			}
-		}
-		testing.ContextLogf(ctx, "Rebooted and re-initialized %d routers", len(routersToReboot))
-	} else {
-		testing.ContextLog(ctx, "Skipping router reboot step: No routers")
 	}
 
 	if tf.options.EnableBridgeAndVeth {
@@ -804,6 +789,29 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 	return nil
 }
 
+// RebootRouters Reboot router and pcap if it's an OpenWRT router otherwise skip that step.
+func (tf *TestFixture) RebootRouters(ctx context.Context) error {
+	// Reboot routers.
+	var routersToReboot []*RouterData
+	if !tf.pcapIsRouter {
+		routersToReboot = append(routersToReboot, tf.pcap)
+	}
+	routersToReboot = append(routersToReboot, tf.routers...)
+	if len(routersToReboot) > 0 {
+		testing.ContextLogf(ctx, "Rebooting %d routers", len(routersToReboot))
+		for _, rd := range routersToReboot {
+			if err := tf.rebootRouter(ctx, rd); err != nil {
+				return err
+			}
+		}
+		testing.ContextLogf(ctx, "Rebooted and re-initialized %d routers", len(routersToReboot))
+	} else {
+		testing.ContextLog(ctx, "Skipping router reboot step: No routers")
+	}
+
+	return nil
+}
+
 func (tf *TestFixture) rebootRouter(ctx context.Context, rd *RouterData) error {
 	ctx, t := timing.Start(ctx, "rebootRouter_"+rd.object.RouterType().String())
 	defer t.End()
@@ -815,11 +823,6 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *RouterData) error {
 
 	if !tf.options.EnableRouterReboot {
 		testing.ContextLogf(ctx, "Skipping reboot of %s: fixture option EnableRouterReboot is false", routerName)
-		return nil
-	}
-
-	if rd.object.RouterType() != support.OpenWrtT && rd.object.RouterType() != support.UbuntuT {
-		testing.ContextLogf(ctx, "Skipping reboot of %s: Router is not an OpenWrt or Ubuntu router", routerName)
 		return nil
 	}
 
@@ -909,33 +912,10 @@ func (tf *TestFixture) Close(ctx context.Context) (firstErr error) {
 		routerDescription := fmt.Sprintf("primary router[%d] target %q", i, rd.target)
 		testing.ContextLogf(ctx, "Closing %s", routerDescription)
 
-		// De-configure bridges on routers except pcap.
-		if rd.br != nil && rd != tf.pcap {
-			testing.ContextLogf(ctx, "Closing bridges at router %d", i)
-			br := rd.br
-			if err := br.r.ReleaseBridge(ctx, br.br); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to release bridge %q: ", br.br))
+		if tf.options.EnableBridgeAndVeth {
+			if err := tf.deinitializeBridgeAndVethOnRouter(ctx, rd); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to deinitialize bridge and veth on router %d", i))
 			}
-			testing.ContextLogf(ctx, "Closed bridges at router %d", i)
-		}
-
-		// De-configure bridges and veths on routers except pcap.
-		if rd.brveth != nil && rd != tf.pcap {
-			testing.ContextLogf(ctx, "Closing bridges and veths at router %d", i)
-			bv := rd.brveth
-
-			for j := 0; j < 2; j++ {
-				if err := bv.r.UnbindVeth(ctx, bv.veth[j]); err != nil {
-					utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to unbind %q", bv.veth[j]))
-				}
-				if err := bv.r.ReleaseBridge(ctx, bv.br[j]); err != nil {
-					utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to release bridge %q: ", bv.br[j]))
-				}
-			}
-			if err := bv.r.ReleaseVethPair(ctx, bv.veth[0]); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to release veth"))
-			}
-			testing.ContextLogf(ctx, "Closed bridges and veths at router %d", i)
 		}
 
 		if rd.object != nil {
@@ -2894,6 +2874,41 @@ func (tf *TestFixture) initializeBridgeAndVethOnRouter(ctx context.Context, rd *
 	rd.brveth = bv
 	testing.ContextLogf(ctx, "Network environment setup is done: %s <= %s----%s => %s", bv.br[0], bv.veth[0], bv.veth[1], bv.br[1])
 	return nil
+}
+
+func (tf *TestFixture) deinitializeBridgeAndVethOnRouter(ctx context.Context, rd *RouterData) error {
+	var firstErr error
+
+	// De-configure bridges on router
+	if rd.br != nil {
+		testing.ContextLogf(ctx, "Closing bridges at router %s", rd.target)
+		br := rd.br
+		if err := br.r.ReleaseBridge(ctx, br.br); err != nil {
+			return errors.Wrapf(err, "failed to release bridge %q: ", br.br)
+		}
+		testing.ContextLogf(ctx, "Closed bridges at router %s", rd.target)
+	}
+
+	// De-configure bridges and veths on router
+	if rd.brveth != nil {
+		testing.ContextLogf(ctx, "Closing bridges and veths at router %s", rd.target)
+		bv := rd.brveth
+
+		for j := 0; j < 2; j++ {
+			if err := bv.r.UnbindVeth(ctx, bv.veth[j]); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to unbind %q", bv.veth[j]))
+			}
+			if err := bv.r.ReleaseBridge(ctx, bv.br[j]); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to release bridge %q: ", bv.br[j]))
+			}
+		}
+		if err := bv.r.ReleaseVethPair(ctx, bv.veth[0]); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to release veth"))
+		}
+		testing.ContextLogf(ctx, "Closed bridges and veths at router %s", rd.target)
+	}
+
+	return firstErr
 }
 
 // GetBridgesOnRouterID gets all of bridge names on router at idx.
