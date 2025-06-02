@@ -18,9 +18,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// The index of the MCCI port to which the monitor is connected.
-const portUsed = 1
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     HpdWake,
@@ -30,37 +27,30 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_mcci"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.ChromeEC()),
-		Vars:         []string{"typec.McciSerial", "typec.McciPath"},
+		Fixture:      "typecSwitch",
 	})
 }
 
 // HpdWake does the following:
-// - Disconnect the monitor via MCCI switch.
+// - Disconnect the monitor via USB switch.
 // - Suspend the DUT.
-// - Reconnect the monitor via MCCI switch.
+// - Reconnect the monitor via USB switch.
 // - Check that the DUT woke, count the EC wake events and confirm that the wake count increased.
 //
 // This test expects the following hardware topology:
 //
-//	Host -------- DUT -------- dock ----- MCCI (`portUsed`) ---- display
+//	Host -------- DUT -------- dock ----- USB switch ---- display
 //	 |                                        |
 //	 |________________________________________|
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	sw, err := typecswitch.GetSwitch(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-	defer sw.Close(ctx)
-
-	// Disconnect the monitor.
-	sw.DisablePorts(ctx)
-
-	// GoBigSleepLint: Give enough time for a new display modeset after hot unplug.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to sleep for display unplug modeset: ", err)
-	}
+	sw := fixtData.TestSwitch
 
 	// Count wake sources before.
 	wakesBefore, err := getWakeCount(ctx, d)

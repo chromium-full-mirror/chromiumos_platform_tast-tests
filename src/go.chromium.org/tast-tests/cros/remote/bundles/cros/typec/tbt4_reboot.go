@@ -6,11 +6,10 @@ package typec
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,7 +24,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"reboot"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_tbt4_bringup"},
 			Val:       5,
@@ -40,9 +39,9 @@ func init() {
 
 // Tbt4Reboot does the following:
 //
-// - Disconnect the dock via MCCI switch.
+// - Disconnect the dock via USB switch.
 // - Verify that there is no Thunderbolt 4 dock present on the system.
-// - Reconnect the dock via MCCI switch.
+// - Reconnect the dock via USB switch.
 // - Reboot the system.
 // - Verify that the Thunderbolt 4 dock enumerates correctly.
 //
@@ -51,27 +50,20 @@ func init() {
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt 4 dock.
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB switch ---- Thunderbolt 4 dock.
+//	|                            |
+//	|____________________________|
 func Tbt4Reboot(ctx context.Context, s *testing.State) {
-
-	numIterations := s.Param().(int)
 	d := s.DUT()
-
+	numIterations := s.Param().(int)
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
-	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
-	}
-	defer sw.Close(ctx)
+	sw := fixtData.TestSwitch
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
@@ -87,7 +79,7 @@ func Tbt4Reboot(ctx context.Context, s *testing.State) {
 }
 
 // performTbt4RebootIteration runs 1 iteration of the Thunderbolt 4 reboot test.
-func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch) error {
+func performTbt4RebootIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
 	// Disconnect the dock.
 	sw.DisablePorts(ctx)
 

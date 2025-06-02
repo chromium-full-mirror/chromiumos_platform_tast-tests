@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +25,7 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
+		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			Val:     100,
 			Timeout: 30 * time.Minute,
@@ -123,25 +122,22 @@ var unigrafDiscIDParams = discIDParams{
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- Switch (`portUsed`) ---- Dock
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB Switch ---- Dock
+//	|                            |
+//	|____________________________|
 func DiscID(ctx context.Context, s *testing.State) {
 	var params discIDParams
 
-	numIterations := s.Param().(int)
 	d := s.DUT()
-
+	numIterations := s.Param().(int)
 	s.Log("Number of iterations: ", numIterations)
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
 
-	sw, err := typecswitch.GetSwitch(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to get switch handle: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-	defer sw.Close(cleanupCtx)
+	sw := fixtData.TestSwitch
 
 	// Select parameters based on the switch type.
 	switch sw.GetType() {
@@ -155,14 +151,6 @@ func DiscID(ctx context.Context, s *testing.State) {
 		s.Fatal("Unknown or unsupported switch type: ", sw.GetType())
 	}
 	s.Logf("Using Disc ID parameters: %+v", params)
-
-	// Make sure the dock is disconnected before testing.
-	if err := sw.DisablePorts(ctx); err != nil {
-		s.Fatal("Could not disable the port before testing: ", err)
-	}
-	if err := waitForDisconnection(ctx, d); err != nil {
-		s.Fatal("Failed to disconnect the device before the test: ", err)
-	}
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)

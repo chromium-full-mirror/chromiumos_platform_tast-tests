@@ -6,11 +6,10 @@ package typec
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
-	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -27,7 +26,7 @@ func init() {
 		SoftwareDeps: []string{"tpm2", "chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath"},
+		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_tbt4_bringup", "typec_tbt3_bringup"},
 			Val:       10,
@@ -42,10 +41,10 @@ func init() {
 
 // TbtHotplug does the following:
 //
-// - Disconnect the dock via MCCI switch.
+// - Disconnect the dock via USB switch.
 // - Verify that there is no Thunderbolt dock present on the system.
 // - Log in with Peripheral Data Access Protection disabled.
-// - Reconnect the dock via MCCI switch.
+// - Reconnect the dock via USB switch.
 // - Verify that the Thunderbolt dock enumerates correctly.
 //
 // This test expects the following hardware topology:
@@ -53,27 +52,20 @@ func init() {
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- Thunderbolt3 or Thunderbolt4 dock.
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB switch ---- Thunderbolt3 or Thunderbolt4 dock.
+//	|                            |
+//	|____________________________|
 func TbtHotplug(ctx context.Context, s *testing.State) {
-
-	numIterations := s.Param().(int)
 	d := s.DUT()
-
+	numIterations := s.Param().(int)
 	s.Log("Number of iterations: ", numIterations)
 
-	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
-	if err != nil {
-		s.Fatal("Failed to parse MCCI port commandline variable: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-
-	path, _ := s.Var("typec.McciPath")
-	sw, err := mcci.GetSwitch(s.RequiredVar("typec.McciSerial"), path, portUsed)
-	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
-	}
-	defer sw.Close(ctx)
+	sw := fixtData.TestSwitch
 
 	if err := typectest.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
 		s.Fatal("Failed to log in to Chrome: ", err)
@@ -92,7 +84,7 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performHotplugIteration runs 1 iteration of the hotplug test.
-func performHotplugIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch) error {
+func performHotplugIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
 	// Disconnect the dock.
 	sw.DisablePorts(ctx)
 

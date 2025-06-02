@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -27,12 +26,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Usb3StorageSpeed,
-		Desc:     "Checks data transfer speed with a USB 3.X mass storage device",
+		Desc:     "Checks data transfer speed with a USB 3.0 mass storage device",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
+		Fixture:      "typecSwitch",
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
@@ -51,9 +50,9 @@ func init() {
 // Usb3StorageSpeed does the following:
 //
 // - Unmount any removable media.
-// - Disconnect the USB 3.X mass storage device via MCCI switch.
-// - Reconnect the USB 3.X mass storage device via MCCI switch.
-// - Verify that at least one external USB 3.X mass storage device is connected to the DUT.
+// - Disconnect the USB 3.0 mass storage device via USB switch.
+// - Reconnect the USB 3.0 mass storage device via USB switch.
+// - Verify that at least one external USB 3.0 mass storage device is connected to the DUT.
 // - Writes 250000 blocks of random data to a newly enumerated block device (1 GB for typical flash drives).
 // - Confirms the data transfer speed is not unexpectedly slow.
 //
@@ -62,30 +61,22 @@ func init() {
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB 3.X mass storage (can be connected via dock or adapter).
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB switch ---- USB 3.0 mass storage (can be connected via dock or adapter).
+//	|                            |
+//	|____________________________|
 func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
-
 	const minPassingSpeed = 60 // MB/s
-	numIterations := s.Param().(int)
-	d := s.DUT()
 
+	d := s.DUT()
+	numIterations := s.Param().(int)
 	s.Log("Number of iterations: ", numIterations)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	sw, err := typecswitch.GetSwitch(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-	defer sw.Close(cleanupCtx)
-
-	if err = sw.EnterUsb3Mode(ctx); err != nil {
-		s.Fatal("Failed to enter USB3 mode: ", err)
-	}
+	sw := fixtData.TestSwitch
 
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {
@@ -93,41 +84,6 @@ func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
-
-	if err := typecutils.UnmountRemovableMedia(ctx, d); err != nil {
-		s.Fatal("Failed to unmount removable media: ", err)
-	}
-
-	// Make sure the device is disconnected before testing
-	testPort, err := sw.TestPort(ctx)
-	if err != nil {
-		s.Fatal("Could not get active port before testing")
-	}
-
-	if devicePort, err := sw.DevicePort(ctx); err != nil {
-		s.Fatal("Could not get used port before testing: ", err)
-	} else if devicePort == testPort {
-		devicesWhenOn, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
-		if err != nil {
-			s.Fatal("Could not get storage device list before testing: ", err)
-		}
-		if err := sw.DisablePorts(ctx); err != nil {
-			s.Fatal("Could not disable the port before testing: ", err)
-		}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient); err != nil {
-				return errors.Wrap(err, "could not get storage device list before testing")
-			} else if len(devices) >= len(devicesWhenOn) {
-				return errors.New("failed to disconnect USB device")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-			s.Fatal("Failed to disconnect the device before the test: ", err)
-		}
-
-	} else if err := sw.DisablePorts(ctx); err != nil {
-		s.Fatal("Could not disable the port before testing: ", err)
-	}
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
@@ -137,7 +93,7 @@ func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
 	}
 }
 
-// performUsb3StorageSpeedIteration runs 1 iteration of the USB 3.X storage speed test.
+// performUsb3StorageSpeedIteration runs 1 iteration of the USB 3.0 storage speed test.
 func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw typecswitch.Switch, minPassingSpeed float64) error {
 	// Get the devices when switch is off
 	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)

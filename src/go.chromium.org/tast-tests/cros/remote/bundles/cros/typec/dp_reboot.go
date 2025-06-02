@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +25,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"reboot"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
+		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_dp_bringup", "typec_unigraf274"},
 			Val:       5,
@@ -41,8 +40,8 @@ func init() {
 
 // DpReboot does the following:
 //
-// - Disconnect the DP dock/display via MCCI switch.
-// - Connect the DP dock/display via MCCI switch.
+// - Disconnect the DP dock/display via USB switch.
+// - Connect the DP dock/display via USB switch.
 // - Verify that the DP display enumerates correctly.
 // - Reboot the system.
 // - Verify that the DP display enumerates correctly.
@@ -52,24 +51,20 @@ func init() {
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- DP display (can be connected via DP Type-C dock).
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB switch ---- DP display (can be connected via DP Type-C dock).
+//	|                            |
+//	|____________________________|
 func DpReboot(ctx context.Context, s *testing.State) {
-	numIterations := s.Param().(int)
 	d := s.DUT()
-
+	numIterations := s.Param().(int)
 	s.Log("Number of iterations: ", numIterations)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	sw, err := typecswitch.GetSwitch(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to get MCCI switch handle: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-	defer sw.Close(cleanupCtx)
+	sw := fixtData.TestSwitch
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)

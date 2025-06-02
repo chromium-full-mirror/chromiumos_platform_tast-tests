@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,12 +20,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     Usb2Reboot,
-		Desc:     "Check that a USB 2 device enumerates successfully when rebooting",
+		Desc:     "Check that a USB 2.0 device enumerates successfully after reboot",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
-		Vars:         []string{"typec.McciSerial", "typec.McciPort", "typec.McciPath", "typec.UnigrafUri"},
+		Fixture:      "typecSwitch",
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
@@ -42,79 +41,34 @@ func init() {
 
 // Usb2Reboot does the following:
 //
-// - Toggle USB device connectivity via the MCCI switch.
-// - Count the number of currently connected USB devices.
+// - Toggle USB device connectivity via the USB switch.
+// - Count the number of currently connected USB 2.0 devices.
 // - Reboot the DUT.
-// - Check that there is the same number of USB devices as there were before rebooting.
+// - Check that there is the same number of USB 2.0 devices as there were before rebooting.
 //
 // This test expects the following hardware topology:
 //
 //	 ____network___
 //	|              |
 //	|              |
-//	Host -------- DUT ----- MCCI (`portUsed`) ---- USB device (can be connected via dock or adapter).
-//	|                              |
-//	|______________________________|
+//	Host          DUT ----- USB switch ---- USB 2.0 device (can be connected via dock or adapter).
+//	|                            |
+//	|____________________________|
 func Usb2Reboot(ctx context.Context, s *testing.State) {
-
-	numIterations := s.Param().(int)
 	d := s.DUT()
-
 	s.Log("Number of iterations: ", numIterations)
+	numIterations := s.Param().(int)
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	sw, err := typecswitch.GetSwitch(ctx, s)
-	if err != nil {
-		s.Fatal("Failed to get switch handle: ", err)
+	// Get the switch from the fixture.
+	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get fixture data")
 	}
-	defer sw.Close(cleanupCtx)
+	sw := fixtData.TestSwitch
 
-	if err = sw.EnterUsb2Mode(ctx); err != nil {
+	if err := sw.EnterUsb2Mode(ctx); err != nil {
 		s.Fatal("Failed to enter USB2 mode: ", err)
 	}
-	defer sw.EnterUsb3Mode(cleanupCtx)
-
-	// Dial rpc
-	cl, err := rpc.Dial(ctx, d, s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	usbClient := usb.NewSysfsServiceClient(cl.Conn)
-
-	// Make sure the device is disconnected before testing
-	testPort, err := sw.TestPort(ctx)
-	if err != nil {
-		s.Fatal("Could not get active port before testing: ", err)
-	}
-	if devicePort, err := sw.DevicePort(ctx); err != nil {
-		s.Fatal("Could not get used port before testing: ", err)
-	} else if devicePort == testPort {
-		devicesWhenOn, err := typecutils.Usb2GetDeviceList(ctx, usbClient)
-		if err != nil {
-			s.Fatal("Could not get USB2 device list before testing: ", err)
-		}
-		if err := sw.DisablePorts(ctx); err != nil {
-			s.Fatal("Could not disable the port before testing: ", err)
-		}
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if devices, err := typecutils.Usb2GetDeviceList(ctx, usbClient); err != nil {
-				return errors.Wrap(err, "could not get USB2 device list before testing")
-			} else if len(devices) >= len(devicesWhenOn) {
-				return errors.New("failed to disconnect new USB2 device")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-			s.Fatal("Failed to disconnect the device before the test: ", err)
-		}
-
-	} else if err := sw.DisablePorts(ctx); err != nil {
-		s.Fatal("Could not disable the port before testing: ", err)
-	}
-
-	cl.Close(ctx)
 
 	for i := 1; i <= numIterations; i++ {
 		s.Log("Running iteration ", i)
