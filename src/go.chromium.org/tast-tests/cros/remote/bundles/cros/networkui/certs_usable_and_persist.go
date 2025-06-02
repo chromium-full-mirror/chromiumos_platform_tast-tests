@@ -33,11 +33,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that installed certificates are usable and persist after different test scenarios",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-networking@google.com",
+			"miersh@google.com",
 		},
-		// ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		BugComponent: "b:1578688",
+		BugComponent: "b:156085",                                          // ChromeOS > Platform > baseOS > Networking
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{

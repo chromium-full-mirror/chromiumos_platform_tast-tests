@@ -42,12 +42,10 @@ func init() {
 		Func: CertsAreUserSpecific,
 		Desc: "Verify that the imported certificates are user specific",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
+			"cros-networking@google.com",
+			"miersh@google.com",
 		},
-		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:network", "network_e2e"},
 		SoftwareDeps:   []string{"chrome"},

@@ -26,10 +26,10 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that ChromeOS User/CA certificates can be deleted",
 		Contacts: []string{
-			"cros-device-enablement@google.com",
-			"cros-conn-test-team@google.com",
+			"cros-networking@google.com",
+			"miersh@google.com",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
 		Attr:         []string{"group:network", "network_e2e", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedIn,
