@@ -115,7 +115,7 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 	}()
 
 	// Open a browser tab with a text area for typing.
-	textURL := a11y.URLFromHTML("<textarea autofocus rows=\"10\" cols=\"80\"></textarea>")
+	textURL := a11y.URLFromHTML("<textarea rows=\"10\" cols=\"80\"></textarea>")
 	conn, err := a11y.NewTabWithURL(ctx, cr, textURL)
 	if err != nil {
 		s.Fatal("Failed to open textarea URL: ", err)
@@ -128,6 +128,9 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 	textFieldNode := nodewith.Role(role.TextField).Ancestor(nodewith.HasClass("ContentsWebView"))
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(textFieldNode)(ctx); err != nil {
 		s.Fatal("Text field node did not appear: ", err)
+	}
+	if err := ui.WithTimeout(5 * time.Second).LeftClickUntilFocused(textFieldNode)(ctx); err != nil {
+		s.Fatal("Failed to click and focus on text field: ", err)
 	}
 
 	// Finder for the actual text node in the text field.
