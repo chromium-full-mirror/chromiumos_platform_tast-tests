@@ -761,6 +761,9 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 
 	// Disable collecting Intel firmware dump on failure.
 	f.tf.CollectIntelFirmwareDumpOnError = false
+
+	// Disable rebooting the DUT on failure.
+	f.tf.RebootDUTOnErr = false
 }
 
 func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -851,5 +854,12 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 
 	if err := f.tf.CollectLogs(ctx); err != nil {
 		s.Log("Error collecting logs, err: ", err)
+	}
+
+	if s.HasError() && f.tf.RebootDUTOnErr {
+		// recovering from bad state
+		if err := s.DUT().Reboot(ctx); err != nil {
+			s.Fatal("Failed to reboot DUT: ", err)
+		}
 	}
 }

@@ -55,18 +55,7 @@ func Reset(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	tf.CollectIntelFirmwareDumpOnError = true
-
-	var errReset error
-	defer func(ctx context.Context) {
-		if errReset != nil {
-			// recovering from bad state
-			if err := s.DUT().Reboot(ctx); err != nil {
-				s.Fatal("Failed to reboot DUT: ", err)
-			}
-		}
-	}(ctx)
-	ctx, cancel := tf.ReserveForReboot(ctx)
-	defer cancel()
+	tf.RebootDUTOnErr = true
 
 	apOps := s.Param().([]hostapd.Option)
 	ap, err := tf.ConfigureAP(ctx, apOps, nil)
@@ -78,7 +67,7 @@ func Reset(ctx context.Context, s *testing.State) {
 			s.Error("Failed to deconfigure the AP: ", err)
 		}
 	}(ctx)
-	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap)
+	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
 	defer cancel()
 
 	ctxForDisconnectWiFi := ctx
@@ -98,10 +87,10 @@ func Reset(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ping from the DUT: ", err)
 	}
 
-	if _, errReset = tf.WifiClient().ResetTest(ctx, &wifi.ResetTestRequest{
+	if _, err = tf.WifiClient().ResetTest(ctx, &wifi.ResetTestRequest{
 		ServicePath: resp.ServicePath,
 		ServerIp:    ap.ServerIP().String(),
-	}); errReset != nil {
-		s.Fatal("gRPC command ResetTest failed: ", errReset)
+	}); err != nil {
+		s.Fatal("gRPC command ResetTest failed: ", err)
 	}
 }

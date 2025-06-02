@@ -246,6 +246,10 @@ type TestFixture struct {
 	// Enable CollectIntelFirmwareDumpOnError at the beginning of the test to collect
 	// Intel firmware dumps in the case of failure.
 	CollectIntelFirmwareDumpOnError bool
+
+	// Enable RebootDUTOnErr at the beginning of the test to reboot
+	// the DUT in the case of failure.
+	RebootDUTOnErr bool
 }
 
 // NewTestFixture creates a TestFixture.
