@@ -70,7 +70,7 @@ func init() {
 				forceClamshellMode: true,
 			},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.Model("kracko360")),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
