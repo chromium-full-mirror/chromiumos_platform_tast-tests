@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -61,8 +62,12 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 
 	cr := data.CR
 	server := data.Server
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create test API connection: ", err)
+	}
 
-	// Enable ChromeVox and open the test PDF.
+	// Enable ChromeVox and open the test PDF, which will trigger screen-ai dlc installation.
 	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), server.URL+"/"+pdfocr.MultiPagePDFName)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -73,9 +78,14 @@ func PDFOCRMultiPage(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// PDF OCR is on by default, so just wait until screen-ai dlc is installed.
+	// Wait until screen-ai dlc is installed.
 	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
+	}
+
+	// Due to crbug.com/417323832, need to refresh the PDF tab to re-load the PDF with OCR content after screen-ai dlc installation.
+	if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
+		s.Fatal("Failed to reload page: ", err)
 	}
 
 	ui := uiauto.New(cvData.TTSData.TConn)

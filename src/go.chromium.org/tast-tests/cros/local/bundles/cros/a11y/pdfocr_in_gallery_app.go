@@ -76,7 +76,7 @@ func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for installed app: ", err)
 	}
 
-	// Enable ChromeVox and open the test PDF.
+	// Enable ChromeVox.
 	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), server.URL)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -86,11 +86,6 @@ func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to tear down ChromeVox setup: ", err)
 		}
 	}()
-
-	// PDF OCR is on by default, so just wait until screen-ai dlc is installed.
-	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
-	}
 
 	ui := uiauto.New(cvData.TTSData.TConn).WithInterval(time.Second)
 
@@ -148,6 +143,11 @@ func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
 		)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to dismiss the PDF dialog: ", err)
+	}
+
+	// Opening a PDF in Gallery app triggers screen-ai dlc installation, so wait until it's installed.
+	if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
 	}
 
 	pdfCanvas := nodewith.Role(role.GraphicsDocument).Ancestor(galleryRootFinder)
