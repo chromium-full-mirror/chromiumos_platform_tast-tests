@@ -48,9 +48,9 @@ func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
 	}
 
 	// Make sure required modules exist and are accessible.
-	if err := extConn.Eval(ctx, `(async () => {
-		if (!window.selectToSpeak) {
-			window.selectToSpeak = (await import('/select_to_speak/select_to_speak_main.js')).selectToSpeak;
+	if err := extConn.Eval(ctx, `(() => {
+		if (!globalThis.selectToSpeak) {
+			globalThis.selectToSpeak = TestImportManager.getImports().selectToSpeak;
 		}
 	  })()`, nil); err != nil {
 		return nil, errors.Wrap(err, "failed to export modules from Select-to-Speak")
