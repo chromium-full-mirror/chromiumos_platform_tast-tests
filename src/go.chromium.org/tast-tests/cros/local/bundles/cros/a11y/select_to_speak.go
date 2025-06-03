@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1272897",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInDisableSelectToSpeakManifestV3",
 	})
 }
 

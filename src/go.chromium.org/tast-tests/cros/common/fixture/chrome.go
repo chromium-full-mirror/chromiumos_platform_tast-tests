@@ -8,6 +8,8 @@ package fixture
 const (
 	// Logged into a user session.
 	ChromeLoggedIn = "chromeLoggedIn"
+	// Logged into a user session without select to speak manifest v3.
+	ChromeLoggedInDisableSelectToSpeakManifestV3 = "chromeLoggedInDisableSelectToSpeakManifestV3"
 	// Logged into a user session with --disable-sync flag.
 	ChromeLoggedInDisableSync = "chromeLoggedInDisableSync"
 	// Logged into a user session with --disable-sync flag and turn on battery saver.

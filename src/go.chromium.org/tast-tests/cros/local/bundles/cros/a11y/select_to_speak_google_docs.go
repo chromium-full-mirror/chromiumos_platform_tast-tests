@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1272897", // ChromeOS Public Tracker > Experiences > Accessibility > Features > Select To Speak
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInDisableSelectToSpeakManifestV3",
 	})
 }
 func SelectToSpeakGoogleDocs(ctx context.Context, s *testing.State) {

@@ -513,6 +513,20 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeLoggedInDisableSelectToSpeakManifestV3,
+		Desc:     "Logged into a user session with select to speak manifest v3 disabled",
+		Contacts: []string{"akihiroota@chromium.org"},
+		// ChromeOS > Software > Experiences > Accessibility > Features > SelectToSpeak
+		BugComponent: "b:1273148",
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{DisableFeatures("AccessibilityManifestV3SelectToSpeak")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.
