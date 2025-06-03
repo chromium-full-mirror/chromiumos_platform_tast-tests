@@ -106,6 +106,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -119,6 +120,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -132,6 +134,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -145,6 +148,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -158,6 +162,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -171,6 +176,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -184,6 +190,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -197,6 +204,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -210,6 +218,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,
@@ -223,6 +232,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
+				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
 				Val: deqpParams{
 					api:        graphics.VK,
 					isParallel: true,

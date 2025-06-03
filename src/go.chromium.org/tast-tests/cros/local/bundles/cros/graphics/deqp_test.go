@@ -30,8 +30,9 @@ type dEQPGenParamData struct {
 	SkipGPUFamily  []string      // GPU Families to skip it on.
 
 	// The following should be autogen. Do not fill values.
-	ShardNum     int    // Index of the fractions for the subtest. Should only be generated.
-	HardwareDeps string // The formatted HardwareDeps string.
+	ShardNum        int    // Index of the fractions for the subtest. Should only be generated.
+	HardwareDeps    string // The formatted HardwareDeps string.
+	VariantCategory string // The formatted VariantCategory.
 }
 
 func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
@@ -62,17 +63,18 @@ func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 
 	for i := 0; i < p.ShardCount; i++ {
 		newParam := dEQPGenParamData{
-			Name:           p.Name,
-			Timeout:        p.Timeout,
-			Attr:           p.Attr,
-			API:            p.API,
-			IsParallel:     p.IsParallel,
-			IsSmoke:        p.IsSmoke,
-			HardwareModels: p.HardwareModels,
-			SoftwareDeps:   p.SoftwareDeps,
-			ShardCount:     p.ShardCount,
-			ShardNum:       i + 1,
-			HardwareDeps:   p.HardwareDeps,
+			Name:            p.Name,
+			Timeout:         p.Timeout,
+			Attr:            p.Attr,
+			API:             p.API,
+			IsParallel:      p.IsParallel,
+			IsSmoke:         p.IsSmoke,
+			HardwareModels:  p.HardwareModels,
+			SoftwareDeps:    p.SoftwareDeps,
+			ShardCount:      p.ShardCount,
+			ShardNum:        i + 1,
+			HardwareDeps:    p.HardwareDeps,
+			VariantCategory: p.VariantCategory,
 		}
 		// Replace the name field
 		var tpl bytes.Buffer
@@ -111,13 +113,14 @@ func TestDEQPParams(t *testing.T) {
 
 	// Adding the normal run for each APIType
 	params = append(params, []dEQPGenParamData{{
-		Name:          `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
-		Timeout:       3 * time.Hour,
-		Attr:          []string{"graphics_nightly", "graphics_cft"},
-		API:           "graphics.VK",
-		ShardCount:    10,
-		IsParallel:    true,
-		SkipGPUFamily: []string{"rogue"},
+		Name:            `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
+		Timeout:         3 * time.Hour,
+		Attr:            []string{"graphics_nightly", "graphics_cft"},
+		API:             "graphics.VK",
+		ShardCount:      10,
+		IsParallel:      true,
+		SkipGPUFamily:   []string{"rogue"},
+		VariantCategory: "`{\"name\": \"Graphics:board_gpu-id\"}`",
 	}, {
 		Name:       `gles2`,
 		Timeout:    30 * time.Minute,
@@ -170,6 +173,9 @@ func TestDEQPParams(t *testing.T) {
 		{{ end }}
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
+		{{ end }}
+		{{ if .VariantCategory }}
+		VariantCategory: {{ .VariantCategory }},
 		{{ end }}
 		Val: deqpParams {
 			{{ if .API }} api: {{ .API }}, {{ end }}
