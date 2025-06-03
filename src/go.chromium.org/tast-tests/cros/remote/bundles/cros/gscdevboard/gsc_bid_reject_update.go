@@ -142,7 +142,7 @@ func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 
 	// GSC should accept the update, but it won't jump to the image. The
 	// board id locked locked images are not signed with valid keys.
-	err = b.GSCToolUpdate(ctx, i, bidImagePath)
+	err = b.GSCToolUpdateSkipBidCheck(ctx, i, bidImagePath)
 	if testConfig.blocked {
 		if err == nil {
 			s.Fatalf("BID %s did not block update to image with %s BID", bidDesc, testConfig.imageBID)

@@ -327,9 +327,9 @@ func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context) error
 	return err
 }
 
-// GSCToolUpdate uses gsctool to update the image.
-func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, i *common.CrOSImage, imagePath string) error {
-	out, err := a.GSCToolCommand(ctx, imagePath)
+// gscToolUpdate uses gsctool to update to the specified image with args.
+func (a *DUTControlAndreiboard) gscToolUpdate(ctx context.Context, i *common.CrOSImage, imagePath string, args ...string) error {
+	out, err := a.GSCToolCommand(ctx, imagePath, args...)
 	// We need a success message without a failure. The NT update process doesn't
 	// fail for a BID flags/type mismatch until the reset request since we need
 	// the entire image to be present to check the image's BID values.
@@ -337,6 +337,18 @@ func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, i *common.CrO
 		return i.WaitUntilBooted(ctx)
 	}
 	return errors.Wrap(err, "gsctool update")
+}
+
+// GSCToolUpdate uses gsctool to update the image.
+func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, i *common.CrOSImage, imagePath string) error {
+	return a.gscToolUpdate(ctx, i, imagePath)
+}
+
+// GSCToolUpdateSkipBidCheck uses gsctool to update the image but skipping the
+// built-in gsctool bid constraint check and thus relying on RW bid constraint
+// check.
+func (a *DUTControlAndreiboard) GSCToolUpdateSkipBidCheck(ctx context.Context, i *common.CrOSImage, imagePath string) error {
+	return a.gscToolUpdate(ctx, i, imagePath, "--skip_bid_check")
 }
 
 // GSCVersion represents the epic.major.minor version tuple of GSC fw.
