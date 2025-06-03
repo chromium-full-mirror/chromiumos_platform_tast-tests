@@ -35,22 +35,34 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Path("dev_image_new"), SkipPermCheck(), SkipChildren()),
 		NewPattern(Path("var_overlay"), SkipPermCheck(), SkipChildren()),
 		NewPattern(Path("developer_tools"), SkipPermCheck(), SkipChildren()),
+		NewPattern(Path("unencrypted/dev_image.block"), SkipPermCheck()),
 
 		// These files/directories do not currently pass the general Unix permissions check.
+		// On some boards, these files exist under encrypted directory.
 		// TODO(b/306477467) Figure out why these files have relaxed permissions.
 		NewPattern(Path("encrypted/var/cache/fwupd/fwupd/fwupdtool"), SkipPermCheck()),
 		// The below two files are used by metrics-library to allow all processes to
 		// communicate metrics to chrome.
 		NewPattern(Path("encrypted/var/lib/metrics/uma-events"), SkipPermCheck()),
+		NewPattern(Path("var/lib/metrics/uma-events"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/metrics/uma-events.d"), SkipPermCheck()),
+		NewPattern(Path("var/lib/metrics/uma-events.d"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/metrics/structured/events"), SkipPermCheck()),
+		NewPattern(Path("var/lib/metrics/structured/events"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/metrics/structured/keys"), SkipPermCheck()),
+		NewPattern(Path("var/lib/metrics/structured/keys"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/bluetooth/bluetooth-daemon.current"), SkipPermCheck()),
+		NewPattern(Path("var/lib/bluetooth/bluetooth-daemon.current"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/bluetooth/bluetooth-llprivacy.experimental"), SkipPermCheck()),
+		NewPattern(Path("var/lib/bluetooth/bluetooth-llprivacy.experimental"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/crash_reporter/pending_clean_shutdown"), SkipPermCheck()),
+		NewPattern(Path("var/lib/crash_reporter/pending_clean_shutdown"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/featured/store"), SkipPermCheck()),
+		NewPattern(Path("var/lib/featured/store"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/tmp"), SkipPermCheck()),
+		NewPattern(Path("var/tmp"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/log/asan"), SkipPermCheck()),
+		NewPattern(Path("var/log/asan"), SkipPermCheck()),
 		NewPattern(Path("unencrypted/preserve/log/asan"), SkipPermCheck()),
 		NewPattern(Path("home/.shadow"), Users("root"), Groups("root"), Mode(0700), SkipPermCheck(), SkipChildren()),
 
