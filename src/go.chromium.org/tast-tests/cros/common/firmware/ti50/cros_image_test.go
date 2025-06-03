@@ -1516,7 +1516,7 @@ func TestConvertCr50ResetFlags9(t *testing.T) {
 }
 
 func testConvertCr50ResetFlags(t *testing.T, input, expected uint32) {
-	res := convertCr50ResetFlags(int64(input))
+	res := convertCr50ResetFlags(uint64(input))
 	if expected != res {
 		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
 	}
@@ -1577,7 +1577,7 @@ func TestConvertOTResetFlags9(t *testing.T) {
 }
 
 func testConvertOTResetFlags(t *testing.T, input, expected uint32) {
-	res := convertOTResetFlags(int64(input))
+	res := convertOTResetFlags(uint64(input))
 	if expected != res {
 		t.Fatalf("flag mismatch with %x: expected %x got %x", input, expected, res)
 	}

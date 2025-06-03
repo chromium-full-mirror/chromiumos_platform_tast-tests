@@ -769,7 +769,7 @@ func matchImageBID(s string, slot GscSlot) (ImageBID, error) {
 	}
 
 	hexToBIDField := func(str string) (BIDField, error) {
-		res, err := strconv.ParseInt(str, 16, 32)
+		res, err := strconv.ParseUint(str, 16, 32)
 		if err != nil {
 			return 0, errors.Wrap(err, "could not parse hex string")
 		}
@@ -1318,7 +1318,7 @@ const (
 	OTResetBrownOut = (1 << 5)
 )
 
-func convertCr50ResetFlags(flags int64) uint32 {
+func convertCr50ResetFlags(flags uint64) uint32 {
 	res := uint32(0)
 	if flags&Cr50ResetFlagPowerOn != 0 {
 		res |= GscResetFlagPowerOn
@@ -1338,7 +1338,7 @@ func convertCr50ResetFlags(flags int64) uint32 {
 	return res
 }
 
-func convertOTResetFlags(flags int64) uint32 {
+func convertOTResetFlags(flags uint64) uint32 {
 	res := uint32(0)
 	if flags&OTResetFlagPowerOn != 0 {
 		res |= GscResetFlagPowerOn
@@ -1451,19 +1451,19 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	}
 	result.RWRollbackBits = rollbackBits
 
-	res, err := strconv.ParseInt(input["resetCount"], 10, 32)
+	res, err := strconv.ParseUint(input["resetCount"], 10, 32)
 	if err != nil {
 		return result, errors.Wrap(err, "invalid resetCount")
 	}
 	result.ResetCount = uint32(res)
 
-	res, err = strconv.ParseInt(input["tpmModeStatus"], 10, 32)
+	res, err = strconv.ParseUint(input["tpmModeStatus"], 10, 32)
 	if err != nil {
 		return result, errors.Wrap(err, "invalid tpmModeStatus")
 	}
 	result.TpmModeStatus = uint32(res)
 
-	res, err = strconv.ParseInt(input["resetFlags"], 16, 32)
+	res, err = strconv.ParseUint(input["resetFlags"], 16, 32)
 	if err != nil {
 		return result, errors.Wrap(err, "invalid resetFlags")
 	}
