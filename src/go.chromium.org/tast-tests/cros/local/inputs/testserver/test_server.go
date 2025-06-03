@@ -523,7 +523,7 @@ func (its *InputsTestServer) validateVoiceInField(uc *useractions.UserContext, i
 			its.CleanFieldAndTriggerVK(inputField),
 			vkbCtx.SwitchToVoiceInput(),
 			func(ctx context.Context) error {
-				return voice.AudioFromFile(ctx, dataPath(inputData.VoiceFile))
+				return voice.AudioFromFile(ctx, dataPath(inputData.VoiceFile), 0 /*duration*/)
 			},
 		)(ctx)
 	}

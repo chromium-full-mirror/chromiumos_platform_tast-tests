@@ -69,7 +69,7 @@ func Dictation(ctx context.Context, s *testing.State) {
 	}
 
 	audioFile := s.DataPath("voice_en_hello.wav")
-	if err := driver.DictateAndWaitForEditableValue(audioFile, "Hello"); err != nil {
+	if err := driver.DictateAndWaitForEditableValue(audioFile, 2 /*audioDurationSec*/, "Hello"); err != nil {
 		s.Fatal("Failed to dictate and verify editable value: ", err)
 	}
 

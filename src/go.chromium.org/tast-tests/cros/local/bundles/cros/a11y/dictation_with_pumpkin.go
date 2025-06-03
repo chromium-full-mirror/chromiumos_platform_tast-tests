@@ -58,7 +58,7 @@ func DictationWithPumpkin(ctx context.Context, s *testing.State) {
 	// The audio file will play "Dictate hello" - if Pumpkin is working correctly,
 	// Dictation should just enter "Hello" into the text field.
 	audioFile := s.DataPath("voice_en_dictate_hello.wav")
-	if err := driver.DictateAndWaitForEditableValue(audioFile, "Hello"); err != nil {
+	if err := driver.DictateAndWaitForEditableValue(audioFile, 2 /*audioDurationSec*/, "Hello"); err != nil {
 		s.Fatal("Failed to dictate and verify editable value: ", err)
 	}
 

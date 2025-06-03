@@ -142,6 +142,9 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 	cr, err := chrome.New(ctx,
 		// Enforce on-device speech recognition.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
+		// TODO(b:388867838): Enable this feature when the manifest v3 migration
+		// of accessibility common is complete.
+		chrome.DisableFeatures("AccessibilityManifestV3AccessibilityCommon"),
 	)
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to start chrome")
@@ -348,10 +351,9 @@ func (d driver) ToggleOff() error {
 // to; note, it is assumed that speech recognition is on when calling this
 // method. It then verifies that the expected text was entered into the editable
 // field by using uiauto.
-func (d driver) DictateAndWaitForEditableValue(audioFile, expectedValue string) error {
+func (d driver) DictateAndWaitForEditableValue(audioFile string, audioDurationSec int, expectedValue string) error {
 	ctx := d.ctx
-
-	if err := voice.AudioFromFile(ctx, audioFile); err != nil {
+	if err := voice.AudioFromFile(ctx, audioFile, audioDurationSec); err != nil {
 		return errors.Wrap(err, "failed to play audio file")
 	}
 

@@ -30,7 +30,7 @@ const (
 )
 
 // AudioFromFile inputs an audio file via active input node and waits for its completion.
-func AudioFromFile(ctx context.Context, audioFilePath string) error {
+func AudioFromFile(ctx context.Context, audioFilePath string, duration int) error {
 	audioInput := audio.TestRawData{
 		Path:          audioFilePath,
 		BitsPerSample: 16,
@@ -38,6 +38,7 @@ func AudioFromFile(ctx context.Context, audioFilePath string) error {
 		Rate:          48000,
 		Frequencies:   []int{440, 440},
 		Volume:        0.05,
+		Duration:      duration,
 	}
 
 	// Playback function by CRAS.
