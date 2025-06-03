@@ -38,6 +38,7 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"informational",
+			"group:criticalstaging",
 		},
 		Timeout: devicePlaybackRecordTimeout,
 		Fixture: "rebootForAudioDSPFixture",
