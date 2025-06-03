@@ -107,13 +107,14 @@ func GSCBIDRejectUpdate(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
 	fwName := fixture.FindFwName(f.TestbedProperties.TestbedType)
+	imagePrefix := fixture.GetFwAndDevicePrefix(f.TestbedProperties.TestbedType)
 
 	testConfig := s.Param().(testBIDConfig)
 	testFlags := testConfig.testFlags
 	testType := testConfig.testType
 	bidDesc := fmt.Sprintf("%x:%x", testType, testFlags)
 
-	gsURL := fmt.Sprintf(imageTemplate, fwName, fwName, testConfig.imageBID)
+	gsURL := fmt.Sprintf(imageTemplate, fwName, imagePrefix, testConfig.imageBID)
 	bidImagePath, err := fixture.DownloadToTempFile(ctx, "testBID", gsURL)
 	th.MustSucceed(err, "Failed to download %s", gsURL)
 

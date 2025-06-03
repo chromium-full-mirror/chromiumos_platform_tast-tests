@@ -39,6 +39,7 @@ const (
 )
 
 var reGsctoolUpdateSuccess = regexp.MustCompile(`image updated`)
+var reGsctoolResetRequestFailure = regexp.MustCompile(`generate_reset_request: Error`)
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
 type DUTControlAndreiboard struct {
@@ -329,7 +330,10 @@ func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context) error
 // GSCToolUpdate uses gsctool to update the image.
 func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, i *common.CrOSImage, imagePath string) error {
 	out, err := a.GSCToolCommand(ctx, imagePath)
-	if reGsctoolUpdateSuccess.Match(out) {
+	// We need a success message without a failure. The NT update process doesn't
+	// fail for a BID flags/type mismatch until the reset request since we need
+	// the entire image to be present to check the image's BID values.
+	if reGsctoolUpdateSuccess.Match(out) && !reGsctoolResetRequestFailure.Match(out) {
 		return i.WaitUntilBooted(ctx)
 	}
 	return errors.Wrap(err, "gsctool update")

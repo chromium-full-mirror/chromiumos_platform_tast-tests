@@ -685,6 +685,28 @@ func FindFwName(t ti50.TestbedType) string {
 	return "ti50"
 }
 
+// GetFwAndDevicePrefix returns ti50-dt, ti50-nt, or cr50
+func GetFwAndDevicePrefix(t ti50.TestbedType) string {
+	switch t {
+	case ti50.GscDTAndreiboard:
+		fallthrough
+	case ti50.GscDTShield:
+		fallthrough
+	case ti50.GscDTShieldV2:
+		return "ti50-dt"
+	case ti50.GscOTShield:
+		fallthrough
+	case ti50.GscOpentitanCw310Fpga:
+		fallthrough
+	case ti50.GscNTShieldV2:
+		return "ti50-nt"
+	case ti50.GscHostEmulation:
+		return "ti50-he"
+	default:
+		return FindFwName(t)
+	}
+}
+
 // ti50ImageTypeToProject returns the project.
 func ti50ImageTypeToProject(i ImageType) string {
 	if i == SystemImage {
