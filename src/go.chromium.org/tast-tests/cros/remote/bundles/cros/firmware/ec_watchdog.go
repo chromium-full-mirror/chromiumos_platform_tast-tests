@@ -8,6 +8,8 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -126,6 +128,9 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		if watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
 			s.Fatal("Failed to clear panicinfo")
 		}
+		if err := checkProgramCounter(ctx, panicInfo); err != nil {
+			s.Log("Unexpected program counter value: ", err)
+		}
 	}
 
 	if oldBootID, err = h.Reporter.BootID(ctx); err != nil {
@@ -176,6 +181,9 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	}
 	if watchdogWarnPanicReason.MatchString(panicInfo) {
 		s.Fatal("Unexpected watchdog warning caused by short wait")
+	}
+	if err := checkProgramCounter(ctx, panicInfo); err != nil {
+		s.Log("Unexpected program counter value: ", err)
 	}
 
 	// Watchdog warning test
@@ -235,6 +243,9 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 			s.Log("Watchdog warning not found in panicinfo (unexpected, but not a failure)")
 		}
 	}
+	if err := checkProgramCounter(ctx, panicInfo); err != nil {
+		s.Log("Unexpected program counter value: ", err)
+	}
 
 	// Watchdog panic test
 	watchdogDelay := h.Config.ECWatchdogPeriod * 2
@@ -268,5 +279,36 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if !watchdogPanicReason.MatchString(panicInfo) {
 		s.Fatal("Watchdog panic reason missing in panicinfo")
 	}
+	if err := checkProgramCounter(ctx, panicInfo); err != nil {
+		s.Log("Unexpected program counter value: ", err)
+	}
+
 	s.Logf("Boot ID old: %s, new: %s", newBootID, oldBootID)
+}
+
+func checkProgramCounter(ctx context.Context, panicInfo string) error {
+	if strings.Contains(panicInfo, "No panic data") {
+		return nil
+	}
+
+	pcMap := map[string]*regexp.Regexp{
+		"cortex-m0": regexp.MustCompile(`(?i)pc\s*[\:=]\s*(?:0x)?([0-9a-fA-F]+)\s`),
+		"nds32":     regexp.MustCompile(`(?i)ipc\s*[\:=]?\s*(?:0x)?([0-9a-fA-F]+)\s`),
+	}
+	for arch, regex := range pcMap {
+		match := regex.FindStringSubmatch(panicInfo)
+		if match == nil {
+			continue
+		}
+		pc, err := strconv.ParseInt(match[1], 16, 64)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse program counter value from match %v to int", match)
+		}
+		testing.ContextLogf(ctx, "Found program counter value (arch: %v): %v (%v)", arch, pc, match[0])
+		if pc == 0 {
+			return errors.Errorf("program counter was unexpectedly 0, expected non-zero value: %v", panicInfo)
+		}
+		return nil
+	}
+	return errors.Errorf("unable to find value for program counter in panic info, unsupported architecture or bad regex: %v", panicInfo)
 }
