@@ -109,7 +109,7 @@ func USBGuardAllowDeviceAfterLockUnlock(ctx context.Context, s *testing.State) {
 
 	// Start Chrome on the DUT.
 	ns := nearbyservice.NewNearbyShareServiceClient(cl.Conn)
-	loginReq := &nearbyservice.CrOSLoginRequest{KeepState: true}
+	loginReq := &nearbyservice.CrOSLoginRequest{KeepState: false}
 	if _, err := ns.NewChromeLogin(ctx, loginReq); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
