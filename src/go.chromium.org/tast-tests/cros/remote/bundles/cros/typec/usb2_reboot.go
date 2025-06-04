@@ -57,8 +57,8 @@ func init() {
 //	|____________________________|
 func Usb2Reboot(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	s.Log("Number of iterations: ", numIterations)
 	numIterations := s.Param().(int)
+	s.Log("Number of iterations: ", numIterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)

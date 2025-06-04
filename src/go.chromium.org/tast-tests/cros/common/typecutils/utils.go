@@ -415,7 +415,7 @@ func Usb2GetDeviceList(ctx context.Context, cl usb.SysfsServiceClient) ([]string
 }
 
 // CheckPowerRole verifies that the power role on a specified port is the expected one.
-func CheckPowerRole(ctx context.Context, dut *dut.DUT, powerRole string, portId uint8) error {
+func CheckPowerRole(ctx context.Context, dut *dut.DUT, powerRole string, portId int) error {
 	powerRole = strings.ToUpper(powerRole)
 
 	out, err := dut.Conn().CommandContext(ctx, "ectool", "typecstatus", fmt.Sprintf("%d", portId)).Output()
@@ -424,7 +424,22 @@ func CheckPowerRole(ctx context.Context, dut *dut.DUT, powerRole string, portId 
 	}
 
 	if !strings.Contains(string(out), fmt.Sprintf("Role:%s", powerRole)) {
-		return errors.Wrapf(err, "power role was not %s", powerRole)
+		return errors.Errorf("power role was not %s. Typecstatus: %s", powerRole, string(out))
+	}
+	return nil
+}
+
+// CheckDataRole verifies that the data role on a specified port is the expected one.
+func CheckDataRole(ctx context.Context, dut *dut.DUT, dataRole string, portId int) error {
+	dataRole = strings.ToUpper(dataRole)
+
+	out, err := dut.Conn().CommandContext(ctx, "ectool", "typecstatus", fmt.Sprintf("%d", portId)).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to execute ectool typecstatus command")
+	}
+
+	if !strings.Contains(string(out), fmt.Sprintf("%s, Polarity:", dataRole)) {
+		return errors.Errorf("data role was not %s. Typecstatus: %s", dataRole, string(out))
 	}
 	return nil
 }

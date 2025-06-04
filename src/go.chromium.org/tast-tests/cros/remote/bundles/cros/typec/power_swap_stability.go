@@ -26,12 +26,10 @@ func init() {
 	})
 }
 
-const (
-	numIterations = 30
-	dutTestPortID = 1
-)
-
 func PowerSwapStability(ctx context.Context, s *testing.State) {
+	numIterations := 30
+	dutTestPortID := 1
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()

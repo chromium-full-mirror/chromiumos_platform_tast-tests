@@ -266,15 +266,20 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
 	return nil
 }
 
-// SendDataSwapRequest sends data swap request to be initiated by the DUT.
+// SendDataSwapRequest sends data swap request with servo to be initiated by the DUT.
 func (s *Servo) SendDataSwapRequest(ctx context.Context) error {
+	return s.SendDataSwapRequestToPort(ctx, s.dutPDInfo.activePort)
+}
+
+// SendDataSwapRequestToPort sends data swap request to be initiated by the DUT on a given port.
+func (s *Servo) SendDataSwapRequestToPort(ctx context.Context, port int) error {
 	var cmd string
 
 	switch s.dutPDInfo.version {
 	case TCPMv1, TCPMv2:
-		cmd = fmt.Sprintf("pd %d swap data", s.dutPDInfo.activePort)
+		cmd = fmt.Sprintf("pd %d swap data", port)
 	case PDC:
-		cmd = fmt.Sprintf("pdc drs %d", s.dutPDInfo.activePort)
+		cmd = fmt.Sprintf("pdc drs %d", port)
 	default:
 		panic("Unknown TCPM version")
 	}
