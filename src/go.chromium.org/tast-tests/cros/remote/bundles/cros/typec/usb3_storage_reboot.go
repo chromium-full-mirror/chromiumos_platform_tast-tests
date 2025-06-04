@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -78,7 +79,7 @@ func Usb3StorageReboot(ctx context.Context, s *testing.State) {
 }
 
 // performUsb3StorageRebootIteration runs 1 iteration of the USB 3.0 storage reboot test.
-func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw typecswitch.Switch) error {
+func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw usbswitch.Switch) error {
 	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())
 	if err != nil {

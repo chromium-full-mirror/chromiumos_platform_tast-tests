@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -73,7 +74,7 @@ func DpHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performDpHotplugIteration runs 1 iteration of the DP hotplug test.
-func performDpHotplugIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performDpHotplugIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	// Disconnect the dock/display.
 	if err := sw.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch off the port")

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -38,13 +39,13 @@ func init() {
 
 // SwitchFixture holds the state for the Type-C switch fixture.
 type SwitchFixture struct {
-	TestSwitch Switch
+	TestSwitch usbswitch.Switch
 }
 
 // FixtureData holds the data passed from the fixture to the test.
 // Tests will cast s.FixtValue() to this type.
 type FixtureData struct {
-	TestSwitch Switch
+	TestSwitch usbswitch.Switch
 }
 
 // SetUp initializes the Type-C switch.
@@ -89,7 +90,7 @@ func (f *SwitchFixture) Reset(ctx context.Context) error {
 	}
 
 	// Attempt to reset to USB3 mode as a common default.
-	if err := f.TestSwitch.EnterUsb3Mode(ctx); err != nil {
+	if err := f.TestSwitch.EnterMode(ctx, usbswitch.Usb3Mode); err != nil {
 		return errors.Wrap(err, "failed to reset Unigraf to USB3 mode during fixture reset")
 	}
 	return nil
@@ -104,7 +105,7 @@ func (i *SwitchFixture) PostTest(ctx context.Context, s *testing.FixtTestState) 
 }
 
 // newSwitch returns an interface for the usb switch.
-func newSwitch(ctx context.Context, s *testing.FixtState) (Switch, error) {
+func newSwitch(ctx context.Context, s *testing.FixtState) (usbswitch.Switch, error) {
 	if unigrafURI, unigrafPresent := s.Var("typec.UnigrafUri"); unigrafPresent {
 		unigrafObj, err := unigraf.New(ctx, unigrafURI)
 		if err != nil {
@@ -120,7 +121,7 @@ func newSwitch(ctx context.Context, s *testing.FixtState) (Switch, error) {
 			return nil, errors.Wrap(err, "failed to parse MCCI port cmdline argument")
 		}
 
-		mcciObj, err := mcci.GetSwitch(mcciSerial, path, portUsed)
+		mcciObj, err := mcci.New(mcciSerial, path, portUsed)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get MCCI switch handle")
 		}

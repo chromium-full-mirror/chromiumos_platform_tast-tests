@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -66,7 +67,7 @@ func Usb2Reboot(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
-	if err := sw.EnterUsb2Mode(ctx); err != nil {
+	if err := sw.EnterMode(ctx, usbswitch.Usb2Mode); err != nil {
 		s.Fatal("Failed to enter USB2 mode: ", err)
 	}
 
@@ -79,7 +80,7 @@ func Usb2Reboot(ctx context.Context, s *testing.State) {
 }
 
 // performUsb2RebootIteration runs 1 iteration of the USB 2.0 reboot test.
-func performUsb2RebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw typecswitch.Switch) error {
+func performUsb2RebootIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw usbswitch.Switch) error {
 
 	// Dial rpc
 	cl, err := rpc.Dial(ctx, d, s.RPCHint())

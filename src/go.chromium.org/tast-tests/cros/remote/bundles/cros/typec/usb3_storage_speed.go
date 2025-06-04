@@ -15,6 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -94,7 +95,7 @@ func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
 }
 
 // performUsb3StorageSpeedIteration runs 1 iteration of the USB 3.0 storage speed test.
-func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw typecswitch.Switch, minPassingSpeed float64) error {
+func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw usbswitch.Switch, minPassingSpeed float64) error {
 	// Get the devices when switch is off
 	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 	if err != nil {

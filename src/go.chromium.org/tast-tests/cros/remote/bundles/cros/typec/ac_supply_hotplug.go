@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -88,7 +89,7 @@ func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performACSupplyHotplugIteration runs 1 iteration of the AC supply hotplug test.
-func performACSupplyHotplugIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performACSupplyHotplugIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	// Enable the port
 	if err := sw.EnablePort(ctx); err != nil {
 		return errors.Wrap(err, "failed to enable the port")

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
@@ -84,7 +85,7 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performHotplugIteration runs 1 iteration of the hotplug test.
-func performHotplugIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performHotplugIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	// Disconnect the dock.
 	sw.DisablePorts(ctx)
 

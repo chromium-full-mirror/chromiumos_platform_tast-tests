@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -83,7 +84,7 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 }
 
 // performUsb3StorageHotplugIteration runs 1 iteration of the USB 3.0 storage hotplug test.
-func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw typecswitch.Switch) error {
+func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw usbswitch.Switch) error {
 
 	// Get the devices when switch is off
 	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)

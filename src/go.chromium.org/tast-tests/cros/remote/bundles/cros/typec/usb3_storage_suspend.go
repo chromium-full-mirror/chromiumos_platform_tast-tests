@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -79,7 +80,7 @@ func Usb3StorageSuspend(ctx context.Context, s *testing.State) {
 }
 
 // performUsb3StorageSuspendIteration runs 1 iteration of the USB 3.0 storage suspend test.
-func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw typecswitch.Switch) error {
+func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d *dut.DUT, sw usbswitch.Switch) error {
 	const suspendDurationS = 10
 
 	// Dial rpc

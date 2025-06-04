@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
@@ -68,7 +69,7 @@ func Usb2Hotplug(ctx context.Context, s *testing.State) {
 	sw := fixtData.TestSwitch
 
 	// Set USB2 mode for this test.
-	if err := sw.EnterUsb2Mode(ctx); err != nil {
+	if err := sw.EnterMode(ctx, usbswitch.Usb2Mode); err != nil {
 		s.Fatal("Failed to set USB2 mode via switch: ", err)
 	}
 
@@ -89,7 +90,7 @@ func Usb2Hotplug(ctx context.Context, s *testing.State) {
 }
 
 // performUsb2HotplugIteration runs a single iteration of the USB 2.0 hotplug.
-func performUsb2HotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw typecswitch.Switch) error {
+func performUsb2HotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw usbswitch.Switch) error {
 
 	// Get the device count when switch is off
 	devicesWhenOff, err := typecutils.Usb2GetDeviceList(ctx, cl)

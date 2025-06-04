@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -76,7 +77,7 @@ func DpSuspend(ctx context.Context, s *testing.State) {
 }
 
 // performDpSuspendIteration runs 1 iteration of the DP suspend test.
-func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performDpSuspendIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	const suspendDurationS = 10
 
 	// Disconnect the dock/display.

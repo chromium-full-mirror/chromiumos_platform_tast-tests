@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	grpc "google.golang.org/grpc"
 )
 
@@ -73,10 +74,11 @@ const (
 
 // UsbTester is data type to model a unigraf utc274 usb tester.
 type UsbTester struct {
-	conn   *grpc.ClientConn
-	client passport.UsbTesterServiceClient
-	tester string
-	uri    string
+	conn          *grpc.ClientConn
+	client        passport.UsbTesterServiceClient
+	tester        string
+	uri           string
+	switchPortNum int
 }
 
 // New Unigraf tester. It will connect to the the remote grcp server passed as
@@ -94,9 +96,10 @@ func New(ctx context.Context, uri string) (*UsbTester, error) {
 	}
 
 	ctl := &UsbTester{
-		conn:   conn,
-		client: client,
-		uri:    uri,
+		conn:          conn,
+		client:        client,
+		uri:           uri,
+		switchPortNum: 0,
 	}
 	openctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -444,36 +447,42 @@ func (s *UsbTester) TestPort(ctx context.Context) (int, error) {
 
 // DisablePorts disables the device testing ports.
 func (s *UsbTester) DisablePorts(ctx context.Context) error {
+	//TODO(b:416456393): Implement this properly when turning off ports is supported.
+	if s.switchPortNum == 1 {
+		return s.SetTestPort(ctx, 0)
+	}
 	return s.SetTestPort(ctx, 1)
 }
 
 // EnablePort enables the used port.
 func (s *UsbTester) EnablePort(ctx context.Context) error {
-	return s.SetTestPort(ctx, 0)
+	return s.SetTestPort(ctx, s.switchPortNum)
 }
 
-// DevicePort returns the port connected to the device used in the test.
-func (s *UsbTester) DevicePort(_ context.Context) (int, error) {
-	return 0, nil
+// SetTestPort sets the port affected by Enable/DisablePort actions.
+func (s *UsbTester) SetActiveSwitchPort(ctx context.Context, portNum int) error {
+	if portNum != 0 && portNum != 1 {
+		return errors.Errorf("port number must be 0 or 1, got %d", portNum)
+	}
+	s.switchPortNum = portNum
+	return nil
 }
 
 // GetType returns the type of the switch.
-func (s *UsbTester) GetType() string {
-	return "UTC274"
+func (s *UsbTester) GetType() usbswitch.SwitchType {
+	return usbswitch.UTC274
 }
 
-// EnterUsb2Mode sets the USB channel to USB2.
-func (s *UsbTester) EnterUsb2Mode(ctx context.Context) error {
-	return s.SetUsbChannel(ctx, UsbChannelUSB2)
-}
-
-// EnterUsb3Mode sets the USB channel to USB3.
-func (s *UsbTester) EnterUsb3Mode(ctx context.Context) error {
-	return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
-}
-
-// EnterDpMode enabled DP on Unigraf.
-func (s *UsbTester) EnterDpMode(ctx context.Context) error {
-	// TODO(bszpila): Implement this.
-	return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
+// EnterMode sets the mode of the device.
+func (s *UsbTester) EnterMode(ctx context.Context, mode usbswitch.ConnectionMode) error {
+	switch mode {
+	case usbswitch.Usb2Mode:
+		return s.SetUsbChannel(ctx, UsbChannelUSB2)
+	case usbswitch.Usb3Mode:
+		return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
+	case usbswitch.DpMode:
+		return s.SetUsbChannel(ctx, UsbChannelUSB3And2)
+	default:
+		return errors.New("unsupported mode")
+	}
 }

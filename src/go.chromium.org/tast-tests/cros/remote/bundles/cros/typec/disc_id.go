@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -141,14 +142,14 @@ func DiscID(ctx context.Context, s *testing.State) {
 
 	// Select parameters based on the switch type.
 	switch sw.GetType() {
-	case "UTC274":
+	case usbswitch.UTC274:
 		params = unigrafDiscIDParams
 		s.Log("Detected Unigraf UTC-274, using Unigraf parameters")
-	case "MCCI":
+	case usbswitch.Mcci:
 		params = hpG4DiscIDParams // Use HP G4 for MCCI.
 		s.Log("Detected MCCI switch, using HP G4 parameters")
 	default:
-		s.Fatal("Unknown or unsupported switch type: ", sw.GetType())
+		s.Fatal("Unknown or unsupported switch type")
 	}
 	s.Logf("Using Disc ID parameters: %+v", params)
 
@@ -166,7 +167,7 @@ const (
 )
 
 // performDiscIDIteration runs 1 iteration of the Disc ID test using the provided parameters.
-func performDiscIDIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch, params discIDParams) error {
+func performDiscIDIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch, params discIDParams) error {
 	// Enable the port.
 	if err := sw.EnablePort(ctx); err != nil {
 		return errors.Wrap(err, "failed to enable the port")

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -76,7 +77,7 @@ func DpHotplugSuspend(ctx context.Context, s *testing.State) {
 }
 
 // performDpHotplugSuspendIteration runs 1 iteration of the hotplug in suspend test.
-func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performDpHotplugSuspendIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	const suspendDurationS = 10
 
 	// Disconnect the dock.

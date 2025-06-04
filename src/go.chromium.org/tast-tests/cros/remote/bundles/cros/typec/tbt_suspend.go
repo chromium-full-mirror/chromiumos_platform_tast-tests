@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typectest"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
@@ -83,7 +84,7 @@ func TbtSuspend(ctx context.Context, s *testing.State) {
 }
 
 // performTbtSuspendIteration runs 1 iteration of the Thunderbolt suspend test.
-func performTbtSuspendIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performTbtSuspendIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	const suspendDurationS = 15
 
 	// Disconnect the dock.

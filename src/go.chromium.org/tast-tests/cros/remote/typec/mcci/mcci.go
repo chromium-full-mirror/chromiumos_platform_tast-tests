@@ -17,6 +17,7 @@ import (
 
 	"go.bug.st/serial"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -26,9 +27,9 @@ type Switch struct {
 	testPort int
 }
 
-// GetSwitch returns a handle to the MCCI switch with serial number `serialNum`.
+// New returns a handle to the MCCI switch with serial number `serialNum`.
 // If a non-empty path is provided, the function will check it in addition to the serial ports list.
-func GetSwitch(serialNum, path string, testPort int) (*Switch, error) {
+func New(serialNum, path string, testPort int) (*Switch, error) {
 	if testPort != 1 && testPort != 2 {
 		return nil, errors.New("invalid port number provided")
 	}
@@ -73,8 +74,8 @@ func (sw Switch) EnablePort(_ context.Context) error {
 	return writeSerial(serialStr, sw.sPort)
 }
 
-// TestPort gets currently active port.
-func (sw Switch) TestPort(_ context.Context) (int, error) {
+// ActivePort gets currently active port.
+func (sw Switch) ActivePort(_ context.Context) (int, error) {
 	writeSerial("port\r", sw.sPort)
 	resultStr, err := readSerial(sw.sPort)
 	if err != nil {
@@ -90,9 +91,13 @@ func (sw Switch) TestPort(_ context.Context) (int, error) {
 	return portInt, nil
 }
 
-// DevicePort returns the port connected to the device used in the test.
-func (sw Switch) DevicePort(_ context.Context) (int, error) {
-	return sw.testPort, nil
+// SetActiveSwitchPort sets the test port to be affected by Enable/DisablePorts.
+func (sw Switch) SetActiveSwitchPort(ctx context.Context, portNum int) error {
+	if portNum != 1 && portNum != 2 {
+		return errors.New("invalid port number provided")
+	}
+	sw.testPort = portNum
+	return nil
 }
 
 // Close closes the serial port interface for the MCCI switch.
@@ -101,22 +106,12 @@ func (sw Switch) Close(_ context.Context) error {
 }
 
 // GetType returns the type of the switch.
-func (sw Switch) GetType() string {
-	return "MCCI"
+func (sw Switch) GetType() usbswitch.SwitchType {
+	return usbswitch.Mcci
 }
 
-// EnterUsb2Mode does nothing for MCCI, appropriate device should be connected to MCCI.
-func (sw Switch) EnterUsb2Mode(_ context.Context) error {
-	return nil
-}
-
-// EnterUsb3Mode does nothing for MCCI, appropriate device should be connected to MCCI.
-func (sw Switch) EnterUsb3Mode(_ context.Context) error {
-	return nil
-}
-
-// EnterDpMode does nothing for MCCI, appropriate device should be connected to MCCI.
-func (sw Switch) EnterDpMode(_ context.Context) error {
+// EnterMode does nothing for MCCI, appropriate device should be connected to MCCI.
+func (sw Switch) EnterMode(_ context.Context, _ usbswitch.ConnectionMode) error {
 	return nil
 }
 

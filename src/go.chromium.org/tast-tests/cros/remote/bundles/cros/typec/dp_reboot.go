@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -75,7 +76,7 @@ func DpReboot(ctx context.Context, s *testing.State) {
 }
 
 // performDpRebootIteration runs 1 iteration of the DisplayPort reboot test.
-func performDpRebootIteration(ctx context.Context, d *dut.DUT, sw typecswitch.Switch) error {
+func performDpRebootIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch) error {
 	// Disconnect the dock/display.
 	if err := sw.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch off the port")
