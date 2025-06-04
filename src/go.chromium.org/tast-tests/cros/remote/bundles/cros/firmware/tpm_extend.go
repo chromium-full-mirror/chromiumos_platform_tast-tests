@@ -97,15 +97,14 @@ func init() {
 func tpm1CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	s.Logf("Reading PCR%d from the device", num)
-	pcrsFile := "/sys/class/*/tpm0/device/pcrs"
-	pcrBytes, err := h.DUT.Conn().CommandContext(ctx, "cat", pcrsFile).Output()
+	pcrBytes, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", "cat /sys/class/*/tpm0/device/pcrs").Output()
 	if err != nil {
 		s.Fatal("Failed to read TPM1 PCR: ", err)
 	}
 	var pcr = string(pcrBytes)
 
 	padded := append(make([]byte, 20), hashObj.Sum(nil)[:20]...)
-	extended := sha256.Sum256((padded)[:])
+	extended := sha1.Sum((padded)[:])
 	extendedString := fmt.Sprintf("%X", extended)
 	spaced := ""
 	for i := 0; i < len(extendedString); i += 2 {
