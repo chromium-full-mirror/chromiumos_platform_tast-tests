@@ -76,6 +76,7 @@ const (
 	ClamshellNonVKRestartWithJapaneseSystemTyping     = "clamshellNonVKRestartWithJapaneseSystemTyping"
 	ClamshellNonVKRestartWithoutJapaneseSystemTyping  = "clamshellNonVKRestartWithoutJapaneseSystemTyping"
 	TabletVK                                          = "tabletVK"
+	TabletVKWithoutJapaneseSystemTyping               = "tabletVKWithoutJapaneseSystemTyping"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
 	TabletVKInGuest                                   = "tabletVKInGuest"
@@ -424,6 +425,21 @@ func init() {
 		},
 		BugComponent:    "b:95887",
 		Impl:            inputsFixture(tabletMode, true, false),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: TabletVKWithoutJapaneseSystemTyping,
+		Desc: "Tablet mode with VK enabled (without Japanese system typing)",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"essential-inputs-team@google.com",
+		},
+		BugComponent:    "b:95887",
+		Impl:            inputsFixture(tabletMode, true, false, withoutJapaneseSystemTyping),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
