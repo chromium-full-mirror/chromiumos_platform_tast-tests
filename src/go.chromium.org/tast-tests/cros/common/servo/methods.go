@@ -1141,6 +1141,20 @@ func (s *Servo) GetDUTSrcCaps(ctx context.Context) ([]SrcCap, error) {
 // SetFWWPState sets the FWWPState control.
 // Because this is particularly disruptive, it is always logged.
 func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
+	ti50HasWPRebootFeature, err := s.GSCHasFeature(ctx, GSCAPROVerificationWPReboot)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine if ti50-based device")
+	}
+	// Make sure the AllowUnverifiedRo setting is Always before changing the
+	// WP state. If it's not Always, setting WP can brick the device.
+	if ti50HasWPRebootFeature {
+		if _, accessible, err := s.GetCCDCapability(ctx, AllowUnverifiedRo); err != nil {
+			return errors.Wrap(err, "failed to get AllowUnverifiedRo state")
+		} else if accessible != "Y" {
+			return errors.Wrap(err, "cannot set WP unless AllowUnverifiedRo is Always")
+		}
+	}
+
 	testing.ContextLogf(ctx, "Setting %q to %q", FWWPState, value)
 	if err := s.SetString(ctx, FWWPState, string(value)); err != nil {
 		return err
@@ -1150,9 +1164,7 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	// we first set the normal FWWPState otherwise we can get into a mismatch
 	// between servo_micro asserting WP externally and what Ti50 things WP should
 	// be.
-	if ti50HasWPRebootFeature, err := s.GSCHasFeature(ctx, GSCAPROVerificationWPReboot); err != nil {
-		return errors.Wrap(err, "failed to determine if ti50-based device")
-	} else if ti50HasWPRebootFeature {
+	if ti50HasWPRebootFeature {
 		if err := s.SetCCDFWWPAtBootState(ctx, value); err != nil {
 			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
 		}
