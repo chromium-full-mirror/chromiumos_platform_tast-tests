@@ -33,7 +33,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:mainline", "group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		Attr:            []string{"group:mainline", "group:wificell", "group:wifi_standalone", "wificell_func", "group:release-health", "release-health_wifi"},
 		SoftwareDeps:    []string{"wifi"},
 		TestBedDeps:     []string{tbdep.WifiStateNormal},
 		Fixture:         "wiphyEnabled",

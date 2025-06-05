@@ -32,7 +32,7 @@ func init() {
 			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "group:labqual", "group:release-health", "release-health_wifi"},
+		Attr:         []string{"group:mainline", "group:wificell", "group:wifi_standalone", "wificell_func", "group:labqual", "group:release-health", "release-health_wifi"},
 		// TODO(b:169152720), Remove "no_kernel_upstream" to enable the test to run on
 		// boards with upstream kernel when upstream iwlwifi is able to produce valid
 		// fw dumps.

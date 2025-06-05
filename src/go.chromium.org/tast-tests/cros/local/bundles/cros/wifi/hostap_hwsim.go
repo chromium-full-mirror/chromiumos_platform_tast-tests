@@ -47,7 +47,7 @@ func init() {
 				},
 				// Only target the 'validity' list for mainline, as anything more can take a
 				// long time.
-				ExtraAttr: []string{"group:mainline"},
+				ExtraAttr: []string{"group:mainline", "group:wifi_standalone"},
 			},
 			{
 				Name: "full",

@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Run on both Tast CQ and suite:wifi_matfunc.
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		Attr:         []string{"group:mainline", "group:wificell", "group:wifi_standalone", "wificell_func", "group:release-health", "release-health_wifi"},
 		SoftwareDeps: []string{"wifi", "no_kernel_upstream"},
 		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "wiphyEnabled",

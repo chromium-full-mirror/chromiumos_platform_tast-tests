@@ -24,7 +24,7 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual", "group:release-health", "release-health_wifi",
+		Attr: []string{"group:mainline", "group:wificell", "group:wifi_standalone", "wificell_func", "wificell_dut_validation", "group:labqual", "group:release-health", "release-health_wifi",
 			// Updating the SAR tables in CBFS can break this test.
 			"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw",
 		},
