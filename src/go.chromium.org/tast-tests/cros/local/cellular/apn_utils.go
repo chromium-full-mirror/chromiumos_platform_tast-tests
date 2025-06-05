@@ -68,7 +68,7 @@ const (
 )
 
 var (
-	// When updating this list, please also update the list in cellular/data/test_no_apns.prototxt
+	// When updating this list, please also update the list in cellular/data/test_no_apns.textproto
 	// and regenerate the *.pbf files by following the directions in cellular/data/README.md.
 	carrierMapping = map[string]Carrier{
 		"00101":  CarrierAmarisoft,
@@ -124,6 +124,8 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		CarrierKDDI: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "au.au-net.ne.jp", ipType: ipv4v6, username: "user@au.au-net.ne.jp", password: "au", auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "uno.au-net.ne.jp", ipType: ipv4v6, username: "685840734641020@uno.au-net.ne.jp", password: "KpyrR6BP", auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
+			// Povo is an MVNO, but we don't have an easy way in here to distinguish between the MNO and MVNO.
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "povo.jp", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 		},
 		CarrierDocomo: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "spmode.ne.jp", ipType: ipv4v6, auth: chap, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
