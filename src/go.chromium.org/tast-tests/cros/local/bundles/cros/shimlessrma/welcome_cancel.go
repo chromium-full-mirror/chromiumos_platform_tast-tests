@@ -34,7 +34,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "critical",
-			ExtraHardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModelsCritical...)),
+			ExtraHardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
 			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "staging",
