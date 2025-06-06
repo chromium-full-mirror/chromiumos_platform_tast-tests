@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/common/servo"
+	servo "go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/rmaweb"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -224,6 +226,12 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Log("Fail to set USB Mux state: ", err)
 	}
 
+	// We set AllowUnverifiedRo to Always because lab devices are installed with dev-signed firmware,
+	// which cannot pass APROV, and will be held in reset by GSC.
+	if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper); err != nil {
+		s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
+	}
+
 	if err := rmaweb.PollStateField(ctx, s, rmaweb.RmadStateFieldFinalizeRebooted, true, rmaweb.StateFieldPollingTimeout); err != nil {
 		s.Fatal("Fail to wait for finalize reboot: ", err)
 	}
@@ -275,6 +283,45 @@ func generateActionCombinedToDisableWP(option rmaweb.WriteProtectDisableOption, 
 			uiHelper.OwnerPageOperation(destination),
 			uiHelper.WriteProtectPageChooseManual,
 		)
+	}
+
+	return nil
+}
+
+func setAllowUnverifiedRoToAlways(ctx context.Context, firmwareHelper *firmware.Helper) error {
+	// Wait rmad for leaving factory mode.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, accessible, err := firmwareHelper.Servo.GetCCDCapability(ctx, servo.AllowUnverifiedRo); err != nil {
+			return errors.Wrap(err, "failed to get AllowUnverifiedRo state")
+		} else if accessible == "Y" {
+			return errors.New("AllowUnverifiedRo is still Always")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		// Informational log. We will still try to reset AllowUnverifiedRo.
+		testing.ContextLog(ctx, "Failed to wait for AllowUnverifiedRo being set to Default")
+	}
+
+	// Open CCD again because it is locked by leaving factory mode.
+	if err := firmwareHelper.OpenCCD(ctx /*ensureTestlab=*/, true /*resetCCD=*/, false); err != nil {
+		return errors.Wrap(err, "failed to open CCD")
+	}
+
+	// Set AllowUnverifiedRo back to Always to avoid holding devices in reset.
+	ccdSettings := map[servo.CCDCap]servo.CCDCapState{servo.AllowUnverifiedRo: servo.CapAlways}
+	if err := firmwareHelper.Servo.SetCCDCapability(ctx, ccdSettings); err != nil {
+		return errors.Wrap(err, "failed to reset AllowUnverifiedRo")
+	}
+
+	// Reboot GSC to make AllowUnverifiedRo take effect.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := firmwareHelper.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
+			return errors.Wrap(err, "failed to run gsc command")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to reboot GSC")
 	}
 
 	return nil
