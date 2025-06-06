@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/rmaweb"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/servoutil"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -217,16 +216,6 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
-	}
-
-	// No need to recreate uiHelper after reboot here.
-	// We don't need to interact with UI during this boot.
-	if err := servoutil.SetBatteryState(ctx, firmwareHelper, servoutil.BatteryStateFollow); err != nil {
-		s.Fatal("Fail to connect battery: ", err)
-	}
-
-	if err := firmwareHelper.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-		s.Fatal("Fail to enable HWWP: ", err)
 	}
 
 	// Given the flakiness of USB on the lab devices, the USB may malfunction at the first place.
