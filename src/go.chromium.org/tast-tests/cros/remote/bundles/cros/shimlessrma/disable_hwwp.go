@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	servo "go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/rmaweb"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/servoutil"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -314,13 +315,7 @@ func setAllowUnverifiedRoToAlways(ctx context.Context, firmwareHelper *firmware.
 	}
 
 	// Reboot GSC to make AllowUnverifiedRo take effect.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := firmwareHelper.Servo.RunGSCCommand(ctx, "reboot"); err != nil {
-			return errors.Wrap(err, "failed to run gsc command")
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 10 * time.Second}); err != nil {
+	if err := servoutil.RebootGSC(ctx, firmwareHelper); err != nil {
 		return errors.Wrap(err, "failed to reboot GSC")
 	}
 
