@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
@@ -25,8 +24,7 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_unigraf274"},
-		Fixture:      "typecSwitch",
-		Vars:         []string{"servo"},
+		Fixture:      "typecSwitchAndServo",
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: typecswitch.TestSetupData{
@@ -75,25 +73,6 @@ func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 
 	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
 		s.Fatal("Failed to setup switch: ", err)
-	}
-
-	// If servo is present, make sure it's in snk role.
-	if servoSpec, present := s.Var("servo"); present {
-		pxy, err := servo.NewProxy(ctx, servoSpec, d.KeyFile(), d.KeyDir())
-		if err != nil {
-			s.Fatal("Failed to setup servo proxy: ", err)
-		}
-		if err := pxy.Servo().ServoCcSnk(ctx); err != nil {
-			s.Fatal("Failed to set servo CC to off: ", err)
-		}
-		defer pxy.Servo().ServoCcSrc(ctx, true)
-
-		// On Unigraf setup, ethernet is connected by servo, wait for the connection to resume.
-		connectCtx, connectCtxCancel := context.WithTimeout(ctx, 10*time.Second)
-		if err := d.WaitConnect(connectCtx); err != nil {
-			s.Fatal("DUT not reachable in time: ", err)
-		}
-		connectCtxCancel()
 	}
 
 	for i := 1; i <= testData.Iterations; i++ {
