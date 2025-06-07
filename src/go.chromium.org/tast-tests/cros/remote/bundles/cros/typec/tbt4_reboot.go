@@ -28,11 +28,17 @@ func init() {
 		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_tbt4_bringup"},
-			Val:       5,
-			Timeout:   10 * time.Minute,
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.TBT4Mode,
+				Iterations:     5,
+			},
+			Timeout: 10 * time.Minute,
 		}, {
-			Name:    "stress",
-			Val:     25,
+			Name: "stress",
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.TBT4Mode,
+				Iterations:     25,
+			},
 			Timeout: 50 * time.Minute,
 		}},
 	})
@@ -56,8 +62,8 @@ func init() {
 //	|____________________________|
 func Tbt4Reboot(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -66,7 +72,11 @@ func Tbt4Reboot(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
-	for i := 1; i <= numIterations; i++ {
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
+
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performTbt4RebootIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

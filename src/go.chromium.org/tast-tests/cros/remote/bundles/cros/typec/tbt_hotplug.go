@@ -30,11 +30,17 @@ func init() {
 		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"typec_tbt4_bringup", "typec_tbt3_bringup"},
-			Val:       10,
-			Timeout:   10 * time.Minute,
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.TBT4Mode,
+				Iterations:     10,
+			},
+			Timeout: 10 * time.Minute,
 		}, {
-			Name:    "stress",
-			Val:     50,
+			Name: "stress",
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.TBT4Mode,
+				Iterations:     50,
+			},
 			Timeout: 50 * time.Minute,
 		}},
 	})
@@ -58,8 +64,8 @@ func init() {
 //	|____________________________|
 func TbtHotplug(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -68,11 +74,15 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
+
 	if err := typectest.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
 		s.Fatal("Failed to log in to Chrome: ", err)
 	}
 
-	for i := 1; i <= numIterations; i++ {
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performHotplugIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

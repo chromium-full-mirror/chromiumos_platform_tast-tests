@@ -25,10 +25,22 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_unigraf274"},
-		Vars:         []string{"servo"},
 		Fixture:      "typecSwitch",
+		Vars:         []string{"servo"},
 		Params: []testing.Param{{
-			Val:     300,
+			Name: "normal",
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.Usb3Mode,
+				Iterations:     300,
+			},
+			Timeout: 30 * time.Minute,
+		}, {
+			Name: "flipped",
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.Usb3Mode,
+				Iterations:     300,
+				Flipped:        true,
+			},
 			Timeout: 30 * time.Minute,
 		}},
 	})
@@ -51,8 +63,8 @@ func init() {
 //	|____________________________|
 func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -60,6 +72,10 @@ func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get fixture data")
 	}
 	sw := fixtData.TestSwitch
+
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
 
 	// If servo is present, make sure it's in snk role.
 	if servoSpec, present := s.Var("servo"); present {
@@ -80,7 +96,7 @@ func ACSupplyHotplug(ctx context.Context, s *testing.State) {
 		connectCtxCancel()
 	}
 
-	for i := 1; i <= numIterations; i++ {
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performACSupplyHotplugIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

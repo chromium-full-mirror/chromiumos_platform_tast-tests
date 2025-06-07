@@ -26,15 +26,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		Fixture:      "typecSwitch",
-		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_dp_bringup", "typec_unigraf274"},
-			Val:       10,
-			Timeout:   7 * time.Minute,
-		}, {
-			Name:    "stress",
-			Val:     50,
-			Timeout: 35 * time.Minute,
-		}},
+		Params:       typecswitch.GenerateParams(7, 10, usbswitch.DpMode, "typec_dp_bringup"),
 	})
 }
 
@@ -55,8 +47,8 @@ func init() {
 //	|____________________________|
 func DpHotplug(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -65,7 +57,11 @@ func DpHotplug(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
-	for i := 1; i <= numIterations; i++ {
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
+
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performDpHotplugIteration(ctx, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

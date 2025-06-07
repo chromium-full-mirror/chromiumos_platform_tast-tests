@@ -17,6 +17,7 @@ type Switch interface {
 	Close(context.Context) error                     // Close the switch.
 	GetType() SwitchType                             // Get the type of the switch.
 	EnterMode(context.Context, ConnectionMode) error // Enter particular USB mode.
+	FlipOrientation(context.Context, bool) error     // Flip the orientation of the USB plug.
 }
 
 // SwitchType is the type of the switch.
@@ -34,4 +35,21 @@ const (
 	Usb2Mode ConnectionMode = iota
 	Usb3Mode
 	DpMode
+	TBT4Mode
 )
+
+// String returns a string representation of the ConnectionMode.
+func (cm ConnectionMode) String() string {
+	switch cm {
+	case Usb2Mode:
+		return "USB2Mode"
+	case Usb3Mode:
+		return "USB3Mode"
+	case DpMode:
+		return "DPMode"
+	case TBT4Mode:
+		return "TBT4Mode"
+	default:
+		return "UnknownMode"
+	}
+}

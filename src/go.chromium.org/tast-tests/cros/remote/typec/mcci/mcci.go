@@ -29,11 +29,7 @@ type Switch struct {
 
 // New returns a handle to the MCCI switch with serial number `serialNum`.
 // If a non-empty path is provided, the function will check it in addition to the serial ports list.
-func New(serialNum, path string, testPort int) (*Switch, error) {
-	if testPort != 1 && testPort != 2 {
-		return nil, errors.New("invalid port number provided")
-	}
-
+func New(serialNum, path string) (*Switch, error) {
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to retrieve serial ports list")
@@ -54,7 +50,7 @@ func New(serialNum, path string, testPort int) (*Switch, error) {
 		}
 
 		if match := checkPort(port, serialNum); match {
-			return &Switch{sPort: port, testPort: testPort}, nil
+			return &Switch{sPort: port}, nil
 		}
 
 		port.Close()
@@ -112,6 +108,14 @@ func (sw Switch) GetType() usbswitch.SwitchType {
 
 // EnterMode does nothing for MCCI, appropriate device should be connected to MCCI.
 func (sw Switch) EnterMode(_ context.Context, _ usbswitch.ConnectionMode) error {
+	return nil
+}
+
+// FlipOrientation does nothing for MCCI, device doesn't support flipping.
+func (sw Switch) FlipOrientation(_ context.Context, flipped bool) error {
+	if flipped {
+		return errors.New("MCCI does not support flipping")
+	}
 	return nil
 }
 

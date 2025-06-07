@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package typecswitch contains the usb switch interface for the tests in the typec directory.
+// Package typecswitch contains the usb switch fixture and helper functions for the tests in the typec directory.
 package typecswitch
 
 import (
@@ -21,18 +21,18 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "typecSwitch",
 		Desc:     "Initializes and provides a Type-C switch (MCCI or Unigraf) interface.",
-		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com", "jthies@google.com"},
+		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
 		Impl:            &SwitchFixture{},
 		SetUpTimeout:    20 * time.Second, // For switch initialization and initial DisablePorts
 		ResetTimeout:    15 * time.Second, // For DisablePorts and potential mode reset
 		TearDownTimeout: 15 * time.Second, // For closing the switch
-		Vars: []string{ // These Vars are needed by typecswitch.GetSwitch
+		Vars: []string{
 			"typec.McciSerial",
-			"typec.McciPort",
 			"typec.McciPath",
 			"typec.UnigrafUri",
+			"typec.SwitchPort",
 		},
 	})
 }
@@ -40,6 +40,7 @@ func init() {
 // SwitchFixture holds the state for the Type-C switch fixture.
 type SwitchFixture struct {
 	TestSwitch usbswitch.Switch
+	PortNum    int
 }
 
 // FixtureData holds the data passed from the fixture to the test.
@@ -55,6 +56,22 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 		s.Fatal("Failed to get switch handle: ", err)
 	}
 	f.TestSwitch = ts
+
+	if portStr, portPresent := s.Var("typec.SwitchPort"); portPresent {
+		if portUsed, err := strconv.Atoi(portStr); err != nil {
+			s.Fatalf("Failed to convert port number to integer: %v", err)
+		} else if err := f.TestSwitch.SetActiveSwitchPort(ctx, portUsed); err != nil {
+			// Attempt to close the switch if setting active port fails during setup.
+			if closeErr := f.TestSwitch.Close(ctx); closeErr != nil {
+				s.Errorf("Failed to close switch during SetUp after SetActiveSwitchPort failure: %v", closeErr)
+			}
+			s.Fatalf("Failed to set port during SetUp: %v", err)
+		} else {
+			f.PortNum = portUsed
+		}
+	} else {
+		s.Fatal("Port number is not set in the fixture with typec.SwitchPort var")
+	}
 
 	// Ensure ports are disabled initially as a baseline.
 	if err := f.TestSwitch.DisablePorts(ctx); err != nil {
@@ -115,13 +132,8 @@ func newSwitch(ctx context.Context, s *testing.FixtState) (usbswitch.Switch, err
 
 	} else if mcciSerial, mcciPresent := s.Var("typec.McciSerial"); mcciPresent {
 		path, _ := s.Var("typec.McciPath")
-		portStr, _ := s.Var("typec.McciPort")
-		portUsed, err := strconv.Atoi(portStr)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse MCCI port cmdline argument")
-		}
 
-		mcciObj, err := mcci.New(mcciSerial, path, portUsed)
+		mcciObj, err := mcci.New(mcciSerial, path)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get MCCI switch handle")
 		}

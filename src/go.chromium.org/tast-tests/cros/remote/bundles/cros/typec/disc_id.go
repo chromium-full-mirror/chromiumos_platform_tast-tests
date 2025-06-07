@@ -28,7 +28,10 @@ func init() {
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
-			Val:     100,
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.DpMode,
+				Iterations:     100,
+			},
 			Timeout: 30 * time.Minute,
 		}},
 	})
@@ -130,8 +133,8 @@ func DiscID(ctx context.Context, s *testing.State) {
 	var params discIDParams
 
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -139,6 +142,10 @@ func DiscID(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get fixture data")
 	}
 	sw := fixtData.TestSwitch
+
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
 
 	// Select parameters based on the switch type.
 	switch sw.GetType() {
@@ -153,7 +160,7 @@ func DiscID(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Using Disc ID parameters: %+v", params)
 
-	for i := 1; i <= numIterations; i++ {
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performDiscIDIteration(ctx, d, sw, params); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

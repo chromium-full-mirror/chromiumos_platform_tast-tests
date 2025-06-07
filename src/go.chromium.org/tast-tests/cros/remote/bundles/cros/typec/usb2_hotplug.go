@@ -28,15 +28,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		Fixture:      "typecSwitch",
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
-		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
-			Val:       10,
-			Timeout:   5 * time.Minute,
-		}, {
-			Name:    "stress",
-			Val:     50,
-			Timeout: 25 * time.Minute,
-		}},
+		Params:       typecswitch.GenerateParams(5, 10, usbswitch.Usb2Mode, "typec_usb_bringup"),
 	})
 }
 
@@ -56,10 +48,9 @@ func init() {
 //	|                           |
 //	|___________________________|
 func Usb2Hotplug(ctx context.Context, s *testing.State) {
-
-	numIterations := s.Param().(int)
 	d := s.DUT()
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -68,9 +59,8 @@ func Usb2Hotplug(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
-	// Set USB2 mode for this test.
-	if err := sw.EnterMode(ctx, usbswitch.Usb2Mode); err != nil {
-		s.Fatal("Failed to set USB2 mode via switch: ", err)
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
 	}
 
 	// RPC client setup.
@@ -81,7 +71,7 @@ func Usb2Hotplug(ctx context.Context, s *testing.State) {
 	defer cl.Close(ctx)
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
-	for i := 1; i <= numIterations; i++ {
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performUsb2HotplugIteration(ctx, d, usbClient, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

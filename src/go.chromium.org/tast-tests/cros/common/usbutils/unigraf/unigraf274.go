@@ -28,6 +28,12 @@ type UsbChannel passport.UsbChannel
 // InitPdState is a wrapper around passport.InitPdState
 type InitPdState passport.InitPdState
 
+// ActiveCc is a wrapper around passport.ActiveCc
+type ActiveCc passport.ActiveCc
+
+// CableMode is a wrapper around passport.CableMode
+type CableMode passport.CableMode
+
 // Constants for PowerRole
 const (
 	PowerRoleNotSet PowerRole = PowerRole(passport.PowerRole_POWER_ROLE_NOT_SET)
@@ -70,6 +76,20 @@ const (
 	InitPdStateUfp    InitPdState = InitPdState(passport.InitPdState_PD_UFP)
 	InitPdStateDfp    InitPdState = InitPdState(passport.InitPdState_PD_DFP)
 	InitPdStateDrp    InitPdState = InitPdState(passport.InitPdState_PD_DRP)
+)
+
+// Constants for ActiveCc
+const (
+	ActiveCcNotSet ActiveCc = ActiveCc(passport.ActiveCc_ACTIVE_CC_NOT_SET)
+	ActiveCc0      ActiveCc = ActiveCc(passport.ActiveCc_CC1)
+	ActiveCc1      ActiveCc = ActiveCc(passport.ActiveCc_CC2)
+)
+
+// Constants for CableMode
+const (
+	CableModeNotSet   CableMode = CableMode(passport.CableMode_CABLE_MODE_NOT_SET)
+	CableModeNormal   CableMode = CableMode(passport.CableMode_NORMAL)
+	CableModeElecTest CableMode = CableMode(passport.CableMode_ELEC_TEST)
 )
 
 // UsbTester is data type to model a unigraf utc274 usb tester.
@@ -246,6 +266,32 @@ func (s *UsbTester) SetSrcPdoCount(ctx context.Context, cnt int64) error {
 	)
 }
 
+// SetActiveCc will set the active CC.
+func (s *UsbTester) SetActiveCc(ctx context.Context, cc ActiveCc) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_ACTIVE_CC,
+			Value: &passport.SetUsbTesterCapabilityRequest_ActiveCc{
+				ActiveCc: passport.ActiveCc(cc),
+			},
+		},
+	)
+}
+
+// SetCableMode will set the cable mode.
+func (s *UsbTester) SetCableMode(ctx context.Context, mode CableMode) error {
+	return s.doCapabilitySetRequest(
+		ctx,
+		&passport.SetUsbTesterCapabilityRequest{
+			Capability: passport.Capability_CABLE_MODE,
+			Value: &passport.SetUsbTesterCapabilityRequest_CableMode{
+				CableMode: passport.CableMode(mode),
+			},
+		},
+	)
+}
+
 // doCapabilityGetRequest is a internal helper method that does the actual grpc request.
 func (s *UsbTester) doCapabilityGetRequest(
 	ctx context.Context,
@@ -343,6 +389,16 @@ func (s *UsbTester) VbusCurrent(ctx context.Context) (int, error) {
 	)
 
 	return int(reply.GetNonDescrete()), err
+}
+
+// ActiveCc will return the active Cc.
+func (s *UsbTester) ActiveCc(ctx context.Context) (ActiveCc, error) {
+	reply, err := s.doCapabilityGetRequest(
+		ctx,
+		&passport.GetUsbTesterCapabilityRequest{Capability: passport.Capability_ACTIVE_CC},
+	)
+
+	return ActiveCc(reply.GetActiveCc()), err
 }
 
 // DpInfo will get the display port information.
@@ -485,4 +541,17 @@ func (s *UsbTester) EnterMode(ctx context.Context, mode usbswitch.ConnectionMode
 	default:
 		return errors.New("unsupported mode")
 	}
+}
+
+// FlipOrientation sets the orientation of USB plug.
+func (s *UsbTester) FlipOrientation(ctx context.Context, flipped bool) error {
+	if err := s.SetCableMode(ctx, CableModeElecTest); err != nil {
+		return errors.Wrap(err, "failed to set cable mode to elec test before flipping orientation")
+	}
+
+	if flipped {
+		return s.SetActiveCc(ctx, ActiveCc1)
+	}
+
+	return s.SetActiveCc(ctx, ActiveCc0)
 }

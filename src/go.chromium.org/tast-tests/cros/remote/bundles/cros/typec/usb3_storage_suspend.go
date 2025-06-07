@@ -31,15 +31,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		Fixture:      "typecSwitch",
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
-		Params: []testing.Param{{
-			ExtraAttr: []string{"typec_usb_bringup", "typec_unigraf274"},
-			Val:       10,
-			Timeout:   8 * time.Minute,
-		}, {
-			Name:    "stress",
-			Val:     50,
-			Timeout: 40 * time.Minute,
-		}},
+		Params:       typecswitch.GenerateParams(8, 10, usbswitch.Usb3Mode, "typec_usb_bringup"),
 	})
 }
 
@@ -61,8 +53,8 @@ func init() {
 //	|____________________________|
 func Usb3StorageSuspend(ctx context.Context, s *testing.State) {
 	d := s.DUT()
-	numIterations := s.Param().(int)
-	s.Log("Number of iterations: ", numIterations)
+	testData := s.Param().(typecswitch.TestSetupData)
+	s.Log("Number of iterations: ", testData.Iterations)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -71,7 +63,11 @@ func Usb3StorageSuspend(ctx context.Context, s *testing.State) {
 	}
 	sw := fixtData.TestSwitch
 
-	for i := 1; i <= numIterations; i++ {
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
+
+	for i := 1; i <= testData.Iterations; i++ {
 		s.Log("Running iteration ", i)
 		if err := performUsb3StorageSuspendIteration(ctx, s, d, sw); err != nil {
 			s.Fatalf("Failed test on iteration %d: %v", i, err)

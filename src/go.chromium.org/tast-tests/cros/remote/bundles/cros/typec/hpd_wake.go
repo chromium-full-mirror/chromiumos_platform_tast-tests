@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecswitch"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +29,11 @@ func init() {
 		Attr:         []string{"group:typec", "typec_mcci"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.ChromeEC()),
 		Fixture:      "typecSwitch",
+		Params: []testing.Param{{
+			Val: typecswitch.TestSetupData{
+				ConnectionMode: usbswitch.DpMode,
+			},
+		}},
 	})
 }
 
@@ -44,6 +50,7 @@ func init() {
 //	 |________________________________________|
 func HpdWake(ctx context.Context, s *testing.State) {
 	d := s.DUT()
+	testData := s.Param().(typecswitch.TestSetupData)
 
 	// Get the switch from the fixture.
 	fixtData, ok := s.FixtValue().(*typecswitch.FixtureData)
@@ -51,6 +58,10 @@ func HpdWake(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get fixture data")
 	}
 	sw := fixtData.TestSwitch
+
+	if err := typecswitch.SetupSwitch(ctx, sw, testData); err != nil {
+		s.Fatal("Failed to setup switch: ", err)
+	}
 
 	// Count wake sources before.
 	wakesBefore, err := getWakeCount(ctx, d)
