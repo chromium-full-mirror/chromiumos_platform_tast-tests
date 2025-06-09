@@ -14,6 +14,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testUpdateRollbackConfig struct {
+	cmd          string
+	useDBG       bool
+	invalidateRW bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCUpdateRollback,
@@ -25,15 +31,55 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.SystemDevboard,
+		Params: []testing.Param{{
+			Name: "dbg_crash",
+			Val: testUpdateRollbackConfig{
+				cmd:          "crash",
+				useDBG:       true,
+				invalidateRW: false,
+			},
+			ExtraAttr: []string{"gsc_h1_shield"},
+		}, {
+			Name: "dbg_crash_invalid_rw",
+			Val: testUpdateRollbackConfig{
+				cmd:          "crash",
+				useDBG:       true,
+				invalidateRW: true,
+			},
+			ExtraAttr: []string{"gsc_h1_shield"},
+		}, {
+			Name: "console_reboot_invalid_rw",
+			Val: testUpdateRollbackConfig{
+				cmd:          "reboot",
+				useDBG:       false,
+				invalidateRW: true,
+			},
+		}, {
+			Name: "console_reboot",
+			Val: testUpdateRollbackConfig{
+				cmd:          "reboot",
+				useDBG:       false,
+				invalidateRW: false,
+			},
+		}, {
+			Name: "dbg_rollback",
+			Val: testUpdateRollbackConfig{
+				cmd:          "rollback",
+				useDBG:       true,
+				invalidateRW: false,
+			},
+			ExtraAttr: []string{"gsc_h1_shield"},
+		}},
 	})
 }
 
 // GSCUpdateRollback verifies that GSC will rollback to previous image.
 func GSCUpdateRollback(ctx context.Context, s *testing.State) {
+	config := s.Param().(testUpdateRollbackConfig)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
@@ -44,25 +90,38 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	// Inform fixture that this test may replace the firmware image in flash.
 	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
 
-	// Validate debug image is available
-	debugImage, err := f.DebugImagePath(ctx)
-	if err != nil {
-		s.Fatal("DUT must have DBG image")
-	}
-
 	currentImage := f.ImagePath
 
 	_, currentVer, _, _, err := b.GSCToolBinVersion(ctx, currentImage)
 	th.MustSucceed(err, "Unable to get version from current image "+currentImage)
 
-	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
-	th.MustSucceed(err, "Unable to get version from "+debugImage)
+	startImage := currentImage
+	startVer := currentVer
+	targetVer := currentVer
+	if config.useDBG {
+		// Validate debug image is available
+		startImage, err = f.DebugImagePath(ctx)
+		if err != nil {
+			s.Fatal("DUT must have DBG image")
+		}
 
-	if debugVer.Less(currentVer) || debugVer == currentVer {
-		s.Fatal("DBG version must be greater than current version")
+		_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, startImage)
+		th.MustSucceed(err, "Unable to get version from "+startImage)
+
+		if debugVer.Less(currentVer) || debugVer == currentVer {
+			s.Fatal("DBG version must be greater than current version")
+		}
+		startVer = debugVer
+		// If the inactive image is invalidated the DBG image should
+		// still be running after rollback.
+		if config.invalidateRW {
+			targetVer = debugVer
+		}
 	}
 
 	s.Logf("Image under test %s: %s", currentVer, currentImage)
+	s.Logf("Initial image %s: %s", startVer, startImage)
+	s.Logf("Target rollback version: %s", targetVer)
 
 	s.Log("Enabling CCD mode and resetting")
 	tpmBus := b.GscProperties().PreferredTPMBus()
@@ -71,50 +130,95 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 
 	// AP turns on so TPM bus will be active
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.GSCToolCommandViaTPM(ctx, tpmBus, debugImage)
+	b.GSCToolCommandViaTPM(ctx, tpmBus, startImage)
 
-	// Turn AP off to simulate crashing Ti50 FW image
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
+	if config.invalidateRW {
+		s.Log("Invalidate RW")
+		tpm := b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CCDModeOn, ti50.FfClamshell)
+		err = tpm.TpmvInvalidateInactiveRW()
+		th.MustSucceed(err, "failed to send invalidate RW")
 
-	numCrashesForRollback := 0
+	}
+
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	version, err := i.VersionInfo(ctx)
+	th.MustSucceed(err, "failed to get version")
+	s.Log("Setup GSC")
+	s.Logf("RW_A: %+v", version.RwA)
+	s.Logf("RW_B: %+v", version.RwB)
+
+	if version.ActiveRw().Version != startVer.String() {
+		s.Fatalf("Unable to flash %s", startImage)
+	}
+
+	if config.cmd == "crash" {
+		// Turn AP off to simulate crashing Ti50 FW image
+		b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
+	}
+
+	lastResetCount := uint32(0)
 	for attempt := 0; attempt < 10; attempt++ {
 		// Give the device a little more time than normal to reboot since we are
 		// using the watchdog reset.
 		err := i.CommandImage.WaitUntilBooted(ctx, 8*time.Second)
 		th.MustSucceed(err, "GSC revives after attempt %d", attempt)
 
-		versionInfo, err := i.VersionInfo(ctx)
+		version, err = i.VersionInfo(ctx)
 		th.MustSucceed(err, "get version info")
-		s.Logf("Version info on attempt %d: %+v", attempt, versionInfo)
+		s.Logf("Version info after %s", config.cmd)
+		s.Logf("RW_A: %+v", version.RwA)
+		s.Logf("RW_B: %+v", version.RwB)
 
-		if versionInfo.ActiveRw().Version != debugVer.String() {
-			numCrashesForRollback = attempt
+		sysinfo, err := i.Sysinfo(ctx)
+		th.MustSucceed(err, "get sysinfo")
+		s.Logf("sysinfo on attempt %d: %+v", attempt, sysinfo)
+		if attempt != 0 {
+			if lastResetCount == sysinfo.ResetCount {
+				s.Errorf("attempt %d: %s did not increment reset count", attempt, config.cmd)
+			}
+		}
+		lastResetCount = sysinfo.ResetCount
+
+		if sysinfo.RollbackDetected {
 			break
 		}
 
-		th.MustSucceed(i.SendDBGConsoleCrashCmd(ctx), "calling crash cmd")
-		immediateCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
-		defer cancel()
-		// We need to find and remove the fatal message from the UART output
-		// otherwise other console matches will return an error when they detect
-		// the crash output.
-		_, _, err = i.ReadSerialSubmatch(immediateCtx, ti50.FatalMsg)
-		th.MustSucceed(err, "No fatal reset found in UART")
+		switch config.cmd {
+		case "crash":
+			th.MustSucceed(i.SendDBGConsoleCrashCmd(ctx), "calling crash cmd")
+			immediateCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
+			defer cancel()
+			// We need to find and remove the fatal message from the UART output
+			// otherwise other console matches will return an error when they detect
+			// the crash output.
+			_, _, err = i.ReadSerialSubmatch(immediateCtx, ti50.FatalMsg)
+			th.MustSucceed(err, "No fatal reset found in UART")
+		case "rollback":
+			s.Log("Running GSC rollback")
+			th.MustSucceed(i.Rollback(ctx), "failed to send rollback command")
+		case "reboot":
+			s.Log("Rebooting GSC")
+			th.MustSucceed(i.Reboot(ctx), "failed to send reboot command")
+		default:
+			s.Fatalf("Invalid command: %s", config.cmd)
+
+		}
 	}
 
-	if numCrashesForRollback < 5 || numCrashesForRollback > 8 {
-		s.Error("Number of crash for rollback out of range: ", numCrashesForRollback)
-	} else {
-		s.Logf("Rolled back after %d crashes", numCrashesForRollback)
+	s.Logf("Reset count after %s commands: %d", config.cmd, lastResetCount)
+	if lastResetCount < 5 || lastResetCount > 8 {
+		s.Errorf("%s command: Reset count %d out of range", config.cmd, lastResetCount)
 	}
 
-	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after crash")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after "+config.cmd)
 
-	versionInfo, err := i.VersionInfo(ctx)
+	version, err = i.VersionInfo(ctx)
 	th.MustSucceed(err, "get version info")
-	s.Logf("Version info final crash: %+v", versionInfo)
+	s.Logf("Version info final %s", config.cmd)
+	s.Logf("RW_A: %+v", version.RwA)
+	s.Logf("RW_B: %+v", version.RwB)
 
-	if versionInfo.ActiveRw().Version != currentVer.String() {
-		s.Error("Not running original image")
+	if version.ActiveRw().Version != targetVer.String() {
+		s.Errorf("Running %+v not target %s", version.ActiveRw(), targetVer.String())
 	}
 }
