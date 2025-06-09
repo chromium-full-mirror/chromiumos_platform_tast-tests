@@ -58,3 +58,13 @@ func RebootGSC(ctx context.Context, firmwareHelper *firmware.Helper) error {
 
 	return nil
 }
+
+// IsTi50 checks if the device uses Ti50 GSC firmware.
+func IsTi50(ctx context.Context, firmwareHelper *firmware.Helper) (bool, error) {
+	versionInfo, err := firmwareHelper.Servo.GSCVersionInfo(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get GSC version info")
+	}
+
+	return versionInfo.IsTi50, nil
+}

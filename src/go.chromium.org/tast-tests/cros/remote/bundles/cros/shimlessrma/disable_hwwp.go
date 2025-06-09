@@ -229,8 +229,15 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 
 	// We set AllowUnverifiedRo to Always because lab devices are installed with dev-signed firmware,
 	// which cannot pass APROV, and will be held in reset by GSC.
-	if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper); err != nil {
-		s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
+	if isTi50, err := servoutil.IsTi50(ctx, firmwareHelper); err == nil && isTi50 {
+		testing.ContextLog(ctx, "Ti50 device: Setting AllowUnverifiedRo to Always")
+		if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper); err != nil {
+			s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
+		}
+	} else if err != nil {
+		// We still try to complete the rest of test because setting capabilities is not what we want to
+		// verify with this test.
+		s.Log("Fail to check if the device is Ti50: ", err)
 	}
 
 	if err := rmaweb.PollStateField(ctx, s, rmaweb.RmadStateFieldFinalizeRebooted, true, rmaweb.StateFieldPollingTimeout); err != nil {
