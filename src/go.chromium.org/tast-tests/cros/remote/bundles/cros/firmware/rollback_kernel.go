@@ -265,17 +265,38 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed preserving dev image: ", err)
 	}
 
+	// EnableUARTCapture() is needed for DetectFirmwareScreen() to work.
+	if h.HasAPFwState {
+		closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+		if err != nil {
+			s.Fatal("Failed to enable capture EC UART: ", err)
+		}
+		defer func() {
+			if err := closeUART(ctx); err != nil {
+				s.Error("Failed to cancel capture EC UART: ", err)
+			}
+		}()
+	}
+
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
 	}
+
 	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitDisconnect()
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)
 	}
-	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
-		s.Fatal("Failed to get to firmware screen: ", err)
+
+	s.Log("Waiting for DUT to reach the Broken Screen")
+	if h.HasAPFwState {
+		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode, common.RecoveryBroken); err != nil {
+			s.Fatal("Failed to detect firmware screen: ", err)
+		}
+	} else {
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
 	}
 	s.Log("Checking if DUT stays at the Broken Screen")
 	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
