@@ -938,6 +938,7 @@ EK Cert:     Compliant
 	expectedMap["keyladder"] = "prod"
 	expectedMap["ekCert"] = "Compliant"
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.ResetFlags = 0x00000001
@@ -1000,6 +1001,7 @@ Chip factory mode.
 	expectedMap["keyladder"] = "prod"
 	expectedMap["ekCert"] = "Compliant"
 	expectedMap["factoryMode"] = "Chip factory mode."
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.ResetFlags = 0x00000020
@@ -1062,6 +1064,7 @@ EK Cert:     NotFound
 	expectedMap["keyladder"] = "dev"
 	expectedMap["ekCert"] = "NotFound"
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.ResetFlags = 0x00000001
@@ -1120,6 +1123,7 @@ Key Ladder:  dev
 	expectedMap["keyladder"] = "dev"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1179,6 +1183,7 @@ Key Ladder:  prod
 	expectedMap["keyladder"] = "prod"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1238,6 +1243,7 @@ Key Ladder:  prod
 	expectedMap["keyladder"] = "prod"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1297,6 +1303,7 @@ Key Ladder:  prod
 	expectedMap["keyladder"] = "prod"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1355,6 +1362,7 @@ Key Ladder:  enabled
 	expectedMap["keyladder"] = "enabled"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = ""
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1414,6 +1422,7 @@ Key Ladder:  dev
 	expectedMap["keyladder"] = "dev"
 	expectedMap["ekCert"] = ""
 	expectedMap["factoryMode"] = ""
+	expectedMap["rollbackDetected"] = "Rollback detected"
 
 	expected := Sysinfo{}
 	expected.Breadcrumbs = ""
@@ -1425,6 +1434,7 @@ Key Ladder:  dev
 	expected.RWKeyid = "0x334f70df"
 	expected.ROKeyid = "0xaa66150f"
 	expected.Devid = "0x12345678 0x12345678"
+	expected.RollbackDetected = true
 	expected.RORollback = "2/2/2"
 	expected.RWRollback = "4/128/2"
 	expected.RWRollbackBits = SysinfoRollbackBits{

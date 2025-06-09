@@ -127,7 +127,7 @@ var (
 	//    EK Cert:     Compliant
 	sysinfoFactoryMode        = `Chip factory mode.`
 	sysinfoResetFlagRE        = `Reset flags:\s+0x(?P<resetFlags>` + hexRE + `)\s+\([^)]*\)\s*`
-	sysinfoRollbackDetectedRE = `(Rollback detected)?\s*`
+	sysinfoRollbackDetectedRE = `(?P<rollbackDetected>Rollback detected)?\s*`
 	sysinfoResetCountRE       = `Reset count:\s+(?P<resetCount>\d*)\s*`
 	sysinfoBreadcrumbRE       = `(Breadcrumbs:\s+0x(?P<breadcrumbs>` + hexRE + `))?\s*`
 	sysinfoChipRE             = `Chip:\s+g\s+(?P<chipName>Ti50|cr50) (?P<chipSKU>\S+)\s*`
@@ -1279,6 +1279,8 @@ type Sysinfo struct {
 	InFactoryMode bool
 	// EKCert is the EK Cert value
 	EKCert string
+	// RollbackDetected is true if sysinfo prints a rollback is detected
+	RollbackDetected bool
 }
 
 const (
@@ -1434,6 +1436,7 @@ func getSysinfoStruct(input map[string]string) (Sysinfo, error) {
 	result.EKCert = input["ekCert"]
 	result.InFactoryMode = false
 	result.FactoryModeValid = false
+	result.RollbackDetected = input["rollbackDetected"] != ""
 
 	result.TpmEnabled = result.TpmMode == "enabled"
 	result.ProdKeyladder = result.Keyladder == "prod" || result.Keyladder == "enabled"
