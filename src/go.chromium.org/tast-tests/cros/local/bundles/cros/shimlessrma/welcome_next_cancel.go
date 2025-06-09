@@ -34,7 +34,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "critical",
-			ExtraHardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
+			ExtraHardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig(), hwdep.Battery()),
 			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "staging",
