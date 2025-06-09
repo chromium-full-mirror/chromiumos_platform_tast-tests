@@ -36,10 +36,10 @@ func init() {
 		// This test requires fetch proxy configs from a web page (CrosNetworkConfig).
 		Desc: "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-networking@google.com",
+			"jiejiang@google.com",
 		},
-		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
