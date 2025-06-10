@@ -163,7 +163,7 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

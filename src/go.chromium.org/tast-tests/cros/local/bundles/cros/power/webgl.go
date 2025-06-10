@@ -83,7 +83,7 @@ func WebGL(ctx context.Context, s *testing.State) {
 		return 0
 	}, "fps"))
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

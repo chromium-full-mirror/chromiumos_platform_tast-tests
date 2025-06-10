@@ -94,7 +94,9 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Start setting up the power recorder")
 	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
-	if err := power.Cooldown(ctx); err != nil {
+
+	// Only record the duration of the first cooldown. (Refer to b/420793324#comment18)
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Failed to cooldown before the manual setup: ", err)
 	}
 
@@ -134,7 +136,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := r.Cooldown(ctx); err != nil {
+	if err := power.Cooldown(ctx); err != nil {
 		s.Log("Failed to cooldown after the manual setup: ", err)
 	}
 	if err := r.Start(ctx); err != nil {

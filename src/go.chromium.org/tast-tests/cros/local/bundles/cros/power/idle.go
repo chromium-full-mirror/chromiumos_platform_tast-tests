@@ -211,7 +211,7 @@ func Idle(ctx context.Context, s *testing.State) {
 		defer display.SetPSRState(display.PSRDefault)
 	}
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

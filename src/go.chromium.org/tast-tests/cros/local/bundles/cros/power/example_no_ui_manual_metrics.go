@@ -69,7 +69,7 @@ func ExampleNoUIManualMetrics(ctx context.Context, s *testing.State) {
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 	if err := r.Start(ctx); err != nil {

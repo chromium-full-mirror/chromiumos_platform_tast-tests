@@ -135,7 +135,7 @@ func VideoPlaybackDrm(ctx context.Context, s *testing.State) {
 	// Register test specific metrics.
 	r.RegisterMetrics(pm.NewVideoFpsMetrics(conn))
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

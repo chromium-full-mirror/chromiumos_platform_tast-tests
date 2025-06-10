@@ -76,7 +76,7 @@ func CooldownExperiment(ctx context.Context, s *testing.State) {
 
 	// We want to upload metrics even if cooldown failed for debugging purposes,
 	// thus the cooldown error needs to be delayed to the end of the test.
-	cooldownErr := power.Cooldown(ctx)
+	cooldownErr := r.Cooldown(ctx)
 
 	if cooldownErr != nil {
 		testing.ContextLog(ctx, "Continue testing after failing to cooldown CPU with error: ", cooldownErr)

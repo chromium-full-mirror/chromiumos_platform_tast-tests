@@ -247,7 +247,7 @@ func Display(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 

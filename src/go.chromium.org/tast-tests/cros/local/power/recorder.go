@@ -196,8 +196,8 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 
 	if r.cooldownDuration >= 0 {
 		r.perfValues.Set(perf.Metric{
-			Name:      cp.GeneralPerfMetricType + "cooldown_time",
-			Unit:      "s",
+			Name:      cp.GeneralPerfMetricType + "seconds_cooldown",
+			Unit:      "second",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  false,
 		}, r.cooldownDuration)

@@ -386,7 +386,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	recorder := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(cleanupCtx)
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := recorder.Cooldown(ctx); err != nil {
 		s.Fatal("Failed to cool down: ", err)
 	}
 

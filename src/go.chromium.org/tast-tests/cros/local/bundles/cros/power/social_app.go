@@ -129,7 +129,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(cleanupCtx)
 
-	if err := power.Cooldown(ctx); err != nil {
+	if err := recorder.Cooldown(ctx); err != nil {
 		s.Error("Failed to cool down the device: ", err)
 	}
 
