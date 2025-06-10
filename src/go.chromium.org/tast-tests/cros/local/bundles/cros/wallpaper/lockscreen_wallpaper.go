@@ -126,6 +126,42 @@ func printRGBA(c color.Color) string {
 	return fmt.Sprintf("{%d, %d, %d, %d}", r, g, b, a)
 }
 
+func checkLockscreenColors(cr *chrome.Chrome, outdir string) uiauto.Action {
+	return func(ctx context.Context) error {
+		// Take a screenshot of the lock screen.
+		lockscreenImage, err := screenshot.GrabScreenshot(ctx, cr)
+		if err != nil {
+			return errors.Wrap(err, "failed to take lockscreen screenshot")
+		}
+
+		bounds := lockscreenImage.Bounds()
+		offsetX := bounds.Dx() / 4
+		offsetY := bounds.Dy() / 8
+		upperLeft := image.Point{bounds.Min.X + offsetX, bounds.Min.Y + offsetY}
+		upperRight := image.Point{bounds.Max.X - offsetX, upperLeft.Y}
+		bottomCenter := image.Point{(bounds.Min.X + bounds.Max.X) / 2, bounds.Max.Y - offsetY}
+
+		red := lockscreenImage.At(upperLeft.X, upperLeft.Y)
+		green := lockscreenImage.At(upperRight.X, upperRight.Y)
+		blue := lockscreenImage.At(bottomCenter.X, bottomCenter.Y)
+
+		// The test wallpaper is divided into three parts of red, green, or blue. All three are shifted towards blue because
+		// blue is the largest region in the image, so system UI should do color extraction and shift the lockscreen towards blue.
+		// Verify that a pixel sampled from the red area is red+blue, a pixel sampled from the green area is green+blue,
+		// and a pixel sampled from the blue area is very blue.
+		if !isRed(red) || !isGreen(green) || !isBlue(blue) {
+			if err = saveLockscreenJpg(outdir, lockscreenImage); err != nil {
+				err = errors.Wrap(err, "failed to save lockscreen debug image")
+			}
+			return errors.Wrapf(
+				err,
+				"failed to verify wallpaper on lockscreen: red - %s, green - %s, blue - %s", printRGBA(red), printRGBA(green), printRGBA(blue))
+		}
+
+		return nil
+	}
+}
+
 // LockscreenWallpaper verifies that a reference red, green, blue wallpaper can be seen in blurred form when the screen is locked.
 // The dominant extracted color is blue, so all colors will be shifted towards blue.
 func LockscreenWallpaper(ctx context.Context, s *testing.State) {
@@ -205,31 +241,7 @@ func LockscreenWallpaper(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Take a screenshot of the lock screen.
-	lockscreenImage, err := screenshot.GrabScreenshot(ctx, cr)
-	if err != nil {
-		s.Fatal("Failed to take lockscreen screenshot: ", err)
-	}
-
-	bounds := lockscreenImage.Bounds()
-	offsetX := bounds.Dx() / 4
-	offsetY := bounds.Dy() / 8
-	upperLeft := image.Point{bounds.Min.X + offsetX, bounds.Min.Y + offsetY}
-	upperRight := image.Point{bounds.Max.X - offsetX, upperLeft.Y}
-	bottomCenter := image.Point{(bounds.Min.X + bounds.Max.X) / 2, bounds.Max.Y - offsetY}
-
-	red := lockscreenImage.At(upperLeft.X, upperLeft.Y)
-	green := lockscreenImage.At(upperRight.X, upperRight.Y)
-	blue := lockscreenImage.At(bottomCenter.X, bottomCenter.Y)
-
-	// The test wallpaper is divided into three parts of red, green, or blue. All three are shifted towards blue because
-	// blue is the largest region in the image, so system UI should do color extraction and shift the lockscreen towards blue.
-	// Verify that a pixel sampled from the red area is red+blue, a pixel sampled from the green area is green+blue,
-	// and a pixel sampled from the blue area is very blue.
-	if !isRed(red) || !isGreen(green) || !isBlue(blue) {
-		if err = saveLockscreenJpg(s.OutDir(), lockscreenImage); err != nil {
-			s.Error("Failed to save debug lockscreen image: ", err)
-		}
-		s.Fatalf("Failed to verify wallpaper on lockscreen: red - %s, green - %s, blue - %s", printRGBA(red), printRGBA(green), printRGBA(blue))
+	if err := uiauto.Retry(2, checkLockscreenColors(cr, s.OutDir()))(ctx); err != nil {
+		s.Fatal("Failed checking lock screen colors: ", err)
 	}
 }
