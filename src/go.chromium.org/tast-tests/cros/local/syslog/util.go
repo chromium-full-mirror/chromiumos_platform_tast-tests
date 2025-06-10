@@ -130,7 +130,13 @@ func ExtractFileName(entry Entry) string {
 	// old format: [file.cc(123)]
 	// new format: [../relative/path/to/file.cc:123]
 	// filename will match just file.cc for both cases
-	r := regexp.MustCompile(`^.*!?\[(?:.*/)?(?P<filename>[^/\]]+?)[(:]\d+\)\].*$`)
+	// This "monstrosity" extracts a filename (like 'object_proxy.cc' or 'device.cc')
+	// from log lines that contain file path and line number information,
+	// especially when wrapped in square brackets. It's designed to:
+	// 1. Handle optional path prefixes (e.g., '../libchrome/.../').
+	// 2. Support both ':line' and '(line)' number formats.
+	// 3. Extract the *last* such filename-line occurrence if multiple are present.
+	r := regexp.MustCompile(`^.*\[(?:.*/)?(?P<filename>[^/:\](]+?)(?::(\d+)|(?:\((\d+)\)))\].*$`)
 	m := r.FindStringSubmatch(entry.Content)
 	if len(m) < 2 {
 		return ""

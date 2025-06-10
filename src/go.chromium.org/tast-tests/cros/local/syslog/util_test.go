@@ -44,6 +44,20 @@ func TestExtractFileName(t *testing.T) {
 			},
 			want: "client.cc",
 		},
+		{
+			name: "NewStyleFilename",
+			e: Entry{
+				Content: "dnsproxyd: [../libchrome-0.0.1/platform2/libchrome/dbus/object_proxy.cc:590] Failed to",
+			},
+			want: "object_proxy.cc",
+		},
+		{
+			name: "NewStyleTwoFilenames",
+			e: Entry{
+				Content: "shill: [../path/to/error.cc(126)] [path/to/wifi_service.cc(690)]: WiFi",
+			},
+			want: "wifi_service.cc",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			f := ExtractFileName(tc.e)
