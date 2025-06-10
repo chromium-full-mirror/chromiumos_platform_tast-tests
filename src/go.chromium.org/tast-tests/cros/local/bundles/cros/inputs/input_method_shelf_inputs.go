@@ -37,7 +37,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         InputMethodShelfInputs,
 		Desc:         "Test input functions triggered from IME tray",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},

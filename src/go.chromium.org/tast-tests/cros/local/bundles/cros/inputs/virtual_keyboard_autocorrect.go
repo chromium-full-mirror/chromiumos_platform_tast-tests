@@ -34,7 +34,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardAutocorrect,
 		Desc:         "Checks that virtual keyboard can perform typing with autocorrects",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{
 			// Disabled by TORA.  See: b/311054997

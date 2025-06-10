@@ -28,7 +28,7 @@ func init() {
 		Func: PhysicalKeyboardAutocorrectAccentKey,
 		Desc: "Checks that physical keyboard with accent keys can perform typing with autocorrects",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com", // PoC
+			// PoC
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",

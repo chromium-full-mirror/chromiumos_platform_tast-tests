@@ -32,7 +32,6 @@ func init() {
 		Func: InputMethodSystemLanguage,
 		Desc: "Launching ChromeOS in different languages defaults input method",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",

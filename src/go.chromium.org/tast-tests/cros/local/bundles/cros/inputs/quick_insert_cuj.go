@@ -41,7 +41,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         QuickInsertCuj,
 		Desc:         "Checks the CUJs of Quick Insert",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
 			"group:input-tools",

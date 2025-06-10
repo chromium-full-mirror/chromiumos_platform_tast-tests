@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardAppCompatGworkspace,
 		Desc:         "Test inputs feature on virtual keyboard for google workspace",
-		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_gworkspace_perbuild"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard", "gaia"},

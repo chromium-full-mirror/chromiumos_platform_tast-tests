@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmojiSearch,
 		Desc:         "Check that emoji search works well",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:input-tools", "group:mainline", "group:input-tools-upstream", "group:hw_agnostic", "group:release-health", "release-health_essential_inputs"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

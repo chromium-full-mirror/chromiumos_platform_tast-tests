@@ -31,7 +31,6 @@ func init() {
 		Func: AppGeditSwitchIME,
 		Desc: "Verify that users can type and view characters on switching input methods in one app",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 			"clumptini@google.com",
 			"shend@google.com",

@@ -23,7 +23,6 @@ func init() {
 		Func: PhysicalKeyboardLayoutChanged,
 		Desc: "Test of the layout changed event",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 			"giovax@google.com",
 		},

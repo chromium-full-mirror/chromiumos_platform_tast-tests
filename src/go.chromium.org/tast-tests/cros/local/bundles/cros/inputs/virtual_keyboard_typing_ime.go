@@ -52,7 +52,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingIME,
 		Desc:         "Checks that virtual keyboard works in different input methods",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "informational"},
 		SearchFlags:  util.IMESearchFlags(vkTypingTestIMEs),

@@ -81,7 +81,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Manual,
 		Desc:         "Login device and setup environment for manual testing purpose",
-		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "arc"},
 		Timeout:      10 * time.Minute,

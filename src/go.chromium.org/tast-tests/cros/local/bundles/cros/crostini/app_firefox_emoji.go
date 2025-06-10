@@ -25,7 +25,6 @@ func init() {
 		Func: AppFirefoxEmoji,
 		Desc: "Open a test webpage with an input box in Firefox and test input with emoji keyboard",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 			"clumptini@google.com",
 			"shend@google.com",

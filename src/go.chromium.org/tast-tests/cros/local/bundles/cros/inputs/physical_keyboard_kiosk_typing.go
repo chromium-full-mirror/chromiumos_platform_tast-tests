@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardKioskTyping,
 		Desc:         "Checks that user can type on physical keyboard in kiosk mode",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
 			"group:golden_tier",

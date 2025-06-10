@@ -36,7 +36,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardSuggestionPasswordField,
 		Desc:         "Checks that virtual keyboard shows digits as candidates when user typing in password field",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay(imes, []string{"screenplay-56ac7c03-9ec5-41a8-9d0c-3431f739c3c2"}),

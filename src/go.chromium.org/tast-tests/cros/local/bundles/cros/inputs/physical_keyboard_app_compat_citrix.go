@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAppCompatCitrix,
 		Desc:         "Checks that physical keyboard can perform typing in citrix",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_citrix_perbuild"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

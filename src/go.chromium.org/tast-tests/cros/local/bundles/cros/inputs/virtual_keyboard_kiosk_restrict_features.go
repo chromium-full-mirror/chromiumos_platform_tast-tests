@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardKioskRestrictFeatures,
 		Desc:         "Checks that restrict features functionality of extension API works in kiosk mode",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
 			"group:golden_tier",

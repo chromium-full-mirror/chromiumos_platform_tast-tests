@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmojiGifInsertion,
 		Desc:         "Checks that we can search and insert GIFs (from emoji picker)",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:input-tools", "group:mainline", "group:input-tools-upstream", "group:hw_agnostic", "informational", "group:release-health", "release-health_essential_inputs"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

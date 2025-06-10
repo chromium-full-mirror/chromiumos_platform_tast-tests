@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardKioskTyping,
 		Desc:         "Checks that user can type in virtual keyboard in kiosk mode",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
 			"group:golden_tier",

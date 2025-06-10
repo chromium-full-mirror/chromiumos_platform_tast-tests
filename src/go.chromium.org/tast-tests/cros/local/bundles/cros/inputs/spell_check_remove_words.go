@@ -29,7 +29,6 @@ func init() {
 		Func: SpellCheckRemoveWords,
 		Desc: "Verify that spell check works while typing the word removed from customize spell check",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",

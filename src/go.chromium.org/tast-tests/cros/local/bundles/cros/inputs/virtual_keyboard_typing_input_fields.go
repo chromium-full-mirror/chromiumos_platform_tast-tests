@@ -46,7 +46,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingInputFields,
 		Desc:         "Checks that virtual keyboard works on different input fields",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay(inputFieldTestIMEs, []string{"screenplay-d0e5c2d9-4c60-43a2-9cb3-80061ab0c7c4"}),

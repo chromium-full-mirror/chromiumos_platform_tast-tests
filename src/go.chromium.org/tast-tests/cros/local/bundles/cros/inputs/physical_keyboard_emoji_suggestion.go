@@ -33,7 +33,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardEmojiSuggestion,
 		Desc:         "Checks emoji suggestions with physical keyboard typing",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

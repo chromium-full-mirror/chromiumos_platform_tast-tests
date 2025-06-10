@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAutocorrect,
 		Desc:         "Checks that physical keyboard can perform typing with autocorrects",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:release-health", "release-health_essential_inputs"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

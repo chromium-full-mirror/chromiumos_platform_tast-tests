@@ -59,7 +59,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         QuickInsertCujPerf,
 		Desc:         "Measures the performance of Quick Insert CUJs",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},

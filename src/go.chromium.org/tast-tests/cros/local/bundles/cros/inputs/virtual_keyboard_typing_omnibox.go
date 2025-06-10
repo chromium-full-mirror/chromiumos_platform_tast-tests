@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingOmnibox,
 		Desc:         "Checks that the virtual keyboard works in Chrome browser omnibox",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "informational", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},

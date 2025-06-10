@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAppCompatArc,
 		Desc:         "Checks that physical keyboard can perform typing in playstore search field",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_arc_perbuild"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "android_vm"},

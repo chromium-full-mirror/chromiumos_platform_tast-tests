@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PhysicalKeyboardAppCompatGworkspace,
 		Desc:         "Test inputs feature on physical keyboard for google workspace",
-		Contacts:     []string{"essential-inputs-team@google.com", "essential-inputs-gardener-oncall@google.com"},
+		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:inputs_appcompat_gworkspace_perbuild"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "gaia"},

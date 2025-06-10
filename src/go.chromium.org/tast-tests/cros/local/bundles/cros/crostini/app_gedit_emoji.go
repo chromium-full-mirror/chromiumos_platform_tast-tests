@@ -26,7 +26,6 @@ func init() {
 		Func: AppGeditEmoji,
 		Desc: "Test emoji keyboard input in gedit windows",
 		Contacts: []string{
-			"essential-inputs-gardener-oncall@google.com",
 			"essential-inputs-team@google.com",
 			"clumptini@google.com",
 			"shend@google.com",
