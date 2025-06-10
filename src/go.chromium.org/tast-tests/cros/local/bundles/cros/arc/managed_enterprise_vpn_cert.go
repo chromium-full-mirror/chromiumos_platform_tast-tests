@@ -47,6 +47,10 @@ const (
 	skipArcTermsLogRegex   = `Skip ARC Terms of Service negotiation`
 )
 
+type managedEntVpnCertTestParam struct {
+	performSecondLoginFlag bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ManagedEnterpriseVpnCert,
@@ -59,6 +63,13 @@ func init() {
 		SoftwareDeps: []string{"android_vm", "chrome", "no_qemu"},
 		VarDeps:      []string{managedEntVpnAccountPoolName},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
+		Params: []testing.Param{{
+			Name: "single_login",
+			Val:  managedEntVpnCertTestParam{performSecondLoginFlag: false},
+		}, {
+			Name: "double_login",
+			Val:  managedEntVpnCertTestParam{performSecondLoginFlag: true},
+		}},
 	})
 }
 
@@ -67,8 +78,9 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	performSecondLoginFlag := s.Param().(managedEntVpnCertTestParam).performSecondLoginFlag
 	cr, a, tconn, err := logInAndStartArc(
-		ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError)
+		ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError, performSecondLoginFlag)
 	if err != nil {
 		s.Fatal("Failed to prepare device for testing: ", err)
 	}
@@ -91,7 +103,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 }
 
 // logInAndStartArc logs into the device with credentials from the specified pool and starts ARC.
-func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError func() bool) (*chrome.Chrome, *arc.ARC, *chrome.TestConn, error) {
+func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError func() bool, performSecondLogin bool) (*chrome.Chrome, *arc.ARC, *chrome.TestConn, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -107,6 +119,7 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 		chrome.ARCSupported(),
 		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
+		chrome.ProdPolicy(),
 	)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to start Chrome")
@@ -149,6 +162,10 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 	}
 
 	// TODO(b/409336666):  Remove this once certificates work after first login.
+	if !performSecondLogin {
+		return cr, a, tconn, nil
+	}
+
 	// Logout the user.
 	testing.ContextLog(ctx, "Logging out the user")
 	if err := quicksettings.SignOut(ctx, tconn); err != nil {
