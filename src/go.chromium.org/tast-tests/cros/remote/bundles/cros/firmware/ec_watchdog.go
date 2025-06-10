@@ -292,19 +292,22 @@ func checkProgramCounter(ctx context.Context, panicInfo string) error {
 	}
 
 	pcMap := map[string]*regexp.Regexp{
-		"cortex-m0": regexp.MustCompile(`(?i)pc\s*[\:=]\s*(?:0x)?([0-9a-fA-F]+)\s`),
-		"nds32":     regexp.MustCompile(`(?i)ipc\s*[\:=]?\s*(?:0x)?([0-9a-fA-F]+)\s`),
+		"cortex-m0 or risc-v": regexp.MustCompile(`pc\s*[\:]\s*([0-9a-fA-F]*)\s`), // Looks like: `... pc :{hex val or empty}\n`
+		"nds32":               regexp.MustCompile(`(?i)IPC\s*([0-9a-fA-F]*)\s`),   // Looks like: `IPC {hex val or empty} ...`
 	}
 	for arch, regex := range pcMap {
 		match := regex.FindStringSubmatch(panicInfo)
 		if match == nil {
 			continue
 		}
+		if len(match) < 2 || match[1] == "" {
+			return errors.Errorf("program counter was unexpectedly blank, expected non-zero value: %v", panicInfo)
+		}
 		pc, err := strconv.ParseInt(match[1], 16, 64)
 		if err != nil {
-			return errors.Wrapf(err, "failed to parse program counter value from match %v to int", match)
+			return errors.Wrapf(err, "failed to parse program counter value from match %v to int", match[1])
 		}
-		testing.ContextLogf(ctx, "Found program counter value (arch: %v): %v (%v)", arch, pc, match[0])
+		testing.ContextLogf(ctx, "Found program counter value (arch: %v): %v (%v)", arch, pc, strings.TrimSpace(match[0]))
 		if pc == 0 {
 			return errors.Errorf("program counter was unexpectedly 0, expected non-zero value: %v", panicInfo)
 		}
