@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
@@ -55,7 +56,7 @@ func init() {
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
-		SoftwareDeps: []string{"android_vm", "chrome"},
+		SoftwareDeps: []string{"android_vm", "chrome", "no_qemu"},
 		VarDeps:      []string{managedEntVpnAccountPoolName},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
 	})
@@ -71,8 +72,9 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to prepare device for testing: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	defer cr.Close(cleanupCtx)
+	defer a.Close(ctx)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for Chrome logs to show ARC Certs installed.
 	s.Log("Waiting for ARC Certs to be installed")
@@ -82,7 +84,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	s.Log("ARC Certs successfully installed")
 
 	// Connect with Global VPN Protect.
-	if err := connectToVpnWithGlobalProtect(ctx, tconn, cr, a, s); err != nil {
+	if err := connectToVpnWithGlobalProtect(ctx, tconn, cr, a); err != nil {
 		s.Fatal("Failed to connect to VPN: ", err)
 	}
 	s.Log("Global Protect VPN successfully connected")
@@ -127,7 +129,7 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 	}
 
 	testing.ContextLog(ctx, "Starting ARC")
-	a, _ := arc.New(ctx, outDir, cr.NormalizedUser())
+	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to start ARC")
 	}
@@ -149,6 +151,10 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 	// TODO(b/409336666):  Remove this once certificates work after first login.
 	// Logout the user.
 	testing.ContextLog(ctx, "Logging out the user")
+	if err := quicksettings.SignOut(ctx, tconn); err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to logout")
+	}
+	a.Close(ctx)
 	cr.Close(ctx)
 
 	// Re-login with the same user credentials.
@@ -224,7 +230,7 @@ func waitForArcCertsInstallationInChromeLog(ctx context.Context, cr *chrome.Chro
 
 // connectToVpnWithGlobalProtect launches the GlobalProtect app and completes the UI flow to connect to VPN.
 func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
-	cr *chrome.Chrome, a *arc.ARC, s *testing.State) error {
+	cr *chrome.Chrome, a *arc.ARC) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -285,7 +291,7 @@ func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
 	okButton := d.Object(ui.ID(okButtonID))
 	if err := okButton.WaitForExists(ctx, 15*time.Second); err != nil {
 		// Click the connect button if there is no "OK" pop-up.
-		if err := clickConnectButtonAgain(ctx, d, s); err != nil {
+		if err := clickConnectButtonAgain(ctx, d); err != nil {
 			return err
 		}
 	}
@@ -319,8 +325,8 @@ func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // clickConnectButtonAgain waits for the shield connect button to exist and clicks it.
-func clickConnectButtonAgain(ctx context.Context, d *ui.Device, s *testing.State) error {
-	s.Log("Clicking on Connect button again")
+func clickConnectButtonAgain(ctx context.Context, d *ui.Device) error {
+	testing.ContextLog(ctx, "Clicking on Connect button again")
 	// Click on the Connect button.
 	connectButton := d.Object(ui.ID(vpnPackage + connectShieldButtonID))
 	if err := connectButton.WaitForExists(ctx, 10*time.Second); err != nil {
