@@ -1288,6 +1288,10 @@ const (
 	Cr50ResetFlagPowerOn = (1 << 3)
 	// Cr50ResetFlagHibernate is set when Cr50 woke from deep sleep
 	Cr50ResetFlagHibernate = (1 << 6)
+	// Cr50ResetFlagRTCAlarm is set when Cr50 woke from rtc-alarm
+	Cr50ResetFlagRTCAlarm = (1 << 7)
+	// Cr50ResetFlagWakePin is set when Cr50 woke from a wake-pin
+	Cr50ResetFlagWakePin = (1 << 8)
 	// Cr50ResetFlagHard is set when Cr50 requests a hard reset
 	Cr50ResetFlagHard = (1 << 11)
 	// Cr50ResetFlagRdd is set when Rdd woke Cr50
