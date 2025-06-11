@@ -384,8 +384,10 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		// There are two possible of descriptions on the Play Store installation page.
 		// One is "Download in progress", the other is "Install in progress".
 		// If one of them exists, that means the installation is still in progress.
-		progress := d.Object(ui.DescriptionContains("in progress"))
-		if err := progress.Exists(ctx); err == nil {
+		progressDescription := d.Object(ui.DescriptionContains("in progress"))
+		progressBar := d.Object(ui.ClassName("android.widget.ProgressBar"))
+		progress, err := findAnyExists(ctx, shortUITimeout, progressDescription, progressBar)
+		if err == nil {
 			// Print the percentage of app installed so far.
 			printPercentageOfAppInstalled(ctx, d)
 			testing.ContextLog(ctx, "Wait until download and install complete")
