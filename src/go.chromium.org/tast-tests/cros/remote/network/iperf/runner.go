@@ -39,6 +39,11 @@ func (r *Runner) Run(ctx context.Context, retryCount int) (*Result, error) {
 		if err == nil {
 			return result, nil
 		}
+		if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+			// If context has been canceled, it means we've been gently asked
+			// to discontinue. Discard the last result but return what we have.
+			break
+		}
 		testing.ContextLogf(ctx, "Failed to run Iperf attempt %d of %d: %v", count+1, retryCount, err)
 	}
 
