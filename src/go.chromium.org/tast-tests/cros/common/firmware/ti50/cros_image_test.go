@@ -620,22 +620,35 @@ func TestTimeDT(t *testing.T) {
 		Since deep sleep: 0x0000000000004a68 = 19.048 s
 `
 	expected := GSCTime{
-		coldResetTime: 10939497000000,
-		dsTime:        19048000000,
+		ColdResetTime: 10939497000000,
+		DSTime:        19048000000,
 	}
 
 	testExtractGSCTime(t, input, expected)
 }
 
-func TestTimeH1(t *testing.T) {
+func TestTimeCr501(t *testing.T) {
 	input := `
 		gettime
 		Time: 0x00000000001ea5ff = 2.008575 s
 		since cold_reset: 1683 s
 `
 	expected := GSCTime{
-		coldResetTime: 1683000000000,
-		dsTime:        2008575000,
+		ColdResetTime: 1683000000000,
+		DSTime:        2008575000,
+	}
+
+	testExtractGSCTime(t, input, expected)
+}
+func TestTimeCr502(t *testing.T) {
+	input := `
+		gettime
+		Time: 0x00000000009864dd = 9.987293 s
+		since cold_reset: 9 s
+`
+	expected := GSCTime{
+		ColdResetTime: 9000000000,
+		DSTime:        9987293000,
 	}
 
 	testExtractGSCTime(t, input, expected)

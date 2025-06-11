@@ -995,10 +995,10 @@ func (i *CrOSImage) BoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
 
 // GSCTime contains the time since cold reset and the time since deep sleep reset
 type GSCTime struct {
-	// coldReset is the time since a cold reset (ex power-on, hard, security)
-	coldResetTime time.Duration
-	// dsTime is the time since deep sleep or any other reset.
-	dsTime time.Duration
+	// ColdResetTime is the time since a cold reset (ex power-on, hard, security)
+	ColdResetTime time.Duration
+	// DSTime is the time since deep sleep or any other reset.
+	DSTime time.Duration
 }
 
 // extractGSCTime extracts the time since deep sleep and cold reset from the gettime output
@@ -1022,13 +1022,13 @@ func extractGSCTime(out string) (GSCTime, error) {
 	if err != nil {
 		return ret, err
 	}
-	ret.dsTime = time.Duration(t * float64(time.Second))
+	ret.DSTime = time.Duration(t * float64(time.Second))
 
 	t, err = strconv.ParseFloat(coldResetTime, 64)
 	if err != nil {
 		return ret, err
 	}
-	ret.coldResetTime = time.Duration(t * float64(time.Second))
+	ret.ColdResetTime = time.Duration(t * float64(time.Second))
 	return ret, nil
 }
 
