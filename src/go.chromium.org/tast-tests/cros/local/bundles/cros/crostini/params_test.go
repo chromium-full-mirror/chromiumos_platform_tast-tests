@@ -31,7 +31,8 @@ type testOptions struct {
 	needsAloop      bool
 	// Foundational tests that should run on all devices. These tests should be lightweight enough
 	// to be stable enough to run on low performance devices and older versions of debian.
-	foundation bool
+	foundation   bool
+	testBaguette bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
@@ -44,7 +45,7 @@ var standardTests = map[string]testOptions{
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	"audio_playback_configurations.go":  {timeout: 10 * time.Minute},
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
-	"basic.go":                          {foundation: true},
+	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true},
 	"command_cd.go":                     {foundation: true},
 	"command_ps.go":                     {foundation: true},
@@ -118,6 +119,7 @@ func TestFixTestParams(t *testing.T) {
 			LowPerfEligible:         options.foundation,
 			MinimumContainerVersion: minimumContainerVersion,
 			RequiresARC:             options.requiresARC,
+			TestBaguette:            options.testBaguette,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

@@ -178,6 +178,11 @@ type Param struct {
 	// NeedsAloop indicates whether a test relies on audio loopback to be
 	// set up
 	NeedsAloop bool
+
+	// TestBaguette indicates opting in to testing baguette (containerless
+	// crostini install). Will eventually be made the default once all tests
+	// are confirmed passing.
+	TestBaguette bool
 }
 
 type generatedParam struct {
@@ -229,6 +234,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	type iterator struct {
 		debianVersion vm.ContainerDebianVersion
 		stable        bool
+		baguette      bool
 	}
 	var itChrome = []iterator{}
 
@@ -237,11 +243,24 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			itChrome = append(itChrome, iterator{
 				debianVersion: debianVersion,
 				stable:        stable,
+				baguette:      false,
 			})
 		}
 	}
 
 	for _, testCase := range baseCases {
+		var testCaseChrome = []iterator{}
+		testCaseChrome = append(testCaseChrome, itChrome...)
+
+		if testCase.TestBaguette {
+			for _, stable := range []bool{true, false} {
+				testCaseChrome = append(testCaseChrome, iterator{
+					debianVersion: vm.DebianBookworm,
+					stable:        stable,
+					baguette:      true,
+				})
+			}
+		}
 		iterate := func(i iterator) {
 			if testCase.LowPerfEligible {
 				if testCase.OnlyStableBoards {
@@ -274,7 +293,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			name := testCase.Name
-			if !testCase.MinimalSet && (i.debianVersion == vm.DebianBullseye || i.debianVersion == vm.DebianBookworm) {
+			if i.baguette {
+				name = combineName(name, "baguette")
+			} else if !testCase.MinimalSet && (i.debianVersion == vm.DebianBullseye || i.debianVersion == vm.DebianBookworm) {
 				// If we're generating a minimal set
 				// then the debian version is always
 				// the same and we don't need to
@@ -325,7 +346,9 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 
 			var extraSoftwareDeps []string
-			extraSoftwareDeps = append(extraSoftwareDeps, "dlc")
+			if !i.baguette {
+				extraSoftwareDeps = append(extraSoftwareDeps, "dlc")
+			}
 
 			var hardwareDeps string
 			if testCase.UseLargeContainer {
@@ -359,29 +382,33 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			var testParam generatedParam
 			var fixture, precondition string
 			if testCase.UseFixture {
-				arcStatus := ""
-				if testCase.LowPerfEligible && !i.stable {
-					arcStatus = "WithoutArc"
-				}
-
-				if testCase.SelfManagedInstall {
-					fixture = ""
-				} else if testCase.UseLargeContainer {
-					suffix := ""
-					if testCase.DeviceMode == devicemode.TabletMode {
-						suffix = "Tablet"
-					} else if testCase.DeviceMode == devicemode.ClamshellMode {
-						suffix = "Clamshell"
-					}
-					fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), suffix)
-				} else if testCase.UseGaiaLogin {
-					fixture = fmt.Sprintf("\"crostini%sGaia%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
+				if i.baguette {
+					fixture = "\"baguettePolicy\""
 				} else {
-					fixture = fmt.Sprintf("\"crostini%s%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
-				}
+					arcStatus := ""
+					if testCase.LowPerfEligible && !i.stable {
+						arcStatus = "WithoutArc"
+					}
 
-				if testCase.NeedsAloop {
-					fixture = fmt.Sprintf("fixture.AloopLoaded{Parent: %s}.Instance()", fixture)
+					if testCase.SelfManagedInstall {
+						fixture = ""
+					} else if testCase.UseLargeContainer {
+						suffix := ""
+						if testCase.DeviceMode == devicemode.TabletMode {
+							suffix = "Tablet"
+						} else if testCase.DeviceMode == devicemode.ClamshellMode {
+							suffix = "Clamshell"
+						}
+						fixture = fmt.Sprintf("\"crostini%sLargeContainer%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), suffix)
+					} else if testCase.UseGaiaLogin {
+						fixture = fmt.Sprintf("\"crostini%sGaia%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
+					} else {
+						fixture = fmt.Sprintf("\"crostini%s%s\"", cases.Title(language.Und).String(i.debianVersion.Codename), arcStatus)
+					}
+
+					if testCase.NeedsAloop {
+						fixture = fmt.Sprintf("fixture.AloopLoaded{Parent: %s}.Instance()", fixture)
+					}
 				}
 			} else {
 				extraData = append(extraData,
@@ -432,7 +459,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			result = append(result, testParam)
 		}
 
-		for _, i := range itChrome {
+		for _, i := range testCaseChrome {
 			iterate(i)
 		}
 	}
