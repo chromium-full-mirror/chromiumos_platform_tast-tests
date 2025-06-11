@@ -915,6 +915,15 @@ func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, timeout time.Duration
 	return err
 }
 
+// WaitUntilDeepSleepWake waits until gsc prints one of the Ti50/Cr50 startup messages
+func (i *CrOSImage) WaitUntilDeepSleepWake(ctx context.Context, timeout time.Duration) (string, error) {
+	out, err := i.WaitUntilMatch(ctx, rwBoot, timeout)
+	if err != nil {
+		return "", err
+	}
+	return string(out[0]), nil
+}
+
 // WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
 // reboot or deep sleep resume.
 func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, timeout time.Duration) error {

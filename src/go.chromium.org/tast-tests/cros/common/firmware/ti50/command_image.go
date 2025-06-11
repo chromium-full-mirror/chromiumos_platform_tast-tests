@@ -25,6 +25,7 @@ var (
 	deepSleep   *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
 	anySleep    *regexp.Regexp = regexp.MustCompile(`Entering (deep|normal) sleep( zzz)?`)
 	roBoot      *regexp.Regexp = regexp.MustCompile(`(ROM_EXT:|Starting ROM_EXT|Ravn4\|)`)
+	rwBoot      *regexp.Regexp = regexp.MustCompile(`.*Reset (cause|Type):.*[\r\n]`)
 
 	// FatalMsg is a regular expression.  If it ever matches any serial console output from
 	// the GSC, it should be reported as a test failure.
