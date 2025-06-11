@@ -611,3 +611,21 @@ func ProxyServer(addr string) Option {
 		return nil
 	}
 }
+
+// EnableAccessibilityManifestV3GoogleTts returns an Option to enable
+// `AccessibilityManifestV3GoogleTts`.
+func EnableAccessibilityManifestV3GoogleTts() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.DisableAccessibilityManifestV3GoogleTts = false
+		return nil
+	}
+}
+
+// EnableAccessibilityManifestV3EspeakNGTts returns an Option to enable
+// `AccessibilityManifestV3EspeakNGTts`.
+func EnableAccessibilityManifestV3EspeakNGTts() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.DisableAccessibilityManifestV3EspeakNGTts = false
+		return nil
+	}
+}

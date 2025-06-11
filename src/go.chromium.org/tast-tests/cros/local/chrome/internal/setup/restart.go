@@ -281,6 +281,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 		disabledFeatures = append(disabledFeatures, "ExtensionManifestV2Unsupported")
 	}
 
+	if cfg.DisableAccessibilityManifestV3GoogleTts() {
+		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3GoogleTts")
+	}
+
+	if cfg.DisableAccessibilityManifestV3EspeakNGTts() {
+		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3EspeakNGTts")
+	}
+
 	if len(enabledFeatures) != 0 {
 		args = append(args, "--enable-features="+strings.Join(enabledFeatures, ","))
 	}
