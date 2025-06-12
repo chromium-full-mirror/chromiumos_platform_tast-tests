@@ -7,6 +7,7 @@ package googlemeet
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
 )
 
 // MeetHelper is an interface defines the operations performed in MeetCUJ.
@@ -79,9 +81,20 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 		return errors.Wrap(err, "failed to navigate to the Meet homepage")
 	}
 
-	if err := webutil.WaitForQuiescence(ctx, h.meetConn, 10*time.Second); err != nil {
+	startTime := time.Now()
+	if err := webutil.WaitForQuiescence(ctx, h.meetConn, time.Minute); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for Meet homepage to quiesce: ", err)
+		outdir, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			testing.ContextLog(ctx, "Failed to get OutDir")
+		} else {
+			path := filepath.Join(outdir, "meet_homepage.jpg")
+			if err := screenshot.Capture(ctx, path); err != nil {
+				testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
+			}
+		}
 	}
+	testing.ContextLog(ctx, "Loading Meet homepage took: ", time.Since(startTime))
 
 	// Experiments in the url are disabled using the e= parameter, where
 	// each experiment is prefixed with - to mark it as disabled.
