@@ -194,7 +194,7 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 
 	// Re-create the ARC instance.
 	testing.ContextLog(ctx, "Starting ARC again")
-	a, _ = arc.New(ctx, outDir, cr.NormalizedUser())
+	a, err = arc.New(ctx, outDir, cr.NormalizedUser())
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to start ARC")
 	}
