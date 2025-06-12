@@ -73,9 +73,9 @@ func SetupUnigraf(ctx context.Context, ug *unigraf.UsbTester, setup TestSetupDat
 		return errors.Wrap(err, "failed to set Unigraf cable mode to ElecTest for orientation change")
 	}
 
-	ccToSet := unigraf.ActiveCc0 // Normal (CC1)
+	ccToSet := unigraf.ActiveCc1 // Normal (CC1)
 	if setup.Flipped {
-		ccToSet = unigraf.ActiveCc1 // Flipped (CC2)
+		ccToSet = unigraf.ActiveCc2 // Flipped (CC2)
 	}
 	if err := ug.SetActiveCc(ctx, ccToSet); err != nil {
 		// Attempt to revert to normal cable mode even if SetActiveCc fails.

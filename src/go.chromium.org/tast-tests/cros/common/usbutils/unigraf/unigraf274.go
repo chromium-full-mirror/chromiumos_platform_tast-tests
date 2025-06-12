@@ -105,15 +105,15 @@ func (x InitPdState) String() string {
 // Constants for ActiveCc
 const (
 	ActiveCcNotSet ActiveCc = ActiveCc(passport.ActiveCc_ACTIVE_CC_NOT_SET)
-	ActiveCc0      ActiveCc = ActiveCc(passport.ActiveCc_CC1)
-	ActiveCc1      ActiveCc = ActiveCc(passport.ActiveCc_CC2)
+	ActiveCc1      ActiveCc = ActiveCc(passport.ActiveCc_CC1)
+	ActiveCc2      ActiveCc = ActiveCc(passport.ActiveCc_CC2)
 )
 
 func (x ActiveCc) String() string {
 	switch x {
-	case ActiveCc0:
-		return "CC1"
 	case ActiveCc1:
+		return "CC1"
+	case ActiveCc2:
 		return "CC2"
 	default:
 		return "Active CC not set"
@@ -585,8 +585,8 @@ func (s *UsbTester) FlipOrientation(ctx context.Context, flipped bool) error {
 	}
 
 	if flipped {
-		return s.SetActiveCc(ctx, ActiveCc1)
+		return s.SetActiveCc(ctx, ActiveCc2)
 	}
 
-	return s.SetActiveCc(ctx, ActiveCc0)
+	return s.SetActiveCc(ctx, ActiveCc1)
 }
