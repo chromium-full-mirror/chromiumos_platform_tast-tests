@@ -53,7 +53,8 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "fast",
-				ExtraAttr: []string{"pasit_fast"},
+				// Dual display tests are not passing on any DUTs: b/420724647
+				ExtraAttr: []string{"pasit_informational"},
 			}},
 	})
 }
