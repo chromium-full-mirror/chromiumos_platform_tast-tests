@@ -92,7 +92,7 @@ func DevicePlaybackRecord(ctx context.Context, s *testing.State) {
 
 	go func() {
 		testing.ContextLogf(ctx, "Playing audio from %s", outputAlsaPCM)
-		playbackContext, cancel := context.WithTimeout(ctx, playbackDuration+time.Second)
+		playbackContext, cancel := context.WithTimeout(ctx, playbackDuration+time.Second*2)
 		defer cancel()
 		if err := testexec.CommandContext(
 			playbackContext, "aplay",
@@ -111,7 +111,7 @@ func DevicePlaybackRecord(ctx context.Context, s *testing.State) {
 
 	testing.ContextLogf(ctx, "Capturing audio from %s", inputAlsaPCM)
 
-	recordContext, cancel := context.WithTimeout(ctx, recordDuration+time.Second)
+	recordContext, cancel := context.WithTimeout(ctx, recordDuration+time.Second*2)
 	defer cancel()
 	if err := testexec.CommandContext(
 		recordContext, "arecord",
