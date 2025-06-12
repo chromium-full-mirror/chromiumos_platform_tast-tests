@@ -640,7 +640,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
 	turnOffEffects := nodewith.Name("Turn off visual effects").Focusable()
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
-	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
+	// Temporary enable trace collection when opening visual effect panel.
+	// TODO(b/404077247): Remove the trace for visual effect after debugging the loading issue.
+	traceConfigFile := dataPath(cujrecorder.SystemTraceConfigFile)
+	setEffect := func(ctx context.Context, effect *nodewith.Finder) (setEffectErr error) {
 		openEffectsPanel := uiauto.NamedCombine("open effects panel",
 			// Open the "More options" popup, and wait until we see
 			// "Apply visual effects".
@@ -677,6 +680,31 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true))(ctx)
 		}
 
+		closeCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		if err := recorder.StartTracingWithName(ctx, outDir, "visual_effect", traceConfigFile); err != nil {
+			// Only log the error as the trace file is for debugging purposes.
+			testing.ContextLog(ctx, "Failed to start tracing: ", err)
+		} else {
+			defer func(ctx context.Context) {
+				// If the trace is not stopped, it might affect the following actions.
+				// Append the error if failing to stop tracing.
+				if err := recorder.StopTracing(ctx); err != nil {
+					setEffectErr = errors.Join(setEffectErr, errors.Wrap(err, "failed to stop tracing"))
+					return
+				}
+				// Save the trace files when error happens.
+				// If no error happens, the file will be saved with other trace files later.
+				if setEffectErr == nil {
+					return
+				}
+				if err := recorder.SaveTraceFiles(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to save trace files: ", err)
+				}
+			}(closeCtx)
+		}
 		return uiauto.NamedCombine(
 			fmt.Sprintf("set effect with node %v", effect),
 			uiauto.Retry(2, openEffectsPanel),
@@ -1062,7 +1090,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 		startTracingRoutine := func(ctx context.Context) {
 			async.Run(ctx, func(ctx context.Context) {
-				if err := recorder.StartTracing(ctx, outDir, dataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				if err := recorder.StartTracing(ctx, outDir, traceConfigFile); err != nil {
 					tracingErr = errors.Wrap(err, "failed to start tracing")
 					return
 				}
