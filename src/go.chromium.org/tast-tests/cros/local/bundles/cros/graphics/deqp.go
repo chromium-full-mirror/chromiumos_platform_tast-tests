@@ -103,7 +103,7 @@ func init() {
 			{
 				Name:              "vk_10_01",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -117,7 +117,7 @@ func init() {
 			{
 				Name:              "vk_10_02",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -131,7 +131,7 @@ func init() {
 			{
 				Name:              "vk_10_03",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -145,7 +145,7 @@ func init() {
 			{
 				Name:              "vk_10_04",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -159,7 +159,7 @@ func init() {
 			{
 				Name:              "vk_10_05",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -173,7 +173,7 @@ func init() {
 			{
 				Name:              "vk_10_06",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -187,7 +187,7 @@ func init() {
 			{
 				Name:              "vk_10_07",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -201,7 +201,7 @@ func init() {
 			{
 				Name:              "vk_10_08",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -215,7 +215,7 @@ func init() {
 			{
 				Name:              "vk_10_09",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,
@@ -229,7 +229,7 @@ func init() {
 			{
 				Name:              "vk_10_10",
 				Timeout:           3 * time.Hour,
-				ExtraAttr:         []string{"graphics_nightly", "graphics_cft"},
+				ExtraAttr:         []string{"graphics_perbuild", "graphics_cft"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{"vulkan"},
 				VariantCategory:   `{"name": "Graphics:board_gpu-id"}`,

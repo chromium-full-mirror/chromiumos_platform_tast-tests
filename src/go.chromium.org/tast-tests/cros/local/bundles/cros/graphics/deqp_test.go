@@ -115,7 +115,7 @@ func TestDEQPParams(t *testing.T) {
 	params = append(params, []dEQPGenParamData{{
 		Name:            `vk_{{.ShardCount}}_{{ printf "%02d" .ShardNum }}`,
 		Timeout:         3 * time.Hour,
-		Attr:            []string{"graphics_nightly", "graphics_cft"},
+		Attr:            []string{"graphics_perbuild", "graphics_cft"},
 		API:             "graphics.VK",
 		ShardCount:      10,
 		IsParallel:      true,
