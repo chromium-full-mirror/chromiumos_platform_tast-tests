@@ -127,7 +127,8 @@ func (h *APIface) Name() string {
 // After started, the caller should call h.Stop() at the end, and use the shortened ctx
 // (provided by h.ReserveForStop()) before h.Stop() to reserve time for h.Stop() to run.
 // If dhcpIface is empty, the DHCP server uses the interface of the hostapd server
-func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
+// If dnsOpt is nil, default DNS options will be applied
+func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool, dnsOpt *dhcp.DNSOption, confs ...*hostapd.Config) (_ *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "StartAPIface")
 	defer st.End()
 
@@ -168,8 +169,7 @@ func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, en
 			}
 		}()
 
-		var dnsOpt *dhcp.DNSOption
-		if enableDNS {
+		if enableDNS && dnsOpt == nil {
 			dnsOpt = new(dhcp.DNSOption)
 			dnsOpt.Port = dnsPort
 			dnsOpt.NameServers = []string{}

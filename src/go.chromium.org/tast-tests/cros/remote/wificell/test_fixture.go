@@ -38,6 +38,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	remotewpacli "go.chromium.org/tast-tests/cros/remote/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/wificell/attenuator"
+	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	crashservice "go.chromium.org/tast-tests/cros/services/cros/crash"
@@ -1061,6 +1062,12 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx RouterIdx,
 // When dhcpIface is empty, the DHCP server uses the interface of the hostapd server if the hostapd server has
 // only one interface; otherwise it is installed on a bridge which connects all hostapd interfaces
 func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, apConfigs []hostapd.ApConfig, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
+	return tf.ConfigureAPOnRouterIDWithConfsDNSOpts(ctx, idx, apConfigs, dhcpIface, enableDHCP, enableDNS, enableHTTP, nil)
+}
+
+// ConfigureAPOnRouterIDWithConfsDNSOpts is an extended version of
+// ConfigureAPOnRouterIDWithConfs, allowing to set custom DNS options.
+func (tf *TestFixture) ConfigureAPOnRouterIDWithConfsDNSOpts(ctx context.Context, idx RouterIdx, apConfigs []hostapd.ApConfig, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool, dnsOpt *dhcp.DNSOption) (ret *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "tf.ConfigureAPOnRouterIDWithConfs")
 	defer st.End()
 
@@ -1128,7 +1135,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 		if dhcpIface == "" {
 			dhcpIface = bridge
 		}
-		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, configs...)
+		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, dnsOpt, configs...)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start APIface")
 		}
@@ -1136,7 +1143,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 			router.BindIfaceToBridge(ctx, iface, bridge)
 		}
 	} else {
-		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, configs...)
+		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, dnsOpt, configs...)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start APIface")
 		}
@@ -2169,7 +2176,7 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		ap, err := StartAPIface(ctx, r.object, name, "", false, false, false, config)
+		ap, err := StartAPIface(ctx, r.object, name, "", false, false, false, nil, config)
 		if err != nil {
 			return errors.Wrap(err, "failed to start APIface")
 		}
