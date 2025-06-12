@@ -81,7 +81,14 @@ var bruschettaKeepVM = testing.RegisterVarString(
 )
 
 // BruschettaHwDeps prevents tests from running on devices without enough storage or RAM.
-var BruschettaHwDeps = hwdep.D(hwdep.MinStorage(50), hwdep.MinMemory(7*1024))
+var BruschettaHwDeps = hwdep.D(
+	hwdep.MinStorage(50),
+	hwdep.MinMemory(7*1024),
+	// Some Bruschetta tests are failing on reven (flex) boards (b/407460862),
+	// also as Bruschetta won't be enabled on reven in production so it should
+	// be fine to just skip this board.
+	hwdep.SkipOnModel("reven"),
+)
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
