@@ -362,16 +362,18 @@ func ti50DeepSleep(ctx context.Context, s *testing.State, b utils.DevboardHelper
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
-	// OpenTitan does not sleep while AC present.
+	// OpenTitan must wake and then deep sleep when AC present toggles
 	if b.GscProperties().ChipType() == ti50.GscOT {
 		s.Log("Simulating AC present")
 		b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
 		if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, nil, "AC present") {
-			verifyNoSleep(ctx, s, i, th)
+			verifyDeepSleep(ctx, s, i, th)
 		}
 		s.Log("Simulating AC not present")
 		b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
-		verifyDeepSleep(ctx, s, i, th)
+		if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, nil, "AC not present") {
+			verifyDeepSleep(ctx, s, i, th)
+		}
 	}
 
 	s.Log("Simulating lid low-to-high event")
