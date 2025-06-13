@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
-	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/floss"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -49,13 +48,6 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{
 			{
-				Name: "floss_disabled",
-				Val: enableDisableBluetoothWithDifferentUsersParams{
-					btImpl:          &bluez.BlueZ{},
-					disableFeatures: []string{"Floss"},
-				},
-				ExtraAttr: []string{"bluetooth_sa", "group:release-health", "release-health_bt"},
-			}, {
 				Name: "floss_enabled",
 				Val: enableDisableBluetoothWithDifferentUsersParams{
 					btImpl:          &floss.Floss{},

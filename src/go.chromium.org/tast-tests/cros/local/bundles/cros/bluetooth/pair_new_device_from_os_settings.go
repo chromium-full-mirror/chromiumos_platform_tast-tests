@@ -29,10 +29,6 @@ func init() {
 		TestBedDeps:     []string{tbdep.BluetoothStateNormal},
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
-			Name:      "floss_disabled",
-			Fixture:   "bluetoothEnabledWithBlueZ",
-			ExtraAttr: []string{"bluetooth_sa"},
-		}, {
 			Name:      "floss_enabled",
 			Fixture:   "bluetoothEnabledWithFloss",
 			ExtraAttr: []string{"bluetooth_floss"},
