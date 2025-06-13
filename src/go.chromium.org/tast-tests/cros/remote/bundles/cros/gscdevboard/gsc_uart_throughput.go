@@ -192,7 +192,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	for ; recvBlockNo < uint32(uartThroughputNumWarmupBlocks+uartThroughputNumMeasurementBlocks); recvBlockNo, sendBlockNo = recvBlockNo+1, sendBlockNo+1 {
 		// Read a block from each console USB endpoint.
 		for _, console := range consoles {
-			recvIteration(ctx, s, th, console.ccd, console.magic, recvBlockNo, console.name)
+			recvIteration(ctx, s, th, console.ccd, console.magic, recvBlockNo, console.name, "UART -> USB")
 		}
 		// Transmit block on each UART.
 		for _, console := range consoles {
@@ -201,7 +201,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		if testOption == bothDirectionsTest {
 			// Read a block from each UART.
 			for _, console := range consoles {
-				recvIteration(ctx, s, th, console.uart, console.magic+1, recvBlockNo, console.name)
+				recvIteration(ctx, s, th, console.uart, console.magic+1, recvBlockNo, console.name, "USB -> UART")
 			}
 			// Transmit block on each console USB endpoint.
 			for _, console := range consoles {
@@ -237,7 +237,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 }
 
 // recvIteration receives a block of data from one specific UART, verifying that it was as expected.
-func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration uint32, name ti50.UartName) {
+func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration uint32, name ti50.UartName, direction string) {
 	databuf, err := ccd.ReadSerialBytes(ctx, uartThroughputBlockSize)
 	th.MustSucceed(err, "Read error")
 
@@ -245,15 +245,15 @@ func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTesti
 	// error messages, as all future data would fail validation in case of a dropped sequence.
 	gotIter := binary.LittleEndian.Uint32(databuf[:4])
 	if gotIter != iteration {
-		s.Fatalf("Incorrect sequence number for %q: %d != %d", name, gotIter, iteration)
+		s.Fatalf("Incorrect sequence number for %q %s: %d != %d", name, direction, gotIter, iteration)
 	}
 	if databuf[4] != magic {
-		s.Fatalf("Incorrect magic for %q", name)
+		s.Fatalf("Incorrect magic for %q %s", name, direction)
 	}
 	var idx = 5
 	for idx < uartThroughputBlockSize {
 		if databuf[idx] != byte(idx) {
-			s.Fatalf("Incorrect data contents for %q at %d: %s", name, idx, hex.EncodeToString(databuf))
+			s.Fatalf("Incorrect data contents for %q %s at %d: %s", name, direction, idx, hex.EncodeToString(databuf))
 		}
 		idx = idx + 1
 	}
