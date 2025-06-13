@@ -30,11 +30,12 @@ func init() {
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
+		HardwareDeps: hwdep.D(hwdep.GSCUART(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "critical",
-			ExtraHardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig(), hwdep.Battery()),
+			ExtraHardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
 			ExtraAttr:         []string{"group:mainline"},
 		}, {
 			Name:              "staging",
