@@ -71,12 +71,6 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
-			Name: "bluez",
-			Val: bluetoothInfoTestParams{
-				BluezValidation: true,
-			},
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-		}, {
 			Name: "floss",
 			Val: bluetoothInfoTestParams{
 				BluezValidation: false,

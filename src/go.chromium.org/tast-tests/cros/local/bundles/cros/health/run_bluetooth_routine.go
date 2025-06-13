@@ -39,24 +39,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		Params: []testing.Param{{
-			Name: "v1_power_bluez",
-			Val: bluetoothRoutineTestParams{
-				BluetoothRoutineType: croshealthd.RoutineBluetoothPower,
-			},
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-		}, {
-			Name: "v1_discovery_bluez",
-			Val: bluetoothRoutineTestParams{
-				BluetoothRoutineType: croshealthd.RoutineBluetoothDiscovery,
-			},
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-		}, {
-			Name: "v1_scanning_bluez",
-			Val: bluetoothRoutineTestParams{
-				BluetoothRoutineType: croshealthd.RoutineBluetoothScanning,
-			},
-			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
-		}, {
 			Name: "v1_power_floss",
 			Val: bluetoothRoutineTestParams{
 				BluetoothRoutineType: croshealthd.RoutineBluetoothPower,
