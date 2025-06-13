@@ -189,8 +189,8 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 	} else {
 		// Version3 cleans server by itself.
 		// Try to verify that server has been stopped and that port is not in use.
+		portName := fmt.Sprintf(":%d", c.config.Port)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			portName := fmt.Sprintf(":%d", c.config.Port)
 			cmd := fmt.Sprintf("netstat -l")
 			out, err := c.conn.CommandContext(ctx, "sh", "-c", cmd).Output()
 			if err != nil {
@@ -203,7 +203,21 @@ func (c *RemoteServer) Stop(ctx context.Context) error {
 		}, &testing.PollOptions{
 			Timeout: 10 * time.Second,
 		}); err != nil {
-			allErrors = errors.Wrap(err, "failed to verify that iperf server has stopped")
+			testing.ContextLog(ctx, "Failed to wait for iperf3 server to stop, killing it forcefully")
+			// Find the process ID for the iperf3 process using the current port number to avoid
+			// killing other concurrent iperf3 servers.
+			cmd := fmt.Sprintf("lsof -i %s | grep iperf3", portName)
+			out, err := c.conn.CommandContext(ctx, "sh", "-c", cmd).Output()
+			if err != nil {
+				return errors.Wrap(err, "failed to get the iperf3 PID")
+			}
+			iperf3PID := strings.Fields(string(out))[1]
+			err = c.conn.CommandContext(ctx, "kill", "-9", iperf3PID).Run()
+			if err != nil && err.Error() != "Process exited with status 1" {
+				allErrors = errors.Wrapf(allErrors, "failed to forcefully stop iperf on server host: %v", err) // NOLINT
+			} else {
+				allErrors = nil
+			}
 		}
 	}
 	c.pid = ""
