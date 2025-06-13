@@ -37,7 +37,7 @@ var (
 	openImageButtonFinder = nodewith.Role(role.Button).Name("Open image").Ancestor(RootFinder)
 
 	// infoButton is the finder of 'Info' button in Gallery app.
-	infoButton = nodewith.Name("Info").Role(role.ToggleButton).Ancestor(RootFinder)
+	infoButton = nodewith.NameStartingWith("Info").Role(role.ToggleButton).Ancestor(RootFinder)
 
 	// dateModifiedText is the finder of 'Date modified' text in Gallery app.
 	dateModifiedText = nodewith.Name("Date modified").Role(role.StaticText).Ancestor(RootFinder)

@@ -48,7 +48,7 @@ func (g *Gallery) WaitPDFOpened() uiauto.Action {
 // AddTextToPDF returns a function that adds text to the PDF.
 func (g *Gallery) AddTextToPDF(kb *input.KeyboardEventWriter, location coords.Point, text string) uiauto.Action {
 	ui := g.ui
-	addTextButton := nodewith.Name("Add text").Role(role.ToggleButton).Ancestor(RootFinder)
+	addTextButton := nodewith.NameStartingWith("Add text").Role(role.ToggleButton).Ancestor(RootFinder)
 	fontHeading := nodewith.Name("Font").Role(role.Heading).Ancestor(RootFinder)
 	textField := nodewith.Name("Annotation text field").Role(role.TextField).Ancestor(RootFinder)
 	return uiauto.Retry(3,
@@ -64,7 +64,7 @@ func (g *Gallery) AddTextToPDF(kb *input.KeyboardEventWriter, location coords.Po
 
 // Sign returns a function that clicks 'Sign' button.
 func (g *Gallery) Sign() uiauto.Action {
-	signButton := nodewith.Name("Sign").Role(role.ToggleButton).Ancestor(RootFinder)
+	signButton := nodewith.NameStartingWith("Sign").Role(role.ToggleButton).Ancestor(RootFinder)
 	return uiauto.NamedCombine("create signature",
 		g.ui.WithTimeout(longUITimeout).LeftClickUntil(signButton,
 			g.ui.WaitUntilAnyExists(drawSignatureCanvas, placeSignatureButton)),
@@ -92,7 +92,7 @@ func (g *Gallery) PlaceSignature() uiauto.Action {
 // points.
 func (g *Gallery) DrawOnPDF(points []coords.Point) uiauto.Action {
 	ui := g.ui
-	drawButton := nodewith.Name("Draw").Role(role.ToggleButton).Ancestor(RootFinder)
+	drawButton := nodewith.NameStartingWith("Draw").Role(role.ToggleButton).Ancestor(RootFinder)
 	penButton := nodewith.Name("Pen").Role(role.ToggleButton).Ancestor(RootFinder)
 	return uiauto.NamedCombine("draw",
 		uiauto.IfSuccessThen(ui.Gone(penButton), ui.LeftClick(drawButton)),

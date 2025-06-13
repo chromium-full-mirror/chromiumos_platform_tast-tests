@@ -70,7 +70,7 @@ func (g *Gallery) WaitImageOpened() uiauto.Action {
 // SetCropAndRotate returns a function that opens 'Crop & rotate' and
 // rotates the image clockwise or counterclockwise by a specific count.
 func (g *Gallery) SetCropAndRotate(r Rotate, count int) uiauto.Action {
-	cropRotateButton := nodewith.Name("Crop & rotate").Role(role.ToggleButton).Ancestor(RootFinder)
+	cropRotateButton := nodewith.NameStartingWith("Crop & rotate").Role(role.ToggleButton).Ancestor(RootFinder)
 	rotateButton := nodewith.Name(string(r)).Role(role.Button).Ancestor(RootFinder)
 	actionName := fmt.Sprintf("click %q for %v times", r, count)
 	return uiauto.NamedCombine(actionName,
@@ -100,7 +100,7 @@ func (g *Gallery) SetRatio(r Ratio) uiauto.Action {
 // lighting filters to the desired direction for a specific count.
 func (g *Gallery) SetLightingFilters(kb *input.KeyboardEventWriter, s Slider, direction string, count int) uiauto.Action {
 	ui := g.ui
-	lightingFiltersButton := nodewith.Name("Lighting filters").Role(role.ToggleButton).Ancestor(RootFinder)
+	lightingFiltersButton := nodewith.NameStartingWith("Lighting filters").Role(role.ToggleButton).Ancestor(RootFinder)
 	expectedSlider := nodewith.Name(string(s)).Role(role.Slider).Ancestor(RootFinder)
 	set := uiauto.Combine("set to "+direction,
 		kb.AccelAction(direction),
@@ -120,7 +120,7 @@ func (g *Gallery) SetLightingFilters(kb *input.KeyboardEventWriter, s Slider, di
 // points.
 func (g *Gallery) DrawOnImage(points []coords.Point) uiauto.Action {
 	ui := g.ui
-	drawButton := nodewith.Name("Draw").Role(role.ToggleButton).Ancestor(RootFinder)
+	drawButton := nodewith.NameStartingWith("Draw").Role(role.ToggleButton).Ancestor(RootFinder)
 	sizeHeading := nodewith.Name("Size").Role(role.Heading).Ancestor(RootFinder)
 	return ui.Retry(3, uiauto.NamedCombine("draw",
 		uiauto.IfSuccessThen(ui.Gone(sizeHeading),
