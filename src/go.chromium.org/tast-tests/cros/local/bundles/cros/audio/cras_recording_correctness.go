@@ -29,9 +29,10 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		// b/291180821: Remove no_qemu after making the test pass on betty.
-		SoftwareDeps: []string{"chrome", "no_qemu"},
-		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
-		Timeout:      3 * time.Minute,
+		SoftwareDeps:    []string{"chrome", "no_qemu"},
+		Fixture:         fixture.AloopLoaded{Channels: 2}.Instance(),
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
+		Timeout:         3 * time.Minute,
 	})
 }
 

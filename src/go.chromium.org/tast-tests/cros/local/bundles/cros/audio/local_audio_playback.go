@@ -46,9 +46,10 @@ func init() {
 		Vars:         []string{"audio.usbDetectionName"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{{
-			Name:      "internal_speaker",
-			ExtraAttr: []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
-			Val:       localAudioParams{"Speaker (internal)", false, "INTERNAL_SPEAKER"},
+			Name:            "internal_speaker",
+			ExtraAttr:       []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
+			VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
+			Val:             localAudioParams{"Speaker (internal)", false, "INTERNAL_SPEAKER"},
 		}, {
 			Name:      "headphone",
 			Val:       localAudioParams{"Headphone", false, "HEADPHONE"},

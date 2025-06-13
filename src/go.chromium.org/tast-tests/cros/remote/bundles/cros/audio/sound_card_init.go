@@ -59,8 +59,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "validate_rdc_range",
-				ExtraAttr: []string{"informational"},
+				Name:            "validate_rdc_range",
+				ExtraAttr:       []string{"informational"},
+				VariantCategory: `{"name": "Audio_Model"}`,
 				Val: soundCardInitTest{
 					Func: validateRDCRange,
 				},

@@ -20,13 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrasRTC,
-		Desc:         "Check checks RTC status reporting",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      1 * time.Minute,
-		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
+		Func:            CrasRTC,
+		Desc:            "Check checks RTC status reporting",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent:    "b:776546",
+		Attr:            []string{"group:mainline", "informational"},
+		Timeout:         1 * time.Minute,
+		Fixture:         fixture.AloopLoaded{Channels: 2}.Instance(),
+		VariantCategory: `{"name": "Audio_Board"}`,
 		Params: []testing.Param{
 			{
 				Val: crasRTCParam{
