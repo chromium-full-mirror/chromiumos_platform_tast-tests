@@ -8,10 +8,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/chromiumos/config/go/api"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -46,7 +49,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(),
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
-		SoftwareDeps: []string{"crossystem"},
+		SoftwareDeps: []string{"crossystem", "chrome"},
 		Params: []testing.Param{
 			{
 				Name: "ac_rw",
@@ -549,6 +552,24 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Errorf("Expected to be in normal mode, got %q", initialVersions[reporters.CrossystemParamMainfwType])
 	}
 
+	pv := perf.NewValues()
+	defer func() {
+		if err := pv.Save(s.OutDir()); err != nil {
+			s.Error("Failed saving perf data: ", err)
+		}
+	}()
+	baselineSpeedMetric, err := runSpeedTest(ctx, h)
+	if err != nil {
+		s.Error("Failed to get baseline speed metric: ", err)
+	} else {
+		pv.Set(perf.Metric{
+			Name:      "baseline_speedometer_metric",
+			Unit:      "None",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  false,
+		}, baselineSpeedMetric)
+	}
+
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-new --manifest: %+v", err)
@@ -571,6 +592,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Errorf("Failed to pack chromeos-firmwareupdate-new EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, expectedECRWVersion)
 	}
 
+	s.Log("Updating firmware to new version")
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-new --mode=autoupdate: %+v", err)
@@ -617,6 +639,23 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Errorf("Expected EC RW updated, got %q want %q", updatedECRW, expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW)
 	}
 
+	speedMetric, err := runSpeedTest(ctx, h)
+	if err != nil {
+		s.Error("Failed to get speed metric: ", err)
+	} else {
+		pv.Set(perf.Metric{
+			Name:      "speedometer_metric",
+			Unit:      "None",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  false,
+		}, speedMetric)
+	}
+	if speedMetric < baselineSpeedMetric*0.95 {
+		s.Error("Speedometer metric has degraded by >5%: ", err)
+	} else {
+		s.Logf("Speedometer metric is acceptable (%f >= %f)", speedMetric, baselineSpeedMetric*0.95)
+	}
+
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-old --manifest: %+v", err)
@@ -639,6 +678,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Errorf("Failed to pack chromeos-firmwareupdate-old EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, initialECRW)
 	}
 
+	s.Log("Rolling back firmware to old version")
 	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-old --mode=autoupdate: %+v", err)
@@ -691,4 +731,44 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			s.Errorf("Expected EC RW reverted, got %q want %q", rollbackECRW, initialECRW)
 		}
 	}
+}
+
+const (
+	// speedometerTime sets the timeout for Speedometer test.
+	maxSpeedometerTime = 10 * time.Minute
+)
+
+// runSpeedTest performs the speedometer2 test.
+func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
+	speedometerCtx, cancelSpeedometerCtx := context.WithTimeout(ctx, maxSpeedometerTime)
+	defer cancelSpeedometerCtx()
+
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return 0.0, errors.Wrap(err, "failed to start rpc client")
+	}
+
+	speedometerService := fwpb.NewUtilsServiceClient(h.RPCClient.Conn)
+	if _, err := speedometerService.NewChrome(speedometerCtx, &empty.Empty{}); err != nil {
+		return 0.0, errors.Wrap(err, "failed to initiate a chrome sesion")
+	}
+	defer func() error {
+		if _, err := speedometerService.CloseChrome(speedometerCtx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to close the chrome sesion")
+		}
+		return nil
+	}()
+
+	testing.ContextLog(speedometerCtx, "Running speedometer test")
+	sptest, err := speedometerService.PerformSpeedometerTest(speedometerCtx, &empty.Empty{})
+	if err != nil {
+		return 0.0, errors.Wrap(err, "failed while performing the Speedometer benchmark")
+	}
+
+	// Parse the output of the test as a float for later math operations.
+	result, err := strconv.ParseFloat(sptest.Result, 64)
+	if err != nil {
+		return 0.0, errors.Wrap(err, "failed to convert the result into float")
+	}
+	testing.ContextLogf(speedometerCtx, "Speedometer Result: %f", result)
+	return result, nil
 }
