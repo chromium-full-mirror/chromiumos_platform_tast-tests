@@ -739,7 +739,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	testing.ContextLog(ctx, "Resetting browser zoom to 100%")
-	zoomNode := nodewith.HasClass("ZoomView")
+	zoomNode := nodewith.ClassNameRegex(regexp.MustCompile("(ZoomView|PageActionView)"))
 	if err := uiauto.NamedCombine(
 		"reset zoom and wait for zoom indicator to be absent",
 		ui.LeftClick(meetRootWebArea),
@@ -750,24 +750,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	if meet.ZoomOut {
-		// Zoom out on the browser to maximize the number of visible video
-		// feeds. This needs to be done before the final layout mode has been set,
-		// so that Meet can properly recalculate how many inbound videos should
-		// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
-		// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
-		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
-			return pv, errors.Wrap(err, "failed to repeatedly press Ctrl+Minus to zoom out")
+		if err := adjustBrowserZoomTo50Percent(ctx, kw, ui); err != nil {
+			return pv, errors.Wrap(err, "failed to adjust browser zoom to 50%")
 		}
-
-		// Verify that we zoomed correctly.
-		zoomInfo, err := ui.Info(ctx, zoomNode)
-		if err != nil {
-			return pv, errors.Wrap(err, "failed to find the current browser zoom")
-		}
-		if zoomInfo.Name != "Zoom: 50%" {
-			return pv, errors.Wrapf(err, `unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
-		}
-		testing.ContextLog(ctx, "Zoomed browser window to 50%")
 	}
 
 	// Make sure the Meet call window hasn't crashed before starting the recorder.
@@ -1695,6 +1680,59 @@ func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestC
 	if err := inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
 		return errors.Wrap(err, "failed to do Ash workflows")
 	}
+	return nil
+}
+
+// adjustBrowserZoomTo50Percent sets browser zoom to 50%.
+func adjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWriter, ui *uiauto.Context) error {
+	// Zoom out on the browser to maximize the number of visible video
+	// feeds. This needs to be done before the final layout mode has been set,
+	// so that Meet can properly recalculate how many inbound videos should
+	// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
+	// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
+	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
+		return errors.Wrap(nil, "failed to repeatedly press Ctrl+Minus to zoom out")
+	}
+
+	// Sometimes the node "ZoomView" will be "PageActionView".
+	// To verify that the browser zoom ratio is 50%, check the corresponding
+	// node according to different UI nodes "ZoomView" or "PageActionView".
+	pageActionView := nodewith.HasClass("PageActionView")
+	if err := ui.Exists(pageActionView)(ctx); err == nil {
+		browserAppMenuButton := nodewith.Name("Chrome").HasClass("BrowserAppMenuButton").First()
+		zoomMenuItem := nodewith.Name("Zoom").Role(role.MenuItem)
+		zoomValueNode := nodewith.Role(role.StaticText).Ancestor(zoomMenuItem)
+		if err := ui.LeftClickUntil(browserAppMenuButton,
+			ui.WithTimeout(3*time.Second).WaitUntilExists(zoomMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrap(nil, "failed to open browser app menu")
+		}
+
+		// Get zoom value text.
+		zoomInfo, err := ui.Info(ctx, zoomValueNode)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the current browser zoom")
+		}
+		if zoomInfo.Name != "50%" {
+			return errors.Wrapf(err, `unexpected zoom value: got %s; want "50%%"`, zoomInfo.Name)
+		}
+		if err := ui.LeftClickUntil(browserAppMenuButton,
+			ui.WithTimeout(3*time.Second).WaitUntilGone(zoomMenuItem),
+		)(ctx); err != nil {
+			return errors.Wrap(nil, "failed to close browser app menu")
+		}
+	} else {
+		zoomNode := nodewith.HasClass("ZoomView")
+		zoomInfo, err := ui.Info(ctx, zoomNode)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the current browser zoom")
+		}
+		if zoomInfo.Name != "Zoom: 50%" {
+			return errors.Wrapf(err, `unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
+		}
+	}
+
+	testing.ContextLog(ctx, "Zoomed browser window to 50%")
 	return nil
 }
 
