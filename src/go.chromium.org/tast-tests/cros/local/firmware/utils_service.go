@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -621,6 +622,19 @@ var versionedDirRE = regexp.MustCompile(`^(gs://.*)/((?:R\d+-)?(\d+\.\d+\.\d+)[-
 // gs://firmware-image-archive/firmware-brya-14505.B/14505.846.0/omnigul.14505.846.0.tar.bz2
 // gs://firmware-image-archive/firmware-brya-14505.B/14505.846.0/omnigul.EC.14505.846.0.tar.bz2
 
+var titleCaseRe = regexp.MustCompile(`[a-zA-Z]+`)
+
+// titleCase converts string to capitalize every word, using the same weird rules as python's titlecase() function.
+// I.e. wonka's_chocolate becomes Wonka'S_Chocolate.
+func titleCase(s string) string {
+	idxs := titleCaseRe.FindAllStringIndex(s, -1)
+	fixed := []rune(s)
+	for _, r := range idxs {
+		fixed[r[0]] = unicode.ToUpper(fixed[r[0]])
+	}
+	return string(fixed)
+}
+
 // getAPCandidateURLs returns a list of urls and files to extract. Try them in order.
 func getAPCandidateURLs(ctx context.Context, gsPath, board, model string, buildTargets *fwpb.FirmwareBuildTargetsResponse) ([]imageCandidate, error) {
 	var candidates []imageCandidate
@@ -629,7 +643,12 @@ func getAPCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 	if m != nil {
 		candidates = append(candidates, imageCandidate{
 			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s.%[3]s.tar.bz2", m[1], m[2], m[3], buildTargets.CorebootName),
-			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName)},
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
+		})
+		capitalCorebootName := titleCase(buildTargets.CorebootName)
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s.%[3]s.tbz2", m[1], m[2], m[3], capitalCorebootName),
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
 		})
 		return candidates, nil
 	}
@@ -638,7 +657,12 @@ func getAPCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 	if m != nil && buildTargets.CorebootName != "" {
 		candidates = append(candidates, imageCandidate{
 			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.%[2]s.tar.bz2", m[1], m[2], buildTargets.CorebootName),
-			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName)},
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
+		})
+		capitalCorebootName := titleCase(buildTargets.CorebootName)
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.%[2]s.tbz2", m[1], m[2], capitalCorebootName),
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
 		})
 	}
 	// Then fallback to the giant tarball.
@@ -676,6 +700,11 @@ func getECCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s.EC.%[3]s.tar.bz2", m[1], m[2], m[3], ecName),
 			Filenames: []string{"ec.bin"},
 		})
+		capitalECName := titleCase(ecName)
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("%[1]s/%[2]s/%[4]s_EC.%[3]s.tbz2", m[1], m[2], m[3], capitalECName),
+			Filenames: []string{"ec.bin"},
+		})
 		return candidates, nil
 	}
 	// If the url matches legacyURLRE, and we have a legacy ec name, try the single target tarfile
@@ -683,6 +712,11 @@ func getECCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 	if m != nil && buildTargets.LegacyEcName != "" {
 		candidates = append(candidates, imageCandidate{
 			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.EC.%[2]s.tar.bz2", m[1], m[2], ecName),
+			Filenames: []string{"ec.bin"},
+		})
+		capitalECName := titleCase(ecName)
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s_EC.%[2]s.tbz2", m[1], m[2], capitalECName),
 			Filenames: []string{"ec.bin"},
 		})
 	}
