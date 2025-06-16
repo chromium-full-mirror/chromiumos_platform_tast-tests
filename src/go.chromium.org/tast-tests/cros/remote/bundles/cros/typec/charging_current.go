@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
-	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,8 +23,7 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Vars:         []string{"servo"},
-		VarDeps:      []string{"typec.UnigrafUri"},
+		Fixture:      "typecUnigraf",
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 	})
 }
@@ -32,17 +31,12 @@ func init() {
 func ChargingCurrent(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	// Set up unigraf
-	unigrafURI := s.RequiredVar("typec.UnigrafUri")
-	unigrafctl, err := unigraf.New(ctx, unigrafURI)
-	if err != nil {
-		s.Fatal("Failed to allocate unigraf device: ", err)
+	// Get Unigraf controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get Unigraf controller from fixture")
 	}
-	defer unigrafctl.Close(cleanupCtx)
+	unigrafctl := fixtData.Unigraf
 
 	// Set up servo
 	if servoSpec, present := s.Var("servo"); present {
@@ -54,7 +48,7 @@ func ChargingCurrent(ctx context.Context, s *testing.State) {
 		if err := pxy.Servo().ServoCcSnk(ctx); err != nil {
 			s.Fatal("Failed to set servo CC to off: ", err)
 		}
-		defer pxy.Servo().ServoCcSrc(cleanupCtx, true)
+		defer pxy.Servo().ServoCcSrc(ctx, true)
 
 		// On Unigraf setup, ethernet might be connected via servo, wait for connection.
 		connectCtx, connectCtxCancel := context.WithTimeout(ctx, 30*time.Second)
@@ -75,7 +69,7 @@ func ChargingCurrent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set power role to SRC (DFP): ", err)
 	}
 	// Ensure Unigraf state is reset at the end.
-	defer unigrafctl.SetInitPdState(cleanupCtx, unigraf.InitPdStateDrp)
+	defer unigrafctl.SetInitPdState(ctx, unigraf.InitPdStateDrp)
 
 	// Ensure Unigraf sends 20V PDO.
 	if err := unigrafctl.SetSrcPdoCount(ctx, 4); err != nil {

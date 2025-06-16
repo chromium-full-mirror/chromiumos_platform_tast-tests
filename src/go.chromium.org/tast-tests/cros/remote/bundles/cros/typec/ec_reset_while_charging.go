@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
-	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,7 +20,7 @@ func init() {
 		Desc: "Check that DUT is charging after EC reset",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		VarDeps:      []string{"typec.UnigrafUri"},
+		Fixture:      "typecUnigraf",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 		Timeout:      3 * time.Minute,
@@ -31,21 +30,29 @@ func init() {
 func ECResetWhileCharging(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	unigrafURI := s.RequiredVar("typec.UnigrafUri")
-	unigrafctl, err := unigraf.New(ctx, unigrafURI)
-	if err != nil {
-		s.Fatal("Failed to allocate unigraf device: ", err)
+	// Get Unigraf controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get Unigraf controller from fixture")
 	}
-	defer unigrafctl.Close(cleanupCtx)
+	unigrafctl := fixtData.Unigraf
 
 	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
 		s.Fatal("Failed to set testing port: ", err)
 	}
 	s.Log("Unigraf testing port was set to port 0")
+
+	// Verify that the DUT is charging within 10 seconds.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if connected, err := typecutils.VerifyChargerConnected(ctx, d); err != nil {
+			return errors.Wrap(err, "failed to verify charger connection")
+		} else if !connected {
+			return errors.New("charger is not connected after EC reset")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		s.Fatal("Failed to verify charger connection after EC reset: ", err)
+	}
 
 	// Issue EC reset command.
 	s.Log("Issuing EC reset command")

@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -22,7 +23,8 @@ func init() {
 		Desc: "Check data swap stability on a typec port",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		VarDeps:      []string{"typec.UnigrafUri", "servo"},
+		VarDeps:      []string{"servo"},
+		Fixture:      "typecUnigraf",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 	})
@@ -37,24 +39,12 @@ func DataSwapStability(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	// Prepare Unigraf.
-	unigrafURI := s.RequiredVar("typec.UnigrafUri")
-	unigrafctl, err := unigraf.New(ctx, unigrafURI)
-	if err != nil {
-		s.Fatal("Failed to allocate unigraf device: ", err)
+	// Get Unigraf controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	if !ok {
+		s.Fatal("Failed to get Unigraf controller from fixture")
 	}
-	defer unigrafctl.Close(cleanupCtx)
-
-	// Set Unigraf to DRP.
-	if err := unigrafctl.SetInitPdState(cleanupCtx, unigraf.InitPdStateDrp); err != nil {
-		s.Fatal("Failed to set power role to SRC: ", err)
-	}
-
-	// TODO(b/416456393): Switch to off when Unigraf API available
-	// Turn off active port on Unigraf to get PD info.
-	if err := unigrafctl.SetTestPort(ctx, 1); err != nil {
-		s.Fatal("Failed to set testing port: ", err)
-	}
+	unigrafctl := fixtData.Unigraf
 
 	// Prepare servo.
 	servoSpec := s.RequiredVar("servo")
