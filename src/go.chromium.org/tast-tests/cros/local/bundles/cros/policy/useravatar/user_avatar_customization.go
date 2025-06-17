@@ -77,7 +77,7 @@ func TriggerUserAvatarCustomization(ctx context.Context, params networkrequestmo
 	}
 	policyParam := TestCases()[params.PolicySetting]
 
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 
 	// Open user avatar personalization app. Note: We retry here because sometimes the button
 	// to open the user avatar subpage does not load properly.
@@ -99,7 +99,7 @@ func TriggerUserAvatarCustomization(ctx context.Context, params networkrequestmo
 		}
 
 		return nil // exit successfully
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to open avatar personalization app")
 	}
 

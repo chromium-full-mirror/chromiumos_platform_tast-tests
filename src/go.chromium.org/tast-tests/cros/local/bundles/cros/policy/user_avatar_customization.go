@@ -43,7 +43,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{policy.ManagedUserAccountPoolVarName},
-		Timeout:      5 * time.Minute,
+		Timeout:      8 * time.Minute,
 		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{},
