@@ -93,7 +93,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mojo"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mtbf"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/multivm"
-	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/nacl"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/nearbyshare"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/netperf"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/network"
