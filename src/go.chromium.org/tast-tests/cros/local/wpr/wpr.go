@@ -145,6 +145,12 @@ func New(ctx context.Context, mode Mode, archive string, scripts []string) (*WPR
 	if err := proc.Start(); err != nil {
 		return nil, errors.Wrap(err, "cannot start WPR")
 	}
+
+	// Set the oom score so that if the oom killer has to step in it will kill wpr before system services.
+	if err := proc.SetOOMScoreAdj(100); err != nil {
+		testing.ContextLog(ctx, "Failed to set oom score for wpr: ", err)
+	}
+
 	defer func() {
 		if proc != nil {
 			if err := proc.Kill(); err != nil {

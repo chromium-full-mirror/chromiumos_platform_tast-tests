@@ -33,6 +33,8 @@ package testexec
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -169,6 +171,16 @@ func (c *Cmd) CombinedOutput(opts ...RunOption) ([]byte, error) {
 
 	err := c.Wait(opts...)
 	return buf.Bytes(), err
+}
+
+// SetOOMScoreAdj sets the OOM score for the kernel OOM killer.
+//
+// See: https://www.man7.org/linux/man-pages/man5/proc_pid_oom_score.5.html
+func (c *Cmd) SetOOMScoreAdj(score int) error {
+	if err := os.WriteFile(fmt.Sprintf("/proc/%d/oom_score_adj", c.Cmd.Process.Pid), []byte(fmt.Sprintf("%d", score)), 0644); err != nil {
+		return err
+	}
+	return nil
 }
 
 // SeparatedOutput runs an external command, waits for its completion and
