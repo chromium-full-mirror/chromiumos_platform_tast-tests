@@ -41,7 +41,7 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps:      []string{policy.ManagedUserAccountPoolVarName},
 		Timeout:      8 * time.Minute,
 		Fixture:      fixture.FakeDMS,
