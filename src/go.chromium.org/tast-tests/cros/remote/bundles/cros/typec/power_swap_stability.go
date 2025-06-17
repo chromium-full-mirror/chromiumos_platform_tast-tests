@@ -20,7 +20,7 @@ func init() {
 		Desc: "Check power swap stability on a typec port",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigraf",
+		Fixture:      "typecUnigrafAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "danielgeorgem@google.com"},
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 	})

@@ -20,7 +20,7 @@ func init() {
 		Desc: "Check that DUT is charging after EC reset",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigraf",
+		Fixture:      "typecUnigrafAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 		Timeout:      3 * time.Minute,

@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/typecutils"
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
 	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
@@ -23,8 +22,7 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Vars:         []string{"servo"},
-		Fixture:      "typecUnigraf",
+		Fixture:      "typecUnigrafAndServo",
 		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
 	})
 }
@@ -38,25 +36,6 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Unigraf controller from fixture")
 	}
 	unigrafctl := fixtData.Unigraf
-
-	// Set up servo
-	if servoSpec, present := s.Var("servo"); present {
-		pxy, err := servo.NewProxy(ctx, servoSpec, d.KeyFile(), d.KeyDir())
-		if err != nil {
-			s.Fatal("Failed to setup servo proxy: ", err)
-		}
-		if err := pxy.Servo().ServoCcSnk(ctx); err != nil {
-			s.Fatal("Failed to set servo CC to off: ", err)
-		}
-		defer pxy.Servo().ServoCcSrc(ctx, true)
-
-		// On Unigraf setup, ethernet is connected by servo, wait for the connection to resume.
-		connectCtx, connectCtxCancel := context.WithTimeout(ctx, 30*time.Second)
-		if err := d.WaitConnect(connectCtx); err != nil {
-			s.Fatal("DUT not reachable in time: ", err)
-		}
-		connectCtxCancel()
-	}
 
 	// Make sure Unigraf uses correct port.
 	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
