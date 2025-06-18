@@ -278,8 +278,9 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		}()
 	}
 
-	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
-		s.Fatal("Failed to run reboot command: ", err)
+	s.Log("Rebooting DUT by warm reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		s.Fatal("Failed to warm reset DUT: ", err)
 	}
 
 	waitDisconnectCtx, cancelWaitDisconnect := context.WithTimeout(ctx, 2*time.Minute)
