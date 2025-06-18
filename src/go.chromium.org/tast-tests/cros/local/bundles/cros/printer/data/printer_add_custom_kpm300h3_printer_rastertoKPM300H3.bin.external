@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kpm300h3_printer_rastertoKPM300H3_20240704.bin",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_kpm300h3_printer_rastertoKPM300H3_20250613.bin",
   "size": 17905,
-  "sha256sum": "74a889d2a58d7177615d8e25a6490ecc994fa08e23e570a046331a8055ec8d5e"
+  "sha256sum": "5bbc6eba01826d34377f440c4fc125296a6d82f56422295e91ed9e0695b0c4ff"
 }

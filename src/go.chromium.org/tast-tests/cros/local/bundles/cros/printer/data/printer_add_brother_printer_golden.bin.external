@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_brother_printer_golden_20230817.bin",
-  "size": 8924,
-  "sha256sum": "68541a77304017dee26e2a794e0c72273d3628328762702c97a9d1b08ef72c4d"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_brother_printer_golden_20250613.bin",
+  "size": 8917,
+  "sha256sum": "944a672aa012f85ae8dbd7ce6c390b4b7c6ef27f797069c4a87e98f924bb09a2"
 }

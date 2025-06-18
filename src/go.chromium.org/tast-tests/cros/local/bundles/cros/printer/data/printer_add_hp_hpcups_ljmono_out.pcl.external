@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_hp_hpcups_ljmono_out_20230329.pcl",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_hp_hpcups_ljmono_out_20250613.pcl",
   "size": 6375,
-  "sha256sum": "64b8f552315dc274efe4b5a7d1b14d5c5edb7690f4467e973f1c3531f4b62dc7"
+  "sha256sum": "b9a92effc20063d65d5f2533c101416e4777df8d30616c6efa9112066ae5c853"
 }

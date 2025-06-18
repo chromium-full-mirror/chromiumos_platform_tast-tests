@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/Example_1_golden_20240228.pwg",
-  "size": 12392865,
-  "sha256sum": "ed23ee0d4d5e5db785692b66cba5d5a252bc5a28071c22036d385a65f10d947d"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/Example_1_golden_20250613.pwg",
+  "size": 12394988,
+  "sha256sum": "9ec2ba70c8298d463cbc9a1c5d9a86d4fc0b1256a81da6f7a31f8289396040ea"
 }

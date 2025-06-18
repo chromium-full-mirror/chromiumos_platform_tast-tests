@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_epson_colorworks_c4000_20241219.bin",
-  "size": 250997,
-  "sha256sum": "4b4a6e719aafbdd67c41ba4c67d8289c45ee1a8196c83398d279f6f96fac99b5"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_epson_colorworks_c4000_20250613.bin",
+  "size": 251010,
+  "sha256sum": "594fbb9fecb7dcc2a5728252504f769fd58bee514e7b472e504c6b1a79f32d64"
 }

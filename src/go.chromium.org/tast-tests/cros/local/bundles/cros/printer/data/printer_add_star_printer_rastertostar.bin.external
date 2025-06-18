@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_star_printer_rastertostar_20240326.bin",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_star_printer_rastertostar_20250613.bin",
   "size": 1177,
-  "sha256sum": "3ada73dbc633ef7ed06263efe71f8a7c6739e2abd49a451624ceb712de24c8d3"
+  "sha256sum": "0154d5f7f076a6d089f9368889abce959033664e6ff5b322cbdcaf9e93fa4958"
 }

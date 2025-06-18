@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/font-golden_20230329.pwg",
-  "size": 5399576,
-  "sha256sum": "35dc72f0dda2ae03bdc57d64a8edaeb6403acac95d362cf41bbee67cc15884fa"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/font-golden_20250613.pwg",
+  "size": 5398966,
+  "sha256sum": "d46763aad969f20f23266726d3a5f1b113e61860b8768507e4ee7ce530b5f636"
 }

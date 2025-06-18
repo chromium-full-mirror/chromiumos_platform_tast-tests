@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/test_fonts_unembedded_dingbats_golden_20240515.pwg",
-  "size": 2185613,
-  "sha256sum": "43f2bf8a44e964007ede2af7053f089105080b4be4f5b3187ff689db76f86263"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/test_fonts_unembedded_dingbats_golden_20250613.pwg",
+  "size": 2186309,
+  "sha256sum": "5fffbb063769ee7bf6283fdd3e64ea7a2eb00336a9d62f81f8851021193e8281"
 }
