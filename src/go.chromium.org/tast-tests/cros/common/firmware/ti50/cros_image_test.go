@@ -621,7 +621,7 @@ func TestTimeDT(t *testing.T) {
 `
 	expected := GSCTime{
 		ColdResetTime: 10939497000000,
-		DSTime:        19048000000,
+		DeepSleepTime: 19048000000,
 	}
 
 	testExtractGSCTime(t, input, expected)
@@ -635,7 +635,7 @@ func TestTimeCr501(t *testing.T) {
 `
 	expected := GSCTime{
 		ColdResetTime: 1683000000000,
-		DSTime:        2008575000,
+		DeepSleepTime: 2008575000,
 	}
 
 	testExtractGSCTime(t, input, expected)
@@ -648,7 +648,7 @@ func TestTimeCr502(t *testing.T) {
 `
 	expected := GSCTime{
 		ColdResetTime: 9000000000,
-		DSTime:        9987293000,
+		DeepSleepTime: 9987293000,
 	}
 
 	testExtractGSCTime(t, input, expected)

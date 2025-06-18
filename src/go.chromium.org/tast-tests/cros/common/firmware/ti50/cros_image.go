@@ -60,16 +60,16 @@ var (
 	// regex to parse ti50 gettime output
 	// example ti50 output:
 	//    gettime
-	//    Time: 0x0000000000a6ec69 = 10939.000 s
-	//    Since reset: 0x0000000000a6ec69 = 10939.497 s
-	//    Since deep sleep: 0x0000000000004a68 = 19.048 s
-	gettimeTi50RE = regexp.MustCompile(`(?s)Since reset:.*\s([0-9\.]+) s\s*Since deep sleep:.*\s([0-9\.]+) s\s`)
+	//    Time: 0x000000000000542d = 21.549 s
+	//    Since reset: 0x000000000000542d = 21.549 s
+	//    Since deep sleep: 0x0000000000001620 = 5.664 s
+	gettimeTi50RE = regexp.MustCompile(`Since reset:.*\s([0-9.]+) s\s+Since deep sleep:.*\s([0-9.]+) s`)
 	// regex to parse cr50 gettime output
 	// example cr50 output:
 	//    gettime
 	//    Time: 0x00000000001ea5ff = 2.008575 s
 	//    since cold_reset: 1683 s
-	gettimeCr50RE = regexp.MustCompile(`(?s)Time:.*\s([0-9\.]+) s\s*since cold_reset:.*\s([0-9\.]+) s\s`)
+	gettimeCr50RE = regexp.MustCompile(`Time:.*\s([0-9.]+) s\s+since cold_reset:.*\s([0-9.]+) s`)
 
 	// USB ADC info regex
 	usbAdcStateRE = regexp.MustCompile(`(PHY [AB])|ADC: (disconnected)|connected: ([\S]+)`)
@@ -1002,17 +1002,17 @@ func (i *CrOSImage) BoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
 	}
 }
 
-// GSCTime contains the time since cold reset and the time since deep sleep reset
+// GSCTime contains the time since cold reset and deep sleep reset.
 type GSCTime struct {
-	// ColdResetTime is the time since a cold reset (ex power-on, hard, security)
+	// ColdResetTime is the time since a cold reset.
 	ColdResetTime time.Duration
-	// DSTime is the time since deep sleep or any other reset.
-	DSTime time.Duration
+	// DeepSleepTime is the time since deep sleep.
+	DeepSleepTime time.Duration
 }
 
-// extractGSCTime extracts the time since deep sleep and cold reset from the gettime output
+// extractGSCTime extracts the times from the gettime output
 func extractGSCTime(out string) (GSCTime, error) {
-	ret := GSCTime{}
+	var ret GSCTime
 	var coldResetTime string
 	var dsTime string
 
@@ -1027,17 +1027,18 @@ func extractGSCTime(out string) (GSCTime, error) {
 		return ret, errors.New("failed to match gettime output")
 	}
 
-	t, err := strconv.ParseFloat(dsTime, 64)
-	if err != nil {
-		return ret, err
-	}
-	ret.DSTime = time.Duration(t * float64(time.Second))
-
-	t, err = strconv.ParseFloat(coldResetTime, 64)
+	t, err := strconv.ParseFloat(coldResetTime, 64)
 	if err != nil {
 		return ret, err
 	}
 	ret.ColdResetTime = time.Duration(t * float64(time.Second))
+
+	t, err = strconv.ParseFloat(dsTime, 64)
+	if err != nil {
+		return ret, err
+	}
+	ret.DeepSleepTime = time.Duration(t * float64(time.Second))
+
 	return ret, nil
 }
 
