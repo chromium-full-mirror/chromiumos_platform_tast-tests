@@ -148,8 +148,13 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	return uiauto.NamedCombine("delete document",
 		cuj.ExpandMenu(tconn, fileButton, menu, 392),
 		ui.WaitUntilExists(moveToTrashItem),
+		// If the document has not been modified, the menu item "Move to Trash"
+		// will be disabled, and there is no need to delete the file because it
+		// has not been successfully created.
+		// Check if the menu item "Move to Trash" is disabled.
+		// If it's not disabled, proceed to perform the move-to-trash action.
 		uiauto.IfSuccessThenWithLog(
-			ui.WithTimeout(3*time.Second).WaitUntilCheckedState(moveToTrashItem, true),
+			ui.Gone(moveToTrashItem.HasClass("goog-menuitem-disabled")),
 			moveToTrash,
 		),
 	)
