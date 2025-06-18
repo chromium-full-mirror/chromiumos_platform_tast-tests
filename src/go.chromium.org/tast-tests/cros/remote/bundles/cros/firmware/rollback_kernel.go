@@ -289,12 +289,15 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for DUT to reach the Broken Screen")
+	// DUT will try to boot from both FW slots before rebooting to the Broken Screen.
+	// Use h.Config.FirmwareScreen as the approximate time for the 2 normal/dev boots.
+	brokenScreenTimeout := 2*h.Config.FirmwareScreen + h.Config.FirmwareScreenRecMode
 	if h.HasAPFwState {
-		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode, common.RecoveryBroken); err != nil {
+		if err := h.DetectFirmwareScreen(ctx, brokenScreenTimeout, common.RecoveryBroken); err != nil {
 			s.Fatal("Failed to detect firmware screen: ", err)
 		}
 	} else {
-		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		if err := h.WaitFirmwareScreen(ctx, brokenScreenTimeout); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 	}
