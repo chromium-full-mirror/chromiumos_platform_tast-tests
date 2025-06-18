@@ -62,8 +62,8 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("bugzzy", "navi")),
 			},
 			{
-				Name:              "corner_radius_5",
-				Val:               screenCornerRadius(5),
+				Name:              "corner_radius_15",
+				Val:               screenCornerRadius(15),
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("navi")),
 			},
 			{
