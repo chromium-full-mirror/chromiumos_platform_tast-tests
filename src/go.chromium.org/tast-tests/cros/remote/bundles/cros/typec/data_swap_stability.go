@@ -26,7 +26,16 @@ func init() {
 		VarDeps:      []string{"servo"},
 		Fixture:      "typecUnigraf",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
-		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
+		Attr:         []string{"group:typec", "typec_informational"},
+		// This will ever only be run on one port.
+		// It requires servo to be connected, so only Unigraf port 0 will be used.
+		Params: []testing.Param{
+			{
+				Name:      "port0_normal",
+				ExtraAttr: []string{"typec_unigraf274"},
+				Timeout:   3 * time.Minute,
+			},
+		},
 	})
 }
 
@@ -34,6 +43,7 @@ func DataSwapStability(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 	numIterations := 30
 	dutTestPortID := 1
+	unigrafTestPortID := 0
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
@@ -45,6 +55,11 @@ func DataSwapStability(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Unigraf controller from fixture")
 	}
 	unigrafctl := fixtData.Unigraf
+
+	// TODO(b/416456393) Turn off active port on Unigraf
+	if err := unigrafctl.SetTestPort(ctx, 1); err != nil {
+		s.Fatal("Failed to set testing port: ", err)
+	}
 
 	// Prepare servo.
 	servoSpec := s.RequiredVar("servo")
@@ -60,10 +75,10 @@ func DataSwapStability(ctx context.Context, s *testing.State) {
 	}
 
 	// Turn on active port on Unigraf.
-	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
+	if err := unigrafctl.SetTestPort(ctx, unigrafTestPortID); err != nil {
 		s.Fatal("Failed to set testing port: ", err)
 	}
-	s.Log("Unigraf testing port was set to port 0")
+	s.Logf("Unigraf testing port was set to port %d", unigrafTestPortID)
 
 	// Stress data swap.
 	for i := 0; i < numIterations; i++ {

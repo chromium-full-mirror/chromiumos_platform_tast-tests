@@ -31,6 +31,12 @@ func init() {
 	})
 }
 
+const (
+	defaultInitialPdoCount = 4
+	defaultInitialPdState  = unigraf.InitPdStateDrp
+	defaultUsbChannel      = unigraf.UsbChannelUSB3And2
+)
+
 // UnigrafFixture holds the state for the Unigraf fixture.
 type UnigrafFixture struct {
 	unigrafController *unigraf.UsbTester
@@ -102,14 +108,19 @@ func (f *UnigrafFixture) Reset(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to set Unigraf active port to %d during Reset", 1)
 	}
 
-	// Reset to DRP state.
-	if err := f.unigrafController.SetInitPdState(ctx, unigraf.InitPdStateDrp); err != nil {
-		return errors.Wrap(err, "failed to set Unigraf to DRP state during Reset")
+	// Reset to default Init PD state.
+	if err := f.unigrafController.SetInitPdState(ctx, defaultInitialPdState); err != nil {
+		return errors.Wrapf(err, "failed to set Unigraf to %s state during Reset", defaultInitialPdState)
 	}
 
-	// Reset to USB3 mode.
-	if err := f.unigrafController.SetUsbChannel(ctx, unigraf.UsbChannelUSB3And2); err != nil {
-		return errors.Wrap(err, "failed to set Unigraf to USB3 mode during Reset")
+	// Reset to default USB mode.
+	if err := f.unigrafController.SetUsbChannel(ctx, defaultUsbChannel); err != nil {
+		return errors.Wrapf(err, "failed to set Unigraf to %s mode during Reset", defaultUsbChannel)
+	}
+
+	// Set initial PDO count.
+	if err := f.unigrafController.SetSrcPdoCount(ctx, defaultInitialPdoCount); err != nil {
+		return errors.Wrapf(err, "failed to set Unigraf initial PDO count to %d during Reset", defaultInitialPdoCount)
 	}
 
 	return nil

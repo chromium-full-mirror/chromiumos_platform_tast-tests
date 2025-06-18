@@ -15,6 +15,7 @@ import (
 )
 
 func init() {
+	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 3)
 	testing.AddTest(&testing.Test{
 		Func: ECResetWhileCharging,
 		Desc: "Check that DUT is charging after EC reset",
@@ -22,8 +23,8 @@ func init() {
 		BugComponent: "b:958036",
 		Fixture:      "typecUnigrafAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
-		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
-		Timeout:      3 * time.Minute,
+		Attr:         []string{"group:typec", "typec_informational"},
+		Params:       params,
 	})
 }
 
@@ -37,10 +38,10 @@ func ECResetWhileCharging(ctx context.Context, s *testing.State) {
 	}
 	unigrafctl := fixtData.Unigraf
 
-	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
-		s.Fatal("Failed to set testing port: ", err)
+	// Setup Unigraf.
+	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup Unigraf: ", err)
 	}
-	s.Log("Unigraf testing port was set to port 0")
 
 	// Verify that the DUT is charging within 10 seconds.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

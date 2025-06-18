@@ -16,6 +16,9 @@ import (
 )
 
 func init() {
+	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{
+		InitialPdState: unigraf.InitPdStateDfp,
+	}, 3)
 	testing.AddTest(&testing.Test{
 		Func:     ChargingCurrent,
 		Desc:     "Test if charging current is ~3A after connecting Unigraf as source",
@@ -23,7 +26,8 @@ func init() {
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
 		Fixture:      "typecUnigrafAndServo",
-		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
+		Attr:         []string{"group:typec", "typec_informational"},
+		Params:       params,
 	})
 }
 
@@ -37,28 +41,9 @@ func ChargingCurrent(ctx context.Context, s *testing.State) {
 	}
 	unigrafctl := fixtData.Unigraf
 
-	// Make sure Unigraf is set to correct test port.
-	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
-		s.Fatal("Failed to set testing port: ", err)
-	}
-	s.Log("Unigraf testing port was set to port 0")
-
-	// Set unigraf as a power source (DFP)
-	if err := unigrafctl.SetInitPdState(ctx, unigraf.InitPdStateDfp); err != nil {
-		s.Fatal("Failed to set power role to SRC (DFP): ", err)
-	}
-	// Ensure Unigraf state is reset at the end.
-	defer unigrafctl.SetInitPdState(ctx, unigraf.InitPdStateDrp)
-
-	// Ensure Unigraf sends 20V PDO.
-	if err := unigrafctl.SetSrcPdoCount(ctx, 4); err != nil {
-		s.Fatal("Failed to set power role to SRC (DFP): ", err)
-	}
-
-	// Replug the Unigraf to trigger negotiation.
-	s.Log("Replugging Unigraf")
-	if err := unigrafctl.Replug(ctx); err != nil {
-		s.Fatal("Failed to replug unigraf: ", err)
+	// Setup Unigraf.
+	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup Unigraf: ", err)
 	}
 
 	// Expected current in mA and tolerance buffer (e.g., +/- 10%)

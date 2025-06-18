@@ -70,6 +70,17 @@ const (
 	UsbChannelUSB3And2 UsbChannel = UsbChannel(passport.UsbChannel_USB_3_AND_2_HS)
 )
 
+func (x UsbChannel) String() string {
+	switch x {
+	case UsbChannelUSB2:
+		return "USB2"
+	case UsbChannelUSB3And2:
+		return "USB3"
+	default:
+		return "USB channel not set"
+	}
+}
+
 // Constants for InitPdState
 const (
 	InitPdStateNotSet InitPdState = InitPdState(passport.InitPdState_INIT_PD_STATE_NOT_SET)
@@ -78,12 +89,36 @@ const (
 	InitPdStateDrp    InitPdState = InitPdState(passport.InitPdState_PD_DRP)
 )
 
+func (x InitPdState) String() string {
+	switch x {
+	case InitPdStateUfp:
+		return "UFP"
+	case InitPdStateDfp:
+		return "DFP"
+	case InitPdStateDrp:
+		return "DRP"
+	default:
+		return "Init PD state not set"
+	}
+}
+
 // Constants for ActiveCc
 const (
 	ActiveCcNotSet ActiveCc = ActiveCc(passport.ActiveCc_ACTIVE_CC_NOT_SET)
 	ActiveCc0      ActiveCc = ActiveCc(passport.ActiveCc_CC1)
 	ActiveCc1      ActiveCc = ActiveCc(passport.ActiveCc_CC2)
 )
+
+func (x ActiveCc) String() string {
+	switch x {
+	case ActiveCc0:
+		return "CC1"
+	case ActiveCc1:
+		return "CC2"
+	default:
+		return "Active CC not set"
+	}
+}
 
 // Constants for CableMode
 const (

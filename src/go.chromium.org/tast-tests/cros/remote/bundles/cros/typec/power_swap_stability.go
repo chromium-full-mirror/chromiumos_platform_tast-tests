@@ -15,6 +15,7 @@ import (
 )
 
 func init() {
+	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 3)
 	testing.AddTest(&testing.Test{
 		Func: PowerSwapStability,
 		Desc: "Check power swap stability on a typec port",
@@ -22,13 +23,17 @@ func init() {
 		BugComponent: "b:958036",
 		Fixture:      "typecUnigrafAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "danielgeorgem@google.com"},
-		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
+		Attr:         []string{"group:typec", "typec_informational"},
+		Params:       params,
 	})
 }
 
 func PowerSwapStability(ctx context.Context, s *testing.State) {
 	numIterations := 30
 	dutTestPortID := 1
+	if s.Param().(typecunigraf.TestSetupData).PortNum == 1 {
+		dutTestPortID = 0
+	}
 
 	// Get Unigraf controller from fixture.
 	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
@@ -37,10 +42,10 @@ func PowerSwapStability(ctx context.Context, s *testing.State) {
 	}
 	unigrafctl := fixtData.Unigraf
 
-	if err := unigrafctl.SetTestPort(ctx, 0); err != nil {
-		s.Fatal("Failed to set testing port: ", err)
+	// Setup Unigraf.
+	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup Unigraf: ", err)
 	}
-	s.Log("Unigraf testing port was set to port 0")
 
 	// We want to do the toggle operation a bunch of time.
 	for i := 0; i < numIterations; i++ {
@@ -71,8 +76,5 @@ func PowerSwapStability(ctx context.Context, s *testing.State) {
 		}
 
 		s.Logf("Iter (%d/%d) OK", i+1, numIterations)
-
-		// GoBigSleepLint: if we try to switch again too fast the unigraf might fail.
-		testing.Sleep(ctx, time.Second)
 	}
 }
