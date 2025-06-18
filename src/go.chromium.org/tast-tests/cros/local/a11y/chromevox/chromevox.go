@@ -75,10 +75,10 @@ func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
 	// Make sure required modules exist and are accessible.
 	if err := extConn.Eval(ctx, `(async () => {
 		if (!window.TtsBackground) {
-		  window.TtsBackground = (await import('/chromevox/mv2/background/tts_background.js')).TtsBackground;
+		  window.TtsBackground = TestImportManager.getImports().TtsBackground;
 		}
 		if (!window.ChromeVoxRange) {
-		  window.ChromeVoxRange = (await import('/chromevox/mv2/background/chromevox_range.js')).ChromeVoxRange;
+		  window.ChromeVoxRange = TestImportManager.getImports().ChromeVoxRange;
 		}
 	  })()`, nil); err != nil {
 		return nil, errors.Wrap(err, "failed to export modules from ChromeVox")
