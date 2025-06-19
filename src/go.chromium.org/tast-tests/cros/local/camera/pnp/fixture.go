@@ -260,7 +260,7 @@ func (f *fakeHALFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 // Cooldown should be run before loading the work for cooldown phase.
 func Cooldown(ctx context.Context) error {
 	testing.ContextLog(ctx, "[Cool Down Phase]")
-	if err := power.Cooldown(ctx); err != nil {
+	if _, err := power.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "cooldown failed")
 	}
 

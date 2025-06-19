@@ -48,7 +48,7 @@ func (r *RecorderService) Cooldown(ctx context.Context, req *empty.Empty) (*empt
 		return nil, errors.New("cannot cooldown device as a recorder was not created")
 	}
 
-	if err := pl.Cooldown(ctx); err != nil {
+	if _, err := pl.Cooldown(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to cooldown device")
 	}
 

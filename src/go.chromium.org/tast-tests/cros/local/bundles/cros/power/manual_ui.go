@@ -136,7 +136,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := power.Cooldown(ctx); err != nil {
+	if _, err := power.Cooldown(ctx); err != nil {
 		s.Log("Failed to cooldown after the manual setup: ", err)
 	}
 	if err := r.Start(ctx); err != nil {

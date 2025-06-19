@@ -125,6 +125,28 @@ type CooldownConfig struct {
 // it should return nil immediately through the returned channel.
 type cooldownProcedure func(context.Context, CooldownConfig) <-chan error
 
+// cooldownProcedureID is used to identify different cooldown procedure.
+type cooldownProcedureID string
+
+// These constants represent different cooldown procedures.
+const (
+	waitForThermalSteadyState cooldownProcedureID = "cooldown_thermal"
+	waitForIdleTemperature    cooldownProcedureID = "cooldown_idle_temperature"
+	waitForCPUIdle            cooldownProcedureID = "cooldown_cpu_usage"
+	waitForPackageStateIdle   cooldownProcedureID = "cooldown_cpu_pkg"
+	waitForIOCooldown         cooldownProcedureID = "cooldown_io"
+)
+
+type cooldownEntry struct {
+	id   cooldownProcedureID
+	proc cooldownProcedure
+}
+
+type cooldownDuration struct {
+	id       cooldownProcedureID
+	duration time.Duration
+}
+
 func afterCPUIdle(ctx context.Context, cfg CooldownConfig) <-chan error {
 	return async(ctx, func(ctx context.Context) error {
 		if !cfg.CPUIdle {
@@ -180,9 +202,9 @@ func afterIdleTemperature(ctx context.Context, cfg CooldownConfig) <-chan error 
 //
 // To skip cooldown for debugging, use
 // -var=cpu.Cooldown.skipCooldown=true.
-func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
+func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (_ []cooldownDuration, err error) {
 	if cpu.IsSkipCooldownSet(ctx) {
-		return nil
+		return nil, nil
 	}
 
 	// Keep fans running at max RPM throughout cooldown.
@@ -199,27 +221,39 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
 	}()
 
 	// All cooldowns are included, execution depends on cooldownConfig.
-	cooldowns := []cooldownProcedure{
-		afterThermalSteadyState,
-		afterIdleTemperature,
-		afterCPUIdle,
-		afterPackageStateIdle,
-		afterIOCooldown,
+	cooldowns := []cooldownEntry{
+		{waitForThermalSteadyState, afterThermalSteadyState},
+		{waitForIdleTemperature, afterIdleTemperature},
+		{waitForCPUIdle, afterCPUIdle},
+		{waitForPackageStateIdle, afterPackageStateIdle},
+		{waitForIOCooldown, afterIOCooldown},
 	}
+
+	results := make([]cooldownDuration, 0, len(cooldowns))
 
 	// Perform cooldowns in sequential order.
-	for _, c := range cooldowns {
+	for i := range cooldowns {
+		st := time.Now()
 		select {
-		case err = <-c(ctx, cfg):
+		case err = <-cooldowns[i].proc(ctx, cfg):
 		case err = <-fanStatus:
+			if err != nil {
+				return results, err
+			}
 		}
 
+		// No idle temperature is specified, so this item will not wait additionally.
+		// Therefore, no record required.
+		if cooldowns[i].id != waitForIdleTemperature {
+			// The duration should be recorded even if the device cooldown fails.
+			results = append(results, cooldownDuration{cooldowns[i].id, time.Since(st)})
+		}
 		if err != nil {
-			return err
+			return results, err
 		}
 	}
 
-	return nil
+	return results, nil
 }
 
 // Cooldown ensures the device is cooled down as much as possible,
@@ -231,7 +265,7 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (err error) {
 //
 // To skip cooldown for debugging, use
 // -var=cpu.Cooldown.skipCooldown=true.
-func Cooldown(ctx context.Context) error {
+func Cooldown(ctx context.Context) ([]cooldownDuration, error) {
 	cfg := CooldownConfig{
 		// Accelerate cooldown when possible.
 		UseFan: true,
@@ -252,11 +286,12 @@ func Cooldown(ctx context.Context) error {
 		IOIdle:           true,
 	}
 
-	if err := ConfigurableCooldown(ctx, cfg); err != nil {
-		return errors.Wrap(err, "failed to power cooldown")
+	result, err := ConfigurableCooldown(ctx, cfg)
+	if err != nil {
+		return result, errors.Wrap(err, "failed to power cooldown")
 	}
 
-	return nil
+	return result, nil
 }
 
 // FastThermalCooldown cools down the CPU temperature within a time
@@ -279,7 +314,7 @@ func FastThermalCooldown(ctx context.Context) error {
 		},
 	}
 
-	if err := ConfigurableCooldown(ctx, cfg); err != nil {
+	if _, err := ConfigurableCooldown(ctx, cfg); err != nil {
 		return errors.Wrap(err, "failed to power cooldown")
 	}
 

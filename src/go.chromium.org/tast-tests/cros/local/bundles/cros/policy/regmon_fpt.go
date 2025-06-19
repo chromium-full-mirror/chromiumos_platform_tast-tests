@@ -79,7 +79,7 @@ func RegmonFpt(ctx context.Context, s *testing.State) {
 	// Power test startup code (copied from template).
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
-	if err := power.Cooldown(ctx); err != nil {
+	if _, err := power.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 	if err := r.Start(ctx); err != nil {

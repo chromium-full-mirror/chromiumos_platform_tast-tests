@@ -6,6 +6,7 @@ package power
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
@@ -43,7 +44,8 @@ type Recorder struct {
 	enableDischargeWatchdog bool
 	isRecording             bool
 	perfValues              *perf.Values
-	cooldownDuration        float64
+	totalCooldownDuration   time.Duration
+	cooldownDurations       []cooldownDuration
 
 	// Fields used for perfetto tracing.
 	traceEnabled    bool
@@ -82,8 +84,9 @@ func DischargeWatchdogOption(discharge bool) OptionalRecorderArg {
 func (r *Recorder) Cooldown(ctx context.Context) error {
 	st := time.Now()
 	// The duration should be recorded even if the device cooldown fails.
-	err := Cooldown(ctx)
-	r.cooldownDuration = time.Since(st).Seconds()
+	result, err := Cooldown(ctx)
+	r.totalCooldownDuration = time.Since(st)
+	r.cooldownDurations = result
 
 	return err
 }
@@ -194,13 +197,23 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		}
 	}
 
-	if r.cooldownDuration >= 0 {
+	if r.totalCooldownDuration >= 0 {
 		r.perfValues.Set(perf.Metric{
 			Name:      cp.GeneralPerfMetricType + "seconds_cooldown",
 			Unit:      "second",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  false,
-		}, r.cooldownDuration)
+		}, r.totalCooldownDuration.Seconds())
+	}
+
+	for _, result := range r.cooldownDurations {
+		r.perfValues.Set(perf.Metric{
+			Name:      fmt.Sprintf("%sseconds_%s", cp.GeneralPerfMetricType, result.id),
+			Unit:      "second",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false,
+		}, result.duration.Seconds())
+
 	}
 
 	r.checkpoints.Save(r.outDir)
@@ -354,7 +367,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		dataSources:             metrics.TestMetrics(),
 		enableDischargeWatchdog: discharge,
 		isRecording:             false,
-		cooldownDuration:        -1,
+		totalCooldownDuration:   -1,
 
 		traceEnabled:    false,
 		traceSession:    nil,

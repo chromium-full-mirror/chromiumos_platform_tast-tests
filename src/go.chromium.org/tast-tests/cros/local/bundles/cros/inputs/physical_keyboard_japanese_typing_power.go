@@ -94,7 +94,7 @@ func PhysicalKeyboardJapaneseTypingPower(ctx context.Context, s *testing.State) 
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 
-	if err := power.Cooldown(ctx); err != nil {
+	if _, err := power.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
 	if err := r.Start(ctx); err != nil {
