@@ -44,12 +44,12 @@ func init() {
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"group:release-health",
 			"release-health_audio",
 		},
-		Timeout:      4 * time.Minute,
+		Timeout: 4 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:    "gain_fieldtrial_config_disable",
@@ -68,10 +68,11 @@ func init() {
 				ExtraAttr: []string{"informational"},
 			},
 			{
-				Name:      "mute_fieldtrial_config_enable",
-				Fixture:   audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
-				Val:       muteButton,
-				ExtraAttr: []string{"informational"},
+				Name:            "mute_fieldtrial_config_enable",
+				Fixture:         audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
+				Val:             muteButton,
+				ExtraAttr:       []string{"informational"},
+				VariantCategory: `{"name": "Audio_Board"}`,
 			},
 		},
 	})

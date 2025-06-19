@@ -58,6 +58,7 @@ func init() {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(alsaConformanceUnstableModels...)),
 				ExtraAttr:         []string{"informational"},
+				VariantCategory:   `{"name": "Audio_SoC_Codec_Amp"}`,
 			},
 		},
 	})

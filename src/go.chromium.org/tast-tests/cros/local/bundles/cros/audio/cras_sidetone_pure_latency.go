@@ -29,7 +29,8 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
-		Data: []string{data.AudioShortSine440Wav},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		Data:            []string{data.AudioShortSine440Wav},
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,
 			Parent:   fixture.UIStopped{}.Instance(),

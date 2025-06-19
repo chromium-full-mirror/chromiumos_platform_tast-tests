@@ -74,6 +74,7 @@ func init() {
 				ExtraAttr: []string{
 					"informational",
 				},
+				VariantCategory: `{"name": "Audio_Board"}`,
 			},
 			{
 				Name: "16000_stereo",

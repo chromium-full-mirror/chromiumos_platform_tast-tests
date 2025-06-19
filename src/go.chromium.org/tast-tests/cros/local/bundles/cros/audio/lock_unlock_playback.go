@@ -34,9 +34,10 @@ func init() {
 			"group:release-health",
 			"release-health_audio",
 		},
-		Fixture:      fixture.AloopLoaded{Channels: 2, Parent: "chromeLoggedIn"}.Instance(),
-		Timeout:      5 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		Fixture:         fixture.AloopLoaded{Channels: 2, Parent: "chromeLoggedIn"}.Instance(),
+		Timeout:         5 * time.Minute,
+		SoftwareDeps:    []string{"chrome"},
 	})
 }
 

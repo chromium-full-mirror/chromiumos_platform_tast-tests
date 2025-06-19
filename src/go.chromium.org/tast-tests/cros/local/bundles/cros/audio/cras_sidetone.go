@@ -30,6 +30,7 @@ func init() {
 			"group:release-health",
 			"release-health_audio",
 		},
+		VariantCategory: `{"name": "Audio_Board"}`,
 		Fixture: fixture.AloopLoaded{
 			Channels:    2,
 			DevicePairs: 2,

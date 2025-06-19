@@ -794,6 +794,7 @@ func init() {
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline", "informational"},
+				VariantCategory:  `{"name": "Audio_Model"}`,
 			},
 			{
 				Name: "beamforming_enabled_by_ui",
@@ -816,6 +817,7 @@ func init() {
 				}.Instance(),
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 				ExtraAttr:        []string{"group:mainline", "informational"},
+				VariantCategory:  `{"name": "Audio_Model"}`,
 			},
 			{
 				Name: "style_transfer",

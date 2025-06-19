@@ -39,6 +39,7 @@ func init() {
 			Name:              "unstable_model",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(crasPlayUnstableModels...)),
 			ExtraAttr:         []string{"informational"},
+			VariantCategory:   `{"name": "Audio_SoC_Codec_Amp"}`,
 		}},
 	})
 }

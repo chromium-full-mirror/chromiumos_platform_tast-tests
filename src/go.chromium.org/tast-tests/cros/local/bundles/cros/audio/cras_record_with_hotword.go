@@ -22,13 +22,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrasRecordWithHotword,
-		Desc:         "Verifies CRAS record function works correctly with hotword",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
-		BugComponent: "b:776546",
-		HardwareDeps: hwdep.D(hwdep.Microphone()),
-		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
-		Attr:         []string{"group:mainline", "informational"},
+		Func:            CrasRecordWithHotword,
+		Desc:            "Verifies CRAS record function works correctly with hotword",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
+		BugComponent:    "b:776546",
+		HardwareDeps:    hwdep.D(hwdep.Microphone()),
+		Fixture:         fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
 	})
 }
 

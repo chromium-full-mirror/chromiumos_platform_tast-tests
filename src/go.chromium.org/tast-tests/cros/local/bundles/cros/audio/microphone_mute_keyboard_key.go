@@ -30,9 +30,10 @@ func init() {
 		BugComponent: "b:776546",
 		// TODO(https://crbug.com/1266507): Remove "informational" once stable.
 		// TODO(https://crbug.com/1271209): Add a formal HW dependency for devices with KEY_MICMUTE.
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Model("gimble", "wormdingler")),
+		Attr:            []string{"group:mainline", "informational", "group:release-health"},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		SoftwareDeps:    []string{"chrome"},
+		HardwareDeps:    hwdep.D(hwdep.Model("gimble", "wormdingler")),
 	})
 }
 

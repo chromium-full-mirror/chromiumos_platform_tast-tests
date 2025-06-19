@@ -40,8 +40,9 @@ func init() {
 			"informational",
 			"group:criticalstaging",
 		},
-		Timeout: devicePlaybackRecordTimeout,
-		Fixture: "rebootForAudioDSPFixture",
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
+		Timeout:         devicePlaybackRecordTimeout,
+		Fixture:         "rebootForAudioDSPFixture",
 	})
 }
 

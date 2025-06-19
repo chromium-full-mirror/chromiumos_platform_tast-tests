@@ -28,7 +28,8 @@ func init() {
 			DevicePairs: 1,
 			Parent:      fixture.UIStopped{}.Instance(),
 		}.Instance(),
-		Attr: []string{"group:mainline", "informational"},
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Audio_Board"}`,
 	})
 }
 

@@ -20,12 +20,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrasLoopbackCaptureTimestamp,
-		Desc:         "Flexible loopback should provide samples in correct timestamp order",
-		Contacts:     []string{"htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
-		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
+		Func:            CrasLoopbackCaptureTimestamp,
+		Desc:            "Flexible loopback should provide samples in correct timestamp order",
+		Contacts:        []string{"htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Fixture:         audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
+		BugComponent:    "b:776546",
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Audio_Board"}`,
 	})
 }
 

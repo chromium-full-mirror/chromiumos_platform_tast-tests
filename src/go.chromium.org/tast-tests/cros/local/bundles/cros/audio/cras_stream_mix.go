@@ -83,6 +83,7 @@ func init() {
 			{
 				Name:              "all_unstable",
 				ExtraAttr:         []string{"informational"},
+				VariantCategory:   `{"name": "Audio_Board"}`,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crasStreamMixUnstableModels...)),
 				Val: crasStreamMixVal{
 					rate:      44100,

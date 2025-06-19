@@ -19,14 +19,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         USBVolumeGranularity,
-		Desc:         "Check for USB device volume changes depending on the volume range reported by the USB device",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "whalechang@chromium.org"},
-		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational", "group:release-health"},
-		SoftwareDeps: []string{"chrome", "qemu"},
-		Fixture:      "chromeLoggedIn",
-		Timeout:      20 * time.Minute,
+		Func:            USBVolumeGranularity,
+		Desc:            "Check for USB device volume changes depending on the volume range reported by the USB device",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "whalechang@chromium.org"},
+		BugComponent:    "b:776546",
+		Attr:            []string{"group:mainline", "informational", "group:release-health"},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		SoftwareDeps:    []string{"chrome", "qemu"},
+		Fixture:         "chromeLoggedIn",
+		Timeout:         20 * time.Minute,
 	})
 }
 

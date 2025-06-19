@@ -25,10 +25,11 @@ func init() {
 		//   - hasn't started yet
 		//   - has ended
 
-		Contacts:     []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
-		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:        []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Fixture:         audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
+		BugComponent:    "b:776546",
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Audio_Board"}`,
 		// Param.Name encoding:
 		// - r: request flexible loopback
 		// - p: playback

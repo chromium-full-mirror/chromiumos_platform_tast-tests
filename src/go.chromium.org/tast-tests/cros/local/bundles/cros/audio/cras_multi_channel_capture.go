@@ -23,13 +23,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CrasMultiChannelCapture,
-		Desc:         "Verifies recorded samples from CRAS are correct",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:776546",
-		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      3 * time.Minute,
-		Data:         []string{data.AudioLong16Wav},
+		Func:            CrasMultiChannelCapture,
+		Desc:            "Verifies recorded samples from CRAS are correct",
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent:    "b:776546",
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		Timeout:         3 * time.Minute,
+		Data:            []string{data.AudioLong16Wav},
 		Params: []testing.Param{
 			{
 				Name: "1ch",

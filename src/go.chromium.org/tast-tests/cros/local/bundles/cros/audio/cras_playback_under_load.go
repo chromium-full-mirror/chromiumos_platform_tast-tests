@@ -19,13 +19,14 @@ func init() {
 		Desc:         "Verifies CRAS playback function works correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@chromium.org"},
 		BugComponent: "b:776546",
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"informational",
 			"group:hw_agnostic",
 			"group:release-health",
 			"release-health_audio",
 		},
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
 		Params: []testing.Param{
 			{
 				Name: "fieldtrial_enable",

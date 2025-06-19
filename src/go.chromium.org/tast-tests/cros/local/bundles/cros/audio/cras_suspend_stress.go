@@ -64,6 +64,7 @@ func init() {
 				rounds:   50,
 			},
 			ExtraAttr:         []string{"informational"},
+			VariantCategory:   `{"name": "Audio_SoC_Codec_Amp"}`,
 			ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel(suspendStressUnstableModels...)),
 			Timeout:           50*suspendStressTimePerRound + chrome.ResetTimeout,
 		}},

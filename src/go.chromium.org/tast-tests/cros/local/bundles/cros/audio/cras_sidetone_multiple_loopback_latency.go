@@ -30,9 +30,10 @@ func init() {
 			"group:mainline", "informational",
 			"group:cbx", "cbx_feature_enabled", "cbx_stable",
 		},
-		Timeout:      3 * time.Minute,
-		Data:         []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
-		SoftwareDeps: []string{"chrome"},
+		VariantCategory: `{"name": "Audio_Board"}`,
+		Timeout:         3 * time.Minute,
+		Data:            []string{data.TheQuickBrownFoxS16LEStereo48000Wav},
+		SoftwareDeps:    []string{"chrome"},
 		Params: []testing.Param{
 			{
 				Name:    "no_effects",

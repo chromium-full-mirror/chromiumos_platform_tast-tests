@@ -38,7 +38,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Attr:         []string{
+		Attr: []string{
 			"group:mainline",
 			"group:intel-nda",
 			"group:release-health",
@@ -50,9 +50,10 @@ func init() {
 				Fixture: audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigDisable}.Instance(),
 			},
 			{
-				Name:      "fieldtrial_config_enable",
-				Fixture: audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
-				ExtraAttr: []string{"informational"},
+				Name:            "fieldtrial_config_enable",
+				Fixture:         audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
+				ExtraAttr:       []string{"informational"},
+				VariantCategory: `{"name": "Audio_Board"}`,
 			},
 		},
 	})
