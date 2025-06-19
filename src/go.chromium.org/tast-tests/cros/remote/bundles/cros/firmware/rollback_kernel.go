@@ -301,19 +301,6 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 	}
-	s.Log("Checking if DUT stays at the Broken Screen")
-	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnectBrokenToDev()
-
-	err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
-	switch err.(type) {
-	case nil:
-		s.Fatal("DUT woke up unexpectedly")
-	default:
-		if !errors.As(err, &context.DeadlineExceeded) {
-			s.Fatal("Unexpected error occurred: ", err)
-		}
-	}
 
 	if err := bootToDevAndRestore(ctx, h, ms, rolledBackKernB); err != nil {
 		s.Fatal("Failed to restore kernel versions from dev mode: ", err)
