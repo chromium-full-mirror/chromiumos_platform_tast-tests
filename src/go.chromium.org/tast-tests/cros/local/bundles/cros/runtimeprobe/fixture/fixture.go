@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	commonfixture "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
@@ -21,8 +22,9 @@ import (
 
 // Fixture names.
 const (
-	DecryptProbeConfig     = "decryptProbeConfig"
-	probeConfigStatefulDir = "/usr/local/etc/runtime_probe/"
+	DecryptProbeConfig          = "decryptProbeConfig"
+	RebootAndDecryptProbeConfig = "rebootAndDecryptProbeConfig"
+	probeConfigStatefulDir      = "/usr/local/etc/runtime_probe/"
 )
 
 func init() {
@@ -32,12 +34,28 @@ func init() {
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"clarkchung@google.com",
+			"allenshihmc@google.com",
 		},
 		BugComponent:    "b:606088",
 		Impl:            &decryptProbeConfigFixture{},
 		Vars:            []string{"runtimeprobe.ProbeFunction.keys"},
 		SetUpTimeout:    10 * time.Second,
 		TearDownTimeout: 10 * time.Second,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: RebootAndDecryptProbeConfig,
+		Desc: "Decrypt private probe configs after reboot",
+		Contacts: []string{
+			"chromeos-runtime-probe@google.com",
+			"clarkchung@google.com",
+			"allenshihmc@google.com",
+		},
+		BugComponent:    "b:606088",
+		Impl:            &decryptProbeConfigFixture{},
+		Vars:            []string{"runtimeprobe.ProbeFunction.keys"},
+		SetUpTimeout:    10 * time.Second,
+		TearDownTimeout: 10 * time.Second,
+		Parent:          commonfixture.RebootForProbeFunction,
 	})
 }
 

@@ -16,6 +16,7 @@ import (
 
 	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
 
+	commonfixture "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/fixture"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
@@ -295,6 +296,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "battery",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("wyrdeer")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
@@ -303,7 +305,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "battery_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
@@ -312,6 +314,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "camera",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360", "wugtrio")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
@@ -320,7 +323,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "camera_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
@@ -329,6 +332,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "edid",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("domilly")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
@@ -337,7 +341,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "edid_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
@@ -346,6 +350,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "input_device",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
@@ -354,7 +359,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "input_device_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
@@ -363,6 +368,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "memory",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"dram"},
@@ -371,7 +377,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "memory_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"dram"},
@@ -380,6 +386,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "network",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 				Val: probeFunctionTestParam{
@@ -389,7 +396,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "network_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 				Val: probeFunctionTestParam{
@@ -399,6 +406,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "storage",
+				Fixture:           commonfixture.RebootForProbeFunction,
 				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
@@ -407,7 +415,7 @@ func init() {
 				ExtraAttr: []string{"racc_config_installed"},
 			}, {
 				Name:              "storage_private",
-				Fixture:           fixture.DecryptProbeConfig,
+				Fixture:           fixture.RebootAndDecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
