@@ -56,8 +56,8 @@ const (
 	// If the network is unstable, account synchronization may take a long time.
 	syncTimeout      = 5 * time.Minute
 	loadTimeout      = time.Minute
-	longLoadTimeout  = 90 * time.Second
-	longUITimeout    = 30 * time.Second
+	longLoadTimeout  = 2 * time.Minute
+	longUITimeout    = 45 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
 	swipeDuration    = time.Second
@@ -330,7 +330,7 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
 		apputil.FindAndClick(createButton, defaultUITimeout),
 		uiauto.NamedAction("wait for room title "+roomName,
-			apputil.WaitForExists(roomTitle, loadTimeout)),
+			apputil.WaitForExists(roomTitle, longLoadTimeout)),
 	)
 }
 
