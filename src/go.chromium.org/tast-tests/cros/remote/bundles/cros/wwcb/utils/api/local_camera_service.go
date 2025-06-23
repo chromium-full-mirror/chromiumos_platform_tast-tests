@@ -7,9 +7,8 @@ package api
 import (
 	"context"
 
-	"google.golang.org/grpc"
-
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
+	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast/core/errors"
@@ -52,7 +51,7 @@ func (s *localCameraService) GetCameras(ctx context.Context, req *passport.GetCa
 
 // GetAveragePixel gets the average pixel color detected by the specified camera.
 func (s *localCameraService) GetAveragePixel(ctx context.Context, req *passport.GetAveragePixelRequest, opts ...grpc.CallOption) (*passport.GetAveragePixelResponse, error) {
-	pixel, frame, err := utils.GetAvgPixelFromWebcam(ctx, req.GetDeviceId())
+	pixel, frame, err := utils.GetAvgPixelFromWebcam(ctx, req.GetDeviceId(), int32(req.GetExposureMicroseconds()))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get average pixel from webcam")
 	}

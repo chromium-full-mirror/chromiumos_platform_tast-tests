@@ -13,10 +13,11 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
+	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/blackjack/webcam"
-
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 
 	"go.chromium.org/tast/core/errors"
@@ -114,7 +115,7 @@ func addMotionDht(frame []byte) []byte {
 }
 
 // GetAvgPixelFromWebcam is for get avg pixel from webcam.
-func GetAvgPixelFromWebcam(ctx context.Context, devPort string) (*pixel, []byte, error) {
+func GetAvgPixelFromWebcam(ctx context.Context, devPort string, exposureTimeUs int32) (*pixel, []byte, error) {
 	var p *pixel
 	cam, err := webcam.Open(devPort)
 
@@ -141,6 +142,13 @@ func GetAvgPixelFromWebcam(ctx context.Context, devPort string) (*pixel, []byte,
 	if err != nil {
 		return nil, nil, errors.Wrap(err, devPort+" streaming failed")
 	}
+
+	err = setManualExposure(cam, exposureTimeUs)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to set manual exposure")
+	}
+	// set back to auto exposure setting on clean up
+	defer setManualExposure(cam, 0)
 
 	// 5 seconds time out.
 	frameCount := 0
@@ -178,6 +186,61 @@ func GetAvgPixelFromWebcam(ctx context.Context, devPort string) (*pixel, []byte,
 			return p, frame, nil
 		}
 	}
+}
+
+func setManualExposure(cam *webcam.Webcam, exposureMicroseconds int32) error {
+	// Set exposure to the requested value in 100uS units (V4L2_CID_EXPOSURE_ABSOLUTE)
+	// if the value is 0, we will turn the exposure to auto.
+	// Store control IDs we find by name
+	controlIDs := make(map[string]webcam.ControlID)
+	controls := cam.GetControls()
+	for id, ctrl := range controls {
+		// Store discovered IDs for easy lookup
+		controlIDs[strings.ToLower(ctrl.Name)] = id
+	}
+
+	// the value here is setting enum for V4L2_CID_EXPOSURE_AUTO and the value of
+	// 0 means V4L2_EXPOSURE_MANUAL (as defined in v4l2-controls.h)
+	// 3 means V4L2_EXPOSURE_APERTURE_PRIORITY (as defined in v4l2-controls.h)
+	const manualExposureSetting = int32(1)
+	const autoExposureSetting = int32(3)
+
+	if exposureMicroseconds == 0 {
+		return setControl(cam, controlIDs, controls, "Auto Exposure", autoExposureSetting)
+	}
+	err := setControl(cam, controlIDs, controls, "Auto Exposure", manualExposureSetting)
+	if err != nil {
+		return err
+	}
+	// Exposure Time, Absolute is in 100uS units (V4L2_CID_EXPOSURE_ABSOLUTE)
+	return setControl(cam, controlIDs, controls, "Exposure Time, Absolute", exposureMicroseconds/100)
+}
+
+func setControl(cam *webcam.Webcam, controlIDs map[string]webcam.ControlID, controls map[webcam.ControlID]webcam.Control, name string, value int32) error {
+	id, found := controlIDs[strings.ToLower(name)]
+	if !found || id == 0 {
+		return errors.Errorf("control %q not found on this camera", name)
+	}
+
+	// Get current control info to clamp the value
+	ctrlInfo, ok := controls[id]
+	if !ok {
+		return errors.Errorf("control info for %q (ID %d) not found after discovery", name, id)
+	}
+	setVal := value
+	if setVal < ctrlInfo.Min {
+		setVal = ctrlInfo.Min
+	}
+	if setVal > ctrlInfo.Max {
+		setVal = ctrlInfo.Max
+	}
+	val, err := cam.GetControl(id)
+	if err != nil {
+		return errors.Wrap(err, "failed to get control"+name)
+	}
+	slog.Info("Current control", "name", name, "value", val, "id", id)
+	slog.Info("Setting control", "name", name, "value", setVal)
+	return cam.SetControl(id, setVal)
 }
 
 // getAvgPixelColor is for get the bi-dimensional pixel array.

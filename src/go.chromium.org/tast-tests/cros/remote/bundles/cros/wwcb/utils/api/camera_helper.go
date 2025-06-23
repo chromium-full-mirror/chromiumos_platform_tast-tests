@@ -46,13 +46,15 @@ var enableWebcamSaveImg = testing.RegisterVarString(
 
 // CameraServiceHelper is a utility class for interacting with a camera service.
 type CameraServiceHelper struct {
-	service CameraService
+	service        CameraService
+	exposureTimeUs int32
 }
 
 // NewCameraServiceHelper creates a new helper to wrap a camera service.
 func NewCameraServiceHelper(service CameraService) *CameraServiceHelper {
 	return &CameraServiceHelper{
-		service: service,
+		service:        service,
+		exposureTimeUs: 0,
 	}
 }
 
@@ -75,7 +77,7 @@ func (c *CameraServiceHelper) VerifyVideo(ctx context.Context, outDir, cameraID 
 
 	detectColorCount := 0
 	for timeoutCtx.Err() != nil {
-		req := &passport.GetAveragePixelRequest{DeviceId: cameraID}
+		req := &passport.GetAveragePixelRequest{DeviceId: cameraID, ExposureMicroseconds: c.exposureTimeUs}
 		resp, err := c.service.GetAveragePixel(ctx, req)
 		if err != nil {
 			return errors.Wrap(err, "failed to get average pixel color from webcam")
@@ -108,7 +110,7 @@ func (c *CameraServiceHelper) VerifyVideo(ctx context.Context, outDir, cameraID 
 
 // GAMLightingValue gets the average pixel "strength" between [0(dark), 255(light)].
 func (c *CameraServiceHelper) GAMLightingValue(ctx context.Context, outDir, camera string) (int, error) {
-	req := &passport.GetAveragePixelRequest{DeviceId: camera}
+	req := &passport.GetAveragePixelRequest{DeviceId: camera, ExposureMicroseconds: c.exposureTimeUs}
 	resp, err := c.service.GetAveragePixel(ctx, req)
 	if err != nil {
 		return 0, err
@@ -124,7 +126,7 @@ func (c *CameraServiceHelper) GAMLightingValue(ctx context.Context, outDir, came
 
 // GAMHotColdValue gets the difference between the average pixel red and blue value.
 func (c *CameraServiceHelper) GAMHotColdValue(ctx context.Context, outDir, camera string) (int, error) {
-	req := &passport.GetAveragePixelRequest{DeviceId: camera}
+	req := &passport.GetAveragePixelRequest{DeviceId: camera, ExposureMicroseconds: c.exposureTimeUs}
 	resp, err := c.service.GetAveragePixel(ctx, req)
 	if err != nil {
 		return 0, err
@@ -147,15 +149,25 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, outDir st
 	}
 
 	if len(displayIDs) > len(resp.GetCameras()) {
-		return nil, errors.Errorf("Expect the number of online webcams is higher than the number of displays; webcams: %d, displays: %d", len(resp.GetCameras()), len(displayIDs))
+		return nil, errors.Errorf("expect the number of online webcams is higher than the number of displays; webcams: %d, displays: %d", len(resp.GetCameras()), len(displayIDs))
 	}
 	var cameraIDs []string
 	for _, camera := range resp.GetCameras() {
 		cameraIDs = append(cameraIDs, camera.GetId())
 	}
-
+	exposureTimesToTry := []int32{3000, 6000, 12000, 24000, 0}
+	exposureTimeIdx := 0
 	var displayMappings map[string]string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Try different exposure times to see if we can get a good match.
+		// testing shows that lower exposure times are more reliable and less
+		// affected by glare and overexposure, so start with those and then try 0
+		// which is auto exposure as a last resort.
+		c.exposureTimeUs = exposureTimesToTry[exposureTimeIdx]
+		exposureTimeIdx++
+		if exposureTimeIdx == len(exposureTimesToTry) {
+			exposureTimeIdx = 0
+		}
 		displayMappings, err = c.findCameraMatch(ctx, outDir, cameraIDs, displayIDs)
 		return err
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
@@ -168,8 +180,9 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, outDir st
 func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string, cameraIDs, displayIDs []string) (map[string]string, error) {
 	// Get current image for each camera
 	camPxl := make(map[string]*passport.Pixel)
+	testing.ContextLogf(ctx, "Trying to match cameras with exposure of %d", c.exposureTimeUs)
 	for _, webcam := range cameraIDs {
-		req := &passport.GetAveragePixelRequest{DeviceId: webcam}
+		req := &passport.GetAveragePixelRequest{DeviceId: webcam, ExposureMicroseconds: c.exposureTimeUs}
 		resp, err := c.service.GetAveragePixel(ctx, req)
 		if err != nil {
 			return nil, errors.Wrap(err, "get average pixel from webcam")
@@ -187,10 +200,10 @@ func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string
 		expectedColor := mappingColors[dispIndex]
 		testing.ContextLogf(ctx, "==== Display %d: %s ====", dispIndex, dispID)
 
-		maxScore, cameraDev := getMaxScoreAndCamera(ctx,camPxl, dispIndex)
+		maxScore, cameraDev := getMaxScoreAndCamera(ctx, camPxl, dispIndex)
 		testing.ContextLogf(ctx, "Max score: %d, cameraDev: %s", maxScore, cameraDev)
 		if cameraDev == "" {
-			return nil, errors.Errorf("No camera detected a display with dominant color %v for display %d, %s", expectedColor, dispIndex, dispID)
+			return nil, errors.Errorf("no camera detected a display with dominant color %v for display %d, %s", expectedColor, dispIndex, dispID)
 		}
 
 		p := camPxl[cameraDev]
@@ -201,15 +214,15 @@ func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string
 		// check the gray score if we are below one of the color thresholds as
 		// always checking would cause false negatives dut to limitations of this
 		// method.
-		if ((int32(expectColorScore) < webcamMappingLimitScore ||
-				maxScore < expectedColorThreshold) &&
-				grayScore > expectColorScore) {
-			return nil, errors.Errorf("'Display: %d, %s' is abnormal. Please check if the display is on. (Color scores lower than thresholds and GrayScore (%f) is higher than ColorScore (%f))", dispIndex, dispID, grayScore, expectColorScore)
+		if (int32(expectColorScore) < webcamMappingLimitScore ||
+			maxScore < expectedColorThreshold) &&
+			grayScore > expectColorScore {
+			return nil, errors.Errorf("'display: %d, %s' is abnormal. Please check if the display is on. (Color scores lower than thresholds and GrayScore (%f) is higher than ColorScore (%f))", dispIndex, dispID, grayScore, expectColorScore)
 		}
 
 		// Delete this camera so we don't assign it to another display.
 		delete(camPxl, cameraDev)
-		testing.ContextLogf(ctx, "Mapping %s to Display %d, %s with score %d and color scores color:%d, grey: %d", cameraDev, dispIndex, dispID, maxScore, int(expectColorScore), int(grayScore))
+		testing.ContextLogf(ctx, "mapping %s to Display %d, %s with score %d and color scores color:%d, grey: %d", cameraDev, dispIndex, dispID, maxScore, int(expectColorScore), int(grayScore))
 		displayMappings[dispID] = cameraDev
 	}
 	return displayMappings, nil
