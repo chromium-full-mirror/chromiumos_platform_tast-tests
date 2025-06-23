@@ -1427,19 +1427,21 @@ func simpleConnectTunneled1x() []*simpleConnectParams {
 func simpleConnectPower() []*simpleConnectParams {
 	const powerFixture string = `wificell.FixtureID(wificell.TFFeaturesPower)`
 	return []*simpleConnectParams{{
-		Name:      "powern",
-		Fixture:   powerFixture,
-		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel and records power measurements."),
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:             "powern",
+		Fixture:          powerFixture,
+		Doc:              simpleConnectDocPref("an open 802.11n network on 5 GHz channel and records power measurements."),
+		ExtraAttr:        []string{"wificell_unstable"},
+		ExtraTestBedDeps: tbdep.WifiRouterModels("gale"),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)"}},
 			PingOps:   "ping.Count(100), ping.Interval(1)",
 		}},
 	}, {
-		Name:      "powerac",
-		Fixture:   powerFixture,
-		Doc:       simpleConnectDocPref("an open 802.11ac network on channel 40 with a channel width of 20MHz and records power measurements."),
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:             "powerac",
+		Fixture:          powerFixture,
+		Doc:              simpleConnectDocPref("an open 802.11ac network on channel 40 with a channel width of 20MHz and records power measurements."),
+		ExtraAttr:        []string{"wificell_unstable"},
+		ExtraTestBedDeps: tbdep.WifiRouterModels("gale"),
 		Val: []simpleConnectParamsVal{{
 			APConfigs: []apConfigVal{{APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)`}},
 			PingOps:   "ping.Count(100), ping.Interval(1)",

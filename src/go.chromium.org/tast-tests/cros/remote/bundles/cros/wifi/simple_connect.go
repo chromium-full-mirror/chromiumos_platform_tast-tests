@@ -2409,6 +2409,7 @@ func init() {
 					}},
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
+				ExtraTestBedDeps: []string{"wifi_router_models:gale"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 40 with a channel width of 20MHz and records power measurements.
 				Name:      "powerac",
@@ -2420,6 +2421,7 @@ func init() {
 					}},
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
+				ExtraTestBedDeps: []string{"wifi_router_models:gale"},
 			},
 		},
 	})
