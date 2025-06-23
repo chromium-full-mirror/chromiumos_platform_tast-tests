@@ -18,8 +18,11 @@ import (
 
 	"google.golang.org/grpc"
 
+	"go.chromium.org/chromiumos/config/go/test/api"
+	"go.chromium.org/chromiumos/infra/proto/go/satlabrpcserver"
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -51,6 +54,9 @@ const (
 	tearDownTimeout = 5 * time.Second
 	preTestTimeout  = 15 * time.Second
 	postTestTimeout = rescueTwiceTimeout
+
+	devboardContainerSuffix = "-gscdevboardsvc"
+	devboardContainerPort   = "39999"
 )
 
 func init() {
@@ -220,9 +226,12 @@ type ResultInfoTags struct {
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if hostPort, ok := s.Var(DevBoardService); ok {
 		i.hostPort = hostPort
+	} else if hostPort, err := startDevboardService(ctx, s.DUT()); err == nil {
+		testing.ContextLogf(ctx, "-var=%s= not provided, started devboard service using rpc: %s", DevBoardService, hostPort)
+		i.hostPort = hostPort
 	} else {
-		testing.ContextLogf(ctx, "-var=%s= not provided, using default: localhost:39999", DevBoardService)
-		i.hostPort = "localhost:39999"
+		testing.ContextLogf(ctx, "-var=%s= not provided, and failed to start devboard service: %v, using default: localhost:%s", DevBoardService, err, devboardContainerPort)
+		i.hostPort = "localhost:" + devboardContainerPort
 	}
 	i.v = &Value{}
 
@@ -451,6 +460,26 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
 		mustSucceed(s, board.DirectUpdate(ctx, i, imagePath), "direct updateto image")
 	}
+}
+
+// startDevboardService uses satlab_rpcservice to start the service, returns host:port.
+func startDevboardService(ctx context.Context, dut *dut.DUT) (string, error) {
+	testing.ContextLogf(ctx, "Dialing satlab rpc server: %s", testing.SatlabRPCServer)
+
+	conn, err := grpc.Dial(testing.SatlabRPCServer, grpc.WithInsecure())
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to satlab rpcserver")
+	}
+	c := satlabrpcserver.NewSatlabRpcServiceClient(conn)
+	hostInfo := strings.Split(dut.HostName(), ":")
+	containerName := hostInfo[0] + devboardContainerSuffix
+	if _, err = c.StartDevboardService(ctx, &api.StartDevboardServiceRequest{
+		ContainerName: containerName,
+		ServicePort:   devboardContainerPort,
+	}); err != nil {
+		return "", errors.Wrap(err, "failed to start devboard service")
+	}
+	return containerName + ":" + devboardContainerPort, nil
 }
 
 func (i *devboardFixture) Reset(ctx context.Context) error {
