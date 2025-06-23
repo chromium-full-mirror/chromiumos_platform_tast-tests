@@ -72,7 +72,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed"},
-		HardwareDeps: hwdep.D(hwdep.X86(), hwdep.ChromeISH()),
+		HardwareDeps: hwdep.D(hwdep.X86(), hwdep.ChromeISH(), hwdep.IshLoadedFromAP()),
 	})
 }
 
