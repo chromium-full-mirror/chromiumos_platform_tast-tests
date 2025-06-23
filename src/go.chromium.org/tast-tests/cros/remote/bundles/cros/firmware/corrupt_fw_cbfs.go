@@ -240,8 +240,8 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 		}
 
 		// Disable WP so backup can be restored.
-		if err := fwUtils.SetFWWriteProtect(ctx, h, false); err != nil {
-			s.Fatal("Failed to set FW write protect state: ", err)
+		if err := h.SetECWriteProtect(ctx, false); err != nil {
+			s.Fatal("Failed to disable FW write protect: ", err)
 		}
 
 		backupOnDut := "/tmp/fwBackup.bin"

@@ -2370,39 +2370,91 @@ func (h *Helper) PrepareKeysWithScript(ctx context.Context, opts MakeKeysOption)
 	return nil
 }
 
+// isHWWPEnabled checks the hardware write protect state via servo.
+func isHWWPEnabled(ctx context.Context, h *Helper) (bool, error) {
+	state, err := h.Servo.GetString(ctx, servo.FWWPState)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get write protect state")
+	}
+	switch servo.FWWPStateValue(state) {
+	case servo.FWWPStateOn:
+		return true, nil
+	case servo.FWWPStateOff:
+		return false, nil
+	default:
+		return false, errors.New("invalid FW WP state: " + state)
+	}
+}
+
 // SetECWriteProtect sets the EC's write protection and reboots the DUT with a cold reset.
 func (h *Helper) SetECWriteProtect(ctx context.Context, enable bool) error {
-	enableStr := "enable"
-	if !enable {
-		enableStr = "disable"
+	ms, err := NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "creating mode switcher")
+	}
 
-		testing.ContextLog(ctx, "Setting fwwpstate to off")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-			return errors.Wrap(err, "failed to set fwwpstate to off")
+	/*
+		Some ITE ECs can only clear their WP status on a power-on reset,
+		so changing HW WP requires hard ec reboot to take effect, possible cases:
+		init HW | init SW | desired | Steps
+		    0   |    0    |    0    |  Return
+		    0   |    0    |    1    |  SW on -> HW on -> Reboot -> Return
+		    0   |    1    |    0    |  SW off -> Return
+		    0   |    1    |    1    |  HW on -> Reboot -> Return
+		    1   |    0    |    0    |  HW off -> Reboot -> Return
+		    1   |    0    |    1    |  HW off -> Reboot -> SW on -> HW on -> Reboot -> Return
+		    1   |    1    |    0    |  HW off -> Reboot -> SW off -> Return
+		    1   |    1    |    1    |  Return
+		Case 6 would require 2 reboots here, but since hw and sw wp should always match,
+		and both should be disabled at test start/end, we assume they always correspond.
+		Then, we only need to consider cases 1, 2, 7, 8.
+	*/
+	initialState, err := isHWWPEnabled(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial write protect state")
+	}
+	if initialState == enable {
+		testing.ContextLogf(ctx, "WP State already %v, no action required", initialState)
+		return nil
+	} else if enable { // Need to enable WP from disabled state.
+		// Enable SW WP before hardware WP.
+		testing.ContextLog(ctx, "Setting sw wp to enable")
+		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
+			return errors.Wrap(err, "failed to set flashwp enable")
 		}
-	}
-
-	testing.ContextLogf(ctx, "Setting ec write protect to %q with ec console", enableStr)
-	if err := h.Servo.RunECCommand(ctx, fmt.Sprintf("flashwp %t", enable)); err != nil {
-		return errors.Wrap(err, "failed to enable flashwp")
-	}
-
-	if enable {
-		testing.ContextLog(ctx, "Setting fwwpstate to on")
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-			return errors.Wrap(err, "failed to set fwwpstate to on")
+			return errors.Wrap(err, "failed to enable hw write protect")
+		}
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		if err := ms.ModeAwareReboot(ctx, ColdReset, AllowGBBForce); err != nil {
+			return errors.Wrap(err, "failed to perform mode aware reboot")
+		}
+	} else { // Need to disable WP from enabled state.
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			return errors.Wrap(err, "failed to disable hw write protect")
+		}
+		// Reboot after deasserting hardware write protect pin to deactivate
+		// write protect. And then remove software write protect flag.
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		if err := ms.ModeAwareReboot(ctx, ColdReset, AllowGBBForce); err != nil {
+			return errors.Wrap(err, "failed to perform mode aware reboot")
+		}
+		// Disable SW WP after hardware WP.
+		testing.ContextLog(ctx, "Setting sw wp to disable")
+		if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
+			return errors.Wrap(err, "failed to set flashwp disable")
 		}
 	}
 
-	testing.ContextLog(ctx, "Rebooting the DUT with cold reset")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "failed to reboot the DUT with cold reset")
+	currState, err := isHWWPEnabled(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to get new write protect state")
 	}
 
-	if err := h.WaitConnect(ctx, ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT to reconnect")
+	if currState != enable {
+		return errors.Errorf("fw wp state after reboot was %v, want %v", currState, enable)
 	}
-
+	testing.ContextLog(ctx, "FW write protect state has been successfully set to ", currState)
 	return nil
 }
 

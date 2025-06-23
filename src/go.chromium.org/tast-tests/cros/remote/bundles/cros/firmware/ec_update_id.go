@@ -138,11 +138,11 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 		if servo.FWWPStateValue(initialState) == servo.FWWPStateOn {
 			setInitWP = true
 		}
-		if err := setFWWriteProtect(ctx, h, setInitWP); err != nil {
+		if err := h.SetECWriteProtect(ctx, setInitWP); err != nil {
 			s.Fatal("Failed to set FW write protect state: ", err)
 		}
 		// Disable wp so backup can be restored.
-		if err := setFWWriteProtect(ctx, h, false); err != nil {
+		if err := h.SetECWriteProtect(ctx, false); err != nil {
 			s.Fatal("Failed to set FW write protect state: ", err)
 		}
 
@@ -210,7 +210,7 @@ func testCorruptActiveSectionAndReboot(ctx context.Context, h *firmware.Helper, 
 	testing.ContextLog(ctx, "Initial active copy: ", initActiveCopy)
 
 	testing.ContextLog(ctx, "Disable write protect to allow for r/w for test")
-	if err := setFWWriteProtect(ctx, h, false); err != nil {
+	if err := h.SetECWriteProtect(ctx, false); err != nil {
 		return "", errors.Wrap(err, "failed to disable FW write protect state")
 	}
 
@@ -220,7 +220,7 @@ func testCorruptActiveSectionAndReboot(ctx context.Context, h *firmware.Helper, 
 	}
 
 	testing.ContextLog(ctx, "Reenable write protect")
-	if err := setFWWriteProtect(ctx, h, true); err != nil {
+	if err := h.SetECWriteProtect(ctx, true); err != nil {
 		return "", errors.Wrap(err, "failed to enable FW write protect state")
 	}
 
@@ -315,35 +315,6 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) (re
 	if _, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to delete temp file")
 	}
-	return nil
-}
-
-func setFWWriteProtect(ctx context.Context, h *firmware.Helper, enable bool) error {
-	enableStr := "enable"
-	fwwpState := servo.FWWPStateOn
-	if !enable {
-		enableStr = "disable"
-		fwwpState = servo.FWWPStateOff
-	}
-
-	// Enable software wp before hardware wp if enabling.
-	if enable {
-		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
-			return errors.Wrap(err, "failed to enable flashwp")
-		}
-	}
-
-	if err := h.Servo.SetFWWPState(ctx, fwwpState); err != nil {
-		return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
-	}
-
-	// Disable software wp after hardware wp so its allowed.
-	if !enable {
-		if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
-			return errors.Wrap(err, "failed to disable flashwp")
-		}
-	}
-
 	return nil
 }
 
