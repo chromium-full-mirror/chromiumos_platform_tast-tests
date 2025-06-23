@@ -1338,12 +1338,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			isPresenting = true
-			if err := googledocs.ClickOnSlidesWebArea(tconn)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click on slide's web area")
-			}
 
 			// Ensure the slides deck gets scrolled.
-			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('punch-filmstrip-scroll')[0]"); err != nil {
+			clickOnPage := googledocs.ClickOnSlidesWebArea(tconn)
+			if err := scrollDownPage(ctx, collaborationConn, kw, ui, clickOnPage, "punch-filmstrip-scroll"); err != nil {
 				return err
 			}
 			// Ensure MouseClick, LCP2 and ADF metrics are generated.
@@ -1395,12 +1393,9 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			isPresenting = true
 			expectedParticipantCount++
 
-			if err := googledocs.ClickOnSheetsWebArea(tconn)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click on sheets's web area")
-			}
-
 			// Ensure the sheets deck gets scrolled.
-			if err := scrollDownPage(ctx, collaborationConn, kw, "document.getElementsByClassName('native-scrollbar-y')[0]"); err != nil {
+			clickOnPage := googledocs.ClickOnSheetsWebArea(tconn)
+			if err := scrollDownPage(ctx, collaborationConn, kw, ui, clickOnPage, "native-scrollbar-y"); err != nil {
 				return err
 			}
 			// Ensure MouseClick, LCP2 and ADF metrics are generated.
@@ -1682,15 +1677,29 @@ func navigate(ctx context.Context, conn *chrome.Conn, cr *chrome.Chrome, url str
 	return conn.ActivateTarget(ctx)
 }
 
-// scrollDownPage scrolls down the page by pressing Down key, and checks
-// if the specified HTML element is scrolled.
-func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, element string) error {
-	testing.ContextLog(ctx, "Going through the file")
-	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Down", 50*time.Millisecond, 60); err != nil {
-		return errors.Wrap(err, `failed to repeatedly and rapidly press "Down" in between task switches`)
+// scrollDownPage clicks on the page, waits for the expected element, scrolls
+// down the page by pressing Down key, and checks if the specified HTML
+// element is scrolled.
+func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, ui *uiauto.Context,
+	clickOnPage action.Action, className string) error {
+	scrollDown := func(ctx context.Context) error {
+		element := "document.getElementsByClassName('" + className + "')[0]"
+		testing.ContextLog(ctx, "Going through the file")
+		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Down", 50*time.Millisecond, 60); err != nil {
+			return errors.Wrap(err, `failed to repeatedly and rapidly press "Down" in between task switches`)
+		}
+		if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+			return errors.Wrap(err, "failed to wait for the page to quiesce")
+		}
+		// Ensure the element gets scrolled.
+		return ensureElementGetsScrolled(ctx, conn, element)
 	}
-	// Ensure the element gets scrolled.
-	return ensureElementGetsScrolled(ctx, conn, element)
+	elementFinder := nodewith.HasClass(className).Role(role.GenericContainer)
+	return uiauto.Retry(3, uiauto.NamedCombine("scroll down page",
+		clickOnPage,
+		ui.WaitUntilExists(elementFinder),
+		scrollDown,
+	))(ctx)
 }
 
 // generateMetrics generates metrics by interacting with the page and the Ash UI.
