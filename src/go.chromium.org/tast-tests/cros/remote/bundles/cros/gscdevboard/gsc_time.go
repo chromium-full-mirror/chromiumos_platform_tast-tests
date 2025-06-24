@@ -15,6 +15,8 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var testDrift time.Duration
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCTime,
@@ -26,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -49,6 +51,12 @@ func GSCTime(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
+	// H1 rounds to the nearest second. Allow for 2s of drift.
+	if b.TestbedType == ti50.GscH1Shield {
+		testDrift = 2 * time.Second
+	} else {
+		testDrift = 1 * time.Second
+	}
 	want := testTimesNow()
 	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
@@ -56,14 +64,16 @@ func GSCTime(ctx context.Context, s *testing.State) {
 
 	want = testTimesNow()
 	i.Command(ctx, "reboot")
-	th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
+	if b.TestbedType != ti50.GscH1Shield {
+		th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
+	}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	checkTimes(ctx, s, i, want, "reboot 1")
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	s.Log("Waiting for deep sleep")
-	th.MustSucceed(i.WaitUntilDeepSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP off")
+	th.MustSucceed(b.WaitUntilDeepSleep(ctx, i, ti50.WaitForSleepTimeout), "Sleep when AP off")
 	want.deepSleep = time.Now()
 	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 is awake")
@@ -71,18 +81,23 @@ func GSCTime(ctx context.Context, s *testing.State) {
 
 	want = testTimesNow()
 	i.Command(ctx, "reboot")
-	th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
+	if b.TestbedType != ti50.GscH1Shield {
+		th.MustSucceed(i.WaitUntilRoBoot(ctx, time.Second), "console reboot")
+	}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	checkTimes(ctx, s, i, want, "reboot 2")
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
 	s.Log("Waiting for normal sleep")
-	th.MustSucceed(i.WaitUntilNormalSleep(ctx, ti50.WaitForSleepTimeout), "Sleep when AP on")
+	th.MustSucceed(b.WaitUntilNormalSleep(ctx, i, ti50.WaitForSleepTimeout), "Sleep when AP on")
 	b.GpioApplyStrap(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 is awake")
 	checkTimes(ctx, s, i, want, "normal sleep")
 
+	if b.TestbedType == ti50.GscH1Shield {
+		return
+	}
 	// Push all GSC reset keys
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, false)
@@ -113,9 +128,9 @@ func checkTimes(ctx context.Context, s *testing.State, i *ti50.CrOSImage, want t
 func checkTime(ctx context.Context, s *testing.State, got, want time.Duration, label string) {
 	want = want.Round(time.Millisecond)
 	err := want - got
-	msg := fmt.Sprintf("%s: got %s, want %s, err %s", label, got, want, err)
+	msg := fmt.Sprintf("%s: got %s, want %s+-%s, err %s", label, got, want, testDrift, err)
 	s.Log(msg)
-	if err.Abs() > time.Second {
+	if err.Abs() > testDrift {
 		s.Error(msg)
 	}
 }
