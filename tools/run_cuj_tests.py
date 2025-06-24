@@ -258,6 +258,38 @@ def upload_local_directory_to_gcs(
             )
 
 
+def _create_structured_test_id_dict(test_name):
+  """Fills in fields for the structured_test_dict.
+
+  Args:
+    test_name: A string of the test_name.
+
+  Returns:
+    A dictionary containing strucuted test id fields.
+  """
+  struct_test_dict = {
+      'coarseName': '',
+      'fineName': '',
+      'caseNameComponents': [''],
+  }
+  # test_names are expected to take the form:
+  #    tast.network.DNSProxy.arc_doh_off
+  #    tast.network.DNSProxy
+  #    network.DNSProxy.arc_doh_off
+  #    network.DNSProxy
+  test_name = test_name.removeprefix('tast.')
+  test_split = test_name.split('.', 1)
+  if len(test_split) == 2:
+    struct_test_dict['fineName'] = test_split[0]
+    struct_test_dict['caseNameComponents'] = [test_split[1]]
+  else:
+    logging.error(
+        'test_name: %s, did not match known format, so could not be parsed.',
+        test_name)
+
+  return struct_test_dict
+
+
 def upload_artifacts_to_resultdb(
     local_directory_path: Path, experiment_id: str, label: str = ""
 ) -> None:
@@ -318,11 +350,12 @@ def upload_artifacts_to_resultdb(
                 }
 
             tr = {
-                "testId": test_id,
+                "testId": test_name,
                 "status": "PASS",
                 "expected": True,
                 "summaryHtml": '<p><text-artifact artifact-id="log.txt"></p>',
                 "startTime": start_time,
+                "testIdStructured": _create_structured_test_id_dict(test_name),
                 "testMetadata": {
                     "name": test_name,
                 },
