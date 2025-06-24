@@ -11,7 +11,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
@@ -38,7 +37,8 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      60 * time.Minute,
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO(b/156552219): Add "group:firmware_pd_unstable" tag once the test passes.
 		// TODO(b/156552219): Add "group:firmware_pd" tag once the test is stable.
 		Attr: []string{"group:firmware"},

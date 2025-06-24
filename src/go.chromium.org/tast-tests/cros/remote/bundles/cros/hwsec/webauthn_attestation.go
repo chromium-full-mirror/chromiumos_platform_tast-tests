@@ -53,6 +53,8 @@ func init() {
 			Val: webauthnAttestationParam{
 				isSimulator: false,
 			},
+			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+			// ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
@@ -60,9 +62,9 @@ func init() {
 			Val: webauthnAttestationParam{
 				isSimulator: true,
 			},
+			ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
 		}},
-		Vars:        []string{"servo"},
-		TestBedDeps: []string{tbdep.ServoStateWorking},
+		Vars: []string{"servo"},
 	})
 }
 

@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,7 +27,8 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bringup"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 	})
 }
 

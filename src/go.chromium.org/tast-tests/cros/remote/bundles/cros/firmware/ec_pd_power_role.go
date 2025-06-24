@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -32,8 +31,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr: []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{

@@ -15,7 +15,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -39,12 +38,13 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
-		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
-		Data:         []string{kernelDataKeyVerMakekeyFile, kernelDataKeyVerCommonFile},
-		Fixture:      fixture.DevModeGBB,
-		Timeout:      30 * time.Minute,
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr:        []string{"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		ServiceDeps: []string{"tast.cros.firmware.KernelService"},
+		Data:        []string{kernelDataKeyVerMakekeyFile, kernelDataKeyVerCommonFile},
+		Fixture:     fixture.DevModeGBB,
+		Timeout:     30 * time.Minute,
 	})
 }
 

@@ -47,7 +47,8 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},

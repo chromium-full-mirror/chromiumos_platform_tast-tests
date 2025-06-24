@@ -14,7 +14,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 
@@ -44,9 +43,10 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		// 10 minutes for the test, 21 minutes for cleanup.
-		Timeout:     31 * time.Minute,
-		Vars:        []string{"servo"},
-		TestBedDeps: []string{tbdep.ServoStateWorking},
+		Timeout: 31 * time.Minute,
+		Vars:    []string{"servo"},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps: []string{tbdep.ServoStateWorking},
 	})
 }
 

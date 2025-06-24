@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/cros/metrics"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -161,10 +160,11 @@ func init() {
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
 		}, {
-			Name:             "fw_qual",
-			ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
-			ExtraAttr:        []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
-			Fixture:          fixture.NormalMode,
+			Name: "fw_qual",
+			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+			// ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
+			ExtraAttr: []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
+			Fixture:   fixture.NormalMode,
 			Val: testArgsForSuspendPerf{
 				numSuspend:    5,
 				benchMarkEval: true,

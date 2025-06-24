@@ -7,7 +7,6 @@ package firmware
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -24,7 +23,8 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup", "firmware_stressed", "firmware_meets_kpi", "firmware_enabled", "firmware_ec_ro", "firmware_ec_rw"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }

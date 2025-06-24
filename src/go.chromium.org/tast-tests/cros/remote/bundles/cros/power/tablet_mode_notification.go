@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -30,9 +29,10 @@ func init() {
 		Contacts:     []string{"chromeos-power-team@google.com", "timvp@google.com", "cros-fw-engprod@google.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
-		Timeout:      5 * time.Minute,
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr:    []string{"group:mainline", "informational", "group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
+		Timeout: 5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(),
 			hwdep.SkipOnModel(

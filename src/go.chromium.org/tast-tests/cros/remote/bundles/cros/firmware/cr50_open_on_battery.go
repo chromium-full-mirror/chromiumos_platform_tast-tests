@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,7 +30,8 @@ func init() {
 		Desc:         "Verify opening Cr50 for DUTs that have battery",
 		Contacts:     []string{"chromeos-faft@google.com", "tj@semihalf.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO: When stable, change firmware_unstable to a different attr.
 		// TODO(b/194908238): This test never passes, when it does add firmware_unstable for stability testing.
 		Attr:         []string{"group:firmware"},

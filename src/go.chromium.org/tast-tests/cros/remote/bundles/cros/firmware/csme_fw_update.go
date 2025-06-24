@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/chromiumos/config/go/api"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -29,11 +28,12 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
-		Vars:         []string{"firmware_branch", "ro_versions"},
-		Data:         []string{"shipped-firmwares.json"},
-		Timeout:      10 * time.Minute,
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr:    []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		Vars:    []string{"firmware_branch", "ro_versions"},
+		Data:    []string{"shipped-firmwares.json"},
+		Timeout: 10 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "normal",

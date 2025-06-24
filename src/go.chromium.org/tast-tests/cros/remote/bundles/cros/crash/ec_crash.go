@@ -15,7 +15,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
@@ -39,11 +38,12 @@ func init() {
 			"troywang@google.com",
 		},
 		BugComponent: "b:167114",
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
-		Timeout:      10 * time.Minute,
-		Fixture:      fixture.NormalMode,
-		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
+		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
+		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		Attr:        []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
+		Timeout:     10 * time.Minute,
+		Fixture:     fixture.NormalMode,
+		ServiceDeps: []string{"tast.cros.crash.FixtureService"},
 		// no_qemu because the servo is not available in VMs, and tast does
 		// not (yet) support skipping tests if required vars are not provided.
 		// TODO(crbug.com/967901): Remove no_qemu dep once servo var is sufficient.
