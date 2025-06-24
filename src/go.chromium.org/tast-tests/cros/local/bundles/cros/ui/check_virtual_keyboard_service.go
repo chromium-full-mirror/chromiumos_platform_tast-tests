@@ -188,12 +188,9 @@ func (cvk *CheckVirtualKeyboardService) ClickSearchBar(ctx context.Context, req 
 			return &empty.Empty{}, err
 		}
 	} else {
-		tc, err := touch.New(ctx, tconn)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create the touch context instance")
-		}
-		if err := tc.Tap(searchBarNode)(ctx); err != nil {
-			return nil, errors.Wrap(err, "could not tap the search bar")
+		cvk.uia = uiauto.New(tconn)
+		if err := cvk.uia.LeftClick(searchBarNode)(ctx); err != nil {
+			return &empty.Empty{}, err
 		}
 	}
 	return &empty.Empty{}, nil
