@@ -399,7 +399,7 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 
 	// Start with nissa only, and update the list as we enable the attribute on more boards. When
 	// all boards include the property, the board check can be removed.
-	var variantDlcAttributeShouldExistOnBoard = (board == "nissa" || board == "skywalker")
+	var variantDlcAttributeShouldExistOnBoard = (board == "corsola" || board == "guybrush" || board == "nissa" || board == "skywalker")
 	// Until we move to crosworkon ebuilds, some DLCs in other boards will use a cached version
 	// of the package which does not have the DLC attribute `modem`, so skip this check on them.
 	if variantDlcAttributeShouldExistOnBoard {
