@@ -1959,5 +1959,6 @@ func PlaybackStress(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+	graphics.DisableSysLogCheck(s.TestName(), graphics.SysLogKernelSplats)
 	playback.RunTest(ctx, s, tconn, testOpt)
 }
