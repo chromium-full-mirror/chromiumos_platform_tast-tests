@@ -91,7 +91,8 @@ func (ms *Ms365) ChooseSearchEngine() uiauto.Action {
 
 // InputUserName waits for the Microsoft sign in window and input the username.
 func (ms *Ms365) InputUserName(userName string) uiauto.Action {
-	msSignInWindow := nodewith.Role(role.RootWebArea).Name("Sign in to your account").First()
+	focusedView := nodewith.Role(role.WebView).Focused()
+	msSignInWindow := nodewith.Ancestor(focusedView).Role(role.RootWebArea).Name("Sign in to your account")
 	usernameInput := nodewith.Ancestor(msSignInWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(email|someone@example.com).*"))
 
 	return uiauto.Combine("MS SignIn",
