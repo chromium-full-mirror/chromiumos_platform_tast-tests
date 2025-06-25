@@ -9,12 +9,15 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -83,6 +86,20 @@ func init() {
 			pci.SearchFlag(&policy.MicrosoftOfficeCloudUpload{}, pci.Served),
 		},
 	})
+}
+
+// closeMicrosoftOneDriveWindow finds the Microsoft OneDrive app window and
+// close it.
+func closeMicrosoftOneDriveWindow(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) error {
+		w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+			return strings.Contains(w.Title, "Microsoft 365") && strings.Contains(w.Title, "OneDrive") && w.WindowType != ash.WindowTypeBrowser
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to find the MS365 OneDrive window to close")
+		}
+		return w.CloseWindow(ctx, tconn)
+	}
 }
 
 // maybeDismissOneDriveAd will close any potential ad which might pop up when the user opens their files in OneDrive.
@@ -244,18 +261,33 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Microsoft 365: ", err)
 	}
 
-	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365").ClassName("BrowserFrame")
+	// All PWA windows (e.g. PowerPoint, OneDrive) match "Microsoft 365" title,
+	// we just want the one which has "Apps" button, hence "First()" here.
+	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365").ClassName("BrowserFrame").First()
 	m365Context := nodewith.Role(role.RootWebArea).NameContaining("Microsoft 365").Ancestor(m365Window)
-	appsButton := nodewith.Role(role.ToggleButton).NameContaining("Apps").Ancestor(m365Context).First()
+	appsButtonRole := role.ToggleButton
+	if !param.isConsumerMicrosoft {
+		appsButtonRole = role.Button
+	}
+	appsButton := nodewith.Role(appsButtonRole).NameContaining("Apps").Ancestor(m365Context).First()
 	powerPointLink := nodewith.Role(role.Link).NameContaining("PowerPoint").Ancestor(m365Context).Focusable()
-	newPresentationLink := nodewith.Role(role.Link).NameContaining("blank presentation").Focusable().Ancestor(m365Context)
+	powerPointWindow := nodewith.Role(role.Window).NameContaining("PowerPoint").ClassName("BrowserFrame")
+	powerPointContext := nodewith.Role(role.RootWebArea).NameContaining("PowerPoint").Ancestor(powerPointWindow)
+	newPresentationLink := nodewith.Role(role.Button).NameContaining("blank presentation").Focusable().Ancestor(powerPointContext)
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	if err := uiauto.Combine("Create a new PowerPoint presentation in M365",
 		ui.WaitUntilExists(appsButton),
 		ui.DoDefaultUntil(appsButton, ui.Exists(powerPointLink)),
-		ui.DoDefaultUntil(powerPointLink, ui.Exists(newPresentationLink)),
-		ui.DoDefault(newPresentationLink),
+		// A new PWA window will open after clicking the `powerPointLink`, we keep
+		// clicking it until the current window loses focus, to avoid opening
+		// multiple windows.
+		ui.DoDefaultUntil(powerPointLink, ui.Gone(m365Context.Focused())),
+		ui.WaitUntilExists(newPresentationLink),
+		// Click the "create blank presentation" button will change the text to
+		// "creating presentation", so we use the lost of the original button as a
+		// signal to avoid creating multiple files.
+		ui.DoDefaultUntil(newPresentationLink, ui.Gone(newPresentationLink)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new PowerPoint presentation from M365: ", err)
 	}
@@ -296,13 +328,31 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	oneDriveButton := nodewith.Role(role.Link).NameContaining("OneDrive").Ancestor(m365Context).Focusable().First()
 	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(oneDriveUIAncestor)
 	fileNameButton := nodewith.Role(role.StaticText).Name(fileName).Ancestor(oneDriveUIAncestor)
-	// Open OneDrive tab twice as it's sometimes empty on the first try.
 	if err := uiauto.Combine("Open my files in OneDrive",
 		ui.WaitUntilExists(appsButton),
-		ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
-		ui.DoDefaultUntil(oneDriveButton, ui.Exists(appsButton)),
-		ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
-		ui.DoDefault(oneDriveButton),
+		// Open OneDrive tab twice as it's sometimes empty on the first try.
+		func(ctx context.Context) error {
+			if param.isConsumerMicrosoft {
+				return uiauto.Combine("in Consumer mode",
+					ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
+					// A new PWA window will open after clicking the `oneDriveButton`, we
+					// keep clicking it until the current window loses focus, to avoid
+					// opening multiple windows.
+					ui.DoDefaultUntil(oneDriveButton, ui.Gone(m365Context.Focused())),
+					ui.WaitUntilExists(oneDriveUIAncestor),
+					closeMicrosoftOneDriveWindow(tconn),
+					ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
+					ui.DoDefault(oneDriveButton),
+				)(ctx)
+			}
+			return uiauto.Combine("in Commerial mode",
+				// No new PWA window is opened after clicking the `oneDriveButton` here.
+				ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
+				ui.DoDefaultUntil(oneDriveButton, ui.Exists(appsButton)),
+				ui.DoDefaultUntil(appsButton, ui.Exists(oneDriveButton)),
+				ui.DoDefault(oneDriveButton),
+			)(ctx)
+		},
 		maybeDismissOneDriveAd(ui, oneDriveUIAncestor),
 		ui.WaitUntilExists(myFilesButton),
 		ui.DoDefault(myFilesButton),
