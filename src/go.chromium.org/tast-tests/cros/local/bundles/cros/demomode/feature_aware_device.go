@@ -25,10 +25,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBESkipResourcesComponentProd,
-		Attr:         []string{
-			// Disabled by TORA.  See:b/329013560.
-			// "group:cbx", "cbx_feature_enabled", "cbx_unstable"
-		},
+		Attr:         []string{"group:demo-mode", "group:cbx", "cbx_feature_enabled", "cbx_unstable"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
