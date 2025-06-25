@@ -110,8 +110,6 @@ type CooldownConfig struct {
 	UseFan bool
 	// If provided, cooldown to a thermal steady state.
 	SteadyStateConfig *ThermalSteadyStateConfig
-	// If provided, cooldown to idle temperature.
-	IdleTempConfig *cpu.CoolDownConfig
 	// Wait for CPU usage to idle.
 	CPUIdle bool
 	// Wait for CPU package state to idle.
@@ -131,7 +129,6 @@ type cooldownProcedureID string
 // These constants represent different cooldown procedures.
 const (
 	waitForThermalSteadyState cooldownProcedureID = "cooldown_thermal"
-	waitForIdleTemperature    cooldownProcedureID = "cooldown_idle_temperature"
 	waitForCPUIdle            cooldownProcedureID = "cooldown_cpu_usage"
 	waitForPackageStateIdle   cooldownProcedureID = "cooldown_cpu_pkg"
 	waitForIOCooldown         cooldownProcedureID = "cooldown_io"
@@ -188,16 +185,6 @@ func afterThermalSteadyState(ctx context.Context, cfg CooldownConfig) <-chan err
 	})
 }
 
-func afterIdleTemperature(ctx context.Context, cfg CooldownConfig) <-chan error {
-	return async(ctx, func(ctx context.Context) error {
-		if cfg.IdleTempConfig == nil {
-			return nil
-		}
-		_, err := cpu.WaitUntilCoolDown(ctx, *cfg.IdleTempConfig)
-		return err
-	})
-}
-
 // ConfigurableCooldown cools down device as specified by the CooldownConfig.
 //
 // To skip cooldown for debugging, use
@@ -223,7 +210,6 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (_ []cooldown
 	// All cooldowns are included, execution depends on cooldownConfig.
 	cooldowns := []cooldownEntry{
 		{waitForThermalSteadyState, afterThermalSteadyState},
-		{waitForIdleTemperature, afterIdleTemperature},
 		{waitForCPUIdle, afterCPUIdle},
 		{waitForPackageStateIdle, afterPackageStateIdle},
 		{waitForIOCooldown, afterIOCooldown},
@@ -242,12 +228,8 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (_ []cooldown
 			}
 		}
 
-		// No idle temperature is specified, so this item will not wait additionally.
-		// Therefore, no record required.
-		if cooldowns[i].id != waitForIdleTemperature {
-			// The duration should be recorded even if the device cooldown fails.
-			results = append(results, cooldownDuration{cooldowns[i].id, time.Since(st)})
-		}
+		// The duration should be recorded even if the device cooldown fails.
+		results = append(results, cooldownDuration{cooldowns[i].id, time.Since(st)})
 		if err != nil {
 			return results, err
 		}
