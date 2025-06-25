@@ -122,6 +122,18 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Error("Data role swap failed: ", err)
 	}
 
+	// Reset the servo's power role.
+	if err := h.Servo.ServoCcOff(ctx); err != nil {
+		s.Error("Cannot force CC off on Servo: ", err)
+	}
+
+	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
+		s.Error("Failed to set pd role: ", err)
+	}
+	if err := h.Servo.SetPDCommunication(ctx, servo.On); err != nil {
+		s.Error("Failed to enable pd comms: ", err)
+	}
+
 	if testParams.Shutdown {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
