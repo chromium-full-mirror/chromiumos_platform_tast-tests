@@ -19,7 +19,7 @@ const (
 	// Old GSC versions for each chip type.
 	oldH1ImageVersion = "0.3.22"
 	oldDTImageVersion = "0.21.1"
-	oldOTImageVersion = "0.36.3"
+	oldOTImageVersion = "0.33.170"
 	// Error 8 means the image is older than the one running.
 	errOldImage = "(Error: status 0x8|Error 8)"
 	// Upstart updates skip the update with "nothing to do"

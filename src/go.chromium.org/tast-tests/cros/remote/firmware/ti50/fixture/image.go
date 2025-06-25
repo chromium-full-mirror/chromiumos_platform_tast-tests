@@ -93,8 +93,8 @@ const (
 	cr50Release          = "cr50.r0.0.*.w%s.tbz2"
 	cr50BIDLockedRelease = "cr50.r0.0.*.w%s_%s_%08x_%08x.tbz2"
 	// Ti50 changed formats. This works with old and new versions.
-	ti50Release          = "ti50.r*w*%s.tar.xz"
-	ti50BIDLockedRelease = "ti50.r*w*%s_%s_%08x_%08x.tar.xz"
+	ti50Release          = "ti50*.r*w*%s.tar.xz"
+	ti50BIDLockedRelease = "ti50*.r*w*%s_%s_%08x_%08x.tar.xz"
 )
 
 // ImageType declarations, please update AllTi50ImageTypes() after editing.
@@ -124,7 +124,7 @@ var (
 	// reBIDLockedQualVersion extracts relevant contents of qual files.
 	reBIDLockedQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):(.*)`)
 	// reGSCReleaseTarball extracts the firmware name from the tarball filename.
-	reGSCReleaseTarball = regexp.MustCompile(`(cr50|ti50).*(tar.xz|tbz2)`)
+	reGSCReleaseTarball = regexp.MustCompile(`(cr50|ti50-nt|ti50).*(tar.xz|tbz2)`)
 
 	// reTestbedTypeParts extracts relevant parts of the testbed type string.
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)

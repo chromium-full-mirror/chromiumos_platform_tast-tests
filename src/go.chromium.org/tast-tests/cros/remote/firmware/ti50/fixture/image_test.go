@@ -73,15 +73,15 @@ func TestQualVersionToGsGlob3(t *testing.T) {
 }
 
 func TestQualVersionToGsGlob4(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.23.81", "ti50.r*w*0.23.81.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.23.81", "ti50*.r*w*0.23.81.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob5(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.23.81/", "ti50.r*w*0.23.81.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.23.81/", "ti50*.r*w*0.23.81.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob6(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.24.81/FFFF:0x00000010:0x10", "ti50.r*w*0.24.81_FFFF_00000010_00000010.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.24.81/FFFF:0x00000010:0x10", "ti50*.r*w*0.24.81_FFFF_00000010_00000010.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob7(t *testing.T) {
