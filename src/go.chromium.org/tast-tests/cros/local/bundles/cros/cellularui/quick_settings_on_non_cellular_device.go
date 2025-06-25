@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.NoCellular()),
-		Attr:         []string{"group:wificell", "wificell_e2e"},
+		Attr:         []string{"group:wificell_network_cellular", "group:wificell", "wificell_e2e"},
 	})
 }
 

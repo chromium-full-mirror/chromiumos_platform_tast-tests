@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
+		Attr:           []string{"group:wificell_network_cellular", "group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
