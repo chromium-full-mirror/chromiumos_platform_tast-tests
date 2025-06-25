@@ -31,23 +31,24 @@ func init() {
 		Timeout:      20 * time.Minute,
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr: []string{"group:firmware", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
+		Attr: []string{"group:firmware"},
 		Params: []testing.Param{{
 			Name:      "normal",
-			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				NumIterations: 1,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
-			Name: "normal_stress",
+			Name:      "normal_stress",
+			ExtraAttr: []string{"firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				NumIterations: 20,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
 			Name:      "flipcc",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 1,
@@ -55,7 +56,7 @@ func init() {
 			},
 		}, {
 			Name:      "flipcc_stress",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				NumIterations: 20,
@@ -63,27 +64,52 @@ func init() {
 			},
 		}, {
 			Name:      "dts",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 1,
 			},
 		}, {
-			Name: "dts_stress",
+			Name:              "dts_stress",
+			ExtraAttr:         []string{"firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360")),
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 20,
 			},
 		}, {
 			Name:      "flipcc_dts",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 1,
 			},
 		}, {
-			Name: "flipcc_dts_stress",
+			Name:              "flipcc_dts_stress",
+			ExtraAttr:         []string{"firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360")),
+			Val: firmware.PDTestParams{
+				CC:            firmware.CCPolarityFlipped,
+				DTS:           firmware.DTSModeOn,
+				NumIterations: 20,
+			},
+		}, {
+			// Put boards that are flaky with the stress tests onto faft_unstable for testing
+			// TODO(b/427788587): modify tests such that they are stable on low-end devices and put them back on faft_pd
+			Name:              "dts_stress_unstable",
+			ExtraAttr:         []string{"firmware_pd_unstable"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360")),
+			Val: firmware.PDTestParams{
+				DTS:           firmware.DTSModeOn,
+				NumIterations: 20,
+			},
+		}, {
+			// Put boards that are flaky with the stress tests onto faft_unstable for testing
+			// TODO(b/427788587): modify tests such that they are stable on low-end devices and put them back on faft_pd
+			Name:              "flipcc_dts_stress_unstable",
+			ExtraAttr:         []string{"firmware_pd_unstable"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360")),
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
@@ -91,7 +117,7 @@ func init() {
 			},
 		}, {
 			Name:      "shutdown",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				Shutdown:      true,
 				NumIterations: 1,
@@ -99,7 +125,7 @@ func init() {
 			},
 		}, {
 			Name:      "suspend",
-			ExtraAttr: []string{"firmware_meets_kpi"},
+			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				Suspend:       true,
 				NumIterations: 1,
