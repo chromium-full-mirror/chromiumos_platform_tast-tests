@@ -60,6 +60,8 @@ const (
 const (
 	// DefaultCertProfile is the default cert profile we use when tesing.
 	DefaultCertProfile apb.CertificateProfile = apb.CertificateProfile_ENTERPRISE_USER_CERTIFICATE
+	// SoftBindCertProfile is a cert profile for software binding.
+	SoftBindCertProfile apb.CertificateProfile = apb.CertificateProfile_SOFT_BIND_CERTIFICATE
 	// DefaultCertOrigin is the default value of the certificate origin.
 	DefaultCertOrigin string = ""
 	// DefaultCertLabel is the default label to identify the cert.

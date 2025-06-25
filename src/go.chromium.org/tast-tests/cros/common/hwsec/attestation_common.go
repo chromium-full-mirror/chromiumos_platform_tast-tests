@@ -229,9 +229,10 @@ func (at *AttestationTest) Enroll(ctx context.Context) error {
 	return nil
 }
 
-// GetCertificate creates the cert request, sends it to the corresponding PCA server, and finishes the request with the received response.
-func (at *AttestationTest) GetCertificate(ctx context.Context, username, label string) error {
-	req, err := at.ac.CreateCertRequest(ctx, DefaultPCA, DefaultCertProfile, username, DefaultCertOrigin)
+// GetCertificateWithProfile creates the cert request with the specified profile, sends it to the corresponding PCA server,
+// and finishes the request with the received response.
+func (at *AttestationTest) GetCertificateWithProfile(ctx context.Context, profile apb.CertificateProfile, username, label string) error {
+	req, err := at.ac.CreateCertRequest(ctx, DefaultPCA, profile, username, DefaultCertOrigin)
 	if err != nil {
 		return errors.Wrap(err, "failed to create certificate request")
 	}
@@ -247,6 +248,11 @@ func (at *AttestationTest) GetCertificate(ctx context.Context, username, label s
 		return errors.Wrap(err, "failed to finish cert request")
 	}
 	return nil
+}
+
+// GetCertificate creates the cert request, sends it to the corresponding PCA server, and finishes the request with the received response.
+func (at *AttestationTest) GetCertificate(ctx context.Context, username, label string) error {
+	return at.GetCertificateWithProfile(ctx, DefaultCertProfile, username, label)
 }
 
 func getDecodedVAChallenge(ctx context.Context, retryCount int) ([]byte, error) {

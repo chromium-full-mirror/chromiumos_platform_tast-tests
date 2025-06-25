@@ -43,6 +43,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/diagnostics"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/dlp"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/documentscanapi"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/dpanel"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/example"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/factory"
