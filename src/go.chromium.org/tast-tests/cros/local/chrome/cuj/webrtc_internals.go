@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/errors"
@@ -59,7 +60,7 @@ func ExpandCreateDumpSection(ctx context.Context, tconn *chrome.TestConn) error 
 // DumpWebRTCInternals downloads a dump from chrome://webrtc-internals and
 // returns the file path. This function assumes that chrome://webrtc-internals
 // is already shown, with the Create Dump section expanded.
-func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, username string) (dumpFilePath string, err error) {
+func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, conn *chrome.Conn, username string) (dumpFilePath string, err error) {
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, username)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get Downloads path")
@@ -114,6 +115,12 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+			if err := conn.Eval(ctx, "location.reload()", nil); err != nil {
+				return errors.Wrap(err, "failed to reload the webrtc-internals page")
+			}
+			if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+				testing.ContextLog(ctx, "Failed to wait for the webrtc-internals page to quiesce: ", err)
+			}
 			return errors.Wrap(err, "failed to find webrtc dump file in Downloads folder")
 		}
 		testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))

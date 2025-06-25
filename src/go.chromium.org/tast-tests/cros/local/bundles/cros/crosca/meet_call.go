@@ -621,7 +621,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	}
 	// Report info from chrome://webrtc-internals.
 	webRTCUI := ui.WithTimeout(3 * time.Minute)
-	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
+	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, webRTCUI, webrtcInternals, cr.NormalizedUser()); err != nil {
 		s.Error("Failed to download dump from chrome://webrtc-internals: ", err)
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.

@@ -1479,7 +1479,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 
 	// Report info from chrome://webrtc-internals.
-	path, err := cuj.DumpWebRTCInternals(ctx, tconn, ui, cr.NormalizedUser())
+	path, err := cuj.DumpWebRTCInternals(ctx, tconn, ui, webrtcInternals, cr.NormalizedUser())
 	if err != nil {
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.
