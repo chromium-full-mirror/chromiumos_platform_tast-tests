@@ -38,7 +38,6 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"informational",
-			"group:criticalstaging",
 		},
 		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
 		Timeout:         devicePlaybackRecordTimeout,
