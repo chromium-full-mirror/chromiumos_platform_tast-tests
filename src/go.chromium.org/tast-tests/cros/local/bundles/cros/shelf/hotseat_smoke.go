@@ -35,8 +35,14 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-a64ba692-0294-456d-a714-5c4226b9c93c",
 		}},
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("magister")),
-		Pre:          chrome.LoggedIn(),
+		HardwareDeps: hwdep.D(
+			hwdep.InternalDisplay(),
+			hwdep.SkipOnModel(
+				"magister",
+				"meliks", "bugzzy", "wugtrio", // Workaround for b/418244720.
+			),
+		),
+		Pre: chrome.LoggedIn(),
 	})
 }
 
