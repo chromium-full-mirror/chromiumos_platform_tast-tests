@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Check that the Device, when powered on while connected to the DUT and after undergoing Suspend/Resume, has its filesystems, FileManager, and ARC++ Application working as expected",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_storage",
@@ -85,7 +85,7 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	before, err := utils.GetUSBDevice(ctx, dut)
+	before, err := utils.GetUSBStorageDeviceCount(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
@@ -156,7 +156,7 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 	}
 
 	// Expect number of USB devices is not less than number of input parameters.
-	if err := utils.VerifyUSBDeviceConnectionChangeCount(ctx, dut, len(before), 1); err != nil {
+	if err := utils.VerifyUSBStorageDeviceConnectionChangeCount(ctx, dut, before, 1); err != nil {
 		s.Fatal("Failed to match the expected number of USB devices after resume: ", err)
 	}
 

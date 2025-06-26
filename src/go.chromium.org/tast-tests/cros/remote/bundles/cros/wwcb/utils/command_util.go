@@ -117,6 +117,38 @@ func VerifyDisplayCount(ctx context.Context, dut *dut.DUT, timeout time.Duration
 	}, &testing.PollOptions{Timeout: timeout, Interval: pollInterval})
 }
 
+// GetUSBStorageDeviceCount retrieves USB storage devices info from lshow command.
+func GetUSBStorageDeviceCount(ctx context.Context, dut *dut.DUT) (int, error) {
+	// Allow grep to fail by using || since it will raise an error on no match.
+	const command = "lshw -businfo -class STORAGE | grep usb || true"
+	info, err := dut.Conn().CommandContext(ctx, "sh", "-c", command).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrap(err, "get storage device info")
+	}
+	count := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(info)), "\n") {
+		if line != "" {
+			count++
+		}
+	}
+	return count, nil
+}
+
+// VerifyUSBStorageDeviceConnectionChangeCount Verifies the count of USB devices after a connection change.
+func VerifyUSBStorageDeviceConnectionChangeCount(ctx context.Context, dut *dut.DUT, before, expectedCount int) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		after, err := GetUSBStorageDeviceCount(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "get USB storage devices")
+		}
+		if (after - before) != expectedCount {
+			return errors.Wrapf(err, "unexpected change in the number of usb storage devices detected; expect: %d, actual: %d (from %d to %d)",
+				expectedCount, (after - before), before, after)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: pollInterval})
+}
+
 // GetUSBDevice retrieves USB devices info from lsusb command.
 func GetUSBDevice(ctx context.Context, dut *dut.DUT) ([]string, error) {
 	lsusbInfo, err := dut.Conn().CommandContext(ctx, "lsusb").Output(testexec.DumpLogOnError)
