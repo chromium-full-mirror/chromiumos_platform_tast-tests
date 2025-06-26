@@ -8,6 +8,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +26,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 	"gopkg.in/yaml.v2"
@@ -108,6 +112,12 @@ const minChargePercent = 30
 // FWAutoupdate expects the DUT to have the released RO/RW installed on the DUT as a precondition (--mode=recovery),
 // then it will autoupdate to the version under test which is provided in the command line vars.
 // Next it will attempt to downgrade back to the prior version.
+// The command line flags accept any of:
+// - a gs:// path to a directory of model tar files (gs://firmware-image-archive/firmware-rex-15709.B/15709.234.0/)
+// - a gs:// path to a large board tar file (gs://chromeos-image-archive/firmware-rex-15709.B-branch/R122-15709.234.0-1-8717810714641823665/rex/firmware_from_source.tar.bz2)
+// - a local path to a model tar file (karis.15709.234.0.tar.bz2 or FIXME.tbz2)
+// - a local path to a large board tar file (15709.234.0.tar.bz2) WARNING the large board tar file from zephyr builds might pick the wrong ec binary.
+// - a local path to a image.bin file.
 func FWAutoupdate(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireConfig(ctx); err != nil {
@@ -193,6 +203,146 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 
 	s.Logf("Found the FW targets: %s", fwTargets.String())
 
+	tryUntarFiles := func(ctx context.Context, archivePath, outputDir string, candidateFilenames, extraFilenames []string) (string, error) {
+		// Run a single tar command to extract all the files, and then see which ones got extracted.
+		// Running tar multiple times is very very slow.
+		args := append([]string{
+			"-x", "-j", "-f", archivePath, "-C", outputDir,
+		}, candidateFilenames...)
+		args = append(args, extraFilenames...)
+		testing.ContextLog(ctx, "Trying to extract files from local archive: tar ", args)
+		out, tarErr := exec.CommandContext(ctx, "tar", args...).CombinedOutput()
+		for _, filename := range candidateFilenames {
+			binFile := path.Join(outputDir, filename)
+			if _, err = os.Stat(binFile); err == nil {
+				testing.ContextLog(ctx, "Found ", filename)
+				return binFile, nil
+			}
+		}
+		return "", errors.Wrapf(tarErr, "none of %v found in %q: %s", candidateFilenames, archivePath, string(out))
+	}
+
+	extractAPFirmwareImage := func(ctx context.Context, artifactUrl, destFile string) error {
+		if strings.HasPrefix(artifactUrl, "gs://") {
+			_, err := h.RPCUtils.ExtractAPFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
+				PreferredDevserver: s.CloudStorage().Devservers(),
+				BackupDevserver:    redirectedDevServers,
+				Dest:               destFile,
+				Url:                artifactUrl,
+				BuildTargets:       fwTargets,
+				Board:              h.Board,
+				Model:              h.Model,
+			})
+			if err != nil {
+				return errors.Wrap(err, "RPCUtils.ExtractAPFirmwareImage failed")
+			}
+			return nil
+		}
+		if _, err := os.Stat(artifactUrl); err != nil {
+			return errors.Wrapf(err, "failed to stat %q", artifactUrl)
+		}
+		if strings.HasSuffix(artifactUrl, ".tar.bz2") || strings.HasSuffix(artifactUrl, ".tbz2") {
+			tempDir, err := os.MkdirTemp("", "firmware-extract-*")
+			if err != nil {
+				return errors.Wrap(err, "failed to create tmp dir")
+			}
+			defer os.RemoveAll(tempDir)
+
+			var filenames []string
+			if fwTargets.CorebootName != "" {
+				filenames = append(filenames, fmt.Sprintf("image-%v.bin", fwTargets.CorebootName))
+			}
+			if h.Model != "" {
+				filenames = append(filenames, fmt.Sprintf("image-%v.bin", h.Model))
+			}
+			if h.Board != "" {
+				filenames = append(filenames, fmt.Sprintf("image-%v.bin", h.Board))
+			}
+			filenames = append(filenames, "image.bin")
+			filenames = append(filenames, "bios.bin")
+			binFile, err := tryUntarFiles(ctx, artifactUrl, tempDir, filenames, nil)
+			if err != nil {
+				return errors.Wrap(err, "tryUntarFiles failed")
+			}
+			artifactUrl = binFile
+			// Continue on with handling of .bin files
+		}
+		_, err = linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
+			artifactUrl: destFile,
+		}, linuxssh.DereferenceSymlinks)
+		if err != nil {
+			return errors.Wrap(err, "copy file to dut failed")
+		}
+		return nil
+	}
+	extractECFirmwareImage := func(ctx context.Context, artifactUrl, destFile string) error {
+		if strings.HasPrefix(artifactUrl, "gs://") {
+			_, err := h.RPCUtils.ExtractECFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
+				PreferredDevserver: s.CloudStorage().Devservers(),
+				BackupDevserver:    redirectedDevServers,
+				Dest:               destFile,
+				Url:                artifactUrl,
+				BuildTargets:       fwTargets,
+				Board:              h.Board,
+				Model:              h.Model,
+			})
+			if err != nil {
+				return errors.Wrap(err, "RPCUtils.ExtractECFirmwareImage failed")
+			}
+			return nil
+		}
+		if _, err := os.Stat(artifactUrl); err != nil {
+			return errors.Wrapf(err, "failed to stat %q", artifactUrl)
+		}
+		if strings.HasSuffix(artifactUrl, ".tar.bz2") || strings.HasSuffix(artifactUrl, ".tbz2") {
+			tempDir, err := os.MkdirTemp("", "firmware-extract-*")
+			if err != nil {
+				return errors.Wrap(err, "failed to create tmp dir")
+			}
+			defer os.RemoveAll(tempDir)
+
+			var filenames []string
+			var extraFilenames []string
+			if fwTargets.LegacyEcName != "" {
+				filenames = append(filenames, path.Join(fwTargets.LegacyEcName, "ec.bin"))
+				extraFilenames = append(extraFilenames, path.Join(fwTargets.LegacyEcName, "ec.config"))
+			}
+			if fwTargets.StandaloneEcName != "" {
+				filenames = append(filenames, path.Join(fwTargets.StandaloneEcName, "ec.bin"))
+				extraFilenames = append(extraFilenames, path.Join(fwTargets.StandaloneEcName, "ec.config"))
+			}
+			if h.Model != "" {
+				filenames = append(filenames, path.Join(h.Model, "ec.bin"))
+				extraFilenames = append(extraFilenames, path.Join(h.Model, "ec.config"))
+			}
+			if h.Board != "" {
+				filenames = append(filenames, path.Join(h.Board, "ec.bin"))
+				extraFilenames = append(extraFilenames, path.Join(h.Board, "ec.config"))
+			}
+			filenames = append(filenames, "ec.bin")
+			extraFilenames = append(extraFilenames, "ec.config")
+			binFile, err := tryUntarFiles(ctx, artifactUrl, tempDir, filenames, extraFilenames)
+			if err != nil {
+				return errors.Wrap(err, "tryUntarFiles failed")
+			}
+			artifactUrl = binFile
+			// Continue on with handling of .bin files
+		}
+		files := map[string]string{
+			artifactUrl: destFile,
+		}
+		ecConfigFile := strings.Replace(artifactUrl, ".bin", ".config", 1)
+		if _, err := os.Stat(ecConfigFile); err == nil {
+			files[ecConfigFile] = strings.Replace(destFile, ".bin", ".config", 1)
+		}
+		testing.ContextLog(ctx, "Copying files to dut: ", files)
+		_, err = linuxssh.PutFiles(ctx, h.DUT.Conn(), files, linuxssh.DereferenceSymlinks)
+		if err != nil {
+			return errors.Wrap(err, "copy file to dut failed")
+		}
+		return nil
+	}
+
 	// Make a temp dir on the DUT
 	tmpDirOut, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "/usr/local/tmp/tast.firmware.FWAutoupdate.XXXXXXXXXX").Output(ssh.DumpLogOnError)
 	if err != nil {
@@ -209,15 +359,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 
 	// Download all the necessary images
 	apROFile := fmt.Sprintf("%s/apro.bin", tmpDir)
-	_, err = h.RPCUtils.ExtractAPFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
-		PreferredDevserver: s.CloudStorage().Devservers(),
-		BackupDevserver:    redirectedDevServers,
-		Dest:               apROFile,
-		Url:                apROURL,
-		BuildTargets:       fwTargets,
-		Board:              h.Board,
-		Model:              h.Model,
-	})
+	err = extractAPFirmwareImage(ctx, apROURL, apROFile)
 	if err != nil {
 		s.Fatalf("Failed to extract AP RO from %q: %+v", apROURL, err)
 	}
@@ -237,15 +379,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	apRWFile := ""
 	if apROURL != apRWURL {
 		apRWFile = fmt.Sprintf("%s/aprw.bin", tmpDir)
-		_, err = h.RPCUtils.ExtractAPFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
-			PreferredDevserver: s.CloudStorage().Devservers(),
-			BackupDevserver:    redirectedDevServers,
-			Dest:               apRWFile,
-			Url:                apRWURL,
-			BuildTargets:       fwTargets,
-			Board:              h.Board,
-			Model:              h.Model,
-		})
+		err = extractAPFirmwareImage(ctx, apRWURL, apRWFile)
 		if err != nil {
 			s.Fatalf("Failed to extract AP RW from %q: %+v", apRWURL, err)
 		}
@@ -263,15 +397,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	s.Logf("Extracted AP RW: %q (%s)", apRWFile, expectedAPRWVersion)
 
 	ecROFile := fmt.Sprintf("%s/ecro.bin", tmpDir)
-	_, err = h.RPCUtils.ExtractECFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
-		PreferredDevserver: s.CloudStorage().Devservers(),
-		BackupDevserver:    redirectedDevServers,
-		Dest:               ecROFile,
-		Url:                ecROURL,
-		BuildTargets:       fwTargets,
-		Board:              h.Board,
-		Model:              h.Model,
-	})
+	err = extractECFirmwareImage(ctx, ecROURL, ecROFile)
 	if err != nil {
 		s.Fatalf("Failed to extract EC RO from %q: %+v", ecROURL, err)
 	}
@@ -293,15 +419,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if ecROURL == ecRWURL {
 			ecRWFile = ecROFile
 		} else {
-			_, err = h.RPCUtils.ExtractECFirmwareImage(ctx, &fwpb.ExtractFirmwareImageRequest{
-				PreferredDevserver: s.CloudStorage().Devservers(),
-				BackupDevserver:    redirectedDevServers,
-				Dest:               ecRWFile,
-				Url:                ecRWURL,
-				BuildTargets:       fwTargets,
-				Board:              h.Board,
-				Model:              h.Model,
-			})
+			err = extractECFirmwareImage(ctx, ecRWURL, ecRWFile)
 			if err != nil {
 				s.Fatalf("Failed to extract EC RW from %q: %+v", ecRWURL, err)
 			}
@@ -599,7 +717,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("%s --mode=autoupdate: %s", shellBallNew, string(out))
 	testing.ContextLog(ctx, "Rebooting the DUT")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce, firmware.WaitSoftwareSync); err != nil {
 		s.Fatal("Failed to perform mode aware reboot: ", err)
 	}
 
@@ -651,7 +769,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}, speedMetric)
 	}
 	if speedMetric < baselineSpeedMetric*0.95 {
-		s.Error("Speedometer metric has degraded by >5%: ", err)
+		s.Errorf("Speedometer metric has degraded by >5%%: (%f < %f)", speedMetric, baselineSpeedMetric*0.95)
 	} else {
 		s.Logf("Speedometer metric is acceptable (%f >= %f)", speedMetric, baselineSpeedMetric*0.95)
 	}
@@ -685,7 +803,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("%s --mode=autoupdate: %s", shellBallOld, string(out))
 	testing.ContextLog(ctx, "Rebooting the DUT")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce, firmware.WaitSoftwareSync); err != nil {
 		s.Fatal("Failed to perform mode aware reboot: ", err)
 	}
 
