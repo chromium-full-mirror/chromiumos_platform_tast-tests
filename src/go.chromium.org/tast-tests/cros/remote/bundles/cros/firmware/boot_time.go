@@ -147,10 +147,6 @@ func BootTime(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restore EC UART timestamping: ", err)
 		}
 	}()
-	// Read the uart stream just to make sure there isn't buffered data.
-	if _, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream); err != nil {
-		s.Fatal("Failed to read UART: ", err)
-	}
 	s.Log("Rebooting EC")
 	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
 		s.Fatal("Failed to send reboot command: ", err)
