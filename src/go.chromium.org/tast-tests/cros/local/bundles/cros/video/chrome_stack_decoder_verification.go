@@ -681,7 +681,7 @@ func init() {
 			{
 				Name:              "av1_files_from_bugs_346405213",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("gc_10_3_7"), hwdep.SkipOnModel("dojo", "tomato", "ciri", "navi")),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("mali-g57", "mali-g925-immortalis")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         test_vectors.AppendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}),
 				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_346405213_reference-frame-scaling-test.ivf"}, "av1_files_from_bugs_346405213"),

@@ -333,9 +333,9 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		ValidatorType: "decoding.MD5",
 	}, test_vectors.AV1FilesFromBugs,
 		map[string]string{
-			// Disable on Cherry, Geralt, and Skyrim (b/346775704)
-			// Disable on Rauru (b/388110973
-			"346405213": "hwdep.D(hwdep.SkipGPUFamily(\"gc_10_3_7\"), hwdep.SkipOnModel(\"dojo\", \"tomato\", \"ciri\", \"navi\"))",
+			// Disable on Cherry (b/346775704)
+			// Disable on Rauru (b/388110973)
+			"346405213": "hwdep.D(hwdep.SkipGPUFamily(\"mali-g57\", \"mali-g925-immortalis\"))",
 		},
 	)...)
 	params = append(params, genFilesFromBugs(paramData{
