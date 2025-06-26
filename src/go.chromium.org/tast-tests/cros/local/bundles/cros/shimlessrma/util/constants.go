@@ -127,6 +127,8 @@ var ShimlessRmaEnabledModelsCritical = []string{
 	"yavilly",
 	"yavilla",
 	"pujjoga",
+	"uldrenite",
+	"uldrenite360",
 	// staryu
 	"starmie",
 	// brya
@@ -159,7 +161,10 @@ var ShimlessRmaEnabledModelsCritical = []string{
 
 // ShimlessRmaEnabledModelsStaging are models with Shimless RMA support and pending to be enlisted to critical model list.
 var ShimlessRmaEnabledModelsStaging = []string{
-	// nissa
-	"uldrenite",
-	"uldrenite360",
+	// asurada
+	"spherion",
+	// cherry
+	"tomato",
+	// hatch
+	"kled",
 }
