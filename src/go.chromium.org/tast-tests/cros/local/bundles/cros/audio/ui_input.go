@@ -49,7 +49,8 @@ func init() {
 			"group:release-health",
 			"release-health_audio",
 		},
-		Timeout: 4 * time.Minute,
+		VariantCategory: `{"name": "Audio_Board"}`,
+		Timeout:         4 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:    "gain_fieldtrial_config_disable",
@@ -68,11 +69,10 @@ func init() {
 				ExtraAttr: []string{"informational"},
 			},
 			{
-				Name:            "mute_fieldtrial_config_enable",
-				Fixture:         audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
-				Val:             muteButton,
-				ExtraAttr:       []string{"informational"},
-				VariantCategory: `{"name": "Audio_Board"}`,
+				Name:      "mute_fieldtrial_config_enable",
+				Fixture:   audiofixture.AloopLoaded{Parent: fixture.ChromeLoggedInWithFieldTrialConfigEnable}.Instance(),
+				Val:       muteButton,
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})

@@ -37,8 +37,9 @@ func init() {
 			"group:mainline",
 			"informational",
 		},
-		Timeout: crasPlaybackRecordTimeout,
-		Fixture: "rebootForAudioDSPFixture",
+		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
+		Timeout:         crasPlaybackRecordTimeout,
+		Fixture:         "rebootForAudioDSPFixture",
 	})
 }
 
