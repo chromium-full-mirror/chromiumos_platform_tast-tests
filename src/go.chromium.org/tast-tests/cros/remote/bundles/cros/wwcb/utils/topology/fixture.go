@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
@@ -53,6 +54,12 @@ var rpcServiceHostVar = testing.RegisterVarString(
 	"topology.apiHost",
 	"",
 	"A string containing the host that the passport API is running on.",
+)
+
+var tagFilterHostVar = testing.RegisterVarString(
+	"topology.tagFilter",
+	"",
+	"A set of tags to use to prune topology from.",
 )
 
 func init() {
@@ -207,6 +214,11 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		params := s.Param().(topologyParamVal)
 		pasitTopology = params.defaultTopology(s, hostname)
 		s.Log("Loaded DUT info from CLI args")
+	}
+
+	if tagFilterHostVar.Value() != "" {
+		s.Logf("Pruning topology using tag: %q", tagFilterHostVar.Value())
+		pasitTopology = pruneTopology(pasitTopology, tagFilterHostVar.Value())
 	}
 
 	s.Log("Saving topology to topology.textproto")
@@ -429,4 +441,30 @@ func (tf *TestFixture) connectToGrpcServices(ctx context.Context, s *testing.Fix
 	}
 	tf.grpcConn = grpcConn
 	return nil
+}
+
+func pruneTopology(topology *labapi.PasitHost, tag string) *labapi.PasitHost {
+	prunedTopology := proto.Clone(topology).(*labapi.PasitHost)
+	usedDevices := make(map[string]bool)
+
+	prunedTopology.Connections = []*labapi.PasitHost_Connection{}
+	for _, c := range topology.GetConnections() {
+		for _, t := range c.GetTags() {
+			if strings.EqualFold(t, tag) {
+				prunedTopology.Connections = append(prunedTopology.Connections, c)
+				usedDevices[c.GetParentId()] = true
+				usedDevices[c.GetChildId()] = true
+				break
+			}
+		}
+	}
+
+	prunedTopology.Devices = []*labapi.PasitHost_Device{}
+	for _, d := range topology.Devices {
+		if usedDevices[d.GetId()] {
+			prunedTopology.Devices = append(prunedTopology.Devices, d)
+		}
+	}
+
+	return prunedTopology
 }
