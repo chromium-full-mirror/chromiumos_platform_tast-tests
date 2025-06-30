@@ -37,7 +37,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Attr: []string{
 			"group:mainline",
-			"informational",
 		},
 		VariantCategory: `{"name": "Audio_SoC_Codec_Amp"}`,
 		Timeout:         devicePlaybackRecordTimeout,
