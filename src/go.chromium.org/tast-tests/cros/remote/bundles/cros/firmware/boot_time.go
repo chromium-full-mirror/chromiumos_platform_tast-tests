@@ -103,13 +103,6 @@ const (
 // It appears that this test is not measuring the same thing as "Boot-to-Kernel" or "Boot to chromeball", but should catch a regression in that time.
 func BootTime(ctx context.Context, s *testing.State) {
 	param := s.Param().(testParameters)
-	rebootingStarted := regexp.MustCompile(`Rebooting!`)
-	coldBootFinished := regexp.MustCompile(`power state \d+ = S5,`)
-	// This means the AP is initialized, but does not mean ChromeOS is booted.
-	apBootFinished := regexp.MustCompile(param.apBootRegexp)
-	// YY-mm-dd HH:MM:SS.sss, but only looking at the MM:SS.sss here
-	// See HOST_STRFTIME in src/platform/ec/util/ec3po/console.py
-	uartAbsoluteTime := regexp.MustCompile(`^\d+-\d+-\d+ \d+:(\d+):(\d+)\.(\d+)`)
 
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
@@ -119,7 +112,37 @@ func BootTime(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to local config: ", err)
 	}
 
-	cancel, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	s.Log("Rebooting EC")
+	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
+		s.Fatal("Failed to send reboot command: ", err)
+	}
+
+	coldBootTime, apBootTime := measureBootTimeViaFollowingECLog(ctx, s, param.apBootRegexp, h.Servo)
+
+	s.Logf("EC cold boot time: %s", coldBootTime)
+	s.Logf("AP Boot time: %s", apBootTime)
+	var coldBootMax time.Duration = h.Config.ECColdBootTime
+	if coldBootTime > coldBootMax {
+		s.Errorf("EC boot time = %s; want <=%s", coldBootTime, coldBootMax)
+	}
+	if apBootTime > param.apBootMax {
+		s.Errorf("AP Boot time = %s; want <=%s", apBootTime, param.apBootMax)
+	}
+	if s.HasError() {
+		s.Log("To debug, check the log in $LOGDIR/autoserv_test/servod_*/ec.txt")
+	}
+}
+
+func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apBootRegexp string, ser *servo.Servo) (time.Duration, time.Duration) {
+	rebootingStarted := regexp.MustCompile(`Rebooting!`)
+	coldBootFinished := regexp.MustCompile(`power state \d+ = S5,`)
+	// This means the AP is initialized, but does not mean ChromeOS is booted.
+	apBootFinished := regexp.MustCompile(apBootRegexp)
+	// YY-mm-dd HH:MM:SS.sss, but only looking at the MM:SS.sss here
+	// See HOST_STRFTIME in src/platform/ec/util/ec3po/console.py
+	uartAbsoluteTime := regexp.MustCompile(`^\d+-\d+-\d+ \d+:(\d+):(\d+)\.(\d+)`)
+
+	cancel, err := ser.EnableUARTCapture(ctx, servo.ECUARTCapture)
 	defer func() {
 		if err := cancel(ctx); err != nil {
 			s.Fatal("Failed to cancel capture EC UART: ", err)
@@ -128,11 +151,11 @@ func BootTime(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
-	timestampState, err := h.Servo.GetOnOff(ctx, servo.ECUARTTimestamp)
+	timestampState, err := ser.GetOnOff(ctx, servo.ECUARTTimestamp)
 	if err != nil {
 		s.Fatal("Failed to get EC UART timestamping: ", err)
 	}
-	if err := h.Servo.SetOnOff(ctx, servo.ECUARTTimestamp, servo.On); err != nil {
+	if err := ser.SetOnOff(ctx, servo.ECUARTTimestamp, servo.On); err != nil {
 		s.Fatal("Failed to enable EC UART timestamping: ", err)
 	}
 	defer func() {
@@ -143,14 +166,11 @@ func BootTime(ctx context.Context, s *testing.State) {
 		} else {
 			onoff = servo.Off
 		}
-		if err := h.Servo.SetOnOff(ctx, servo.ECUARTTimestamp, onoff); err != nil {
+		if err := ser.SetOnOff(ctx, servo.ECUARTTimestamp, onoff); err != nil {
 			s.Fatal("Failed to restore EC UART timestamping: ", err)
 		}
 	}()
-	s.Log("Rebooting EC")
-	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
-		s.Fatal("Failed to send reboot command: ", err)
-	}
+
 	// Set times to invalid values to start.
 	var (
 		startTime      time.Duration = -1
@@ -163,7 +183,7 @@ func BootTime(ctx context.Context, s *testing.State) {
 		priorMinute    = -1
 	)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if lines, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream); err != nil {
+		if lines, err := ser.GetQuotedString(ctx, servo.ECUARTStream); err != nil {
 			s.Fatal("Failed to read UART: ", err)
 		} else if lines != "" {
 			// It is possible to read partial lines, so save the part after newline for later
@@ -238,16 +258,5 @@ func BootTime(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: maxWaitTime}); err != nil {
 		s.Error("EC output parsing failed: ", err)
 	}
-	s.Logf("EC cold boot time: %s", coldBootTime)
-	s.Logf("AP Boot time: %s", apBootTime)
-	var coldBootMax time.Duration = h.Config.ECColdBootTime
-	if coldBootTime > coldBootMax {
-		s.Errorf("EC boot time = %s; want <=%s", coldBootTime, coldBootMax)
-	}
-	if apBootTime > param.apBootMax {
-		s.Errorf("AP Boot time = %s; want <=%s", apBootTime, param.apBootMax)
-	}
-	if s.HasError() {
-		s.Log("To debug, check the log in $LOGDIR/autoserv_test/servod_*/ec.txt")
-	}
+	return time.Second, time.Second
 }
