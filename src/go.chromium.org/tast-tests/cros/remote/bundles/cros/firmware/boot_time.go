@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 // testParameters contains all the data needed to run a single test iteration.
 type testParameters struct {
 	apBootRegexp string
+	apBootState  string
 	apBootMax    time.Duration
 }
 
@@ -57,6 +59,7 @@ func init() {
 				Val: testParameters{
 					// Same as default, with 1.5 seconds
 					apBootRegexp: `power state \d+ = S0,`,
+					apBootState:  "S0",
 					apBootMax:    1500 * time.Millisecond,
 				},
 			},
@@ -86,6 +89,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.NoX86()),
 				Val: testParameters{
 					apBootRegexp: `power state \d+ = S0,`,
+					apBootState:  "S0",
 					apBootMax:    1 * time.Second,
 				},
 			},
@@ -112,12 +116,19 @@ func BootTime(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to local config: ", err)
 	}
 
+	useBootTimeCommand := isECSupportBootTimeCommand(ctx, h.Servo)
+
 	s.Log("Rebooting EC")
 	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
 		s.Fatal("Failed to send reboot command: ", err)
 	}
 
-	coldBootTime, apBootTime := measureBootTimeViaFollowingECLog(ctx, s, param.apBootRegexp, h.Servo)
+	var coldBootTime, apBootTime time.Duration
+	if useBootTimeCommand {
+		coldBootTime, apBootTime = measureBootTimeViaECBootTimeCommand(ctx, s, param.apBootState, h.Servo)
+	} else {
+		coldBootTime, apBootTime = measureBootTimeViaFollowingECLog(ctx, s, param.apBootRegexp, h.Servo)
+	}
 
 	s.Logf("EC cold boot time: %s", coldBootTime)
 	s.Logf("AP Boot time: %s", apBootTime)
@@ -131,6 +142,55 @@ func BootTime(ctx context.Context, s *testing.State) {
 	if s.HasError() {
 		s.Log("To debug, check the log in $LOGDIR/autoserv_test/servod_*/ec.txt")
 	}
+}
+
+func isECSupportBootTimeCommand(ctx context.Context, ser *servo.Servo) bool {
+	_, err := runECBootTimeCommand(ctx, ser, "S5")
+	return err == nil
+}
+
+func measureBootTimeViaECBootTimeCommand(ctx context.Context, s *testing.State, apBootState string, ser *servo.Servo) (time.Duration, time.Duration) {
+	// GoBigSleepLint: Sleep for the first few seconds, then we can safely disable chan then send console command to get boot times
+	if err := testing.Sleep(ctx, time.Second*5); err != nil {
+		s.Fatal("Failed to sleep for skipping boot ec console jamming: ", err)
+	}
+	if err := ser.RunECCommand(ctx, "chan save"); err != nil {
+		s.Fatal("Failed to save chan: ", err)
+	}
+	defer func() {
+		if err := ser.RunECCommand(ctx, "chan restore"); err != nil {
+			s.Fatal("Failed to restore chan: ", err)
+		}
+	}()
+	if err := ser.RunECCommand(ctx, "chan 0"); err != nil {
+		s.Fatal("Failed to save chan: ", err)
+	}
+
+	elapsedColdBootTime, err := runECBootTimeCommand(ctx, ser, "S5")
+	if err != nil {
+		s.Fatal("Failed to get cold boot time: ", err)
+	}
+
+	elapsedAPBootTime, err := runECBootTimeCommand(ctx, ser, apBootState)
+	if err != nil {
+		s.Fatal("Failed to get AP boot time: ", err)
+	}
+
+	return elapsedColdBootTime, elapsedAPBootTime - elapsedColdBootTime
+}
+
+func runECBootTimeCommand(ctx context.Context, ser *servo.Servo, powerState string) (time.Duration, error) {
+	cmd := fmt.Sprintf("boottime %s", powerState)
+	timePattern := fmt.Sprintf("first %s: (-?\\d+ms)", powerState)
+	timeMatches, err := ser.RunECCommandGetOutput(ctx, cmd, []string{timePattern})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to run boottime command")
+	}
+
+	if len(timeMatches) == 1 && len(timeMatches[0]) == 2 {
+		return time.ParseDuration(timeMatches[0][1])
+	}
+	return 0, errors.Errorf("unexpected boottime output pattern matches: %v", timeMatches)
 }
 
 func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apBootRegexp string, ser *servo.Servo) (time.Duration, time.Duration) {
