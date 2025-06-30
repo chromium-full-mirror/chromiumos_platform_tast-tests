@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Move and copy the files to erternal storage media and verify files are being copied/moved successfully",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_storage",
@@ -105,7 +105,7 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 	}
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTextPath).Output()
 
-	before, err := utils.GetUSBDevice(ctx, dut)
+	before, err := utils.GetUSBStorageDeviceCount(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
@@ -125,13 +125,13 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 	const verifyTimeout, verifyInterval = 10 * time.Second, 1 * time.Second
 	// Expect number of USB devices is not less than number of input parameters.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, err := utils.GetUSBDevice(ctx, dut)
+		after, err := utils.GetUSBStorageDeviceCount(ctx, dut)
 		if err != nil {
 			s.Fatal("Failed to get USB devices after plug: ", err)
 		}
 
-		if len(after)-len(before) < usbCount {
-			s.Fatalf("Failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, (len(after) - len(before)), len(before), len(after))
+		if after-before < usbCount {
+			s.Fatalf("Failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, after-before, before, after)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
