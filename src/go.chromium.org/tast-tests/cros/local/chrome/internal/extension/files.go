@@ -43,9 +43,10 @@ const (
 // directory should not exist at the beginning. Callers are responsible for
 // deleting the directory after they're done with it.
 // cfg is the chrome configuration that will be used by the chrome session.
-// The user test extension is always created. If SigninExtKey of cfg is a
-// non-empty string, the sign-in profile test extension is also created using
-// the key. Extra extensions specified by extraExtDirs of cfg will also be
+// The user test extension is always created, unless InstallUserTestExtension
+// of cfg is set to false. If SigninExtKey of cfg is a non-empty string, the
+// sign-in profile test extension is also created using the key.
+// Extra extensions specified by extraExtDirs of cfg will also be
 // installed. cfg will further be stored into test extension's background.js.
 // It can be retrieved later for session reuse comparison.
 // If guestMode is true, we load the tast extension as a component extension.
@@ -72,10 +73,13 @@ func PrepareExtensions(destDir string, cfg *config.Config, guestMode GuestModeLo
 	}
 	extraBgJs := fmt.Sprintf("%s = %q;", TastChromeOptionsJSVar, data)
 	// Prepare the user test extension.
-	user, err := prepareTestExtension(filepath.Join(destDir, "test_api"),
-		testExtensionKey, TestExtensionID, extraBgJs, cfg.TestExtOAuthClientID())
-	if err != nil {
-		return nil, err
+	var user *testExtension
+	if cfg.ShouldInstallUserTestExtension() {
+		user, err = prepareTestExtension(filepath.Join(destDir, "test_api"),
+			testExtensionKey, TestExtensionID, extraBgJs, cfg.TestExtOAuthClientID())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Prepare the sign-in profile test extension if it is available.
@@ -149,24 +153,28 @@ func Checksums(destDir string) ([]string, error) {
 // DEPRECATED: Use AshArgs instead. This method does not handle sign-in
 // profile extensions correctly.
 func (f *Files) DeprecatedDirs() []string {
-	return append([]string{f.user.Dir()}, f.extraExtDirs...)
+	if f.user != nil {
+		return append([]string{f.user.Dir()}, f.extraExtDirs...)
+	}
+	return f.extraExtDirs
 }
 
 // AshArgs returns a list of arguments to be passed to Chrome to enable
 // extensions.
 func (f *Files) AshArgs() []string {
-	extDirs := append([]string{f.user.Dir()}, f.extraExtDirs...)
 	args := []string{
-		"--load-extension=" + strings.Join(extDirs, ","),
+		"--load-extension=" + strings.Join(f.DeprecatedDirs(), ","),
 	}
 	if f.signin != nil {
 		args = append(args,
 			"--load-signin-profile-test-extension="+f.signin.Dir(),
 			"--allowlisted-extension-id="+f.signin.ID())
-	} else if f.guest {
-		args = append(args, "--load-guest-mode-test-extension="+f.user.Dir())
-	} else {
-		args = append(args, "--allowlisted-extension-id="+f.user.ID())
+	} else if f.user != nil {
+		if f.guest {
+			args = append(args, "--load-guest-mode-test-extension="+f.user.Dir())
+		} else {
+			args = append(args, "--allowlisted-extension-id="+f.user.ID())
+		}
 	}
 	return args
 }

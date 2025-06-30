@@ -188,6 +188,10 @@ func (c *Config) ExtraExtDirs() []string { return append([]string(nil), c.m.Extr
 // SigninExtKey returns a private key for the sign-in profile test extension.
 func (c *Config) SigninExtKey() string { return c.m.SigninExtKey }
 
+// ShouldInstallUserTestExtension returns whether the test_api test extension
+// should be installed.
+func (c *Config) ShouldInstallUserTestExtension() bool { return c.m.InstallUserTestExtension }
+
 // EnableRestoreTabs returns true if creating browser windows on login should be skipped.
 func (c *Config) EnableRestoreTabs() bool { return c.m.EnableRestoreTabs }
 
@@ -319,6 +323,7 @@ type MutableConfig struct {
 	ProxyServer                               string           `reuse_match:"true"`
 	DisableAccessibilityManifestV3GoogleTts   bool             `reuse_match:"true"`
 	DisableAccessibilityManifestV3EspeakNGTts bool             `reuse_match:"true"`
+	InstallUserTestExtension                  bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -359,6 +364,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			DisableExtensionManifestV2Disabled:      true,
 			DisableAccessibilityManifestV3GoogleTts: true,
 			DisableAccessibilityManifestV3EspeakNGTts: true,
+			InstallUserTestExtension:                  true,
 		},
 	}
 

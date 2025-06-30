@@ -136,6 +136,7 @@ message GAIAEnrollUsingChromeRequest {
   string username = 1;
   string password = 2;
   string dmserverURL = 3;
+  bool dont_install_user_test_extension = 4;
 }
 
 message GAIAEnrollAndLoginUsingChromeRequest {

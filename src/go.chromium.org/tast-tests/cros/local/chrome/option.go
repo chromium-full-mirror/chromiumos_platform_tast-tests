@@ -283,6 +283,15 @@ func DMSPolicy(url string) Option {
 	}
 }
 
+// InstallUserTestExtension returns an option that can be passed to New to
+// control if the test_api user test extension is installed.
+func InstallUserTestExtension(value bool) Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.InstallUserTestExtension = value
+		return nil
+	}
+}
+
 // EncryptedReportingAddr returns an option that can be passed to New to tell the device
 // to report Chrome real-time events to the Encrypted Reporting Server at the given url.
 // By default encrypted real-time event reporting is not enabled, and when enabled,

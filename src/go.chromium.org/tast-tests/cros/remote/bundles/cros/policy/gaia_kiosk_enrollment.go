@@ -143,9 +143,10 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 
 	if _, err := policyClient.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
-		Username:    acc.Username,
-		Password:    acc.Password,
-		DmserverURL: dmServerURL,
+		Username:                     acc.Username,
+		Password:                     acc.Password,
+		DmserverURL:                  dmServerURL,
+		DontInstallUserTestExtension: true,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}

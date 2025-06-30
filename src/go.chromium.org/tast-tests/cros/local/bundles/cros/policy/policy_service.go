@@ -199,6 +199,9 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 // GAIAEnrollUsingChrome enrolls the device using dmserver.
 func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIAEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
+	if req.DontInstallUserTestExtension {
+		testing.ContextLog(ctx, "Not installing user test extension")
+	}
 
 	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
 	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
@@ -208,6 +211,7 @@ func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIA
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
+		chrome.InstallUserTestExtension(!req.DontInstallUserTestExtension),
 	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
