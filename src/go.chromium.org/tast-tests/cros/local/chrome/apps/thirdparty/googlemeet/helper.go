@@ -81,6 +81,18 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 		return errors.Wrap(err, "failed to navigate to the Meet homepage")
 	}
 
+	ui := uiauto.New(h.tconn)
+	siteUnreachableMessage := nodewith.Name("This site can’t be reached").Role(role.StaticText)
+	node, existsErr := ui.FindAnyExists(ctx, meetRootWebArea, siteUnreachableMessage)
+	if existsErr != nil {
+		return existsErr
+	}
+	if node == siteUnreachableMessage {
+		if err := h.Reload(ctx); err != nil {
+			return errors.Wrap(err, "failed to reload page")
+		}
+	}
+
 	startTime := time.Now()
 	if err := webutil.WaitForQuiescence(ctx, h.meetConn, time.Minute); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for Meet homepage to quiesce: ", err)
@@ -201,7 +213,6 @@ func (h *HRTelemetryHelper) SetCamera(ctx context.Context, expectedOn bool) erro
 		return h.meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.setCameraMuted(%t)", !expectedOn), nil)
 	}
 	ui := uiauto.New(h.tconn)
-	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
 	cameraName := "Turn off camera"
 	if !expectedOn {
 		cameraName = "Turn on camera"
