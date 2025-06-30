@@ -179,7 +179,7 @@ func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
 
 // GAIAEnrollAndLoginUsingChrome enrolls the device using dmserver. Specified user is logged in after this function completes.
 func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *ppb.GAIAEnrollAndLoginUsingChromeRequest) (*empty.Empty, error) {
-	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
+	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s, args: %s", string(req.Username), string(req.DmserverURL), req.ExtraArgs)
 
 	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
 	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
@@ -189,6 +189,7 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.DMSPolicy(req.DmserverURL),
+		chrome.ExtraArgs(req.ExtraArgs),
 	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
@@ -1028,6 +1029,43 @@ func (c *PolicyService) RefreshRemoteCommands(ctx context.Context, req *empty.Em
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// RefreshPolicies refreshes the policies on the device (similar to pressing
+// the "Reload policies" button on the chrome://policy page).
+func (c *PolicyService) RefreshPolicies(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	// Refresh policies.
+	if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.refreshEnterprisePolicies)();`, nil); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to refresh policies")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// GetPolicyValue returns the current value of a single policy on the DUT as a JSON string.
+func (c *PolicyService) GetPolicyValue(ctx context.Context, req *ppb.GetPolicyValueRequest) (*ppb.GetPolicyValueResponse, error) {
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	policies, err := policyutil.PoliciesFromDUT(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get policies from DUT")
+	}
+
+	value, ok := policies.Chrome[req.PolicyName]
+	if !ok {
+		return nil, errors.Wrap(err, "could not find the policy")
+	}
+
+	return &ppb.GetPolicyValueResponse{JsonValue: string(value.ValueJSON)}, nil
+
 }
 
 // FindAndClickRestartNowButton finds and clicks the Restart now button that shows up after triggering DEVICE_REBOOT remote command.

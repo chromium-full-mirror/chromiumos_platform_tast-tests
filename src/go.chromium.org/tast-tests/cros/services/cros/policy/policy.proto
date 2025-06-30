@@ -102,6 +102,8 @@ service PolicyService {
       returns (google.protobuf.Empty) {}
   rpc RefreshRemoteCommands(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
+  rpc RefreshPolicies(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc GetPolicyValue(GetPolicyValueRequest) returns (GetPolicyValueResponse) {}
   rpc FindAndClickRestartNowButton(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
 }
@@ -143,6 +145,7 @@ message GAIAEnrollAndLoginUsingChromeRequest {
   string username = 1;
   string password = 2;
   string dmserverURL = 3;
+  string extra_args = 4;
 }
 
 message GAIAEnrollForReportingRequest {
@@ -239,3 +242,6 @@ message SendRemoteCommandResponse { int64 command_id = 1; }
 message WaitRemoteCommandResultRequest { int64 command_id = 1; }
 message WaitRemoteCommandResultResponse { bytes result = 1; }
 message WaitRemoteCommandAckedRequest { int64 command_id = 1; }
+
+message GetPolicyValueRequest { string policy_name = 1; }
+message GetPolicyValueResponse { string json_value = 1; }

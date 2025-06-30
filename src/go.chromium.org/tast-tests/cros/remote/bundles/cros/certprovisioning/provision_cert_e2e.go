@@ -14,12 +14,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
+	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -43,6 +45,12 @@ const (
 	subjectOrgForUserCert   = "TestCompanyNameForUser"
 )
 
+type testParams struct {
+	gaiaTestParams  gaiaenrollment.TestParams
+	chromeFlags     string
+	deviceProfileID string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ProvisionCertE2E,
@@ -57,7 +65,7 @@ func init() {
 			"group:tape-daily",
 			"group:golden_tier", // TODO: Keep golden_tier suite until b/321909589 is resolved.
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
+		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.hwsec.Pkcs11Service",
@@ -67,17 +75,106 @@ func init() {
 		},
 		Timeout: 6 * time.Minute,
 		Fixture: fixture.CleanOwnership,
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Use Windows infra to provision client certificate (COM_FOUND_CUJ2_TASK4_WF1).
-			Value: "screenplay-305c3ff4-9d82-4ebe-b9d2-fc2fbd77f5e8",
-		}},
+		SearchFlags: []*testing.StringPair{
+			{
+				Key: "feature_id",
+				// Use Windows infra to provision client certificate (COM_FOUND_CUJ2_TASK4_WF1).
+				Value: "screenplay-305c3ff4-9d82-4ebe-b9d2-fc2fbd77f5e8",
+			},
+			pci.SearchFlag(&policy.RequiredClientCertificateForDevice{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.RequiredClientCertificateForUser{}, pci.VerifiedFunctionalityOS),
+		},
 		Params: []testing.Param{
 			{
+				// Test that Certificate Provisioning (non-API) works on alpha. See the
+				// policy in the managedchrome.com/zzzTape/tape-cert-prov OU. It
+				// configures a user and device certificates with VA enabled.
 				Name: "alpha", // Static flow.
-				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerAlphaURL,
-					PoolID:   tape.BuiltInCertProvisioningTesting,
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningTesting,
+					},
+					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+				// With "gaia" the test will also be run with DMA enabled.
+				ExtraSoftwareDeps: []string{"gaia"},
+			},
+			{
+				// Test that Certificate Provisioning (non-API) works on prod. See the
+				// policy in the managedchrome.com/zzzTape/tape-cert-prov OU. It
+				// configures a user and device certificates with VA enabled.
+				Name: "prod", // Static flow.
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningTesting,
+					},
+					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+				// With "gaia" the test will also be run with DMA enabled.
+				ExtraSoftwareDeps: []string{"gaia"},
+			},
+			{
+				// Test that Certificate Provisioning API works on alpha. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-2 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA enabled and static SCEP challenges.
+				Name: "dynamic_alpha",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting,
+					},
+					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+				// With "gaia" the test will also be run with DMA enabled.
+				ExtraSoftwareDeps: []string{"gaia"},
+			},
+			{
+				// Test that Certificate Provisioning API works on prod. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-2 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA enabled and static SCEP challenges.
+				Name: "dynamic_prod",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting,
+					},
+					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+				// With "gaia" the test will also be run with DMA enabled.
+				ExtraSoftwareDeps: []string{"gaia"},
+			},
+			{
+				// Test that Certificate Provisioning API works on alpha. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-5 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA disabled and static SCEP challenges.
+				Name: "no_va_dynamic_alpha",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting5,
+					},
+					deviceProfileID: "be201149-9176-48bc-be86-d12e7cd254e0",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
@@ -85,10 +182,17 @@ func init() {
 				}},
 			},
 			{
-				Name: "prod", // Static flow.
-				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerProdURL,
-					PoolID:   tape.BuiltInCertProvisioningTesting,
+				// Test that Certificate Provisioning API works on prod. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-5 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA disabled and static SCEP challenges.
+				Name: "no_va_dynamic_prod",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting5,
+					},
+					deviceProfileID: "be201149-9176-48bc-be86-d12e7cd254e0",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
@@ -96,10 +200,17 @@ func init() {
 				}},
 			},
 			{
-				Name: "dynamic_alpha",
-				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerAlphaURL,
-					PoolID:   tape.BuiltInCertProvisioningAPITesting,
+				// Test that Certificate Provisioning API works on alpha. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-6 OU. It configures
+				// a user and device certificates that use SCEP profiles with
+				// RSA-2048 keys, VA enabled and static SCEP challenges.
+				Name: "scep_profile_dynamic_alpha",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting6,
+					},
+					deviceProfileID: "9fcf3bd8-2fbf-4ac4-9155-7a9cae2f8b24",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
@@ -107,11 +218,96 @@ func init() {
 				}},
 			},
 			{
-				Name: "dynamic_prod",
-				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerProdURL,
-					PoolID:   tape.BuiltInCertProvisioningAPITesting,
+				// Test that Certificate Provisioning API works on prod. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-6 OU. It configures
+				// a user and device certificates that use SCEP profiles with
+				// RSA-2048 keys, VA enabled and static SCEP challenges.
+				Name: "scep_profile_dynamic_prod",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting6,
+					},
+					deviceProfileID: "9fcf3bd8-2fbf-4ac4-9155-7a9cae2f8b24",
 				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+			},
+			{
+				// Test that Certificate Provisioning API works on alpha. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-7 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA disabled and static SCEP challenges. ChromeOS is
+				// configured to only proceed when it receives an invalidation.
+				Name: "required_invalidations_dynamic_alpha",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting7,
+					},
+					chromeFlags:     "--enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
+					deviceProfileID: "188adb44-6b18-47b5-86a5-b3f23615d650",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			},
+			{
+				// Test that Certificate Provisioning API works on prod. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-7 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// RSA-2048 keys, VA disabled and static SCEP challenges. ChromeOS is
+				// configured to only proceed when it receives an invalidation.
+				Name: "required_invalidations_dynamic_prod",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting7,
+					},
+					chromeFlags:     "--enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
+					deviceProfileID: "188adb44-6b18-47b5-86a5-b3f23615d650",
+				},
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerProd",
+				}},
+			},
+			{
+				// Test that Certificate Provisioning API works on alpha. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-8 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// ECC-256 keys, VA disabled and dynamic SCEP challenges.
+				Name: "ecc_dscep_dynamic_alpha",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerAlphaURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting8,
+					},
+					deviceProfileID: "b8712124-d5e8-4025-bca9-c43142773324",
+				},
+
+				// TODO b/346725308 Refactor to use utility and known dependency list.
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "external_dependency", Value: "DMServerAlpha",
+				}},
+			},
+			{
+				// Test that Certificate Provisioning API works on prod. See the policy
+				// in the managedchrome.com/zzzTape/tape-cert-prov-8 OU. It configures
+				// a user and device certificates that use generic profiles with
+				// ECC-256 keys, VA disabled and dynamic SCEP challenges.
+				Name: "ecc_dscep_dynamic_prod",
+				Val: testParams{
+					gaiaTestParams: gaiaenrollment.TestParams{
+						DMServer: policy.DMServerProdURL,
+						PoolID:   tape.BuiltInCertProvisioningAPITesting8,
+					},
+					deviceProfileID: "b8712124-d5e8-4025-bca9-c43142773324",
+				},
+
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
 					Key: "external_dependency", Value: "DMServerProd",
@@ -125,9 +321,9 @@ func init() {
 }
 
 func ProvisionCertE2E(ctx context.Context, s *testing.State) {
-	param := s.Param().(gaiaenrollment.TestParams)
-	dmServerURL := param.DMServer
-	poolID := dma.TapePool(param.PoolID)
+	param := s.Param().(testParams)
+	dmServerURL := param.gaiaTestParams.DMServer
+	poolID := dma.TapePool(param.gaiaTestParams.PoolID)
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
@@ -179,10 +375,15 @@ func ProvisionCertE2E(ctx context.Context, s *testing.State) {
 		Username:    acc.Username,
 		Password:    acc.Password,
 		DmserverURL: dmServerURL,
+		ExtraArgs:   param.chromeFlags,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 	defer policyClient.StopChrome(cleanupCtx, &empty.Empty{})
+
+	if err = waitForPolicy(ctx, policyClient, param.deviceProfileID); err != nil {
+		s.Error("Failed to wait for policy: ", err)
+	}
 
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 
@@ -261,4 +462,30 @@ func slotMatches(slotInfo pkcs11.SlotInfo, token pkcs11Token) bool {
 	default:
 		return false
 	}
+}
+
+// waitForPolicy continuously refreshes policies until the
+// RequiredClientCertificateForDevice policy contains `deviceProfileID`. This is
+// useful because shortly after moving to a new OU the device might still get
+// device policies from the previous OU.
+func waitForPolicy(ctx context.Context, policyClient pspb.PolicyServiceClient, deviceProfileID string) error {
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		policy, err := policyClient.GetPolicyValue(ctx, &ppb.GetPolicyValueRequest{
+			PolicyName: "RequiredClientCertificateForDevice",
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to get policy")
+		}
+		if strings.Contains(policy.JsonValue, deviceProfileID) {
+			return nil
+		}
+
+		if _, err := policyClient.RefreshPolicies(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to refresh policies")
+		}
+		return errors.New("still waiting for policies")
+	}, &testing.PollOptions{
+		Interval: 5 * time.Second,
+	})
+	return err
 }
