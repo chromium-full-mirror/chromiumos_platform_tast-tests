@@ -60,18 +60,18 @@ func New(serialNum, path string) (*Switch, error) {
 }
 
 // DisablePorts disables all ports.
-func (sw Switch) DisablePorts(_ context.Context) error {
+func (sw *Switch) DisablePorts(_ context.Context) error {
 	return writeSerial("port 0\r", sw.sPort)
 }
 
 // EnablePort enables the port `portNum`.
-func (sw Switch) EnablePort(_ context.Context) error {
+func (sw *Switch) EnablePort(_ context.Context) error {
 	serialStr := fmt.Sprintf("port %d\r", sw.testPort)
 	return writeSerial(serialStr, sw.sPort)
 }
 
 // ActivePort gets currently active port.
-func (sw Switch) ActivePort(_ context.Context) (int, error) {
+func (sw *Switch) ActivePort(_ context.Context) (int, error) {
 	writeSerial("port\r", sw.sPort)
 	resultStr, err := readSerial(sw.sPort)
 	if err != nil {
@@ -88,7 +88,7 @@ func (sw Switch) ActivePort(_ context.Context) (int, error) {
 }
 
 // SetActiveSwitchPort sets the test port to be affected by Enable/DisablePorts.
-func (sw Switch) SetActiveSwitchPort(ctx context.Context, portNum int) error {
+func (sw *Switch) SetActiveSwitchPort(ctx context.Context, portNum int) error {
 	if portNum != 1 && portNum != 2 {
 		return errors.New("invalid port number provided")
 	}
@@ -97,22 +97,22 @@ func (sw Switch) SetActiveSwitchPort(ctx context.Context, portNum int) error {
 }
 
 // Close closes the serial port interface for the MCCI switch.
-func (sw Switch) Close(_ context.Context) error {
+func (sw *Switch) Close(_ context.Context) error {
 	return sw.sPort.Close()
 }
 
 // GetType returns the type of the switch.
-func (sw Switch) GetType() usbswitch.SwitchType {
+func (sw *Switch) GetType() usbswitch.SwitchType {
 	return usbswitch.Mcci
 }
 
 // EnterMode does nothing for MCCI, appropriate device should be connected to MCCI.
-func (sw Switch) EnterMode(_ context.Context, _ usbswitch.ConnectionMode) error {
+func (sw *Switch) EnterMode(_ context.Context, _ usbswitch.ConnectionMode) error {
 	return nil
 }
 
 // FlipOrientation does nothing for MCCI, device doesn't support flipping.
-func (sw Switch) FlipOrientation(_ context.Context, flipped bool) error {
+func (sw *Switch) FlipOrientation(_ context.Context, flipped bool) error {
 	if flipped {
 		return errors.New("MCCI does not support flipping")
 	}

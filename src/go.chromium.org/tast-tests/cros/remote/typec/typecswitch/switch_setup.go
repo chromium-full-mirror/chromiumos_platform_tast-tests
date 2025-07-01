@@ -9,6 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestSetupData contains the data needed for the test setup.
@@ -23,6 +24,7 @@ func SetupSwitch(ctx context.Context, sw usbswitch.Switch, testData TestSetupDat
 	if err := sw.EnterMode(ctx, testData.ConnectionMode); err != nil {
 		return errors.Wrapf(err, "failed to set switch to %s mode during PreTest", testData.ConnectionMode)
 	}
+	testing.ContextLogf(ctx, "Switch USB mode set to %s", testData.ConnectionMode)
 
 	// Set flipped.
 	if err := sw.FlipOrientation(ctx, testData.Flipped); err != nil {
@@ -31,6 +33,7 @@ func SetupSwitch(ctx context.Context, sw usbswitch.Switch, testData TestSetupDat
 			return errors.Wrap(err, "failed to set switch orientation during PreTest")
 		}
 	}
+	testing.ContextLogf(ctx, "Switch orientation set to %t", testData.Flipped)
 
 	return nil
 }

@@ -72,6 +72,7 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	} else {
 		s.Fatal("Port number is not set in the fixture with typec.SwitchPort var")
 	}
+	testing.ContextLogf(ctx, "Port number set to %d", f.PortNum)
 
 	// Ensure ports are disabled initially as a baseline.
 	if err := f.TestSwitch.DisablePorts(ctx); err != nil {
@@ -105,6 +106,7 @@ func (f *SwitchFixture) Reset(ctx context.Context) error {
 	if err := f.TestSwitch.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable ports during Reset")
 	}
+	testing.ContextLogf(ctx, "Ports disabled during typecSwitch Reset")
 
 	// Attempt to reset to USB3 mode as a common default.
 	if err := f.TestSwitch.EnterMode(ctx, usbswitch.Usb3Mode); err != nil {
