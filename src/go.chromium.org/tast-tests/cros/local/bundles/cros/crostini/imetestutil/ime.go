@@ -95,9 +95,6 @@ func setHiraganaMode(ui *uiauto.Context) uiauto.Action {
 			// Open the IME tray and select Hirigana. This works even if Hiragana is already selected.
 			openIMETray,
 			ui.DoDefault(hiraganaOptionFinder),
-			ui.WithTimeout(3*time.Second).WaitUntilGone(hiraganaOptionFinder),
-			// Open and check again.
-			ui.DoDefault(imeMenuTrayButtonFinder),
 			ui.WithTimeout(3*time.Second).WaitUntilCheckedState(hiraganaOptionFinder, true),
 			// Hiragana is selected now, so click the icon in the tray to close the options menu.
 			closeIMETray,
