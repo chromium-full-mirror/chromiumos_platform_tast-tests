@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -29,10 +28,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture:   "chromeLoggedIn",
 			ExtraAttr: []string{"group:cq-medium", "group:network", "network_cq"},
-		}, {
-			Name:      "root_ns",
-			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

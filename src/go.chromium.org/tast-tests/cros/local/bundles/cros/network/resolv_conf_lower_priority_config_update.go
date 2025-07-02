@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
@@ -40,13 +39,6 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "root_ns",
-			Val: resolvConfLowerPriorityConfigUpdateTestParams{
-				dnsProxyEnabled: true,
-			},
-			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

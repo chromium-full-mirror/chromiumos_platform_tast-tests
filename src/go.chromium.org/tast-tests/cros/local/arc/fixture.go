@@ -626,31 +626,6 @@ func init() {
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
-
-	// arcBootedWithRootNsDnsProxy is a fixture similar to arcBooted along
-	// with DNS proxy running on the root network namespace feature enabled.
-	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.EnableFeatures("EnableRootNsDnsProxy"),
-		}, nil
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithRootNsDnsProxy",
-		Desc: "ARC is booted with DNS proxy running on the network root namespace",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"cros-networking@google.com",
-		},
-		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
-		BugComponent:    "b:1493959",
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PreTestTimeout:  PreTestTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
 }
 
 type arcBootedFixtureArgs struct {
