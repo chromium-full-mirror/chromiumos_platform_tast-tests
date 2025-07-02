@@ -30,12 +30,13 @@ func init() {
 		Desc:         "In clamshell and tablet modes, verifies the connection of the peripherals after plug and unplug the docking station during DUT sleep",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_fast",
 			"group:release-health",
 			"release-health_usb",
+			"pasit_dock",
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

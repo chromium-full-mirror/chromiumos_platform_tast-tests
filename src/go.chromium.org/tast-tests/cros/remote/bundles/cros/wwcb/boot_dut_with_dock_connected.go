@@ -31,6 +31,7 @@ func init() {
 			"group:pasit",
 			"group:release-health",
 			"release-health_usb",
+			"pasit_dock",
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
