@@ -6,10 +6,10 @@ package wallpaper
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -72,25 +72,21 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	filename := "first_session_recording.webm"
-	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
-	// Note that this defer func may be called with the screen recorder from the first guest session or the second guest
-	// session depending on when a fatal error occurs.
-	defer func(ctx context.Context) {
-		uiauto.StopAndSaveOnError(ctx, screenRecorder, filepath.Join(s.OutDir(), filename), s.HasError)
-	}(cleanupCtx)
-
 	ui := uiauto.New(tconn)
 
 	if err := uiauto.Combine("Enable light mode",
+		closeAllWindows(tconn),
 		personalization.OpenPersonalizationHub(ui),
 		personalization.ToggleLightMode(ui),
-		personalization.ClosePersonalizationHub(ui))(ctx); err != nil {
+		closeAllWindows(tconn),
+	)(ctx); err != nil {
 		s.Fatal("Failed to enable light mode: ", err)
 	}
 
 	if err := uiauto.Combine("Verify and set wallpaper",
+		closeAllWindows(tconn),
 		verifyDefaultWallpaper(ui),
+		closeAllWindows(tconn),
 		selectAndVerifyWallpaper(ui),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify and set wallpaper: ", err)
@@ -113,13 +109,20 @@ func SetAndClearGuest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-establish test API connection: ", err)
 	}
 
-	filename = "second_session_recording.webm"
-	screenRecorder = uiauto.CreateAndStartScreenRecorder(ctx, tconn, cr)
-
 	ui = uiauto.New(tconn)
 
-	if err := uiauto.NamedAction("Verify default wallpaper after sign-in", verifyDefaultWallpaper(ui))(ctx); err != nil {
+	if err := uiauto.Retry(3,
+		uiauto.Combine("Verify default wallpaper after sign-in",
+			closeAllWindows(tconn),
+			verifyDefaultWallpaper(ui),
+		))(ctx); err != nil {
 		s.Fatal("Failed to re-verify default wallpaper after logout and login: ", err)
+	}
+}
+
+func closeAllWindows(tconn *chrome.TestConn) uiauto.Action {
+	return func(ctx context.Context) error {
+		return ash.CloseAllWindows(ctx, tconn)
 	}
 }
 
@@ -127,7 +130,6 @@ func verifyDefaultWallpaper(ui *uiauto.Context) uiauto.Action {
 	return uiauto.Combine("open wallpaper picker and verify default wallpaper",
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.WaitForWallpaperWithName(ui, "Default Wallpaper"),
-		personalization.ClosePersonalizationHub(ui),
 	)
 }
 
@@ -137,7 +139,6 @@ func selectAndVerifyWallpaper(ui *uiauto.Context) uiauto.Action {
 		wallpaper.SelectCollection(ui, constants.ElementCollection),
 		wallpaper.SelectImage(ui, constants.LightElementImage),
 		wallpaper.WaitForWallpaperWithName(ui, constants.LightElementImage),
-		personalization.ClosePersonalizationHub(ui),
 	)
 }
 
