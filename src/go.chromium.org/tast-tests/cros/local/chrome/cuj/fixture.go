@@ -371,8 +371,8 @@ func init() {
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--allow-insecure-localhost"),
-				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
 			},
+			enableBatterySaver: true,
 		},
 		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
@@ -624,12 +624,11 @@ func init() {
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("PreferConstantFrameRate",
-					"CrosBatterySaver",
-					"CrosBatterySaverAlwaysOn"),
+				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			docsBlocker: true,
+			docsBlocker:        true,
+			enableBatterySaver: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -816,9 +815,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
-			},
+			enableBatterySaver: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -962,9 +959,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
-			},
+			enableBatterySaver: true,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1569,6 +1564,8 @@ type loggedInToCUJUserFixture struct {
 	pvSchedEnabled bool
 	// Scx scheduler type to be loaded.
 	scxType scx.Type
+	// Enable "CrosBatterySaver" and "CrosBatterySaverAlwaysOn" features.
+	enableBatterySaver bool
 }
 
 // NewWPRLoggedInToCUJUserWithoutCooldownFixture returns a newly created fixture object with WPR parameters
@@ -1715,6 +1712,11 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			} else {
 				s.Logf("scx scheduler %s has been loaded", string(f.scxType))
 			}
+		}
+		if f.enableBatterySaver {
+			opts = append(opts, chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"))
+		} else {
+			opts = append(opts, chrome.DisableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"))
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
