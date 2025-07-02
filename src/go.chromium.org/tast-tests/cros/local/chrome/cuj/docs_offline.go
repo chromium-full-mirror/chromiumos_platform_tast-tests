@@ -27,7 +27,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, cr *chrome.Chrome) error {
 	const (
 		docsOfflineID   = "ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 		docsOfflineName = "Google Docs Offline"
-		docsOfflineURL  = "https://chrome.google.com/webstore/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
+		docsOfflineURL  = "https://chromewebstore.google.com/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
 	)
 	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
 
@@ -58,6 +58,16 @@ func EnsureDocsOfflineInstalled(ctx context.Context, cr *chrome.Chrome) error {
 		isInstalled, err := ash.ExtensionAppInstalled(ctx, tconn, docsOfflineID)
 		if err == nil && isInstalled {
 			testing.ContextLog(ctx, "Docs offline extension has been installed even though the CWS installation returned an error: ", cwsErr)
+			// Sometimes the app installation may fail and return without closing the page.
+			// Make sure the webstore page is closed if it's open.
+			targets, err := cr.FindTargets(ctx, chrome.MatchTargetURLPrefix(docsOfflineURL))
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to find Docs Offline page: ", err)
+			} else if len(targets) != 0 {
+				if err = cr.CloseTarget(ctx, targets[0].TargetID); err != nil {
+					return errors.Wrap(err, "failed to close the webstore page")
+				}
+			}
 			return nil
 		}
 	}
