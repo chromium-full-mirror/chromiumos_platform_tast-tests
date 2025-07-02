@@ -122,16 +122,19 @@ func CopyAndMoveFilesExternalStorage(ctx context.Context, s *testing.State) {
 	}
 
 	usbCount := 1
-	const verifyTimeout, verifyInterval = 10 * time.Second, 1 * time.Second
+	const verifyTimeout, verifyInterval = 1 * time.Minute, 1 * time.Second
 	// Expect number of USB devices is not less than number of input parameters.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, err := utils.GetUSBStorageDeviceCount(ctx, dut)
+		cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		after, err := utils.GetUSBStorageDeviceCount(cmdCtx, dut)
 		if err != nil {
-			s.Fatal("Failed to get USB devices after plug: ", err)
+			return errors.Wrap(err, "failed to get USB devices after plug")
 		}
 
 		if after-before < usbCount {
-			s.Fatalf("Failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, after-before, before, after)
+			return errors.Errorf("failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, after-before, before, after)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
