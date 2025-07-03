@@ -609,10 +609,6 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 		return errors.Wrap(err, "failed to connect Test API")
 	}
 
-	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-		return errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", pwaURL)
-	}
-
 	ui := uiauto.New(tconn).WithInterval(2 * time.Second)
 	statusBubble := nodewith.Role(role.Window).ClassName("StatusBubble").First()
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
@@ -640,11 +636,16 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 			if err := browser.ReloadActiveTab(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to reload the tab")
 			}
-			// The page might be usable even if it failed to quiesce.
-			// Log the error and try to continue the installation.
-			if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
-				testing.ContextLogf(ctx, "Failed to wait for %q to be loaded and quiesce: %v", pwaURL, err)
+			lastErr = nil
+		}
+
+		if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+			siteUnreachableMessage := nodewith.Name("This site can’t be reached").Role(role.StaticText)
+			if ui.Exists(siteUnreachableMessage)(ctx) == nil {
+				lastErr = errors.New("This site can’t be reached")
+				return lastErr
 			}
+			return errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", pwaURL)
 		}
 		lastErr = installPWA(ctx)
 		return lastErr
