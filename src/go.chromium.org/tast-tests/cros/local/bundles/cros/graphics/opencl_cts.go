@@ -381,6 +381,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "api_get_context_info_mult_devices",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "get_context_info_mult_devices",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "api_get_context_info",
 				Val: oclctsTest{
 					executable: "test_api",
@@ -825,6 +833,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_api",
 					args:       "min_max_write_image_args",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_multi_queue_flush_on_release",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "multi_queue_flush_on_release",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -2005,6 +2021,22 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "basic_work_item_functions_out_of_range",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "work_item_functions_out_of_range",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_work_item_functions_out_of_range_hardcoded",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "work_item_functions_out_of_range_hardcoded",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "basic_writeimage",
 				Val: oclctsTest{
 					executable: "test_basic",
@@ -2697,6 +2729,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_bruteforce",
 					args:       "powr -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "bruteforce_reciprocal",
+				Val: oclctsTest{
+					executable: "test_bruteforce",
+					args:       "reciprocal -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7237,6 +7277,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "cl_khr_command_buffer_multi_flag_creation",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "multi_flag_creation",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "cl_khr_command_buffer_mixed_commands",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
@@ -7885,6 +7933,22 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "cl_khr_command_buffer_queue_substitution_in_order",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "queue_substitution_in_order",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_queue_substitution_out_of_order",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "queue_substitution_out_of_order",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "cl_khr_command_buffer_regular_wait_for_command_buffer",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
@@ -7937,6 +8001,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
 					args:       "single_ndrange",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_substitute_queue_profiling",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "substitute_queue_profiling",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -8957,6 +9029,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "compiler_get_linked_program_info_kernel_names",
+				Val: oclctsTest{
+					executable: "test_compiler",
+					args:       "get_linked_program_info_kernel_names",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "compiler_get_program_build_info",
 				Val: oclctsTest{
 					executable: "test_compiler",
@@ -8969,6 +9049,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_compiler",
 					args:       "get_program_info",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "compiler_get_program_info_mult_devices",
+				Val: oclctsTest{
+					executable: "test_compiler",
+					args:       "get_program_info_mult_devices",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "compiler_get_program_info_kernel_names",
+				Val: oclctsTest{
+					executable: "test_compiler",
+					args:       "get_program_info_kernel_names",
 				},
 				Timeout: 1 * time.Minute,
 			},
