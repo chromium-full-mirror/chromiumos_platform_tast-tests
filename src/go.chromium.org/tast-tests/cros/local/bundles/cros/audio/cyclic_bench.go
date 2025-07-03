@@ -98,6 +98,8 @@ var cyclicBenchUnstableModels = []string{
 	"taniks",
 	// brask(b/358316489),
 	"aurash", "gladios", "kinox", "kuldax", "lisbon", "moli",
+	// elm(b/428662054)
+	"elm",
 }
 
 func init() {
