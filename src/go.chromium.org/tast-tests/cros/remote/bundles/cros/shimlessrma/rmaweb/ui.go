@@ -458,6 +458,7 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 			return uiHelper.changeEnrollment(enroll)(ctx)
 		},
 		uiHelper.openCCDIfNotOpen(),
+		uiHelper.connectBatteryByCr50(),
 	)(ctx)
 }
 
@@ -757,6 +758,12 @@ func (uiHelper *UIHelper) enterIntoTextInput(textInputName, content string) acti
 func (uiHelper *UIHelper) disconnectBatteryByCr50() action.Action {
 	return func(ctx context.Context) error {
 		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateOff)
+	}
+}
+
+func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
+	return func(ctx context.Context) error {
+		return servoutil.SetBatteryState(ctx, uiHelper.FirmwareHelper, servoutil.BatteryStateFollow)
 	}
 }
 
