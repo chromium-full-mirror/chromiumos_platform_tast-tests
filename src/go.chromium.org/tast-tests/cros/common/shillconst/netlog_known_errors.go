@@ -18,6 +18,13 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"dhcpcd7", "", ".*eth.*: checksum failure from.*", 0},
 		{"dhcpcd7", "", ".*eth.*: DHCP lease expired.*", 0},
 		{"dhcpcd7", "", ".*eth.*: truncated packet.*", 0},
+		// The "refusing chroot" error comes from the setup failure of PRIVSEP in
+		// dhcpcd. This does not affect the dhcpcd use. We may switch to disable
+		// PRIVSEP in the future but for now just allow this error.
+		{"dhcpcd", "", "refusing chroot: dhcp: /dev/null", 0},
+		// The "dhcpcd is not running" error comes from stopping an already stopped
+		// dhcpcd client, which may occur in the test's context.
+		{"dhcpcd", "", "dhcpcd is not running", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get connected service properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for the default service.*", 0},
