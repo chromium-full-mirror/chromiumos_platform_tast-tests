@@ -38,7 +38,7 @@ var (
 	selectFileWindow = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: "Select a file to open"}},
+			{Value: &ui.NodeWith_NameStartingWith{NameStartingWith: "Select a file"}},
 			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
