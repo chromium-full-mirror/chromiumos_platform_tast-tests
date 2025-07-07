@@ -18,7 +18,7 @@ func init() {
 		Func: SystemWebAppsInstallGuest,
 		Desc: "Checks that system web apps are installed in guest mode",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

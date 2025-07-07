@@ -30,7 +30,7 @@ func init() {
 		Func: Sharesheet,
 		Desc: "Verify sharing a file to PWA works",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

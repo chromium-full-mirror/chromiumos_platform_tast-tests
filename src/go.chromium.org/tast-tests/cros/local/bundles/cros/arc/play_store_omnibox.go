@@ -27,7 +27,7 @@ func init() {
 		Func: PlayStoreOmnibox,
 		Desc: "Installs a TWA and WebAPK app via Omnibox in Play Store",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational"},

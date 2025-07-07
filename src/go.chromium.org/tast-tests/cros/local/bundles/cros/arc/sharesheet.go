@@ -34,7 +34,7 @@ func init() {
 		Func: Sharesheet,
 		Desc: "Install ARC app and share to app via Sharesheet",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		SoftwareDeps: []string{"chrome", "gaia"},

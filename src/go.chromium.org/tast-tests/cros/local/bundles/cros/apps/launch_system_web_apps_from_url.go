@@ -26,7 +26,7 @@ func init() {
 		Func: LaunchSystemWebAppsFromURL,
 		Desc: "Verifies that System Web Apps can launch through their URL",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

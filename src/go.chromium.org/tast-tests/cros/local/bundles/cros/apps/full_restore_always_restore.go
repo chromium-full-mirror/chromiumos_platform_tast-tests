@@ -24,7 +24,7 @@ func init() {
 		Func: FullRestoreAlwaysRestore,
 		Desc: "Test full restore always open setting",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 			"renkens@google.com",
 		},
 		BugComponent: "b:1389907",

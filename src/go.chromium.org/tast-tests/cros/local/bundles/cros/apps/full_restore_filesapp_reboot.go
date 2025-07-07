@@ -23,7 +23,7 @@ func init() {
 		Func: FullRestoreFilesappReboot,
 		Desc: "Test full restore files app",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 			"renkens@google.com",
 		},
 		BugComponent: "b:1389907",

@@ -27,7 +27,7 @@ func init() {
 		Func: SystemWebAppsReinstall,
 		Desc: "Checks that system web apps can be reinstalled",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},

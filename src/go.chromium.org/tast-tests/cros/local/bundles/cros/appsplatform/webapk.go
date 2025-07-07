@@ -43,7 +43,7 @@ func init() {
 		Func: WebAPK,
 		Desc: "Checks that a WebAPK can be used to share data to a web app",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -21,7 +21,7 @@ func init() {
 		Func: Dgapi2GetDetails,
 		Desc: "Verify DGAPI2 test app returns expected details",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -22,7 +22,7 @@ func init() {
 		Func: AppInfoWebStore,
 		Desc: "Test Web Store app info from the context menu on app list",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

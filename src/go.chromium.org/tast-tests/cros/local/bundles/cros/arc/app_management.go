@@ -41,7 +41,7 @@ func init() {
 		Func: AppManagement,
 		Desc: "Verifies integration of ARC apps into the OS Settings App Management UI",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{

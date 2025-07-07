@@ -36,7 +36,7 @@ func init() {
 		Func: LinkCapturing,
 		Desc: "Verifies link capturing integration between ARC and the browser",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

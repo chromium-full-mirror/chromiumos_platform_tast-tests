@@ -29,7 +29,7 @@ func init() {
 		Func: AppDetails,
 		Desc: "Verifies App Details in the OS Settings App Management UI",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

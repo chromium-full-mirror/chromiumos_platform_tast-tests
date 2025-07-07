@@ -23,7 +23,7 @@ func init() {
 		Func: FullRestoreWelcomeRecapScreenSettings,
 		Desc: "Test full restore set on welcome recap screen, restore browser",
 		Contacts: []string{
-			"cros-web-apps-team@google.com",
+			"lt-web-apps-team@google.com",
 			"renkens@google.com",
 		},
 		BugComponent: "b:1389907",
