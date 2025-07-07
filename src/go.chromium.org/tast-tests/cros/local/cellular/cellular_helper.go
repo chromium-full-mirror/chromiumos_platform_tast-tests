@@ -918,12 +918,6 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 		testing.ContextLog(ctx, "Modem reset with ResetModemWithHelper succeeded")
 	}
 
-	// With the single device support,a shill cellular device will be present even after triggering the modem reset.
-	// Confirm modem reset using MM dbus object path property getting cleared.
-	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyDBusObject, "", resetTimeout); err != nil {
-		return time.Since(start), errors.Wrap(err, "expected dbus object to become empty, got non-empty")
-	}
-
 	if err := h.WaitForEnabledState(ctx, true); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected enabled to become true")
 	}

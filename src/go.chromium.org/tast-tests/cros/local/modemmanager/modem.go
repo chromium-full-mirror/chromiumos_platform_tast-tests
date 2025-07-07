@@ -269,7 +269,7 @@ func PollModem(ctx context.Context, oldModem string) (*Modem, error) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: mmconst.ModemPollTime}); err != nil {
-		return nil, errors.Wrap(err, "modem or its properties not up after switching SIM slot")
+		return nil, errors.Wrap(err, "modem or its properties not up")
 	}
 	return NewModem(ctx)
 }
