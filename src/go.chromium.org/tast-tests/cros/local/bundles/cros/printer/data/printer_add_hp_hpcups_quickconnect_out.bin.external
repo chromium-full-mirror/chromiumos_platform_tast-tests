@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_hp_hpcups_quickconnect_out_20230817.bin",
-  "size": 146415,
-  "sha256sum": "bdd16695af75ecc025fefbf3f729e51f1305244ed5346b0404f5a6b06c073506"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_hp_hpcups_quickconnect_out_20250707.bin",
+  "size": 146444,
+  "sha256sum": "2e1c1c32aedf58339a3c0d84503741b7a05d69ca5c34bb8cf4a98b981e26c0e6"
 }
