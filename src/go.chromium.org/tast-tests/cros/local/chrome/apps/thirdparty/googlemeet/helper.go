@@ -38,7 +38,7 @@ type MeetHelper interface {
 	SetSendResolution720p(ctx context.Context) error
 	SetReceiveResolution720p(ctx context.Context) error
 	OpenPresentDialog(ctx context.Context) error
-	PresentTab(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, kw *input.KeyboardEventWriter, presentTabTitle string) error
+	PresentTab(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, presentTabTitle string) error
 	Reload(ctx context.Context) error
 }
 
@@ -47,6 +47,7 @@ type HRTelemetryHelper struct {
 	cs           ash.ConnSource
 	tconn        *chrome.TestConn
 	meetConn     *chrome.Conn
+	ui           *uiauto.Context
 	isPresenting bool
 }
 
@@ -58,9 +59,11 @@ var (
 
 // NewHRTelemetryHelper returns a new HRTelemetryHelper object.
 func NewHRTelemetryHelper(cs ash.ConnSource, tconn *chrome.TestConn) *HRTelemetryHelper {
+	ui := uiauto.New(tconn)
 	return &HRTelemetryHelper{
 		cs:    cs,
 		tconn: tconn,
+		ui:    ui,
 	}
 }
 
@@ -81,7 +84,7 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 		return errors.Wrap(err, "failed to navigate to the Meet homepage")
 	}
 
-	ui := uiauto.New(h.tconn)
+	ui := h.ui
 	siteUnreachableMessage := nodewith.Name("This site can’t be reached").Role(role.StaticText)
 	node, existsErr := ui.FindAnyExists(ctx, meetRootWebArea, siteUnreachableMessage)
 	if existsErr != nil {
@@ -169,7 +172,7 @@ func (h *HRTelemetryHelper) checkError(ctx context.Context, err error) error {
 		errNavigateToHomePage = "navigate to the meet home page for unknown reason"
 	)
 
-	ui := uiauto.New(h.tconn)
+	ui := h.ui
 	// Wrap error message navigating to the meet home page for unknown reason.
 	if strings.Contains(err.Error(), errIsNotInMeeting) {
 		newMeetingButton := nodewith.Name("New meeting").Role(role.Button)
@@ -212,7 +215,7 @@ func (h *HRTelemetryHelper) SetCamera(ctx context.Context, expectedOn bool) erro
 		testing.ContextLog(ctx, "Set camera to ", expectedOn)
 		return h.meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.setCameraMuted(%t)", !expectedOn), nil)
 	}
-	ui := uiauto.New(h.tconn)
+	ui := h.ui
 	cameraName := "Turn off camera"
 	if !expectedOn {
 		cameraName = "Turn on camera"
@@ -253,11 +256,16 @@ func (h *HRTelemetryHelper) SetReceiveResolution720p(ctx context.Context) error 
 
 // OpenPresentDialog opens the presentation dialog with "A tab" mode.
 func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
+	ui := h.ui
 	present := func(ctx context.Context) error {
+		alertDialog := nodewith.Name("Can't share your screen").Role(role.AlertDialog)
+		okText := nodewith.Name("OK").Role(role.StaticText).Ancestor(alertDialog)
+		if err := uiauto.IfSuccessThen(ui.Exists(alertDialog), ui.DoDefault(okText))(ctx); err != nil {
+			return err
+		}
 		return h.meetConn.Eval(ctx, "hrTelemetryApi.presentation.present()", nil)
 	}
 
-	ui := uiauto.New(h.tconn)
 	chromeTab := nodewith.Name("Chrome Tab").Role(role.Tab)
 	if err := ui.WithTimeout(time.Minute).RetryUntil(present, ui.WaitUntilExists(chromeTab))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the screen-sharing popup")
@@ -266,7 +274,8 @@ func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
 }
 
 // PresentTab presents the tab with |presentTabTitle|.
-func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, ui *uiauto.Context, kw *input.KeyboardEventWriter, presentTabTitle string) error {
+func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, presentTabTitle string) error {
+	ui := h.ui
 	if err := ui.Exists(StopPresentingButton)(ctx); err == nil {
 		return nil
 	}
@@ -310,11 +319,11 @@ func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, u
 }
 
 // StopPresenting stops presenting in Google Meet.
-func (h *HRTelemetryHelper) StopPresenting(ctx context.Context, ui *uiauto.Context) error {
+func (h *HRTelemetryHelper) StopPresenting(ctx context.Context) error {
 	if !h.isPresenting {
 		return errors.New("failed to stop presenting, because no screenshare is active")
 	}
-
+	ui := h.ui
 	return uiauto.NamedAction("stop presenting",
 		ui.WithTimeout(time.Minute).DoDefaultUntil(StopPresentingButton,
 			ui.WaitUntilGone(StopPresentingButton)),

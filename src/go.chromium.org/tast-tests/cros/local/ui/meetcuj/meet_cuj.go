@@ -63,6 +63,8 @@ const (
 	longUITimeout = time.Minute
 	// FakeCameraVideoFile720p is the fake camera file.
 	FakeCameraVideoFile720p = "camera_video_720p.y4m"
+
+	presentTabTitle = "Untitled document"
 )
 
 // FakeCameraHALCfg defines parameters that are used to generate the fake
@@ -929,7 +931,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		defer cancel()
 		defer func(ctx context.Context) {
 			if isPresenting {
-				if err := meetHelper.StopPresenting(ctx, ui); err != nil {
+				if err := meetHelper.StopPresenting(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed to stop presenting: ", err)
 				}
 				isPresenting = false
@@ -945,8 +947,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			// and screen sharing the collaboration window.
 			endPresentSection := recorder.AnnotateSection(ctx, "Screenshare")
 
-			presentTabTitle := "Untitled document"
-			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, presentTabTitle); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, kw, presentTabTitle); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			isPresenting = true
@@ -1259,6 +1260,20 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					return errors.Wrap(err, "failed to stop snapshot for Google Docs")
 				}
 			}
+			if meet.Present && isPresenting && ui.Gone(googlemeet.StopPresentingButton)(ctx) == nil {
+				testing.ContextLog(ctx, "The connection lost, restart screen sharing and turn on camera")
+				recorder.CustomScreenshot(ctx)
+
+				if err := meetHelper.PresentTab(ctx, collaborationConn, kw, presentTabTitle); err != nil {
+					return errors.Wrap(err, "failed to start screen sharing")
+				}
+				// Sometimes the connection may be lost, causing the camera to turn off.
+				// Turn on the camera to make sure the number of bots is expected.
+				if err := meetHelper.SetCamera(ctx, true); err != nil {
+					return errors.Wrap(err, "failed to turn on camera")
+				}
+				recorder.CustomScreenshot(ctx)
+			}
 		} else {
 			startTracingRoutine(ctx)
 		}
@@ -1266,7 +1281,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		// "Stop presenting" if the test wants to interact with
 		// Google Slides or Google Sheets later.
 		if meet.Slides || meet.Sheets {
-			if err := meetHelper.StopPresenting(ctx, ui); err != nil {
+			if err := meetHelper.StopPresenting(ctx); err != nil {
 				return errors.Wrap(err, "failed to stop presenting")
 			}
 			// When a participant share the screen, one more participant
@@ -1324,7 +1339,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			// We stopped presenting before navigating to the Google Slides page.
 			// Start screen sharing again for the page.
-			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Slides"); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, kw, "Google Slides"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			isPresenting = true
@@ -1341,7 +1356,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 			// "Stop presenting" if the test wants to interact with
 			// Google Sheets later.
-			if err := meetHelper.StopPresenting(ctx, ui); err != nil {
+			if err := meetHelper.StopPresenting(ctx); err != nil {
 				return errors.Wrap(err, "failed to stop presenting")
 			}
 			isPresenting = false
@@ -1377,7 +1392,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 			// We stopped presenting before navigating to the Google Sheets page.
 			// Start screen sharing again for the page.
-			if err := meetHelper.PresentTab(ctx, collaborationConn, ui, kw, "Google Sheets"); err != nil {
+			if err := meetHelper.PresentTab(ctx, collaborationConn, kw, "Google Sheets"); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
 			isPresenting = true
