@@ -712,8 +712,13 @@ func saveDeviceAttributes(crosAttrs *crossdevicecommon.CrosAttributes, androidAt
 // ConnectToWifi connects the chromebook to the Wifi network in its RF box.
 func ConnectToWifi(ctx context.Context, ssid, passphrase string) error {
 	// Get SSID of currently connected network
-	if out, err := testexec.CommandContext(ctx, "iwgetid").Output(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to check for existing wifi connection")
+	out, err := testexec.CommandContext(ctx, "iwgetid").Output(testexec.DumpLogOnError)
+	if err != nil {
+		// iwgetid returns 255 if not connected to a network, which is not an error
+		// in this case. Proceed to connect.
+		if exitCode, ok := testexec.ExitCode(err); !ok || exitCode != 255 {
+			return errors.Wrap(err, "failed to check for existing wifi connection")
+		}
 	} else if strings.Contains(string(out), ssid) {
 		// If already connected to the desired ssid avoid trying to reconnect
 		testing.ContextLogf(ctx, "Already connected to %s wifi network", ssid)
