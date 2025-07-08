@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package tast.cros.printer;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/printer";
+
+service ChromePrintingService {
+  // GetPrinters returns the list of available printers using the
+  // chrome.printing.getPrinters API method.
+  rpc GetPrinters(google.protobuf.Empty) returns (GetPrintersResponse) {}
+
+  // Close releastes the Chrome instance initialized after calling any other
+  // ChromePrintingService method.
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+// GetPrintersResponse contains a list of available printers.
+message GetPrintersResponse { repeated Printer Printers = 1; }
+
+// Printer represents a single printer with its properties.
+message Printer {
+  string description = 1;
+  string id = 2;
+  bool isDefault = 3;
+  string name = 4;
+  string uri = 5;
+  int32 recentlyUsedRank = 6;
+  string source = 7;
+}
