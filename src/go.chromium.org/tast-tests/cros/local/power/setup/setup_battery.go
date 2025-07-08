@@ -168,6 +168,13 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		return errors.Wrap(err, "failed to obtain DUT power status")
 	}
 
+	degradation := status.BatteryChargeFull / status.BatteryChargeFullDesign
+	// The charge would take a long time in the capacity interval 80% ~ 100%.
+	// Cap the minimum charge percentage to 80% to avoid timeout.
+	const minChargeThreshold = 80.0
+	minChargePercentage := min(cp.MinChargePercentage/degradation, cp.MaxChargePercentage, minChargeThreshold)
+	testing.ContextLogf(ctx, "Degradation of the battery is %f, use %f as minimum charge percentage", degradation, minChargePercentage)
+
 	currentPercentage := status.BatteryPercent
 	logStr := "battery"
 	if cp.UseDisplayPercentage {
@@ -175,19 +182,19 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		logStr = "display battery"
 	}
 	testing.ContextLogf(ctx, "Current %s charge is %.2f%%", logStr, currentPercentage)
-	testing.ContextLogf(ctx, "Acceptable %s range is [%.2f%%, %.2f%%]", logStr, cp.MinChargePercentage, cp.MaxChargePercentage)
+	testing.ContextLogf(ctx, "Acceptable %s range is [%.2f%%, %.2f%%]", logStr, minChargePercentage, cp.MaxChargePercentage)
 
 	batteryPreparationTimeout := BatteryPreparationTimeout
 	if cp.MaxBatteryPreparationTime != time.Duration(0) {
 		batteryPreparationTimeout = cp.MaxBatteryPreparationTime
 	}
 
-	if currentPercentage > cp.MinChargePercentage && currentPercentage < cp.MaxChargePercentage {
+	if currentPercentage > minChargePercentage && currentPercentage < cp.MaxChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is within the acceptable range")
 		err = nil
-	} else if currentPercentage < cp.MinChargePercentage {
+	} else if currentPercentage < minChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is below the acceptable range")
-		err = chargeBattery(ctx, batteryPreparationTimeout, cp.MinChargePercentage, cp.IsPowerQual, cp.UseDisplayPercentage)
+		err = chargeBattery(ctx, batteryPreparationTimeout, minChargePercentage, cp.IsPowerQual, cp.UseDisplayPercentage)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
 		err = drainBattery(ctx, batteryPreparationTimeout, cp.MaxChargePercentage, cp.UseDisplayPercentage)
