@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/calendar"
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/connectivityfwdumps"
+	"go.chromium.org/tast-tests/cros/common/crossdevice"
 	"go.chromium.org/tast-tests/cros/common/dev"
 	"go.chromium.org/tast-tests/cros/common/drivefs"
 	"go.chromium.org/tast-tests/cros/common/enterpriseconnectors"
@@ -55,6 +56,8 @@ func pools() (map[string]string, map[string]string) {
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarDMAAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsDMAAccountValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: arc.ManagedDMAAccountPoolValue(),
+		crossdevice.DefaultCrossDevicePoolVarName:   crossdevice.DmaDefaultCrossDevicePoolValue(),
+		crossdevice.SmartLockPoolVarName:            crossdevice.DmaSmartLockPoolValue(),
 		dev.AccountVarName:                          ui.GaiaDMAPoolDefaultValue(),
 		drivefs.AccountPoolVarName:                  ui.GaiaDMAPoolDefaultValue(),
 		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshDMAAccount1Value(),
@@ -102,6 +105,8 @@ func pools() (map[string]string, map[string]string) {
 		calendar.GoogleCalendarAccountPoolVarName:   calendar.GoogleCalendarAccountPoolValue(),
 		calendar.UpcomingEventsAccountVarName:       calendar.UpcomingEventsAccountValue(),
 		connectivityfwdumps.GaiaLoginAccountVarName: connectivityfwdumps.GaiaLoginAccountValue(),
+		crossdevice.DefaultCrossDevicePoolVarName:   crossdevice.DefaultCrossDevicePoolValue(),
+		crossdevice.SmartLockPoolVarName:            crossdevice.SmartLockPoolValue(),
 		dev.AccountVarName:                          dev.AccountValue(),
 		drivefs.AccountPoolVarName:                  drivefs.AccountPoolValue(),
 		enterpriseconnectors.AshAccount1VarName:     enterpriseconnectors.AshAccount1Value(),

@@ -8,11 +8,11 @@ import (
 	"context"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/adb"
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/crossdevice"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -30,38 +30,10 @@ const resetTimeout = 30 * time.Second
 
 // Runtime variable names.
 const (
-	// These are the default GAIA credentials that will be used to sign in on Android for crossdevice tests.
-	defaultCrossDeviceUsername = "crossdevice.username"
-	defaultCrossDevicePassword = "crossdevice.password"
-
-	// These are the default credentials used for Smart Lock.
-	smartLockUsername = "crossdevice.smartLockUsername"
-	smartLockPassword = "crossdevice.smartLockPassword"
-
 	// Specify -var=skipAndroidLogin=true if the Android device is logged in to a personal account.
 	// Otherwise we will attempt removing all Google accounts and adding a test account to the phone.
 	// Adding/removing accounts requires ADB root access, so this will automatically be set to true if root is not available.
 	skipAndroidLogin = "skipAndroidLogin"
-
-	// Per RF box GAIA accounts.
-	crossDevicePerBoxUsername1  = "crossdevice.PerBoxUser1"
-	crossDevicePerBoxUsername2  = "crossdevice.PerBoxUser2"
-	crossDevicePerBoxUsername3  = "crossdevice.PerBoxUser3"
-	crossDevicePerBoxUsername4  = "crossdevice.PerBoxUser4"
-	crossDevicePerBoxUsername5  = "crossdevice.PerBoxUser5"
-	crossDevicePerBoxUsername6  = "crossdevice.PerBoxUser6"
-	crossDevicePerBoxUsername7  = "crossdevice.PerBoxUser7"
-	crossDevicePerBoxUsername8  = "crossdevice.PerBoxUser8"
-	crossDevicePerBoxUsername9  = "crossdevice.PerBoxUser9"
-	crossDevicePerBoxUsername10 = "crossdevice.PerBoxUser10"
-	crossDevicePerBoxUsername11 = "crossdevice.PerBoxUser11"
-	crossDevicePerBoxUsername12 = "crossdevice.PerBoxUser12"
-	crossDevicePerBoxUsername13 = "crossdevice.PerBoxUser13"
-	crossDevicePerBoxUsername14 = "crossdevice.PerBoxUser14"
-	crossDevicePerBoxUsername15 = "crossdevice.PerBoxUser15"
-	crossDevicePerBoxUsername16 = "crossdevice.PerBoxUser16"
-	crossDevicePerBoxUsername17 = "crossdevice.PerBoxUser17"
-	crossDevicePerBoxPassword   = "crossdevice.PerBoxPassword"
 )
 
 func init() {
@@ -76,27 +48,7 @@ func init() {
 		},
 		BugComponent: "b:1131837", // ChromeOS > Software > System Services > Cross Device > Phone Hub
 		Vars: []string{
-			defaultCrossDeviceUsername,
-			defaultCrossDevicePassword,
 			skipAndroidLogin,
-			crossDevicePerBoxUsername1,
-			crossDevicePerBoxUsername2,
-			crossDevicePerBoxUsername3,
-			crossDevicePerBoxUsername4,
-			crossDevicePerBoxUsername5,
-			crossDevicePerBoxUsername6,
-			crossDevicePerBoxUsername7,
-			crossDevicePerBoxUsername8,
-			crossDevicePerBoxUsername9,
-			crossDevicePerBoxUsername10,
-			crossDevicePerBoxUsername11,
-			crossDevicePerBoxUsername12,
-			crossDevicePerBoxUsername13,
-			crossDevicePerBoxUsername14,
-			crossDevicePerBoxUsername15,
-			crossDevicePerBoxUsername16,
-			crossDevicePerBoxUsername17,
-			crossDevicePerBoxPassword,
 		},
 		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
@@ -116,27 +68,7 @@ func init() {
 		},
 		BugComponent: "b:1131837", // ChromeOS > Software > System Services > Cross Device > Phone Hub
 		Vars: []string{
-			defaultCrossDeviceUsername,
-			defaultCrossDevicePassword,
 			skipAndroidLogin,
-			crossDevicePerBoxUsername1,
-			crossDevicePerBoxUsername2,
-			crossDevicePerBoxUsername3,
-			crossDevicePerBoxUsername4,
-			crossDevicePerBoxUsername5,
-			crossDevicePerBoxUsername6,
-			crossDevicePerBoxUsername7,
-			crossDevicePerBoxUsername8,
-			crossDevicePerBoxUsername9,
-			crossDevicePerBoxUsername10,
-			crossDevicePerBoxUsername11,
-			crossDevicePerBoxUsername12,
-			crossDevicePerBoxUsername13,
-			crossDevicePerBoxUsername14,
-			crossDevicePerBoxUsername15,
-			crossDevicePerBoxUsername16,
-			crossDevicePerBoxUsername17,
-			crossDevicePerBoxPassword,
 		},
 		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
@@ -156,27 +88,7 @@ func init() {
 		},
 		BugComponent: "b:1131772", // ChromeOS > Software > System Services > Cross Device > Smart Lock
 		Vars: []string{
-			smartLockUsername,
-			smartLockPassword,
 			skipAndroidLogin,
-			crossDevicePerBoxUsername1,
-			crossDevicePerBoxUsername2,
-			crossDevicePerBoxUsername3,
-			crossDevicePerBoxUsername4,
-			crossDevicePerBoxUsername5,
-			crossDevicePerBoxUsername6,
-			crossDevicePerBoxUsername7,
-			crossDevicePerBoxUsername8,
-			crossDevicePerBoxUsername9,
-			crossDevicePerBoxUsername10,
-			crossDevicePerBoxUsername11,
-			crossDevicePerBoxUsername12,
-			crossDevicePerBoxUsername13,
-			crossDevicePerBoxUsername14,
-			crossDevicePerBoxUsername15,
-			crossDevicePerBoxUsername16,
-			crossDevicePerBoxUsername17,
-			crossDevicePerBoxPassword,
 		},
 		Parent:          "crossDeviceRemote",
 		SetUpTimeout:    4 * time.Minute,
@@ -255,8 +167,6 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 	if err != nil {
 		s.Fatal("Failed to get login credentials: ", err)
 	}
-	androidUsername = s.RequiredVar(androidUsername)
-	androidPassword = s.RequiredVar(androidPassword)
 
 	if !loggedIn {
 		if rooted {
@@ -297,82 +207,24 @@ func (f *crossdeviceAndroidFixture) PostTest(ctx context.Context, s *testing.Fix
 
 // GetLoginCredentials returns the correct credentials to use based on the Cross Device feature being tested.
 func GetLoginCredentials(ctx context.Context, s *testing.FixtState, feature Feature) (string, string, error) {
-	var username, password, ipaddress string
+	var username, password string
+	var err error
 
-	// Choose the account to use based on the IP address of the chromebook.
-	cmd := `ifconfig eth0 | grep "inet " | awk '{print $2}'`
-	out, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Log("Failed to get IP Address of Chromebook: ", err)
-		ipaddress = ""
-	} else {
-		ipaddress = strings.TrimSpace(string(out))
-	}
-	password = crossDevicePerBoxPassword
-	switch ipaddress {
-	// chromeos15-row3-metro2-unit3 (asurada|corsola)
-	case "100.115.21.78", "100.115.21.79":
-		username = crossDevicePerBoxUsername14
-	// chromeos15-row3-metro4-unit3 (asurada|sentry)
-	case "172.27.213.21", "172.27.213.22":
-		username = crossDevicePerBoxUsername15
-	// chromeos15-row3-metro1-unit2 (atlas|atlas)
-	case "100.115.21.13", "100.115.21.14":
-		username = crossDevicePerBoxUsername1
-	// chromeos15-row3-metro3-unit3 (atlas|atlas)
-	case "172.27.212.197", "172.27.212.198":
-		username = crossDevicePerBoxUsername5
-	// chromeos15-row3-metro3-unit1 (atlas|cherry)
-	case "172.27.212.175", "172.27.212.176":
-		username = crossDevicePerBoxUsername3
-	// chromeos15-row3-metro1-unit3 (brya|hana)
-	case "100.115.21.24", "100.115.21.30":
-		username = crossDevicePerBoxUsername12
-	// chromeos15-row3-metro1-unit1 (coral|sarien)
-	case "100.115.21.2", "100.115.21.3":
-		username = crossDevicePerBoxUsername9
-	// chromeos15-row5-rack12-unit7 (dedede|herobrine)
-	case "100.71.236.135", "100.71.236.141":
-		username = crossDevicePerBoxUsername16
-	// chromeos15-row3-metro4-unit1 (grunt|scarlet)
-	case "172.27.212.253", "172.27.212.254":
-		username = crossDevicePerBoxUsername7
-	// chromeos15-row3-metro3-unit2 (grunt|soraka)
-	case "172.27.212.186", "172.27.212.187":
-		username = crossDevicePerBoxUsername4
-	// chromeos15-row3-metro1-unit4 (guybrush|kevin)
-	case "100.115.21.34", "100.115.21.40":
-		username = crossDevicePerBoxUsername11
-	// chromeos15-row3-metro2-unit2 (guybrush|kukui)
-	case "100.115.21.67", "100.115.21.68":
-		username = crossDevicePerBoxUsername17
-	// chromeos15-row3-metro4-unit2 (hatch|octopus)
-	case "172.27.213.10", "172.27.213.11":
-		username = crossDevicePerBoxUsername8
-	// chromeos15-row3-metro2-unit4 (jacuzzi|jacuzzi)
-	case "100.115.21.89", "100.115.21.90":
-		username = crossDevicePerBoxUsername2
-	// chromeos15-row3-metro4-unit4 (kukui|puff)
-	case "172.27.213.32", "172.27.213.33":
-		username = crossDevicePerBoxUsername10
-	// chromeos15-row3-metro3-unit4 (octopus|strongbad)
-	case "172.27.212.208", "172.27.212.209":
-		username = crossDevicePerBoxUsername6
-	// chromeos15-row3-metro2-unit1 (volteer|zork)
-	case "100.115.21.56", "100.115.21.57":
-		username = crossDevicePerBoxUsername13
-	default:
-		switch feature.Name {
-		case SmartLock:
-			username = smartLockUsername
-			password = smartLockPassword
-		case PhoneHub:
-			username = defaultCrossDeviceUsername
-			password = defaultCrossDevicePassword
-		default:
-			return "", "", errors.New("unknown Cross Device feature specified")
+	switch feature.Name {
+	case SmartLock:
+		username, password, err = dma.UserPassFromPool(crossdevice.SmartLockPoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get Smart Lock user and password: ", err)
 		}
+	case PhoneHub:
+		username, password, err = dma.UserPassFromPool(crossdevice.DefaultCrossDevicePoolVarName)
+		if err != nil {
+			s.Fatal("Failed to get Phone Hub user and password: ", err)
+		}
+	default:
+		return "", "", errors.New("unknown Cross Device feature specified")
 	}
+
 	s.Logf("GAIA account chosen: %s", username)
 	return username, password, nil
 
