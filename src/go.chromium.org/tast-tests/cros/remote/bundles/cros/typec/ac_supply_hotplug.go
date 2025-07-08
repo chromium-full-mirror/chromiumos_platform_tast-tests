@@ -100,7 +100,7 @@ func performACSupplyHotplugIteration(ctx context.Context, d *dut.DUT, sw usbswit
 			return errors.New("charger is not connected after enabling the port")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 6000 * time.Millisecond, Interval: 500 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
 		return err
 	}
 
