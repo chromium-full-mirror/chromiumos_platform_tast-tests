@@ -11,6 +11,7 @@ import (
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
+	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -46,7 +47,7 @@ func init() {
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm"},
+		SoftwareDeps: []string{"tpm", "chrome"},
 		Attr:         []string{"group:hwsec", "hwsec_nightly", "group:cryptohome"},
 		Params: []testing.Param{
 			{
@@ -95,8 +96,10 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to cleanup: ", err)
 	}
 
-	// Create the account.
-	if err := cryptohome.MountVault(ctx, util.PasswordLabel, passConfig, true, hwsec.NewVaultConfig()); err != nil {
+	// Create the account. Make sure Pinweaver passwords are enabled.
+	if err := cryptochrome.WithPinweaverPasswords(ctx, func() error {
+		return cryptohome.MountVault(ctx, util.PasswordLabel, passConfig, true, hwsec.NewVaultConfig())
+	}); err != nil {
 		s.Fatal("Failed to create user vault: ", err)
 	}
 
@@ -178,16 +181,16 @@ func CryptohomeCorruptedKeys(ctx context.Context, s *testing.State) {
 		if err := checkExpectUserMountInfo(ctx, mountInfo, user, false); err != nil {
 			s.Fatal("User mount point check failed after corrupted PIN: ", err)
 		}
-	}
 
-	// Mount with Password should success.
-	if err := cryptohome.MountVault(ctx, util.PasswordLabel, passConfig, false, hwsec.NewVaultConfig()); err != nil {
-		s.Fatal("Failed to mount user vault: ", err)
-	}
+		// Mount with Password should also fail.
+		if err := cryptohome.MountVault(ctx, util.PasswordLabel, passConfig, false, hwsec.NewVaultConfig()); err == nil {
+			s.Fatal("Mounting with corrupted password should fail but it did not")
+		}
 
-	// Check the mount point information.
-	if err := checkExpectUserMountInfo(ctx, mountInfo, user, true); err != nil {
-		s.Fatal("User mount point check failed after login with password: ", err)
+		// Check the mount point information.
+		if err := checkExpectUserMountInfo(ctx, mountInfo, user, false); err != nil {
+			s.Fatal("User mount point check failed after corrupted password: ", err)
+		}
 	}
 }
 
