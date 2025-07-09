@@ -881,6 +881,9 @@ func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 		return nil
 	}()
 
+	testing.ContextLog(speedometerCtx, "Sleep 120 seconds before running Speedometer")
+	testing.Sleep(speedometerCtx, 120 * time.Second)
+
 	testing.ContextLog(speedometerCtx, "Running speedometer test")
 	sptest, err := speedometerService.PerformSpeedometerTest(speedometerCtx, &empty.Empty{})
 	if err != nil {
