@@ -23,15 +23,24 @@ func init() {
 		SoftwareDeps: []string{"ml_service"},
 		Params: []testing.Param{{
 			Name: "sample",
-			Val:  tflite.SampleDelegateLoaderSettings,
+			Val: tflite.StableDelegateSettings{
+				StableDelegateLoaderSettings: tflite.SampleDelegateLoaderSettings,
+			},
 		}, {
 			Name:              "neuron",
-			Val:               tflite.MtkNeuronDelegateLoaderSettings,
 			ExtraSoftwareDeps: []string{"tflite_mtk_neuron"},
+			Val: tflite.StableDelegateSettings{
+				StableDelegateLoaderSettings: tflite.MtkNeuronDelegateLoaderSettings,
+				MtkNeuronSettings: &tflite.MtkNeuronSettings{
+					AllowFp16PrecisionForFp32: true,
+				},
+			},
 		}, {
 			Name:              "openvino",
-			Val:               tflite.IntelOpenVINODelegateLoaderSettings,
 			ExtraSoftwareDeps: []string{"tflite_intel_openvino"},
+			Val: tflite.StableDelegateSettings{
+				StableDelegateLoaderSettings: tflite.IntelOpenVINODelegateLoaderSettings,
+			},
 		}},
 	})
 }
@@ -42,10 +51,7 @@ func AsyncDelegate(ctx context.Context, s *testing.State) {
 	settingsPath := filepath.Join(s.OutDir(), "settings.json")
 	gtestLogPath := filepath.Join(s.OutDir(), "gtest.log")
 
-	settings := tflite.StableDelegateSettings{
-		StableDelegateLoaderSettings: s.Param().(tflite.StableDelegateLoaderSettings),
-	}
-	settings.WriteTo(settingsPath)
+	s.Param().(tflite.StableDelegateSettings).WriteTo(settingsPath)
 
 	if report, err := gtest.New(
 		"async_delegate_test",
