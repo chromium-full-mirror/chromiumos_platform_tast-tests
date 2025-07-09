@@ -18,7 +18,6 @@ import (
 
 type testTPMCmd struct {
 	bus      ti50.TpmBus
-	cmd      string
 	function func(context.Context, *testing.State, utils.DevboardHelper, *utils.TpmHelper)
 }
 
@@ -38,88 +37,16 @@ func init() {
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
-			Name: "spi_apro_boot",
+			Name: "spi_gsctool_info",
 			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "-B",
+				bus:      ti50.TpmBusSpi,
+				function: gsctoolInfo,
 			},
 		}, {
-			Name: "i2c_apro_boot",
+			Name: "i2c_gsctool_info",
 			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "-B",
-			},
-		}, {
-			Name: "spi_get_time",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--get_time",
-			},
-		}, {
-			Name: "i2c_get_time",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--get_time",
-			},
-		}, {
-			Name: "spi_ccd_info",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--ccd_info",
-			},
-		}, {
-			Name: "i2c_ccd_info",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--ccd_info",
-			},
-		}, {
-			Name: "spi_board_id",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--board_id",
-			},
-		}, {
-			Name: "i2c_board_id",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--board_id",
-			},
-		}, {
-			Name: "spi_fwver",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--fwver",
-			},
-		}, {
-			Name: "i2c_fwver",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--fwver",
-			},
-		}, {
-			Name: "spi_metrics",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--metrics",
-			},
-		}, {
-			Name: "i2c_metrics",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--metrics",
-			},
-		}, {
-			Name: "spi_wp",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusSpi,
-				cmd: "--wp",
-			},
-		}, {
-			Name: "i2c_wp",
-			Val: testTPMCmd{
-				bus: ti50.TpmBusI2c,
-				cmd: "--wp",
+				bus:      ti50.TpmBusI2c,
+				function: gsctoolInfo,
 			},
 		}, {
 			Name: "spi_nv_read",
@@ -134,9 +61,15 @@ func init() {
 				function: tpmNvRead,
 			},
 		}, {
-			Name: "spi_tpm_property_vendor_type",
+			Name: "spi_tpm_property",
 			Val: testTPMCmd{
 				bus:      ti50.TpmBusSpi,
+				function: tpmProperty,
+			},
+		}, {
+			Name: "i2c_tpm_property",
+			Val: testTPMCmd{
+				bus:      ti50.TpmBusI2c,
 				function: tpmProperty,
 			},
 		}},
@@ -178,10 +111,20 @@ func tpmNvRead(ctx context.Context, s *testing.State, b utils.DevboardHelper, tp
 	th.MustSucceed(err, "GSC NV_Read")
 }
 
+func gsctoolInfo(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+	cmds := []string{"-B", "--get_time", "--ccd_info", "--board_id", "--fwver", "--metrics", "--wp"}
+	for _, cmd := range cmds {
+		out, err := b.GSCToolCommandViaTPM(ctx, tpm.Bus, "", cmd)
+		if err != nil {
+			s.Errorf("Could not run cmd %q via TPM: %s", cmd, err)
+		}
+		s.Logf("GSCTool %s output: %s", cmd, out)
+	}
+}
+
 func GSCTPM(ctx context.Context, s *testing.State) {
 	config := s.Param().(testTPMCmd)
 	bus := config.bus
-	cmd := config.cmd
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
@@ -224,17 +167,10 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	events := b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "setup.vcd")
 
-	if config.function != nil {
-		config.function(ctx, s, b, tpmHandle)
-	} else if config.cmd != "" {
-		out, err := b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
-		if err != nil {
-			s.Error("Could not get version via TPM: ", err)
-		}
-		s.Logf("GSCTool %s output: %s", cmd, out)
-	} else {
-		s.Error("Missing configuration parameter, either cmd or function")
+	if config.function == nil {
+		s.Fatal("Missing configuration parameter: function")
 	}
+	config.function(ctx, s, b, tpmHandle)
 
 	events = b.GpioMonitorRead(ctx, gpioMonitor)
 	gpioMonitor.Save(ctx, events, "cmd.vcd")
