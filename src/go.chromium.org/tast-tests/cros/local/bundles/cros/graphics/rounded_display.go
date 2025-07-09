@@ -40,7 +40,7 @@ func init() {
 			"zoraiznaeem@chromium.org",
 			"skau@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.InternalDisplay(), hwdep.Model("bugzzy"), hwdep.Model("crota"), hwdep.Model("volet")),
 		Data:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
