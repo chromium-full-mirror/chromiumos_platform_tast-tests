@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -154,6 +155,7 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		slidesRootWebArea := nodewith.NameContaining("Google Slides").Role(role.RootWebArea)
 		documentContentFocused := nodewith.Name("Document content").Role(role.TextField).Ancestor(slidesRootWebArea).Focused()
 		if err := uiauto.Combine("click web area to focus on web content",
+			webutil.ReloadIfSiteUnreachable(ac, slidesConn, slidesRootWebArea),
 			ac.LeftClick(slidesRootWebArea),
 			// Click at |slidesRootWebArea| might focus on the web area or
 			// the document content.

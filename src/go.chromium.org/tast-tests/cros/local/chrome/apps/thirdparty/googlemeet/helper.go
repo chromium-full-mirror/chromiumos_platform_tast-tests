@@ -39,7 +39,6 @@ type MeetHelper interface {
 	SetReceiveResolution720p(ctx context.Context) error
 	OpenPresentDialog(ctx context.Context) error
 	PresentTab(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEventWriter, presentTabTitle string) error
-	Reload(ctx context.Context) error
 }
 
 // HRTelemetryHelper helps to perform Meet operations with hrTelemetryApi.
@@ -84,16 +83,8 @@ func (h *HRTelemetryHelper) JoinMeetingWithDisabledExperiments(ctx context.Conte
 		return errors.Wrap(err, "failed to navigate to the Meet homepage")
 	}
 
-	ui := h.ui
-	siteUnreachableMessage := nodewith.Name("This site can’t be reached").Role(role.StaticText)
-	node, existsErr := ui.FindAnyExists(ctx, meetRootWebArea, siteUnreachableMessage)
-	if existsErr != nil {
-		return existsErr
-	}
-	if node == siteUnreachableMessage {
-		if err := h.Reload(ctx); err != nil {
-			return errors.Wrap(err, "failed to reload page")
-		}
+	if err := webutil.ReloadIfSiteUnreachable(h.ui, h.meetConn, meetRootWebArea)(ctx); err != nil {
+		return errors.Wrap(err, "failed to reload the page")
 	}
 
 	startTime := time.Now()
@@ -328,17 +319,6 @@ func (h *HRTelemetryHelper) StopPresenting(ctx context.Context) error {
 		ui.WithTimeout(time.Minute).DoDefaultUntil(StopPresentingButton,
 			ui.WaitUntilGone(StopPresentingButton)),
 	)(ctx)
-}
-
-// Reload reloads the current Google Meet page.
-func (h *HRTelemetryHelper) Reload(ctx context.Context) error {
-	if err := h.meetConn.Eval(ctx, "location.reload()", nil); err != nil {
-		return errors.Wrap(err, "failed to reload the meeting page")
-	}
-	if err := webutil.WaitForQuiescence(ctx, h.meetConn, time.Minute); err != nil {
-		testing.ContextLog(ctx, "Failed to wait for meeting page to quiesce: ", err)
-	}
-	return nil
 }
 
 var _ MeetHelper = (*HRTelemetryHelper)(nil)

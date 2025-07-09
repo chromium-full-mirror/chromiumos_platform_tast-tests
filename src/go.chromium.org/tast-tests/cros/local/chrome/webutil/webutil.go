@@ -12,6 +12,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,4 +95,25 @@ func NavigateToURLInApp(conn *chrome.Conn, url string, condition uiauto.Action, 
 		}
 		return nil
 	})
+}
+
+// ReloadIfSiteUnreachable reloads the page if "This site can’t be reached" is shown.
+// Waits for the page to settle after reload.
+func ReloadIfSiteUnreachable(ui *uiauto.Context, conn *chrome.Conn, expectedFinder *nodewith.Finder) uiauto.Action {
+	return func(ctx context.Context) error {
+		siteUnreachableMessage := nodewith.Name("This site can’t be reached").Role(role.StaticText)
+		node, existsErr := ui.FindAnyExists(ctx, expectedFinder, siteUnreachableMessage)
+		if existsErr != nil {
+			return existsErr
+		}
+		if node == siteUnreachableMessage {
+			if err := conn.Eval(ctx, "location.reload()", nil); err != nil {
+				return errors.Wrap(err, "failed to reload the page")
+			}
+			if err := WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+				testing.ContextLog(ctx, "Failed to wait for the page to quiesce: ", err)
+			}
+		}
+		return nil
+	}
 }
