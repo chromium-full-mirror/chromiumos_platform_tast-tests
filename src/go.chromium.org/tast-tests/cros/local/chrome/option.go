@@ -638,3 +638,12 @@ func EnableAccessibilityManifestV3EspeakNGTts() Option {
 		return nil
 	}
 }
+
+// EnableAccessibilityManifestV3AccessibilityCommon returns an Option to enable
+// `AccessibilityManifestV3AccessibilityCommon`.
+func EnableAccessibilityManifestV3AccessibilityCommon() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.DisableAccessibilityManifestV3AccessibilityCommon = false
+		return nil
+	}
+}

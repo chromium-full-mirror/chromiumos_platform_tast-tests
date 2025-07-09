@@ -289,6 +289,10 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3EspeakNGTts")
 	}
 
+	if cfg.DisableAccessibilityManifestV3AccessibilityCommon() {
+		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3AccessibilityCommon")
+	}
+
 	if len(enabledFeatures) != 0 {
 		args = append(args, "--enable-features="+strings.Join(enabledFeatures, ","))
 	}

@@ -142,9 +142,6 @@ func SetUp(ctx context.Context, html, className string) (d driver, e error) {
 	cr, err := chrome.New(ctx,
 		// Enforce on-device speech recognition.
 		chrome.EnableFeatures("OnDeviceSpeechRecognition"),
-		// TODO(b:388867838): Enable this feature when the manifest v3 migration
-		// of accessibility common is complete.
-		chrome.DisableFeatures("AccessibilityManifestV3AccessibilityCommon"),
 	)
 	if err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to start chrome")

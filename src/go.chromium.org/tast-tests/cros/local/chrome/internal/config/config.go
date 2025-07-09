@@ -261,6 +261,13 @@ func (c *Config) DisableAccessibilityManifestV3EspeakNGTts() bool {
 	return c.m.DisableAccessibilityManifestV3EspeakNGTts
 }
 
+// DisableAccessibilityManifestV3AccessibilityCommon returns true if
+// `AccessibilityManifestV3AccessibilityCommon` feature should be disabled.
+// That is, forcing to use MV2 accessibility common extension when it is true.
+func (c *Config) DisableAccessibilityManifestV3AccessibilityCommon() bool {
+	return c.m.DisableAccessibilityManifestV3AccessibilityCommon
+}
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -273,57 +280,58 @@ func (c *Config) DisableAccessibilityManifestV3EspeakNGTts() bool {
 // - "customized": Reuse checking logic is expected to be customized in customizedReuseCheck() function.
 // This tag must be set for every field with one of the above values. Otherwise, unit test will fail.
 type MutableConfig struct {
-	Creds                                     credconfig.Creds `reuse_match:"true"`
-	NormalizedUser                            string           `reuse_match:"true"`
-	KeepState                                 bool             `reuse_match:"false"`
-	KeepOwnership                             bool             `reuse_match:"true"`
-	DeferLogin                                bool             `reuse_match:"customized"`
-	ReauthMode                                bool             `reuse_match:"customized"`
-	EnableRestoreTabs                         bool             `reuse_match:"false"`
-	LoginMode                                 LoginMode        `reuse_match:"customized"`
-	TryReuseSession                           bool             `reuse_match:"false"`
-	ForceReuseSession                         bool             `reuse_match:"false"`
-	EnableLoginVerboseLogs                    bool             `reuse_match:"true"`
-	VKEnabled                                 bool             `reuse_match:"true"`
-	SkipOOBEAfterLogin                        bool             `reuse_match:"false"`
-	WaitForCryptohome                         bool             `reuse_match:"false"`
-	CustomLoginTimeout                        int64            `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
-	InstallWebApp                             bool             `reuse_match:"true"`
-	Region                                    string           `reuse_match:"true"`
-	PolicyEnabled                             bool             `reuse_match:"true"`
-	DMSAddr                                   string           `reuse_match:"true"`
-	RealtimeReportingAddr                     string           `reuse_match:"true"`
-	EncryptedReportingAddr                    string           `reuse_match:"true"`
-	EnrollMode                                EnrollMode       `reuse_match:"true"`
-	EnrollmentCreds                           credconfig.Creds `reuse_match:"true"`
-	DisablePolicyKeyVerification              bool             `reuse_match:"true"`
-	ARCMode                                   ARCMode          `reuse_match:"true"`
-	ARCUseHugePages                           bool             `reuse_match:"true"`
-	UnRestrictARCCPU                          bool             `reuse_match:"true"`
-	BreakpadTestMode                          bool             `reuse_match:"true"`
-	ExtraArgs                                 []string         `reuse_match:"true"`
-	EnableFeatures                            []string         `reuse_match:"true"`
-	DisableFeatures                           []string         `reuse_match:"true"`
-	ExtraExtDirs                              []string         `reuse_match:"customized"`
-	SigninExtKey                              string           `reuse_match:"customized"`
-	SkipForceOnlineSignInForTesting           bool             `reuse_match:"true"`
-	RemoveNotification                        bool             `reuse_match:"true"`
-	HideCrashRestoreBubble                    bool             `reuse_match:"true"`
-	ForceLaunchBrowser                        bool             `reuse_match:"true"`
-	EphemeralUser                             bool             `reuse_match:"true"`
-	UseGaiaConfig                             string           `reuse_match:"true"`
-	TestExtOAuthClientID                      string           `reuse_match:"true"`
-	EnableHIDScreenOnOOBE                     bool             `reuse_match:"true"`
-	EnableStackSampledMetrics                 bool             `reuse_match:"true"`
-	FieldTrialConfig                          string           `reuse_match:"true"`
-	EnableHDR                                 bool             `reuse_match:"false"`
-	ForceManualEnrollment                     bool             `reuse_match:"true"`
-	EnableOOBETestAPI                         bool             `reuse_match:"true"`
-	DisableExtensionManifestV2Disabled        bool             `reuse_match:"true"`
-	ProxyServer                               string           `reuse_match:"true"`
-	DisableAccessibilityManifestV3GoogleTts   bool             `reuse_match:"true"`
-	DisableAccessibilityManifestV3EspeakNGTts bool             `reuse_match:"true"`
-	InstallUserTestExtension                  bool             `reuse_match:"true"`
+	Creds                                             credconfig.Creds `reuse_match:"true"`
+	NormalizedUser                                    string           `reuse_match:"true"`
+	KeepState                                         bool             `reuse_match:"false"`
+	KeepOwnership                                     bool             `reuse_match:"true"`
+	DeferLogin                                        bool             `reuse_match:"customized"`
+	ReauthMode                                        bool             `reuse_match:"customized"`
+	EnableRestoreTabs                                 bool             `reuse_match:"false"`
+	LoginMode                                         LoginMode        `reuse_match:"customized"`
+	TryReuseSession                                   bool             `reuse_match:"false"`
+	ForceReuseSession                                 bool             `reuse_match:"false"`
+	EnableLoginVerboseLogs                            bool             `reuse_match:"true"`
+	VKEnabled                                         bool             `reuse_match:"true"`
+	SkipOOBEAfterLogin                                bool             `reuse_match:"false"`
+	WaitForCryptohome                                 bool             `reuse_match:"false"`
+	CustomLoginTimeout                                int64            `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
+	InstallWebApp                                     bool             `reuse_match:"true"`
+	Region                                            string           `reuse_match:"true"`
+	PolicyEnabled                                     bool             `reuse_match:"true"`
+	DMSAddr                                           string           `reuse_match:"true"`
+	RealtimeReportingAddr                             string           `reuse_match:"true"`
+	EncryptedReportingAddr                            string           `reuse_match:"true"`
+	EnrollMode                                        EnrollMode       `reuse_match:"true"`
+	EnrollmentCreds                                   credconfig.Creds `reuse_match:"true"`
+	DisablePolicyKeyVerification                      bool             `reuse_match:"true"`
+	ARCMode                                           ARCMode          `reuse_match:"true"`
+	ARCUseHugePages                                   bool             `reuse_match:"true"`
+	UnRestrictARCCPU                                  bool             `reuse_match:"true"`
+	BreakpadTestMode                                  bool             `reuse_match:"true"`
+	ExtraArgs                                         []string         `reuse_match:"true"`
+	EnableFeatures                                    []string         `reuse_match:"true"`
+	DisableFeatures                                   []string         `reuse_match:"true"`
+	ExtraExtDirs                                      []string         `reuse_match:"customized"`
+	SigninExtKey                                      string           `reuse_match:"customized"`
+	SkipForceOnlineSignInForTesting                   bool             `reuse_match:"true"`
+	RemoveNotification                                bool             `reuse_match:"true"`
+	HideCrashRestoreBubble                            bool             `reuse_match:"true"`
+	ForceLaunchBrowser                                bool             `reuse_match:"true"`
+	EphemeralUser                                     bool             `reuse_match:"true"`
+	UseGaiaConfig                                     string           `reuse_match:"true"`
+	TestExtOAuthClientID                              string           `reuse_match:"true"`
+	EnableHIDScreenOnOOBE                             bool             `reuse_match:"true"`
+	EnableStackSampledMetrics                         bool             `reuse_match:"true"`
+	FieldTrialConfig                                  string           `reuse_match:"true"`
+	EnableHDR                                         bool             `reuse_match:"false"`
+	ForceManualEnrollment                             bool             `reuse_match:"true"`
+	EnableOOBETestAPI                                 bool             `reuse_match:"true"`
+	DisableExtensionManifestV2Disabled                bool             `reuse_match:"true"`
+	ProxyServer                                       string           `reuse_match:"true"`
+	DisableAccessibilityManifestV3GoogleTts           bool             `reuse_match:"true"`
+	DisableAccessibilityManifestV3EspeakNGTts         bool             `reuse_match:"true"`
+	DisableAccessibilityManifestV3AccessibilityCommon bool             `reuse_match:"true"`
+	InstallUserTestExtension                          bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -363,8 +371,9 @@ func NewConfig(opts []Option) (*Config, error) {
 			EnableOOBETestAPI:                       true,
 			DisableExtensionManifestV2Disabled:      true,
 			DisableAccessibilityManifestV3GoogleTts: true,
-			DisableAccessibilityManifestV3EspeakNGTts: true,
-			InstallUserTestExtension:                  true,
+			DisableAccessibilityManifestV3EspeakNGTts:         true,
+			DisableAccessibilityManifestV3AccessibilityCommon: true,
+			InstallUserTestExtension:                          true,
 		},
 	}
 
