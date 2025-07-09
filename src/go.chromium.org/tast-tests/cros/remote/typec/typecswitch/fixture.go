@@ -62,6 +62,9 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 
 	if portStr, portPresent := s.Var("typec.SwitchPort"); portPresent {
 		if portUsed, err := strconv.Atoi(portStr); err != nil {
+			if err := f.TestSwitch.Close(ctx); err != nil {
+				s.Error("Failed to close switch: ", err)
+			}
 			s.Fatal("Failed to convert port number to integer: ", err)
 		} else if err := f.TestSwitch.SetActiveSwitchPort(ctx, portUsed); err != nil {
 			// Attempt to close the switch if setting active port fails during setup.
@@ -73,6 +76,9 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 			f.PortNum = portUsed
 		}
 	} else {
+		if err := f.TestSwitch.Close(ctx); err != nil {
+			s.Error("Failed to close switch: ", err)
+		}
 		s.Fatal("Port number is not set in the fixture with typec.SwitchPort var")
 	}
 	testing.ContextLogf(ctx, "Port number set to %d", f.PortNum)
