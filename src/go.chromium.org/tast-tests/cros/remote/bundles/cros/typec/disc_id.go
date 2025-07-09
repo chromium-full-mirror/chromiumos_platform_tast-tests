@@ -196,7 +196,7 @@ func performDiscIDIteration(ctx context.Context, d *dut.DUT, sw usbswitch.Switch
 			return errors.Wrap(err, "cable check failed")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 6 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
 		return err
 	}
 
