@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -126,6 +127,10 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to RequireServo: ", err)
+	}
+
+	if err := utils.EnableSoftwareSync(ctx, h); err != nil {
+		s.Fatal("Software sync is required for this test: ", err)
 	}
 
 	hasBattery := true
