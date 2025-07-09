@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/go-tpm/tpm2"
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
@@ -18,7 +19,7 @@ import (
 type testTPMCmd struct {
 	bus      ti50.TpmBus
 	cmd      string
-	function func(*utils.TpmHelper, utils.FirmwareTestingHelper)
+	function func(context.Context, *testing.State, utils.DevboardHelper, *utils.TpmHelper)
 }
 
 func init() {
@@ -132,11 +133,37 @@ func init() {
 				bus:      ti50.TpmBusI2c,
 				function: tpmNvRead,
 			},
+		}, {
+			Name: "spi_tpm_property_vendor_type",
+			Val: testTPMCmd{
+				bus:      ti50.TpmBusSpi,
+				function: tpmProperty,
+			},
 		}},
 	})
 }
 
-func tpmNvRead(tpmHandle *utils.TpmHelper, th utils.FirmwareTestingHelper) {
+func tpmProperty(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+	vendorTpmType, err := tpm.GetTPMProperty(tpm2.TPMPTVendorTPMType)
+	if err != nil {
+		s.Fatal("Could not get Vendor TPM Type property")
+	}
+	s.Log("Vendor TPM Type value: ", vendorTpmType)
+
+	expectedTpmType := uint32(1)
+	if b.GscProperties().ChipType() == ti50.GscOT {
+		// NT devices should specify 2 as the vendor TPM type to differentiate
+		// their version hash.
+		expectedTpmType = 2
+	}
+
+	if vendorTpmType != expectedTpmType {
+		s.Errorf("Vendor TPM Type incorrect: got %d want %d", vendorTpmType, expectedTpmType)
+	}
+}
+
+func tpmNvRead(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	// NV_Read first 0x101 bytes from EKcert
 	// size: 0101
 	// offset: 0000
@@ -147,7 +174,7 @@ func tpmNvRead(tpmHandle *utils.TpmHelper, th utils.FirmwareTestingHelper) {
 	//   sess attr: 00
 	//   auth size: 0000
 	// total cmd size: 10+8+13+4 = 35 = 0x23
-	_, err := tpmHandle.OpenTitanToolTpmCommand("execute-command", "--hexdata", "8002000000230000014e01c0000101c000010000000940000009000000000001010000")
+	_, err := tpm.OpenTitanToolTpmCommand("execute-command", "--hexdata", "8002000000230000014e01c0000101c000010000000940000009000000000001010000")
 	th.MustSucceed(err, "GSC NV_Read")
 }
 
@@ -198,7 +225,7 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	gpioMonitor.Save(ctx, events, "setup.vcd")
 
 	if config.function != nil {
-		config.function(tpmHandle, th)
+		config.function(ctx, s, b, tpmHandle)
 	} else if config.cmd != "" {
 		out, err := b.GSCToolCommandViaTPM(ctx, bus, "", cmd)
 		if err != nil {

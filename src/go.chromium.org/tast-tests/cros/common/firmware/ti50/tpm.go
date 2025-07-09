@@ -569,3 +569,28 @@ func (t *TpmHandle) PCRExtendCheckDigest(pcr uint8, extendDigest, expectedDigest
 	}
 	return nil
 }
+
+// GetTPMProperty gets the specified property value
+func (t *TpmHandle) GetTPMProperty(prop tpm2.TPMPT) (uint32, error) {
+	getCap := tpm2.GetCapability{
+		Capability:    tpm2.TPMCapTPMProperties,
+		Property:      uint32(prop),
+		PropertyCount: 1,
+	}
+
+	response, err := getCap.Execute(t)
+	if err != nil {
+		return 0, errors.Wrapf(err, "TPMGetCapability for %d failed", prop)
+	}
+	property, err := response.CapabilityData.Data.TPMProperties()
+	if err != nil {
+		return 0, errors.Wrapf(err, "no property available for %d", prop)
+	}
+	for _, p := range property.TPMProperty {
+		if p.Property == prop {
+			return p.Value, nil
+		}
+	}
+
+	return 0, errors.Errorf("property not found %d", prop)
+}
