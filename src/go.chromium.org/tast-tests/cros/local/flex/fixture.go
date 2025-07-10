@@ -80,7 +80,10 @@ func (i *flexARCVMImpl) SetUp(ctx context.Context, s *testing.FixtState) interfa
 		&policy.DeviceFlexArcPreloadEnabled{Stat: policy.StatusSet, Val: true},
 	}
 	// Update policies from the login screen.
-	if err := policyutil.ServeAndVerifyOnLoginScreen(ctx, i.fdms, cr, policies); err != nil {
+	// b/430091259: Retry to work-around policy mismatch error.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return policyutil.ServeAndVerifyOnLoginScreen(ctx, i.fdms, cr, policies)
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to serve and refresh: ", err)
 	}
 
