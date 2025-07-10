@@ -298,7 +298,13 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to detect firmware screen: ", err)
 		}
 	} else {
-		if err := h.WaitFirmwareScreen(ctx, brokenScreenTimeout); err != nil {
+		// GoBigSleepLint: Wait for the 2 normal/dev boots to complete, as
+		// WaitFirmwareScreen() may return early with the 8042 keyboard
+		// enabled in these 2 boots instead of the Broken Screen boot.
+		if err := testing.Sleep(ctx, 2*h.Config.FirmwareScreen); err != nil {
+			s.Fatalf("Unable to sleep for 2*%s: %v", h.Config.FirmwareScreen, err)
+		}
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 	}
