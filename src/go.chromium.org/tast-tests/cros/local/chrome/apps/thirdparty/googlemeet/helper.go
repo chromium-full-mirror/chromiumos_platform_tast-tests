@@ -323,14 +323,21 @@ func (h *HRTelemetryHelper) PresentTab(ctx context.Context, conn *chrome.Conn, k
 
 // StopPresenting stops presenting in Google Meet.
 func (h *HRTelemetryHelper) StopPresenting(ctx context.Context) error {
-	if !h.isPresenting {
+	ui := h.ui
+	if !h.isPresenting || ui.Gone(StopPresentingButton) == nil {
 		return errors.New("failed to stop presenting, because no screenshare is active")
 	}
-	ui := h.ui
-	return uiauto.NamedAction("stop presenting",
-		ui.WithTimeout(time.Minute).DoDefaultUntil(StopPresentingButton,
-			ui.WaitUntilGone(StopPresentingButton)),
-	)(ctx)
+
+	stopPresenting := uiauto.NamedAction("stop presenting",
+		ui.WithTimeout(time.Minute).DoDefaultUntil(
+			StopPresentingButton,
+			ui.WaitUntilGone(StopPresentingButton),
+		))
+	return uiauto.Retry(3,
+		uiauto.IfSuccessThenWithLog(
+			ui.Exists(StopPresentingButton),
+			stopPresenting,
+		))(ctx)
 }
 
 var _ MeetHelper = (*HRTelemetryHelper)(nil)
