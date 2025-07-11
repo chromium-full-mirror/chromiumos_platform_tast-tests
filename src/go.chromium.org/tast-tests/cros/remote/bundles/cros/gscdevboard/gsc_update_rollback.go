@@ -118,6 +118,7 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 			targetVer = debugVer
 		}
 	}
+	versionChange := targetVer.String() != startVer.String()
 
 	s.Logf("Image under test %s: %s", currentVer, currentImage)
 	s.Logf("Initial image %s: %s", startVer, startImage)
@@ -156,6 +157,7 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	}
 
+	earlyPrint := false
 	lastResetCount := uint32(0)
 	for attempt := 0; attempt < 10; attempt++ {
 		// Give the device a little more time than normal to reboot since we are
@@ -180,6 +182,17 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		lastResetCount = sysinfo.ResetCount
 
 		if sysinfo.RollbackDetected {
+			if version.ActiveRw().Version == targetVer.String() {
+				break
+			}
+			earlyPrint = true
+			s.Errorf("attempt %d: reset count %d: GSC printed 'Rollback detected' before rollback",
+				attempt, lastResetCount)
+		}
+
+		if versionChange && version.ActiveRw().Version == targetVer.String() {
+			s.Errorf("attempt %d: reset count %d: GSC did not print 'Rollback detected' after rollback",
+				attempt, lastResetCount)
 			break
 		}
 
@@ -208,6 +221,9 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	s.Logf("Reset count after %s commands: %d", config.cmd, lastResetCount)
 	if lastResetCount < 5 || lastResetCount > 8 {
 		s.Errorf("%s command: Reset count %d out of range", config.cmd, lastResetCount)
+	}
+	if earlyPrint {
+		s.Errorf("%s command: actual rollback reset count %d", config.cmd, lastResetCount)
 	}
 
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after "+config.cmd)
