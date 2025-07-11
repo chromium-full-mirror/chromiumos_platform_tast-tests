@@ -405,6 +405,11 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 }
 
 func (h *CmdTPMClearHelper) ensureSystemStateIsReset(ctx context.Context) error {
+	// Reset enrollment state.
+	if out, err := h.cmdRunner.Run(ctx, "/usr/sbin/update_rw_vpd", "block_devmode", "", "check_enrollment", ""); err != nil {
+		return errors.Wrapf(err, "failed to unset enrollment state: %s", string(out))
+	}
+
 	args := append([]string{"-rf", "--"}, SystemStateFiles...)
 	if out, err := h.cmdRunner.Run(ctx, "rm", args...); err != nil {
 		return errors.Wrapf(err, "failed to remove files to clear ownership: %s", string(out))
@@ -424,6 +429,7 @@ func (h *CmdTPMClearHelper) ensureSystemStateIsReset(ctx context.Context) error 
 	if out, err := h.cmdRunner.Run(ctx, "/usr/bin/systemd-tmpfiles", "--create", "--remove", "--boot", "--prefix", "/home", "--prefix", "/var/lib"); err != nil {
 		testing.ContextLog(ctx, "Failed to run tmpfiles: ", err, string(out))
 	}
+
 	return nil
 }
 
