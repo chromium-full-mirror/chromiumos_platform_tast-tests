@@ -82,7 +82,7 @@ const (
 	latestQualFile = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
 	// DevGSCImageBucket is the bucket where node locked GSC test images are stored.
 	DevGSCImageBucket  = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/"
-	debugImageTemplate = "*.dbg.0x%s_0x%s.bin.*"
+	debugImageTemplate = "*.dbg%s.0x%s_0x%s.bin.*"
 	efiImageTemplate   = "*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
 	qualBucket         = "chromeos-localmirror/distfiles/"
@@ -519,15 +519,15 @@ func findGSCImage(ctx context.Context, gsTemplate string) (string, error) {
 	return gsURL[0], nil
 }
 
-// findGSCDebugImage finds the debug image for cr50 board.
-func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+// findGSCDebugImage finds the debug image for gsc board.
+func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, ext string) (string, error) {
 	devIds := strings.Split(testbedProperties.UsbSerial, "-")
 	if len(devIds) != 2 {
 		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
 	}
 
 	imageDir := imageDir(testbedProperties.TestbedType)
-	debugImageGlob := fmt.Sprintf(debugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
+	debugImageGlob := fmt.Sprintf(debugImageTemplate, ext, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
 	return findGSCImage(ctx, imageDir+"/"+debugImageGlob)
 }
 
@@ -549,18 +549,18 @@ func DownloadEfiImage(ctx context.Context, testbedProperties remoteTi50.TestbedP
 }
 
 // DownloadDebugImage finds the debug image for gsc board.
-func DownloadDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
-	debugImageURL, err := findGSCDebugImage(ctx, testbedProperties)
+func DownloadDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, ext string) (string, error) {
+	debugImageURL, err := findGSCDebugImage(ctx, testbedProperties, ext)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to find gsc debug image")
+		return "", errors.Wrapf(err, "failed to find gsc debug %s image", ext)
 	}
-	return DownloadToTempFile(ctx, "debug image", debugImageURL)
+	return DownloadToTempFile(ctx, ext+"debug image", debugImageURL)
 }
 
 // DownloadGSCTestImages finds the debug and eraseflashinfo images for gsc board.
 func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, string, error) {
 
-	debugImage, err := DownloadDebugImage(ctx, testbedProperties)
+	debugImage, err := DownloadDebugImage(ctx, testbedProperties, "")
 	if err != nil {
 		return "", "", errors.Wrap(err, "failed to download the debug image")
 	}

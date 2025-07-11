@@ -141,6 +141,7 @@ type Value struct {
 	TestbedProperties       remoteTi50.TestbedProperties
 	efiImagePath            string
 	debugImagePath          string
+	debugLowVerImagePath    string
 	imageMayBeUpdatedByTest bool
 }
 
@@ -179,12 +180,26 @@ func (v *Value) DebugImagePath(ctx context.Context) (string, error) {
 	if v.debugImagePath != "" {
 		return v.debugImagePath, nil
 	}
-	debugImage, err := DownloadDebugImage(ctx, v.TestbedProperties)
+	debugImage, err := DownloadDebugImage(ctx, v.TestbedProperties, "")
 	if err != nil {
 		return "", err
 	}
 	v.debugImagePath = debugImage
 	return v.debugImagePath, nil
+}
+
+// DebugLowVerImagePath returns the path to an debug image with a low version
+// number suitable for the current testbed, if one exists.
+func (v *Value) DebugLowVerImagePath(ctx context.Context) (string, error) {
+	if v.debugLowVerImagePath != "" {
+		return v.debugLowVerImagePath, nil
+	}
+	debugLowVerImage, err := DownloadDebugImage(ctx, v.TestbedProperties, ".low_ver")
+	if err != nil {
+		return "", err
+	}
+	v.debugLowVerImagePath = debugLowVerImage
+	return v.debugLowVerImagePath, nil
 }
 
 type devboardFixture struct {
