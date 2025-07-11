@@ -154,6 +154,11 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("GBB flags from CDD do not match SSH'd GBB flags ", cmp.Diff(old.Set, ret.Set, sortSlice))
 	}
 	powerOnAndWait := func(ctx context.Context) {
+		// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
+		// But you can't press the power button too soon, or it will be ignored.
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			s.Fatal("Pre-power button sleep failed: ", err)
+		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
 				return errors.Wrap(err, "power button press failed")
