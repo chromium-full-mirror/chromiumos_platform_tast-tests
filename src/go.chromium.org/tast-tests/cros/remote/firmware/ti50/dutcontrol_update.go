@@ -6,7 +6,6 @@ package ti50
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -47,7 +46,7 @@ func (b *DUTControlAndreiboard) Rollback(ctx context.Context, i *common.CrOSImag
 		return errors.Wrap(err, "wait until gsc ready after rollback")
 	}
 
-	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, false)
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current fwver after rollback")
 	}
@@ -72,7 +71,7 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.Cr
 	}
 
 	// Update to the debug image if it's not running or if there's an error getting the version.
-	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), true)
 	if err != nil || !matched {
 		if err != nil {
 			testing.ContextLogf(ctx, "Failed to get version: %s", err)
@@ -97,7 +96,7 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.Cr
 	if flashBothSlots {
 		return b.FlashDuplicateImage(ctx, i, imagePath, imageVer)
 	}
-	matched, err = i.CheckRunningVersion(ctx, imageVer.String(), false, false)
+	matched, err = i.CheckRunningVersion(ctx, imageVer.String(), false)
 	if err != nil {
 		return errors.Wrap(err, "unable to get version after rollback")
 	}
@@ -138,7 +137,7 @@ func (b *DUTControlAndreiboard) RollbackAndRunEraseFlashInfoUpdate(ctx context.C
 	if err != nil {
 		return err
 	}
-	matched, err := i.CheckRunningVersion(ctx, debugVer.String(), true, false)
+	matched, err := i.CheckRunningVersion(ctx, debugVer.String(), false)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version after reset")
 	}
@@ -208,9 +207,7 @@ func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context, i
 		return errors.Wrap(err, "wait image to boot")
 	}
 
-	// DBG images use 1 for the epoch
-	isDBG := strings.HasPrefix(imageVer.String(), "1.")
-	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), isDBG, true)
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), true)
 	if err != nil {
 		return err
 	}

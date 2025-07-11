@@ -651,29 +651,36 @@ func (i *CrOSImage) VersionInfo(ctx context.Context) (VersionCommandInfo, error)
 	return matchVersionInfo(output)
 }
 
-// CheckRW returns an error if the rw information doesn't match the expected value.
-func CheckRW(rw RwInfo, expectedVersion string, expectedDebug bool) bool {
-	return expectedVersion == rw.Version && expectedDebug == rw.Debug
+// CheckRW returns true if the rw information matches the expected value.
+func CheckRW(rw RwInfo, expectedVersion string) bool {
+	return expectedVersion == rw.Version
 }
 
 // ValidateVersionInfo validates the expected version is running.
-func ValidateVersionInfo(version VersionCommandInfo, expectedVersion string, expectedDebug, checkBothSlots bool) bool {
+func ValidateVersionInfo(version VersionCommandInfo, expectedVersion string, checkBothSlots bool) bool {
 	if version.RwA.Active || checkBothSlots {
-		matches := CheckRW(version.RwA, expectedVersion, expectedDebug)
+		matches := CheckRW(version.RwA, expectedVersion)
 		if !matches || !checkBothSlots {
 			return matches
 		}
 	}
-	return CheckRW(version.RwB, expectedVersion, expectedDebug)
+	matches := CheckRW(version.RwB, expectedVersion)
+	// Check the version string and DBG status match each other to verify
+	// the exact same image is running in both slots.
+	if checkBothSlots && matches {
+		return (version.RwA.Debug == version.RwB.Debug &&
+			version.RwA.VersionStr == version.RwB.VersionStr)
+	}
+	return matches
 }
 
 // CheckRunningVersion validates the expected version is running.
-func (i *CrOSImage) CheckRunningVersion(ctx context.Context, expectedVersion string, expectedDebug, checkBothSlots bool) (bool, error) {
+func (i *CrOSImage) CheckRunningVersion(ctx context.Context, expectedVersion string, checkBothSlots bool) (bool, error) {
 	versionInfo, err := i.VersionInfo(ctx)
 	if err != nil {
 		return false, err
 	}
-	matches := ValidateVersionInfo(versionInfo, expectedVersion, expectedDebug, checkBothSlots)
+	matches := ValidateVersionInfo(versionInfo, expectedVersion, checkBothSlots)
 	desc := "Running"
 	if !matches {
 		desc = "Not running"

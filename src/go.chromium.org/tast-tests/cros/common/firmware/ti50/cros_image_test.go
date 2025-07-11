@@ -255,53 +255,62 @@ func testVersionInfoMatcher(t *testing.T, input string, expected VersionCommandI
 	}
 }
 
-func TestRunningSameRW(t *testing.T) {
+func TestValidateVersionInfoRunningSameRW(t *testing.T) {
 	input := VersionCommandInfo{
 		RwA: RwInfo{Empty: false, Active: true, Version: "0.3.22", Branch: Unknown},
 		RwB: RwInfo{Empty: false, Active: false, Version: "0.3.22", Branch: Unknown},
 	}
 
 	// Verify checking the active slot works
-	testValidateVersionInfo(t, input, "0.3.22", false, false, true)
+	testValidateVersionInfo(t, input, "0.3.22", false, true)
 	// Verify checking both slots works
-	testValidateVersionInfo(t, input, "0.3.22", false, true, true)
+	testValidateVersionInfo(t, input, "0.3.22", false, true)
 }
 
-func TestRunningDifferentRW(t *testing.T) {
+func TestValidateVersionInfoRunningDifferentRW(t *testing.T) {
 	input := VersionCommandInfo{
 		RwA: RwInfo{Empty: false, Active: true, Version: "0.6.211", Branch: PrePvt},
 		RwB: RwInfo{Empty: false, Active: false, Version: "1.6.205", Branch: ToT},
 	}
-	testValidateVersionInfo(t, input, "0.6.211", false, false, true)
-	// Verify the isDebug mismatch doesn't match
-	testValidateVersionInfo(t, input, "0.6.211", true, false, false)
+	testValidateVersionInfo(t, input, "0.6.211", false, true)
 	// Verify checking both slots doesn't match
-	testValidateVersionInfo(t, input, "0.6.211", false, true, false)
+	testValidateVersionInfo(t, input, "0.6.211", true, false)
 	// Verify it doesn't match RW_B
-	testValidateVersionInfo(t, input, "1.6.205", false, false, false)
+	testValidateVersionInfo(t, input, "1.6.205", false, false)
 }
 
-func TestRunningDebugRW(t *testing.T) {
+func TestValidateVersionInfoDebugMismatch(t *testing.T) {
 	input := VersionCommandInfo{
 		RwA: RwInfo{Empty: false, Active: false, Version: "0.6.211", Branch: PrePvt},
-		RwB: RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.205", Branch: ToT},
+		RwB: RwInfo{Empty: false, Active: true, Debug: true, Version: "0.6.211", Branch: PrePvt},
 	}
-	testValidateVersionInfo(t, input, "1.6.205", true, false, true)
-	// Verify the isDebug doesn't match
-	testValidateVersionInfo(t, input, "1.6.205", false, false, false)
+	testValidateVersionInfo(t, input, "0.6.211", false, true)
 	// Verify checking both slots doesn't match
-	testValidateVersionInfo(t, input, "1.6.205", true, true, false)
-	// Verify it doesn't match RW_A
-	testValidateVersionInfo(t, input, "0.6.211", false, false, false)
+	testValidateVersionInfo(t, input, "0.6.211", true, false)
+	// Verify changing the RwA Debug status makes the versions match
+	input.RwA.Debug = true
+	testValidateVersionInfo(t, input, "0.6.211", true, true)
+}
+func TestValidateVersionInfoVersionStrMismatch(t *testing.T) {
+	input := VersionCommandInfo{
+		RwA: RwInfo{Empty: false, Active: false, Version: "0.6.211", VersionStr: "gsc_RWA", Branch: PrePvt},
+		RwB: RwInfo{Empty: false, Active: true, Version: "0.6.211", VersionStr: "gsc_RWB", Branch: PrePvt},
+	}
+	testValidateVersionInfo(t, input, "0.6.211", false, true)
+	// Verify checking both slots doesn't match
+	testValidateVersionInfo(t, input, "0.6.211", true, false)
+	// Verify changing the RwA Debug status makes the versions match
+	input.RwA.VersionStr = "gsc_RWB"
+	testValidateVersionInfo(t, input, "0.6.211", true, true)
 }
 
-func testValidateVersionInfo(t *testing.T, input VersionCommandInfo, expectedVersion string, isDebug, checkBothSlots, expectMatch bool) {
-	matches := ValidateVersionInfo(input, expectedVersion, isDebug, checkBothSlots)
+func testValidateVersionInfo(t *testing.T, input VersionCommandInfo, expectedVersion string, checkBothSlots, expectMatch bool) {
+	matches := ValidateVersionInfo(input, expectedVersion, checkBothSlots)
 	if expectMatch && !matches {
-		t.Fatalf("unexpected mismatch: %+v did not match %s isDebug(%t) bothSlots(%t)", input, expectedVersion, isDebug, checkBothSlots)
+		t.Fatalf("unexpected mismatch: %+v did not match %s bothSlots(%t)", input, expectedVersion, checkBothSlots)
 	}
 	if !expectMatch && matches {
-		t.Fatalf("unexpected match: %+v matched %s isDebug(%t) bothSlots(%t)", input, expectedVersion, isDebug, checkBothSlots)
+		t.Fatalf("unexpected match: %+v matched %s bothSlots(%t)", input, expectedVersion, checkBothSlots)
 	}
 }
 

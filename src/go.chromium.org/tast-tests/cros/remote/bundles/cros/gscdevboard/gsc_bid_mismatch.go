@@ -27,7 +27,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCBIDMismatch,
-		Desc:    "Verify GSC handles an invalid board id correctly",
+		Desc:    "Verify GSC handles getting stuck running an invalid board id correctly",
 		Timeout: 7 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com",
@@ -42,7 +42,8 @@ func init() {
 	})
 }
 
-// GSCBIDMismatch verifies GSC handles a board id mismatch correctly.
+// GSCBIDMismatch verifies GSC handles getting stuck running an invalid board id correctly.
+// Update to the DBG image, flash an image with a BID mismatch, and rollback to it.
 func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
@@ -104,7 +105,7 @@ func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 
 	i.Rollback(ctx)
 
-	runningDBG, err := i.CheckRunningVersion(ctx, debugVer.String(), true, false)
+	runningDBG, err := i.CheckRunningVersion(ctx, debugVer.String(), false)
 	th.MustSucceed(err, "failed to get version after rollback")
 	// TODO: check RO output to verify it shows there's a BID mismatch.
 	if f.TestbedProperties.TestbedType != ti50.GscH1Shield {
