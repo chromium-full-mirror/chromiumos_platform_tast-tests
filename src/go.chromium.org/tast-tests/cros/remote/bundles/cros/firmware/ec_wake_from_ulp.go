@@ -103,6 +103,9 @@ func init() {
 				"storo",
 				// Guybrush
 				"nipperkin",
+				//Nirva,
+				"telithn50",
+				"telticn50",
 				// Nissa
 				"anraggar",
 				"anraggar360",
