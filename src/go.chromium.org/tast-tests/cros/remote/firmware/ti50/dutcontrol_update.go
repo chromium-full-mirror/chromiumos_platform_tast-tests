@@ -160,9 +160,14 @@ func (b *DUTControlAndreiboard) RollbackAndRunEraseFlashInfoUpdate(ctx context.C
 // FlashDuplicateImage flashes the inactive slot and verifies RW_A and RW_B are
 // running the same version after update.
 func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, i *common.CrOSImage, imagePath string, imageVer GSCVersion) error {
-	testing.ContextLog(ctx, "Sleeping for 61 seconds to avoid update too soon error")
-	// GoBigSleepLint sleeping for known required period of time.
-	testing.Sleep(ctx, 61*time.Second)
+	version, err := i.VersionInfo(ctx)
+	if err != nil || !version.ActiveRw().Debug {
+		testing.ContextLog(ctx, "Sleeping for 61 seconds to avoid update too soon error")
+		// GoBigSleepLint sleeping for known required period of time.
+		testing.Sleep(ctx, 61*time.Second)
+	} else {
+		testing.ContextLog(ctx, "Don't need to wait for update with DBG image")
+	}
 
 	if err := b.UpdateOnce(ctx, i, imagePath, imageVer); err != nil {
 		return errors.Wrap(err, "update inactive 2 to image")
