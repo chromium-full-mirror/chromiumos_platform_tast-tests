@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"regexp"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +26,10 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ChromeISH()),
 	})
 }
+
+// trailingZerosRegex is a compiled regular expression to find trailing " 00" sequences.
+// Compiling it once at the package level is more efficient than compiling it in every function call.
+var trailingZerosRegex = regexp.MustCompile(`( 00)*$`)
 
 // getCbiValues gets the CBI value specified by the tag for both the EC and ISH.
 // This function ignores errors, it's valid to compare CBI flags that don't exist
@@ -44,14 +50,20 @@ func getCbiValues(ctx context.Context, s *testing.State, tag string) (string, st
 	return string(ecOut), string(ishOut)
 }
 
-func assertStringEqual(s *testing.State, str1, str2, errorMessage string) {
-	if str1 == str2 {
+func assertStringEqual(s *testing.State, ecStr, ishStr, errorMessage string) {
+	// Trim the strings to avoid caring about newlines
+	ecStr = strings.TrimSpace(ecStr)
+	ishStr = strings.TrimSpace(ishStr)
+
+	// Replace any trailing " 00", we don't care about padding.
+	ecStr = trailingZerosRegex.ReplaceAllString(ecStr, "")
+	ishStr = trailingZerosRegex.ReplaceAllString(ishStr, "")
+
+	if ecStr == ishStr {
 		return
 	}
-	s.Error("Expected:")
-	s.Error(str1)
-	s.Error("Got:")
-	s.Error(str2)
+	s.Errorf("Expected EC value: %q", ecStr)
+	s.Errorf("Got ISH value:     %q", ishStr)
 	s.Fatal(errorMessage)
 }
 
