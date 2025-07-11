@@ -112,6 +112,7 @@ func init() {
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and a self managed AP and packet capture from the pcap device"
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCompanionAndroid] = "Wificell setup with companion Chromebook DUT, Android Device and a self managed AP"
 	params[TFFeaturesPower] = "Default wificell setup with power diagnostics"
+	params[TFFeaturesCapture|TFFeaturesNoResetAfterTest] = "Wificell setup with Capturer on pcap for each configured AP. Does not reset after each test"
 	params[TFFeaturesCellular] = "Wificell setup on a cellular capable device"
 	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT and self managed AP"
@@ -211,6 +212,8 @@ const (
 	TFFeaturesCellular
 	// TFFeaturesWithUI ensures the UI is started as part of the fixture setup.
 	TFFeaturesWithUI
+	// TFFeaturesNoResetAfterTest is a feature that skips the Reset step after each test.
+	TFFeaturesNoResetAfterTest
 )
 
 // String returns name component corresponding to enum value(s).
@@ -267,6 +270,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesWithUI != 0 {
 		ret = append(ret, "WithUI")
 		enum ^= TFFeaturesWithUI
+	}
+	if enum&TFFeaturesNoResetAfterTest != 0 {
+		ret = append(ret, "NoResetAfterTest")
+		enum ^= TFFeaturesNoResetAfterTest
 	}
 	// Catch weird cases. Like when somebody extends enum, but forgets to extend this.
 	if enum != 0 {
@@ -715,6 +722,10 @@ func (f *tastFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (f *tastFixtureImpl) Reset(ctx context.Context) error {
+	if f.features&TFFeaturesNoResetAfterTest != 0 {
+		testing.ContextLog(ctx, "Skipping Reset for wificell fixture as TFFeaturesNoResetAfterTest is set")
+		return nil
+	}
 	if err := f.tf.Reinit(ctx); err != nil {
 		return errors.Wrap(err, "failed to reinit test fixture")
 	}
