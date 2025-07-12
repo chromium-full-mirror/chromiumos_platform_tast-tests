@@ -255,6 +255,7 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		AndroidNearbyChannel: f.androidNearbyChannel,
 		PhoneIP:              phoneIP,
 		SSID:                 ssid,
+		Passphrase:           passphrase,
 	}
 
 }

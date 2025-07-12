@@ -35,7 +35,7 @@ func init() {
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 		},
-		Parent:          wificell.FixtureID(wificell.TFFeaturesCapture),
+		Parent:          wificell.FixtureID(wificell.TFFeaturesCapture | wificell.TFFeaturesNoResetAfterTest),
 		SetUpTimeout:    3 * time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: 4 * time.Minute,

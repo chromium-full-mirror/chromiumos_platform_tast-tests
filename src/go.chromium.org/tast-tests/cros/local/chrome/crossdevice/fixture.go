@@ -732,6 +732,7 @@ func ConnectToWifi(ctx context.Context, ssid, passphrase string) error {
 				testing.ContextLog(ctx, "Already connected to wifi network")
 				return nil
 			}
+			testing.ContextLogf(ctx, "WiFi script output: %s", out)
 			return errors.Wrap(err, "failed to connect CrOS device to Wifi")
 		}
 		return nil
