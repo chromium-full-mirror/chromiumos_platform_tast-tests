@@ -1065,8 +1065,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCAndMlbenchmarkAndVCEffectsAndRecorderApp",
-		Desc: "CUJ fixture with WebRTC event logging, mlbenchmark data directory, VC platform effects enabled and Recorder App enabled",
+		Name: "loggedInToCUJUserWithWebRTCAndMlbenchmarkAndVCEffects",
+		Desc: "CUJ fixture with WebRTC event logging, mlbenchmark data directory and VC platform effects enabled",
 		Contacts: []string{
 			"vivian.chen@cienet.com",
 			"cros-sw-perf@google.com",
