@@ -459,7 +459,6 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 		},
 		uiHelper.openCCDIfNotOpen(),
 		uiHelper.connectBatteryByCr50(),
-		uiHelper.Dut.Reboot,
 	)(ctx)
 }
 
