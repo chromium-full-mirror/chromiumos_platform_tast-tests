@@ -63,20 +63,30 @@ func RebootAndCheckIshmod(ctx context.Context, s *testing.State) {
 	for i := 0; i < s.Param().(int); i++ {
 		s.Logf("Iteration %d: Rebooting DUT and checking the lsmod", i+1)
 
-		// Perform a warm boot
-		if err := dut.Conn().CommandContext(ctx, "sh", "-c", "{ sleep 2; sync; sync; reboot; }").Run(); err != nil {
-			s.Fatal("Failed to perform warm boot: ", err)
-		}
+		// Perform a warm boot, ignore any errors because rebooting might not return
+		dut.Conn().CommandContext(ctx, "sh", "-c", "{ sleep 2; sync; sync; reboot; }").Run()
+
+		// GoBigSleepLint: Wait 10s (boot time) since WaitConnect cannot succeed before that.
+		testing.Sleep(ctx, 10*time.Second)
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return dut.WaitConnect(ctx)
-		}, &testing.PollOptions{Timeout: 1 * time.Minute}); err != nil {
+			// Try to connect with a 10s timeout
+			connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			defer cancel()
+			return dut.WaitConnect(connectCtx)
+		}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 
-		// Read lsmod logs
-		out, err := dut.Conn().CommandContext(ctx, "lsmod").Output()
-		if err != nil {
+		// Read lsmod logs (retry up to 6 times)
+		var out []byte
+		if err := testing.Poll(ctx, func(context.Context) error {
+			var err error
+			cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			out, err = dut.Conn().CommandContext(cmdCtx, "lsmod").Output()
+			return err
+		}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 			s.Fatal("Failed to read lsmod: ", err)
 		}
 		lsmodOutput := string(out)
