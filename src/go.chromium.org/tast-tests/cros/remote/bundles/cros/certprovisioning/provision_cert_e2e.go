@@ -95,7 +95,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningTesting,
 					},
-					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+					deviceProfileID: "CEA312B8-39AA-4ACE-B7B3-C67D8F3E2FD9",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
@@ -114,7 +114,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningTesting,
 					},
-					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
+					deviceProfileID: "CEA312B8-39AA-4ACE-B7B3-C67D8F3E2FD9",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
 				ExtraSearchFlags: []*testing.StringPair{{
