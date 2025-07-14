@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -17,7 +19,7 @@ import (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "typecUnigraf",
-		Desc:     "Initializes and provides a Unigraf USB PD tester interface.",
+		Desc:     "Initializes and provides a Unigraf USB PD tester interface",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
@@ -26,7 +28,8 @@ func init() {
 		ResetTimeout:    15 * time.Second, // For Unigraf state reset.
 		TearDownTimeout: 15 * time.Second, // For closing the Unigraf connection.
 		Vars: []string{
-			"typec.UnigrafUri", // Required: URI for the Unigraf device.
+			"typec.UnigrafUri",    // Required: URI for the Unigraf device.
+			"typec.UnigrafSerial", // Optional: The unigraf device serial.
 		},
 	})
 }
@@ -51,8 +54,17 @@ type FixtureData struct {
 // SetUp initializes the Unigraf device.
 func (f *UnigrafFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	unigrafURI := s.RequiredVar("typec.UnigrafUri")
+	unigrafSerial, _ := s.Var("typec.UnigrafSerial")
 
-	ug, err := unigraf.New(ctx, unigrafURI)
+	var pasitTopology *labapi.PasitHost
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		if dutConfig.GetChromeos().GetPasitHost() != nil {
+			pasitTopology = dutConfig.GetChromeos().GetPasitHost()
+			s.Log("Loaded DUT info from lab config")
+		}
+	}
+
+	ug, err := unigraf.New(ctx, unigrafURI, unigrafSerial, pasitTopology)
 	if err != nil {
 		s.Fatalf("Failed to connect to Unigraf device at %s: %v", unigrafURI, err)
 	}
@@ -62,7 +74,7 @@ func (f *UnigrafFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if err := f.unigrafController.SetTestPort(ctx, 1); err != nil {
 		// Attempt to close if SetTestPort fails.
 		if closeErr := f.unigrafController.Close(ctx); closeErr != nil {
-			s.Errorf("Failed to close Unigraf during SetUp after SetTestPort failure: %v", closeErr)
+			s.Error("Failed to close Unigraf during SetUp after SetTestPort failure: ", closeErr)
 		}
 		s.Fatalf("Failed to set Unigraf active port to %d: %v", 1, err)
 	}
@@ -70,18 +82,18 @@ func (f *UnigrafFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	// Set a default state (DRP) to ensure it's not sourcing/sinking unexpectedly.
 	if err := f.unigrafController.SetInitPdState(ctx, unigraf.InitPdStateDrp); err != nil {
 		if closeErr := f.unigrafController.Close(ctx); closeErr != nil {
-			s.Errorf("Failed to close Unigraf during SetUp after SetInitPdState failure: %v", closeErr)
+			s.Error("Failed to close Unigraf during SetUp after SetInitPdState failure: ", closeErr)
 		}
-		s.Fatalf("Failed to set Unigraf initial PD state to DRP: %v", err)
+		s.Fatal("Failed to set Unigraf initial PD state to DRP: ", err)
 	}
 	s.Log("Unigraf initial PD state set to DRP")
 
 	// Reset to USB3 mode.
 	if err := f.unigrafController.SetUsbChannel(ctx, unigraf.UsbChannelUSB3And2); err != nil {
 		if closeErr := f.unigrafController.Close(ctx); closeErr != nil {
-			s.Errorf("Failed to close Unigraf during SetUp after SetUsbChannel failure: %v", closeErr)
+			s.Error("Failed to close Unigraf during SetUp after SetUsbChannel failure: ", closeErr)
 		}
-		s.Fatalf("Failed to set Unigraf USB channel to USB3: %v", err)
+		s.Fatal("Failed to set Unigraf USB channel to USB3: ", err)
 	}
 	s.Log("Unigraf USB channel set to USB3")
 
@@ -92,7 +104,7 @@ func (f *UnigrafFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 func (f *UnigrafFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.unigrafController != nil {
 		if err := f.unigrafController.Close(ctx); err != nil {
-			s.Errorf("Failed to close Unigraf device: %v", err)
+			s.Error("Failed to close Unigraf device: ", err)
 		}
 	}
 }

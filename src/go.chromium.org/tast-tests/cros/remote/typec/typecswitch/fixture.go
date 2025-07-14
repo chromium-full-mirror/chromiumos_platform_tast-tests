@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
+
 	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
 	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
@@ -20,7 +22,7 @@ import (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "typecSwitch",
-		Desc:     "Initializes and provides a Type-C switch (MCCI or Unigraf) interface.",
+		Desc:     "Initializes and provides a Type-C switch (MCCI or Unigraf) interface",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
@@ -33,6 +35,7 @@ func init() {
 			"typec.McciPath",
 			"typec.UnigrafUri",
 			"typec.SwitchPort",
+			"typec.UnigrafSerial",
 		},
 	})
 }
@@ -59,13 +62,13 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 
 	if portStr, portPresent := s.Var("typec.SwitchPort"); portPresent {
 		if portUsed, err := strconv.Atoi(portStr); err != nil {
-			s.Fatalf("Failed to convert port number to integer: %v", err)
+			s.Fatal("Failed to convert port number to integer: ", err)
 		} else if err := f.TestSwitch.SetActiveSwitchPort(ctx, portUsed); err != nil {
 			// Attempt to close the switch if setting active port fails during setup.
 			if closeErr := f.TestSwitch.Close(ctx); closeErr != nil {
-				s.Errorf("Failed to close switch during SetUp after SetActiveSwitchPort failure: %v", closeErr)
+				s.Error("Failed to close switch during SetUp after SetActiveSwitchPort failure: ", closeErr)
 			}
-			s.Fatalf("Failed to set port during SetUp: %v", err)
+			s.Fatal("Failed to set port during SetUp: ", err)
 		} else {
 			f.PortNum = portUsed
 		}
@@ -78,9 +81,9 @@ func (f *SwitchFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	if err := f.TestSwitch.DisablePorts(ctx); err != nil {
 		// Attempt to close the switch if disabling ports fails during setup.
 		if closeErr := f.TestSwitch.Close(ctx); closeErr != nil {
-			s.Errorf("Failed to close switch during SetUp after DisablePorts failure: %v", closeErr)
+			s.Error("Failed to close switch during SetUp after DisablePorts failure: ", closeErr)
 		}
-		s.Fatalf("Failed to disable ports during SetUp: %v", err)
+		s.Fatal("Failed to disable ports during SetUp: ", err)
 	}
 
 	return &FixtureData{TestSwitch: f.TestSwitch}
@@ -106,7 +109,7 @@ func (f *SwitchFixture) Reset(ctx context.Context) error {
 	if err := f.TestSwitch.DisablePorts(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable ports during Reset")
 	}
-	testing.ContextLogf(ctx, "Ports disabled during typecSwitch Reset")
+	testing.ContextLog(ctx, "Ports disabled during typecSwitch Reset")
 
 	// Attempt to reset to USB3 mode as a common default.
 	if err := f.TestSwitch.EnterMode(ctx, usbswitch.Usb3Mode); err != nil {
@@ -116,17 +119,25 @@ func (f *SwitchFixture) Reset(ctx context.Context) error {
 }
 
 // PreTest is called before each test.
-func (i *SwitchFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *SwitchFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // PostTest is called after each test.
-func (i *SwitchFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *SwitchFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // newSwitch returns an interface for the usb switch.
 func newSwitch(ctx context.Context, s *testing.FixtState) (usbswitch.Switch, error) {
 	if unigrafURI, unigrafPresent := s.Var("typec.UnigrafUri"); unigrafPresent {
-		unigrafObj, err := unigraf.New(ctx, unigrafURI)
+		var pasitTopology *labapi.PasitHost
+		if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+			if dutConfig.GetChromeos().GetPasitHost() != nil {
+				pasitTopology = dutConfig.GetChromeos().GetPasitHost()
+				s.Log("Loaded DUT info from lab config")
+			}
+		}
+		unigrafSerial, _ := s.Var("typec.UnigrafSerial")
+		unigrafObj, err := unigraf.New(ctx, unigrafURI, unigrafSerial, pasitTopology)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create unigraf object")
 		}

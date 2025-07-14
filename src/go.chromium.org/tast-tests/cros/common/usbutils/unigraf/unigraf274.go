@@ -7,13 +7,15 @@ package unigraf
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"go.chromium.org/tast/core/errors"
-
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
-	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	grpc "google.golang.org/grpc"
+
+	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
+	"go.chromium.org/tast/core/errors"
 )
 
 // PowerRole is a wrapper around passport.PowerRole
@@ -138,7 +140,7 @@ type UsbTester struct {
 
 // New Unigraf tester. It will connect to the the remote grcp server passed as
 // an argument.
-func New(ctx context.Context, uri string) (*UsbTester, error) {
+func New(ctx context.Context, uri, serial string, pasitTopology *labapi.PasitHost) (*UsbTester, error) {
 
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
@@ -164,14 +166,24 @@ func New(ctx context.Context, uri string) (*UsbTester, error) {
 		return nil, errors.Wrapf(err, "failed to get testers uri=%s", uri)
 	}
 
-	// For the moment there is a maximum of 1 usb tester per setup.
-	if len(testers.Testers) != 1 {
-		return nil, errors.Errorf(
-			"the tester selection is ambiguous, there are %d testers",
-			len(testers.Testers),
-		)
+	if pasitTopology != nil {
+		for _, tester := range pasitTopology.GetDevices() {
+			if tester.GetType() != labapi.PasitHost_Device_USB_TESTER {
+				continue
+			}
+			ctl.tester = strings.ToUpper(tester.GetId())
+			break
+		}
+	} else if serial != "" {
+		ctl.tester = strings.ToUpper(serial)
+	} else {
+		if len(testers.Testers) != 1 {
+			return nil, errors.Errorf("the tester selection is ambiguous, there are %d testers",
+				len(testers.Testers))
+		}
+		// Default to the first tester so that we make local runs easier.
+		ctl.tester = testers.Testers[0].Id
 	}
-	ctl.tester = testers.Testers[0].Id
 
 	if _, err := ctl.client.OpenTester(openctx, &passport.OpenTesterRequest{Id: ctl.tester}); err != nil {
 		return nil, errors.Wrapf(err, "failed to open serial=%s for uri=%s", uri, ctl.tester)
@@ -211,12 +223,11 @@ func (s *UsbTester) doCapabilitySetRequest(
 	reply, err := s.client.SetTesterCapability(reqctx, req)
 
 	if err != nil || (reply.GetErrCode() != 0) {
-		return errors.Wrapf(
-			err,
+		return errors.Wrapf(err,
 			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
-			reply.GetErrorMsg(),
-		)
+			reply.GetErrorMsg())
+
 	}
 
 	return nil
@@ -462,12 +473,11 @@ func (s *UsbTester) Replug(ctx context.Context) error {
 		},
 	)
 	if err != nil || reply.GetErrCode() != 0 {
-		return errors.Wrapf(
-			err,
+		return errors.Wrapf(err,
 			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
-			reply.GetErrorMsg(),
-		)
+			reply.GetErrorMsg())
+
 	}
 
 	return nil
@@ -482,12 +492,11 @@ func (s *UsbTester) HardReset(ctx context.Context) error {
 		},
 	)
 	if err != nil || reply.GetErrCode() != 0 {
-		return errors.Wrapf(
-			err,
+		return errors.Wrapf(err,
 			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
-			reply.GetErrorMsg(),
-		)
+			reply.GetErrorMsg())
+
 	}
 
 	return nil
@@ -503,12 +512,11 @@ func (s *UsbTester) SetTestPort(ctx context.Context, portID int) error {
 		},
 	)
 	if err != nil || reply.GetErrCode() != 0 {
-		return errors.Wrapf(
-			err,
+		return errors.Wrapf(err,
 			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
-			reply.GetErrorMsg(),
-		)
+			reply.GetErrorMsg())
+
 	}
 
 	return nil
@@ -523,12 +531,11 @@ func (s *UsbTester) TestPort(ctx context.Context) (int, error) {
 		},
 	)
 	if err != nil || reply.GetErrCode() != 0 || reply.GetMaxNumPorts() == 0 {
-		return 0, errors.Wrapf(
-			err,
+		return 0, errors.Wrapf(err,
 			"failed to do get request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
-			reply.GetErrorMsg(),
-		)
+			reply.GetErrorMsg())
+
 	}
 
 	return int(reply.GetPortId()), nil
@@ -550,7 +557,7 @@ func (s *UsbTester) EnablePort(ctx context.Context) error {
 	return s.SetTestPort(ctx, s.switchPortNum)
 }
 
-// SetTestPort sets the port affected by Enable/DisablePort actions.
+// SetActiveSwitchPort sets the port affected by Enable/DisablePort actions.
 func (s *UsbTester) SetActiveSwitchPort(ctx context.Context, portNum int) error {
 	if portNum != 0 && portNum != 1 {
 		return errors.Errorf("port number must be 0 or 1, got %d", portNum)
