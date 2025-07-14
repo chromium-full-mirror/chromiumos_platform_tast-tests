@@ -560,8 +560,7 @@ func startTask(ctx context.Context, timeout time.Duration, task, done func(conte
 
 func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, outputFile string, timeout time.Duration) (cancelfunc, error) {
 	testing.ContextLogf(ctx, "Starting background process with %v timeout: %q", timeout, cmd)
-	// This starts a background progress with nohup and a timeout
-	wrappedCmd := fmt.Sprintf("{ nohup timeout -s 9 %vs bash -c '%s' </dev/null &> %s & }; echo $!", (timeout + timeoutPadding).Seconds(), cmd, outputFile)
+	wrappedCmd := fmt.Sprintf("{ nohup bash -c '%s' </dev/null &> %s & }; echo $!", cmd, outputFile)
 	finalCmd := h.DUT.Conn().CommandContext(ctx, "bash", "-c", wrappedCmd)
 	out, err := finalCmd.Output()
 	if err != nil {
@@ -573,6 +572,13 @@ func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, output
 		return nil, errors.Wrapf(err, "failed to parse pid %s", outStr)
 	}
 	testing.ContextLogf(ctx, "Background process pid: %d", pid)
+
+	// Background process killer runs in background on remote,
+	// and kills the above background process after wall clock timeout.
+	backgroundKillCmd := fmt.Sprintf("{ nohup bash -c 'declare -i END=$(date +%%s -d \"%v seconds\"); while [ $(date +%%s) -lt  $END ]; do sleep 0.1; done; kill -9 %d;' </dev/null &> /dev/null & };", timeout.Seconds(), pid)
+	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", backgroundKillCmd).Run(); err != nil {
+		return nil, errors.Wrap(err, "failed to start background process killer")
+	}
 
 	return startTask(ctx, timeout, nil,
 		func(backgroundCtx context.Context) error {
