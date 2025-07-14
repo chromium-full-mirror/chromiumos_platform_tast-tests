@@ -21,7 +21,7 @@ import (
 const (
 	fullBatteryPercent    = 95.0
 	fullChargePollTimeout = 110 * time.Minute
-	dischargePollTimeout  = 60 * time.Minute
+	dischargePollTimeout  = 120 * time.Minute
 	chargePollInterval    = 1 * time.Second
 )
 

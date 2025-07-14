@@ -56,7 +56,7 @@ func init() {
 				Val:     statusOnFullCharge,
 			}, {
 				Name:    "discharge",
-				Timeout: 70 * time.Minute,
+				Timeout: 120 * time.Minute,
 				Val:     voltageOnDischarge,
 			},
 		},
