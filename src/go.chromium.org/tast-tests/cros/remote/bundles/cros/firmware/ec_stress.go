@@ -894,7 +894,7 @@ func startFlashStressTask(ctx context.Context, h *firmware.Helper, timeout time.
 func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod time.Duration) (cancelfunc, error) {
 	testing.ContextLogf(ctx, "Starting Suspend Stress Task with wakePeriod=%v, suspendPeriod=%v", wakePeriod, suspendPeriod)
 	// powerd_dbus_suspend is not used because user input from the keyboard prevents suspend
-	cmd := fmt.Sprintf("while true; do echo +%v > /sys/class/rtc/rtc0/wakealarm; echo mem > /sys/power/state; sleep %v; done;", suspendPeriod.Seconds(), wakePeriod.Seconds())
+	cmd := fmt.Sprintf("while true; do sleep %v; echo 0 > /sys/class/rtc/rtc0/wakealarm; echo +%v > /sys/class/rtc/rtc0/wakealarm; echo mem > /sys/power/state; done;", wakePeriod.Seconds(), suspendPeriod.Seconds())
 	remoteSuspendStressCancel, err := startBackgroundProcess(ctx, h, cmd, "/tmp/ec_suspend_stress.out", timeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start suspend stress task")
