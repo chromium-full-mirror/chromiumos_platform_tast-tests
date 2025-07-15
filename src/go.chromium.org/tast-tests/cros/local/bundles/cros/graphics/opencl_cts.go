@@ -7933,18 +7933,18 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "cl_khr_command_buffer_queue_substitution_in_order",
+				Name: "cl_khr_command_buffer_queue_substitute_in_order",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
-					args:       "queue_substitution_in_order",
+					args:       "queue_substitute_in_order",
 				},
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "cl_khr_command_buffer_queue_substitution_out_of_order",
+				Name: "cl_khr_command_buffer_queue_substitute_out_of_order",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
-					args:       "queue_substitution_out_of_order",
+					args:       "queue_substitute_out_of_order",
 				},
 				Timeout: 1 * time.Minute,
 			},
