@@ -7,9 +7,7 @@ package meetcuj
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -46,9 +44,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/effects"
-	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -160,9 +156,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	const (
 		// The addBotTimeout allows 3 2-minute BondAPI request retries by the
 		// Bond lib.
-		addBotTimeout = 6*time.Minute + 10*time.Second
-		// addBotRetries is the local retry number for adding bots.
-		addBotRetries  = 3
+		addBotTimeout  = 6*time.Minute + 10*time.Second
 		defaultDocsURL = "https://docs.new/"
 		newTabTitle    = "New Tab"
 	)
@@ -203,43 +197,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	defer cancel()
 
 	if meet.FakeCamHALCfg != nil {
-		const cameraService = "cros-camera"
-		// Always restart cros-camera in the end.
-		defer upstart.RestartJob(closeCtx, cameraService)
-
-		// Configure CrOS to use only fake HAL camera.
-		if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
-			return pv, errors.Wrap(err, "failed to set up camera test config")
-		}
-		defer testutil.RemoveTestConfig(closeCtx)
-
-		// Copy the fake camera video to where the camera module can access.
-		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(dataPath(meet.FakeCamHALCfg.VideoFileName))
+		resetFakeCameraHAL, err := SetupFakeCameraHAL(ctx, dataPath(meet.FakeCamHALCfg.VideoFileName), meet.FakeCamHALCfg.Formats)
 		if err != nil {
-			return pv, errors.Wrap(err, "failed to copy fake camera input")
+			return pv, errors.Wrap(err, "failed to setup Fake HAL camera")
 		}
-		defer os.Remove(dutFakeHALPath)
-
-		// Write the fake HAL config to the system.
-		fakeCameraConfig := testutil.FakeCameraConfig{
-			ID:        1,
-			Connected: true,
-			Frames: &testutil.FakeCameraImageConfig{
-				Path: dutFakeHALPath,
-			},
-			SupportedFormats: meet.FakeCamHALCfg.Formats,
-		}
-		fakeHALConfig := testutil.FakeHALConfig{
-			Cameras: []testutil.FakeCameraConfig{fakeCameraConfig},
-		}
-		if err := testutil.WriteFakeHALConfig(ctx, fakeHALConfig); err != nil {
-			return pv, errors.Wrap(err, "failed to configure HAL camera")
-		}
-		defer testutil.RemoveFakeHALConfig(closeCtx)
-
-		if err := upstart.RestartJob(ctx, cameraService); err != nil {
-			return pv, errors.Wrapf(err, "failed to restart %s after camera setup", cameraService)
-		}
+		defer resetFakeCameraHAL(closeCtx)
 	}
 
 	if meet.MeasureEcho {
@@ -313,46 +275,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	// right number of bots later in the test.
 	botsInCall := 1
 
-	addBots := func(ctx context.Context, numBots int) error {
-		sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
-		defer cancel()
-
-		testing.ContextLogf(ctx, "Adding %d bots to the call", numBots)
-
-		if numBots == 0 {
-			return nil
-		}
-
-		botsToAdd := numBots
-		wait := 100 * time.Millisecond
-		for i := 0; i < addBotRetries; i++ {
-			// GoBigSleepLint: A short sleep before next call to Bond API.
-			if err := testing.Sleep(ctx, wait); err != nil {
-				return errors.Wrapf(err, "failed to sleep for %v", wait)
-			}
-			// Add 30 minutes to the bot duration, to ensure that the bots stay long
-			// enough for the test to get info from chrome://webrtc-internals.
-			// Add bots that requests HD video.
-			botsOptions := append(meet.BotsOptions, bond.WithHDVideo())
-			botList, numFailures, err := bc.AddBots(sctx, meetingCode, botsToAdd, meetTimeout+30*time.Minute, botsOptions...)
-			if err != nil {
-				return errors.Wrapf(err, "failed to create %d bots", botsToAdd)
-			}
-			testing.ContextLogf(ctx, "%d bots started, %d bots failed", len(botList), numFailures)
-			botsToAdd -= len(botList)
-			if botsToAdd <= 0 {
-				break
-			}
-		}
-
-		if botsToAdd > 0 {
-			return errors.Errorf("failed to add all %d bots to the call; %d to be added after %d retries", numBots, botsToAdd, addBotRetries)
-		}
-		return nil
-	}
-
 	numBotsToAdd := meet.Bots[0] - botsInCall
-	if err := addBots(ctx, numBotsToAdd); err != nil {
+	if err := AddBots(ctx, bc, numBotsToAdd, meetTimeout, meetingCode, meet.BotsOptions); err != nil {
 		return pv, errors.Wrapf(err, "failed to initially add %d bots", numBotsToAdd)
 	}
 	botsInCall += numBotsToAdd
@@ -563,14 +487,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 
 	// Check and grant permissions.
-	if err := prompts.ClearPotentialPrompts(
-		tconn,
-		longUITimeout,
-		prompts.ShowNotificationsPrompt,
-		prompts.AllowAVPermissionPrompt,
-		prompts.AllowMicrophoneAndCameraPermissionPrompt,
-		prompts.OthersSeeDiffPrompt,
-	)(ctx); err != nil {
+	if err := GrantPermissionsInMeet(tconn)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to grant permissions")
 	}
 
@@ -580,31 +497,13 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to wait to enter the meeting")
 	}
 
-	expectedParticipantCount := botsInCall + 1
-	checkParticipantCount := func(ctx context.Context, expectedCount int) error {
-		participantCount, err := meetHelper.GetParticipantCount(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get participant count")
-		}
-		if participantCount != expectedCount {
-			return errors.Errorf("got %d participants, expected %d", participantCount, expectedCount)
-		}
-		return nil
-	}
-
 	ui := uiauto.New(tconn)
-	uiLongWait := ui.WithTimeout(longUITimeout)
-	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
-	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
-	if err := uiauto.NamedAction("wait for the number of participants to be loaded",
-		// Some DUT models have poor performance. When joining a large conference
-		// (over 15 participants), it would take much time to render DOM elements.
-		// Set a longer timer here.
-		uiLongWait.WaitUntilExists(participantText),
-	)(ctx); err != nil {
+	if err := WaitForParticipantInfoLoaded(ui)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for participant info")
 	}
-	if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
+
+	expectedParticipantCount := botsInCall + 1
+	if err := meetHelper.CheckParticipantCount(ctx, expectedParticipantCount); err != nil {
 		return pv, errors.Wrap(err, "the number of bots is unexpected")
 	}
 
@@ -613,65 +512,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to turn on camera")
 	}
 
-	doDefaultMoreOptions := func(ctx context.Context) error {
-		moreOptionsFinder := nodewith.Name("More options").Role(role.PopUpButton)
-		callOptionsMenu := nodewith.Name("Call options").Role(role.Menu)
-		moreOptionsButtons, err := ui.NodesInfo(ctx, moreOptionsFinder)
-		if err != nil || len(moreOptionsButtons) < 1 {
-			return errors.Wrap(err, "failed to find more options button")
-		}
-		// Sometimes, the UI has two identical "More Options" buttons, which requires
-		// selecting the last one to be the correct button.
-		return ui.DoDefaultUntil(moreOptionsFinder.Nth(len(moreOptionsButtons)-1),
-			ui.WithTimeout(5*time.Second).WaitUntilExists(callOptionsMenu),
-		)(ctx)
-	}
-
-	effectsItem := nodewith.Name("Backgrounds and effects").Role(role.MenuItem)
-	effectsHeading := nodewith.Name("Backgrounds and effects").Role(role.Heading).Ancestor(meetRootWebArea)
-	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
-	turnOffEffects := nodewith.Name("Turn off visual effects").Focusable()
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
 	// Temporary enable trace collection when opening visual effect panel.
 	// TODO(b/404077247): Remove the trace for visual effect after debugging the loading issue.
 	traceConfigFile := dataPath(cujrecorder.SystemTraceConfigFile)
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) (setEffectErr error) {
-		openEffectsPanel := uiauto.NamedCombine("open effects panel",
-			// Open the "More options" popup, and wait until we see
-			// "Apply visual effects".
-			doDefaultMoreOptions,
-			// Open the visual effects panel.
-			ui.WithTimeout(30*time.Second).DoDefault(effectsItem),
-			ui.WithTimeout(30*time.Second).WaitUntilExists(effectsHeading),
-		)
-		toggleEffect := func(ctx context.Context) error {
-			if effect == turnOffEffects {
-				toggleButton := turnOffEffects.Role(role.ToggleButton)
-				popUpButton := turnOffEffects.Role(role.PopUpButton)
-
-				turnOffEffectsButton, err := ui.FindAnyExists(ctx, toggleButton, popUpButton)
-				if err != nil {
-					return errors.Wrap(err, "failed to find 'Turn off visual effects' button")
-				}
-				testing.ContextLog(ctx, "Turn off visual effects")
-				if turnOffEffectsButton == popUpButton {
-					nodeInfo, err := ui.Info(ctx, turnOffEffectsButton)
-					if err != nil {
-						return errors.Wrap(err, "failed to find 'Turn off visual effects' button")
-					}
-					if nodeInfo.Description == "No effects applied" {
-						return nil
-					}
-					removeAllItem := nodewith.Name("Remove all").Role(role.MenuItem)
-					return uiauto.Combine("turn off visual effects",
-						ui.DoDefault(popUpButton),
-						ui.DoDefault(removeAllItem))(ctx)
-				}
-			}
-			return uiLongWait.DoDefaultUntil(effect,
-				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true))(ctx)
-		}
-
 		closeCtx := ctx
 		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
@@ -697,22 +541,15 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				}
 			}(closeCtx)
 		}
-		return uiauto.NamedCombine(
-			fmt.Sprintf("set effect with node %v", effect),
-			uiauto.Retry(2, openEffectsPanel),
-			toggleEffect,
-			// Close the visual effects panel.
-			ui.DoDefault(closeButton),
-			uiLongWait.WaitUntilGone(effect),
-		)(ctx)
+		return SetVisualEffects(ui, effect)(ctx)
 	}
 	if meet.Effects {
 		testing.ContextLog(ctx, "Turn on visual effects")
-		if err := setEffect(ctx, blur); err != nil {
+		if err := setEffect(ctx, BlurBackgroundFinder); err != nil {
 			return pv, errors.Wrap(err, "failed to turn on visual effects")
 		}
 	} else {
-		if err := setEffect(ctx, turnOffEffects); err != nil {
+		if err := setEffect(ctx, TurnOffEffectsFinder); err != nil {
 			return pv, errors.Wrap(err, "failed to turn off visual effects")
 		}
 	}
@@ -758,19 +595,12 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 	}
 
-	testing.ContextLog(ctx, "Resetting browser zoom to 100%")
-	zoomNode := nodewith.ClassNameRegex(regexp.MustCompile("(ZoomView|PageActionView)"))
-	if err := uiauto.NamedCombine(
-		"reset zoom and wait for zoom indicator to be absent",
-		ui.LeftClick(meetRootWebArea),
-		kw.AccelAction("Ctrl+0"),
-		ui.WaitUntilGone(zoomNode),
-	)(ctx); err != nil {
+	if err := ResetZoom(ui, kw)(ctx); err != nil {
 		return pv, errors.Wrap(err, "failed to press Ctrl+0 to reset the zoom")
 	}
 
 	if meet.ZoomOut {
-		if err := adjustBrowserZoomTo50Percent(ctx, kw, ui); err != nil {
+		if err := AdjustBrowserZoomTo50Percent(ctx, kw, ui); err != nil {
 			return pv, errors.Wrap(err, "failed to adjust browser zoom to 50%")
 		}
 	}
@@ -1034,7 +864,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					currentPhase++
 					numBotsToAdd = meet.Bots[currentPhase] - botsInCall
 
-					if err := addBots(ctx, numBotsToAdd); err != nil {
+					if err := AddBots(ctx, bc, numBotsToAdd, meetTimeout, meetingCode, meet.BotsOptions); err != nil {
 						addBotsErr = errors.Wrapf(err, "failed to add %d bots", numBotsToAdd)
 						addingMoreBots = false
 						break
@@ -1450,7 +1280,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		case <-time.After(2 * time.Second):
 			testing.ContextLog(ctx, "Dismiss prompt did not start")
 		}
-		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
+		if err := meetHelper.CheckParticipantCount(ctx, expectedParticipantCount); err != nil {
 			if isPresenting && ui.Gone(googlemeet.StopPresentingButton)(ctx) == nil {
 				return errors.Wrap(err, "the number of bots is unexpected, screen sharing is interrupted")
 			}
@@ -1518,7 +1348,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	if meet.Effects {
-		if err := setEffect(ctx, turnOffEffects); err != nil {
+		if err := setEffect(ctx, TurnOffEffectsFinder); err != nil {
 			testing.ContextLog(ctx, "Failed to turn off visual effects: ", err)
 		}
 	}
@@ -1725,59 +1555,6 @@ func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestC
 	return nil
 }
 
-// adjustBrowserZoomTo50Percent sets browser zoom to 50%.
-func adjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWriter, ui *uiauto.Context) error {
-	// Zoom out on the browser to maximize the number of visible video
-	// feeds. This needs to be done before the final layout mode has been set,
-	// so that Meet can properly recalculate how many inbound videos should
-	// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
-	// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
-	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
-		return errors.Wrap(nil, "failed to repeatedly press Ctrl+Minus to zoom out")
-	}
-
-	// Sometimes the node "ZoomView" will be "PageActionView".
-	// To verify that the browser zoom ratio is 50%, check the corresponding
-	// node according to different UI nodes "ZoomView" or "PageActionView".
-	pageActionView := nodewith.HasClass("PageActionView")
-	if err := ui.Exists(pageActionView)(ctx); err == nil {
-		browserAppMenuButton := nodewith.Name("Chrome").HasClass("BrowserAppMenuButton").First()
-		zoomMenuItem := nodewith.Name("Zoom").Role(role.MenuItem)
-		zoomValueNode := nodewith.Role(role.StaticText).Ancestor(zoomMenuItem)
-		if err := ui.LeftClickUntil(browserAppMenuButton,
-			ui.WithTimeout(3*time.Second).WaitUntilExists(zoomMenuItem),
-		)(ctx); err != nil {
-			return errors.Wrap(nil, "failed to open browser app menu")
-		}
-
-		// Get zoom value text.
-		zoomInfo, err := ui.Info(ctx, zoomValueNode)
-		if err != nil {
-			return errors.Wrap(err, "failed to find the current browser zoom")
-		}
-		if zoomInfo.Name != "50%" {
-			return errors.Wrapf(err, `unexpected zoom value: got %s; want "50%%"`, zoomInfo.Name)
-		}
-		if err := ui.LeftClickUntil(browserAppMenuButton,
-			ui.WithTimeout(3*time.Second).WaitUntilGone(zoomMenuItem),
-		)(ctx); err != nil {
-			return errors.Wrap(nil, "failed to close browser app menu")
-		}
-	} else {
-		zoomNode := nodewith.HasClass("ZoomView")
-		zoomInfo, err := ui.Info(ctx, zoomNode)
-		if err != nil {
-			return errors.Wrap(err, "failed to find the current browser zoom")
-		}
-		if zoomInfo.Name != "Zoom: 50%" {
-			return errors.Wrapf(err, `unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
-		}
-	}
-
-	testing.ContextLog(ctx, "Zoomed browser window to 50%")
-	return nil
-}
-
 // dismissPromptIfExists retry to dismiss the prompt in the background if the dialog exists.
 func dismissPromptIfExists(ctx context.Context, tconn *chrome.TestConn, errCh chan error) {
 	async.Run(ctx, func(ctx context.Context) {
@@ -1787,122 +1564,4 @@ func dismissPromptIfExists(ctx context.Context, tconn *chrome.TestConn, errCh ch
 			prompts.OthersSeeDiffPrompt,
 		))(ctx)
 	}, "dismiss the prompt if it exists")
-}
-
-// ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
-func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
-	var webRTC webrtcinternals.Dump
-	if err := json.Unmarshal(dump, &webRTC); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal WebRTC internals dump")
-	}
-
-	expectedConns := 1
-	expectedScreenshareConns := 0
-	if present {
-		expectedConns = 2
-		expectedScreenshareConns = 1
-	}
-	var inCountError, outCountErr error
-	numPeerConns := 0
-	numScreenshareConns := 0
-	outboundVideoStream := 0
-	pv := perf.NewValues()
-	for connID, peerConn := range webRTC.PeerConnections {
-		// Only record peer connections that are related to our
-		// currently open Meet window. This is to make our tests more
-		// robust, by ignoring any peer connections that are hanging
-		// around from previous tests.
-		if !strings.Contains(peerConn.URL, meetingCode) {
-			continue
-		}
-		numPeerConns++
-
-		byType := peerConn.Stats.BuildIndex()
-		inTotalCount, inScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
-		}
-		outTotalCount, outScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
-		}
-
-		if inScreenshareCount != 0 {
-			return nil, errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
-		}
-		if outTotalCount == 0 {
-			testing.ContextLog(ctx, "Found no outbound-rtp video streams in peer connection ", connID)
-			outCountErr = errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
-			continue
-		} else {
-			outboundVideoStream++
-		}
-		expectedInTotalCount := 0
-		switch outScreenshareCount {
-		case 0: // This is the video chat connection.
-			// Sometimes when the connection is unstable, there may be multiple peer connections.
-			// Return failure only if none of the connections have correct inbound video data.
-			expectedInTotalCount = numBots
-
-			testing.ContextLogf(ctx, "Found %v inbound-rtp video streams", inTotalCount)
-			// If an enterprise account turns on effects, it may generate 1~2 inbound-rtp video
-			// streams for the self view of sending client, in particular on lower-end devices.
-			if enterpriseEffects {
-				if inTotalCount < expectedInTotalCount || inTotalCount > expectedInTotalCount+2 {
-					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected to be in range [%d, %d]", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+2)
-				} else {
-					inCountError = nil
-				}
-			} else {
-				if inTotalCount != expectedInTotalCount {
-					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
-				} else {
-					inCountError = nil
-				}
-			}
-		case outTotalCount: // This is the screen share connection.
-			numScreenshareConns++
-			if inTotalCount != expectedInTotalCount {
-				return nil, errors.Errorf("unexpected number of inbound-rtp video streams in screenshare peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
-			}
-		default:
-			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
-		}
-	}
-	if outboundVideoStream < expectedConns && outCountErr != nil {
-		return nil, outCountErr
-	}
-	if inCountError != nil {
-		return nil, inCountError
-	}
-	if numPeerConns < expectedConns {
-		return nil, errors.Errorf("unexpected number of peer connections; got %d, want %d", numPeerConns, expectedConns)
-	} else if numPeerConns > expectedConns {
-		testing.ContextLogf(ctx, "Got more peer connections; got %d, want %d", numPeerConns, expectedConns)
-	}
-
-	if numScreenshareConns < expectedScreenshareConns {
-		return nil, errors.Errorf("unexpected number of screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
-	} else if numScreenshareConns > expectedScreenshareConns {
-		testing.ContextLogf(ctx, "Got more screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
-	}
-
-	return pv, nil
-}
-
-// GetDisabledExperiments gets the list of partially rolled out experiments,
-// that should be disabled in Meet tests.
-func GetDisabledExperiments(ctx context.Context, cloudStorage *testing.CloudStorage) ([]string, error) {
-	reader, err := cloudStorage.Open(ctx, "gs://chromeos-test-assets-partner-shared/tast/crosint/meet-experiments/partial-rollout-experiments.txt")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to download experiment list")
-	}
-	defer reader.Close()
-
-	b, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read experiments list")
-	}
-
-	return strings.Split(strings.TrimSpace(string(b)), "\n"), nil
 }

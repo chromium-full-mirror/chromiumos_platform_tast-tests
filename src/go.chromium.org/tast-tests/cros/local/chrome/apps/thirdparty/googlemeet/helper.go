@@ -230,6 +230,18 @@ func (h *HRTelemetryHelper) GetParticipantCount(ctx context.Context) (int, error
 	return participantCount, nil
 }
 
+// CheckParticipantCount verifies that the number of participants matches the expected count.
+func (h *HRTelemetryHelper) CheckParticipantCount(ctx context.Context, expectedCount int) error {
+	participantCount, err := h.GetParticipantCount(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get participant count")
+	}
+	if participantCount != expectedCount {
+		return errors.Errorf("got %d participants, expected %d", participantCount, expectedCount)
+	}
+	return nil
+}
+
 // ChangeLayoutOption changes the layout to the given option.
 func (h *HRTelemetryHelper) ChangeLayoutOption(ctx context.Context, layoutOption LayoutOption) error {
 	return h.meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.set%sLayout()", layoutOption), nil)
