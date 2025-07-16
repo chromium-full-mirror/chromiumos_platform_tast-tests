@@ -1102,6 +1102,24 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				if err := meetHelper.SetCamera(ctx, true); err != nil {
 					return errors.Wrap(err, "failed to turn on camera")
 				}
+
+				// After reconnecting, it may take more time for videos to load.
+				// Waiting for the video to reach the expected number means the loading
+				// is complete.
+				if err := testing.Poll(ctx, func(ctx context.Context) error {
+					videoFinder := nodewith.Role(role.Video).Ancestor(meetRootWebArea)
+					videos, err := ui.NodesInfo(ctx, videoFinder)
+					if err != nil {
+						return errors.Wrap(err, "failed to get info for the videos")
+					}
+					if len(videos) != expectedParticipantCount {
+						return errors.Wrapf(err, "the number of videos is not expected, want %v; got %v", expectedParticipantCount, len(videos))
+					}
+					return nil
+				}, &testing.PollOptions{Timeout: time.Minute, Interval: 10 * time.Second}); err != nil {
+					testing.ContextLog(ctx, "Failed to wait for videos to load: ", err)
+				}
+
 				recorder.CustomScreenshot(ctx)
 			}
 		} else {
