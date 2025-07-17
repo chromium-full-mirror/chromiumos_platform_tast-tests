@@ -43,7 +43,7 @@ func init() {
 		Func: FetchSupportPacket,
 		Desc: "Verifies that remote log upload with FETCH_SUPPORT_PACKET command works",
 		Contacts: []string{
-			"chromeos-commercial-supportability@google.com", // Team
+			"chromeos-commercial-remote-management@google.com", // Team
 			"iremuguz@google.com",                           // Test author
 		},
 		BugComponent: "b:1111615",
