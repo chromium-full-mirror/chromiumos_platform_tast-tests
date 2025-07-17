@@ -136,6 +136,11 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to setup init status: ", err)
 	}
 
+	// Leaving factory mode will reset capabilities so we have to explicitly allow unverified RO to prevent brick.
+	if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper, true); err != nil {
+		s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
+	}
+
 	uiHelper, err = rmaweb.NewUIHelper(ctx, s, &rmaweb.UIHelperOptions{
 		KeepState:  false,
 		BypassRacc: bypassRacc,
@@ -227,17 +232,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Log("Fail to set USB Mux state: ", err)
 	}
 
-	// We set AllowUnverifiedRo to Always because lab devices are installed with dev-signed firmware,
-	// which cannot pass APROV, and will be held in reset by GSC.
-	if isTi50, err := servoutil.IsTi50(ctx, firmwareHelper); err == nil && isTi50 {
-		testing.ContextLog(ctx, "Ti50 device: Setting AllowUnverifiedRo to Always")
-		if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper); err != nil {
-			s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
-		}
-	} else if err != nil {
-		// We still try to complete the rest of test because setting capabilities is not what we want to
-		// verify with this test.
-		s.Log("Fail to check if the device is Ti50: ", err)
+	if err := setAllowUnverifiedRoToAlways(ctx, firmwareHelper, false); err != nil {
+		s.Fatal("Fail to reset AllowUnverifiedRo to Always: ", err)
 	}
 
 	if err := rmaweb.PollStateField(ctx, s, rmaweb.RmadStateFieldFinalizeRebooted, true, rmaweb.StateFieldPollingTimeout); err != nil {
@@ -296,7 +292,19 @@ func generateActionCombinedToDisableWP(option rmaweb.WriteProtectDisableOption, 
 	return nil
 }
 
-func setAllowUnverifiedRoToAlways(ctx context.Context, firmwareHelper *firmware.Helper) error {
+func setAllowUnverifiedRoToAlways(ctx context.Context, firmwareHelper *firmware.Helper, forceReboot bool) error {
+	// We set AllowUnverifiedRo to Always because lab devices are installed with dev-signed firmware,
+	// which cannot pass APROV, and will be held in reset by GSC.
+	if isTi50, err := servoutil.IsTi50(ctx, firmwareHelper); err != nil || !isTi50 {
+		// We still try to complete the rest of test because setting capabilities is not what we want to
+		// verify with this test.
+		testing.ContextLog(ctx, "Fail to determine if the device is a Ti50 device or it is not")
+		if !forceReboot {
+			return nil
+		}
+		return servoutil.RebootGSC(ctx, firmwareHelper)
+	}
+
 	// Wait rmad for leaving factory mode.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, accessible, err := firmwareHelper.Servo.GetCCDCapability(ctx, servo.AllowUnverifiedRo); err != nil {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,6 +32,11 @@ const retryTimes = 3
 // SetBatteryState sets the state of battery via servo.
 func SetBatteryState(ctx context.Context, firmwareHelper *firmware.Helper, state BatteryStateValue) error {
 	cmd := fmt.Sprintf("bpforce %s atboot", state)
+
+	// Ensure CCD is open so we can set the state of battery.
+	if err := OpenCCDIfNotOpen(ctx, firmwareHelper); err != nil {
+		return err
+	}
 
 	// Certain devices experience unreliable GSC UART communication, leading to potential character loss and
 	// subsequent 'command not found' errors. Thus we add a retry mechanism to address the this.
@@ -67,4 +73,16 @@ func IsTi50(ctx context.Context, firmwareHelper *firmware.Helper) (bool, error) 
 	}
 
 	return versionInfo.IsTi50, nil
+}
+
+// OpenCCDIfNotOpen opens CCD if it's currently closed.
+func OpenCCDIfNotOpen(ctx context.Context, firmwareHelper *firmware.Helper) error {
+	if val, err := firmwareHelper.Servo.GetString(ctx, servo.GSCCCDLevel); err != nil {
+		return err
+	} else if val != servo.Open {
+		if err := firmwareHelper.Servo.SetString(ctx, servo.GSCTestlab, servo.Open); err != nil {
+			return err
+		}
+	}
+	return nil
 }
