@@ -45,7 +45,7 @@ func init() {
 		Func: DataCollection,
 		Desc: "Verifies that chrome://support-tool collects requested logs",
 		Contacts: []string{
-			"chromeos-commercial-supportability@google.com", // Team
+			"chromeos-commercial-remote-management@google.com", // Team
 			"iremuguz@google.com",                           // Test author
 		},
 		BugComponent: "b:1111615",
