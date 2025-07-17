@@ -33,7 +33,7 @@ func init() {
 		Func: PacketCapture,
 		Desc: "Verifies network packet capture works and can be controlled by policy",
 		Contacts: []string{
-			"chromeos-commercial-supportability@google.com", // Team
+			"chromeos-commercial-remote-management@google.com", // Team
 			"iremuguz@google.com",                           // Test author
 			"cros-debugd@google.com",                        // Debugd team
 		},
