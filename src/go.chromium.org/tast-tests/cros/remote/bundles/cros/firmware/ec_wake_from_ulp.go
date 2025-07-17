@@ -75,6 +75,7 @@ func init() {
 				"blipper",
 				"bookem",
 				"boten",
+				"bugzzy",
 				"drawcia",
 				"drawlat",
 				"drawman",
