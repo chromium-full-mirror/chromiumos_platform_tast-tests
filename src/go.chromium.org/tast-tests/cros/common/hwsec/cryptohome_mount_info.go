@@ -152,17 +152,24 @@ func (c *CryptohomeMountInfo) WaitForUserMountAndValidateType(ctx context.Contex
 	ctx, st := timing.Start(ctx, "wait_for_user_mount")
 	defer st.End()
 
-	userpath, err := c.GetHomeUserPath(ctx, user)
-	if err != nil {
-		return errors.Wrap(err, "failed to get user home path")
-	}
-	systempath, err := c.GetRootUserPath(ctx, user)
-	if err != nil {
-		return errors.Wrap(err, "failed to get user root path")
-	}
-
+	var (
+		userpath, systempath string
+		getPathErr           error
+	)
 	testing.ContextLogf(ctx, "Waiting for cryptohome for user %q with timeout %v", user, WaitForUserTimeout)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if userpath == "" {
+			userpath, getPathErr = c.GetHomeUserPath(ctx, user)
+			if getPathErr != nil {
+				return errors.Wrap(getPathErr, "failed to get user home path")
+			}
+		}
+		if systempath == "" {
+			systempath, getPathErr = c.GetRootUserPath(ctx, user)
+			if getPathErr != nil {
+				return errors.Wrap(getPathErr, "failed to get user root path")
+			}
+		}
 		for _, mounter := range []string{cryptohomedExe, mounterExe} {
 			partitions, err := c.findMounts(ctx, mounter)
 			if err != nil {
