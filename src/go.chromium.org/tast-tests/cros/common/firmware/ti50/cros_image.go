@@ -642,6 +642,8 @@ func (i *CrOSImage) IsCCDOpen(ctx context.Context) (bool, error) {
 // VersionInfo uses the `version` GSC console command to returned information
 // about the running firmware.
 func (i *CrOSImage) VersionInfo(ctx context.Context) (VersionCommandInfo, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	output, err := i.safeCommand(ctx, "version")
 	if err != nil {
 		return VersionCommandInfo{}, errors.Wrap(err, "failed to run GSC version command")
