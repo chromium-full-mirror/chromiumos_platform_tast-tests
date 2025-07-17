@@ -161,7 +161,7 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 		if param.inHost {
 			for j := 0; j < numTasks/numTypes; j++ {
 				const tabOpenCooldown = 2 * time.Second
-				task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
+				task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, false /* =preventFastShutdown */, tabOpenCooldown)
 				tabsAliveTasks = append(tabsAliveTasks, task)
 				tasks = append(tasks, task)
 			}

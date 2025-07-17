@@ -110,7 +110,7 @@ func openTabCount(mbPerTab int) (int, error) {
 // openTabs opens tabs to create memory pressure.
 func openTabs(ctx context.Context, cr *chrome.Chrome, createTabCount, mbPerTab int, compressRatio float32) error {
 	for i := 0; i < createTabCount; i++ {
-		url := memory.CompileMemoryStressDataURL(mbPerTab, compressRatio)
+		url := memory.CompileMemoryStressDataURL(mbPerTab, compressRatio, false /* =preventFastShutdown */)
 		if err := openAllocationPage(ctx, url, cr); err != nil {
 			return errors.Wrap(err, "cannot create tab")
 		}

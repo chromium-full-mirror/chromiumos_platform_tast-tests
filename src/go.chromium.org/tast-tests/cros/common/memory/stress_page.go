@@ -65,8 +65,14 @@ window.addEventListener('DOMContentLoaded', () => { setTimeout(main); });
 //
 // Each data url is treated as different origin in Chrome even if the url is the same. With that, we
 // can ensure that renderer processes are created per tab.
-func CompileMemoryStressDataURL(allocMiB int, ratio float32) string {
+func CompileMemoryStressDataURL(allocMiB int, ratio float32, preventFastShutdown bool) string {
 	mainFunctionParams := fmt.Sprintf("const allocMb = %d; const randomRatio = %.3f;", allocMiB, ratio)
+	if preventFastShutdown {
+		// TabLifecycleUnitSource::TabLifecycleUnit::AttemptFastKillForDiscard in Chrome
+		// fails to fast shutdown attempt and fallbacks to normal discarding if both
+		// onbeforeunload and onunload handlers are set.
+		mainFunctionParams += "window.onbeforeunload = () => 'This page has a beforeunload handler.'; window.onunload = () => {};"
+	}
 	tmpl, err := template.New("html").Parse(htmlTemplate)
 	if err != nil {
 		// The template must never fails.

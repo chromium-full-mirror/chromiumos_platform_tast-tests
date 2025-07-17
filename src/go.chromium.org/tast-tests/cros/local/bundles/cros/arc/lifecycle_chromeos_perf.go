@@ -55,7 +55,7 @@ func LifecycleChromeOSPerf(ctx context.Context, s *testing.State) {
 	var tabsAliveTasks []memoryuser.KillableTask
 	for i := 0; i < numTabs; i++ {
 		const tabOpenCooldown = 2 * time.Second
-		task := memoryuser.NewMemoryStressTask(tabAllocMiB, 0.67, tabOpenCooldown)
+		task := memoryuser.NewMemoryStressTask(tabAllocMiB, 0.67, false /* =preventFastShutdown */, tabOpenCooldown)
 		tasks = append(tasks, task)
 		tabsAliveTasks = append(tabsAliveTasks, task)
 	}

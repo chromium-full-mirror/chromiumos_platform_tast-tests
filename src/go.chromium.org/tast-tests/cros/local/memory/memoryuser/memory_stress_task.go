@@ -177,7 +177,7 @@ func FillChromeOSMemory(ctx context.Context, cr *chrome.Chrome, p *perf.Values, 
 	}
 	for i := 0; ; i++ {
 		const tabOpenCooldown = 2 * time.Second
-		unit := NewMemoryStressUnit(unitMiB, ratio, tabOpenCooldown)
+		unit := NewMemoryStressUnit(unitMiB, ratio, false /* =preventFastShutdown */, tabOpenCooldown)
 		units = append(units, unit)
 		if err := unit.Run(ctx, cr, p); err != nil {
 			return cleanup, errors.Wrapf(err, "failed to run MemoryStressUnit %q", unit.url)
@@ -231,8 +231,8 @@ func (st *MemoryStressTask) StillAlive(ctx context.Context, testEnv *TestEnv) bo
 // allocMiB - The amount of memory the tab will allocate.
 // ratio    - How compressible the allocated memory will be.
 // cooldown - How long to wait after allocating before returning.
-func NewMemoryStressUnit(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressUnit {
-	url := memory.CompileMemoryStressDataURL(allocMiB, ratio)
+func NewMemoryStressUnit(allocMiB int, ratio float32, preventFastShutdown bool, cooldown time.Duration) *MemoryStressUnit {
+	url := memory.CompileMemoryStressDataURL(allocMiB, ratio, preventFastShutdown)
 	return &MemoryStressUnit{
 		url:      url,
 		cooldown: cooldown,
@@ -243,6 +243,6 @@ func NewMemoryStressUnit(allocMiB int, ratio float32, cooldown time.Duration) *M
 // allocMiB - The amount of memory the tab will allocate.
 // ratio    - How compressible the allocated memory will be.
 // cooldown - How long to wait after allocating before returning.
-func NewMemoryStressTask(allocMiB int, ratio float32, cooldown time.Duration) *MemoryStressTask {
-	return &MemoryStressTask{*NewMemoryStressUnit(allocMiB, ratio, cooldown)}
+func NewMemoryStressTask(allocMiB int, ratio float32, preventFastShutdown bool, cooldown time.Duration) *MemoryStressTask {
+	return &MemoryStressTask{*NewMemoryStressUnit(allocMiB, ratio, preventFastShutdown, cooldown)}
 }

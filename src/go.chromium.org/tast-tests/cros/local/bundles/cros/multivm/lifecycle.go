@@ -22,7 +22,7 @@ import (
 )
 
 type lifecycleParam struct {
-	inHost, inARC, inCrostini bool
+	inHost, inARC, inCrostini, preventFastShutdown bool
 }
 
 func init() {
@@ -44,6 +44,10 @@ func init() {
 			Name: "host",
 			Pre:  multivm.NoVMStarted(),
 			Val:  &lifecycleParam{inHost: true},
+		}, {
+			Name: "host_normal_discard",
+			Pre:  multivm.NoVMStarted(),
+			Val:  &lifecycleParam{inHost: true, preventFastShutdown: true},
 		}, {
 			Name:              "arc",
 			Pre:               multivm.ArcStarted(),
@@ -83,6 +87,11 @@ func init() {
 			Name:              "host_with_bg_arc_vmmms",
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleParam{inHost: true},
+			ExtraSoftwareDeps: []string{"android_vm"},
+		}, {
+			Name:              "host_with_bg_arc_vmmms_normal_discard",
+			Pre:               multivm.ArcStartedVMMMS(),
+			Val:               &lifecycleParam{inHost: true, preventFastShutdown: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})
@@ -176,7 +185,7 @@ func Lifecycle(ctx context.Context, s *testing.State) {
 	for i := 0; i < numTasks/numTypes; i++ {
 		if param.inHost {
 			const tabOpenCooldown = 2 * time.Second
-			task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, tabOpenCooldown)
+			task := memoryuser.NewMemoryStressTask(int(taskAllocMiB), compressRatio, param.preventFastShutdown, tabOpenCooldown)
 			tabsAliveTasks = append(tabsAliveTasks, task)
 			tasks = append(tasks, task)
 		}
