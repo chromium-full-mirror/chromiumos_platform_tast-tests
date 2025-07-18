@@ -813,13 +813,13 @@ func IsNewUIActive(ctx context.Context) bool {
 }
 
 // DeleteUserCertNewUI selects and deletes specific client's certificate from "Your certificates" tab.
-func DeleteUserCertNewUI(ctx context.Context, ui *uiauto.Context, userCaCertName string) (retErr error) {
+func DeleteUserCertNewUI(ctx context.Context, ui *uiauto.Context, userClientCertName string) (retErr error) {
 	if err := OpenUserInstalledClientCertsNewUI(ctx, ui); err != nil {
 		return errors.Wrap(err, "failed to select client certificates tab")
 	}
 
 	dialogMessage := nodewith.NameStartingWith("If you delete one of").Role(role.StaticText)
-	deleteNamePrefix := "Delete certificate " + userCaCertName
+	deleteNamePrefix := "Delete certificate " + userClientCertName
 	deleteButton := nodewith.NameStartingWith(deleteNamePrefix).Role(role.Button)
 	popupDialog := nodewith.NameStartingWith("Delete ").Role(role.Dialog)
 
@@ -828,9 +828,9 @@ func DeleteUserCertNewUI(ctx context.Context, ui *uiauto.Context, userCaCertName
 		ui.DoDefault(deleteButton),
 		ui.WaitUntilExists(popupDialog),
 		ui.WaitUntilExists(dialogMessage),
-		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name("Cancel").Role(role.Button).Ancestor(popupDialog)),
+		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button).Ancestor(popupDialog)),
+		ui.DoDefault(nodewith.Name("OK").Role(role.Button).Ancestor(popupDialog)),
 		ui.WaitUntilGone(popupDialog),
 	)(ctx); err != nil {
 		return errors.Wrap(err, failedToDeleteCertErr)
