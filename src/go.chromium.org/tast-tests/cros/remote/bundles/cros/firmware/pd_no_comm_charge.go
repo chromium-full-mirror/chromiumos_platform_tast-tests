@@ -39,9 +39,8 @@ func init() {
 		Timeout:      60 * time.Minute,
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		// TODO(b/156552219): Add "group:firmware_pd_unstable" tag once the test passes.
 		// TODO(b/156552219): Add "group:firmware_pd" tag once the test is stable.
-		Attr: []string{"group:firmware"},
+		Attr: []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val:  firmware.PDTestParams{},
