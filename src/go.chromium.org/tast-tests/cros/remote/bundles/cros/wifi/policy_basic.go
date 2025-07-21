@@ -246,6 +246,8 @@ func PolicyBasic(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	pc := ps.NewPolicyServiceClient(tf.RPC().Conn)
 
+	tf.CollectIntelFirmwareDumpOnError = true
+
 	s.Log("Configuring device-wide Wi-Fi network")
 	deviceAP, err := tf.ConfigureAP(ctx, tc.devAPOpts, tc.devSecConfFac)
 	if err != nil {
