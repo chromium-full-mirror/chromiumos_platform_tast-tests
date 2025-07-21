@@ -7685,14 +7685,6 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "cl_khr_command_buffer_negative_create_command_buffer_device_does_not_support_out_of_order_queue",
-				Val: oclctsTest{
-					executable: "test_cl_khr_command_buffer",
-					args:       "negative_create_command_buffer_device_does_not_support_out_of_order_queue",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
 				Name: "cl_khr_command_buffer_negative_create_command_buffer_not_supported_properties",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
@@ -7713,14 +7705,6 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
 					args:       "negative_create_command_buffer_num_queues",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "cl_khr_command_buffer_negative_create_command_buffer_queue_without_min_properties",
-				Val: oclctsTest{
-					executable: "test_cl_khr_command_buffer",
-					args:       "negative_create_command_buffer_queue_without_min_properties",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7797,10 +7781,10 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "cl_khr_command_buffer_negative_enqueue_queue_not_compatible",
+				Name: "cl_khr_command_buffer_negative_enqueue_inconsistent_device",
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
-					args:       "negative_enqueue_queue_not_compatible",
+					args:       "negative_enqueue_inconsistent_device",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7809,6 +7793,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_cl_khr_command_buffer",
 					args:       "negative_enqueue_queue_with_different_context",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_queue_without_reqd_properties",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_queue_without_reqd_properties",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "cl_khr_command_buffer_negative_enqueue_with_unsupported_queue_property",
+				Val: oclctsTest{
+					executable: "test_cl_khr_command_buffer",
+					args:       "negative_enqueue_with_unsupported_queue_property",
 				},
 				Timeout: 1 * time.Minute,
 			},
