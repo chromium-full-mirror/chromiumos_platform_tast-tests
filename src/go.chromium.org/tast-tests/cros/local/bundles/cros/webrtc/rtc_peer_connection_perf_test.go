@@ -214,7 +214,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							Profile:           strings.ToUpper(codec),
 							StreamWidth:       resolution.Width,
 							StreamHeight:      resolution.Height,
-							TraceChromeEvents: isHardwareDecoderImpl(dec) || isHardwareEncoderImpl(enc),
 						}
 						var streamTypeStr string
 						if stream != vanilla {
@@ -302,7 +301,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 					StreamWidth:       k1080p.Width,
 					StreamHeight:      k1080p.Height,
 					DisplayMediaType:  displayMediaTypeStr,
-					TraceChromeEvents: true,
 				}
 
 				var svc string
@@ -343,7 +341,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			StreamWidth:       k1080p.Width,
 			StreamHeight:      k1080p.Height,
 			DisplayMediaType:  "peerconnection.CaptureTab",
-			TraceChromeEvents: true,
 		}
 		fixture := "chromeZeroCopyTabCapture"
 		if enc == swEnc {
@@ -368,7 +365,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			Profile:                               strings.ToUpper(codec),
 			StreamWidth:                           k720p.Width,
 			StreamHeight:                          k720p.Height,
-			TraceChromeEvents:                     false,
 			VerifyOutOfProcessVideoEncodingIsUsed: true,
 		}
 		sourceData := rtcPerfTestSourceData{
@@ -391,7 +387,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			Profile:           strings.ToUpper(codec),
 			StreamWidth:       k720p.Width,
 			StreamHeight:      k720p.Height,
-			TraceChromeEvents: true,
 		}
 		swDeps := softwareCodecsDeps(codec, enc, dec)
 		swDeps = append(swDeps, "thread_safe_libva_backend")

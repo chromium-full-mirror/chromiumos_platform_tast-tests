@@ -169,8 +169,10 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 	if err != nil {
 		return errors.Wrap(err, "failed to get expected resolutions")
 	}
-	if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p.GetUnderlyingValues()); traceErr != nil {
-		return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
+	if params.TraceChromeEvents {
+		if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p.GetUnderlyingValues()); traceErr != nil {
+			return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
+		}
 	}
 
 	return nil
