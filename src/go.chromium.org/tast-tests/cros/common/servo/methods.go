@@ -35,8 +35,7 @@ const (
 	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
 	FWWPState             StringControl = "fw_wp_state"
-	FWWPAtBootState       StringControl = "fw_wp_atboot_state"
-	GSCChip               StringControl = "gsc_chip"
+	GSCFWWPAtBootState    StringControl = "gsc_fw_wp_atboot_state"
 	ImageUSBKeyDev        StringControl = "image_usbkey_dev"
 	ImageUSBKeyDirection  StringControl = "image_usbkey_direction"
 	ImageUSBKeyPwr        StringControl = "image_usbkey_pwr"
@@ -1165,7 +1164,7 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	// between servo_micro asserting WP externally and what Ti50 things WP should
 	// be.
 	if ti50HasWPRebootFeature {
-		if err := s.SetCCDFWWPAtBootState(ctx, value); err != nil {
+		if err := s.setGSCFWWPAtBootState(ctx, value); err != nil {
 			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
 		}
 
@@ -1176,17 +1175,11 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	return nil
 }
 
-// SetCCDFWWPAtBootState sets the FWWPAtBootState control with CCD prefix.
+// setGSCFWWPAtBootState sets the GSCFWWPAtBootState control.
 // Because this is particularly disruptive, it is always logged.
-func (s *Servo) SetCCDFWWPAtBootState(ctx context.Context, value FWWPStateValue) error {
-	// Note when crrev.com/c/6557589 makes it into lab station servod, we
-	// can use gsc_fw_wp_atboot_state always. Until then, servo_micro only set
-	// up will fail trying to call this. However it is worth landing sooner as
-	// most set up are not servo_micro only, and this unblocks tests after the
-	// Ti50 behavior change around WP.
-	ccdFWWPAtBootState := "ccd_gsc." + FWWPAtBootState
-	testing.ContextLogf(ctx, "Setting %q to %q", ccdFWWPAtBootState, value)
-	return s.SetString(ctx, ccdFWWPAtBootState, string(value))
+func (s *Servo) setGSCFWWPAtBootState(ctx context.Context, value FWWPStateValue) error {
+	testing.ContextLogf(ctx, "Setting %q to %q", GSCFWWPAtBootState, value)
+	return s.SetString(ctx, GSCFWWPAtBootState, string(value))
 }
 
 // GetPDRole returns the servo's current PDRole (SNK or SRC), or PDRoleNA if Servo is not V4.
