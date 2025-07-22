@@ -35,6 +35,7 @@ var (
 	DocsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea).First()
 	docsApplication = nodewith.Role(role.Application).Ancestor(DocsWebArea)
 	moveToTrashItem = nodewith.NameContaining("Move to trash t").Role(role.MenuItem).First()
+	menuBar         = nodewith.Name("Menu bar").Role(role.Banner).Ancestor(docsApplication)
 )
 
 // NewGoogleDocs returns an action to create a new Google document.
@@ -231,7 +232,6 @@ func docContent(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 // ShowTheDocMenus shows the doc menus if it's hidden.
 func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) action.Action {
 	ui := uiauto.New(tconn)
-	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(docsApplication)
 	modeAndViewToolBar := nodewith.Name("Mode and view").Role(role.Toolbar).Ancestor(docsApplication)
 	exitFullScreen := uiauto.NamedCombine("exit full screen",
 		kb.AccelAction("Esc"),
@@ -247,6 +247,7 @@ func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) acti
 			),
 			ui.WaitUntilExists(menuBar),
 			reloadDocsIfLoadingIssueDialogAppears(ui),
+			reloadIfFileMenuDisabled(ui),
 			// In some cases, the toolbar is hidden in full screen.
 			uiauto.IfFailThen(ui.Exists(modeAndViewToolBar), exitFullScreen),
 			showTheMenus(ui)))
@@ -256,4 +257,21 @@ func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) acti
 // "Loading issue" dialog appears.
 func reloadDocsIfLoadingIssueDialogAppears(ui *uiauto.Context) action.Action {
 	return reloadIfLoadingIssueDialogAppears(ui, DocsWebArea)
+}
+
+// reloadIfFileMenuDisabled reloads the page if the "File" menu is disabled
+// for more than a minute.
+func reloadIfFileMenuDisabled(ui *uiauto.Context) action.Action {
+	fileMenuItem := nodewith.Name("File").Role(role.MenuItem).Ancestor(DocsWindow)
+	fileMenuItemDisabled := fileMenuItem.HasClass("goog-control-disabled")
+	reloadButton := nodewith.Name("Reload").Role(role.Button).Ancestor(DocsWindow)
+	reloadPage := uiauto.NamedCombine("reload page because File menu is disabled",
+		ui.DoDefault(reloadButton),
+		ui.WaitUntilGone(menuBar),
+		ui.WithTimeout(time.Minute).WaitUntilExists(menuBar),
+	)
+	return uiauto.Combine("reload if file menu disabled",
+		ui.WaitUntilExists(fileMenuItem),
+		uiauto.IfFailThen(ui.WithTimeout(time.Minute).WaitUntilGone(fileMenuItemDisabled), reloadPage),
+	)
 }
