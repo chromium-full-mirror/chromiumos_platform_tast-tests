@@ -118,11 +118,6 @@ func BootTime(ctx context.Context, s *testing.State) {
 
 	useBootTimeCommand := isECSupportBootTimeCommand(ctx, h.Servo)
 
-	s.Log("Rebooting EC")
-	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
-		s.Fatal("Failed to send reboot command: ", err)
-	}
-
 	var coldBootTime, apBootTime time.Duration
 	if useBootTimeCommand {
 		coldBootTime, apBootTime = measureBootTimeViaECBootTimeCommand(ctx, s, param.apBootState, h.Servo)
@@ -150,6 +145,11 @@ func isECSupportBootTimeCommand(ctx context.Context, ser *servo.Servo) bool {
 }
 
 func measureBootTimeViaECBootTimeCommand(ctx context.Context, s *testing.State, apBootState string, ser *servo.Servo) (time.Duration, time.Duration) {
+	s.Log("Rebooting EC")
+	if err := ser.RunECCommand(ctx, "reboot"); err != nil {
+		s.Fatal("Failed to send reboot command: ", err)
+	}
+
 	// GoBigSleepLint: Sleep for the first few seconds, then we can safely disable chan then send console command to get boot times
 	if err := testing.Sleep(ctx, time.Second*5); err != nil {
 		s.Fatal("Failed to sleep for skipping boot ec console jamming: ", err)
@@ -208,6 +208,12 @@ func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apB
 			s.Fatal("Failed to cancel capture EC UART: ", err)
 		}
 	}()
+
+	s.Log("Rebooting EC")
+	if err := ser.RunECCommand(ctx, "reboot"); err != nil {
+		s.Fatal("Failed to send reboot command: ", err)
+	}
+
 	if err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
