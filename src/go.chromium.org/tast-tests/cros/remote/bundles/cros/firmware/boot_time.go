@@ -318,5 +318,5 @@ func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apB
 	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: maxWaitTime}); err != nil {
 		s.Error("EC output parsing failed: ", err)
 	}
-	return time.Second, time.Second
+	return coldBootTime, apBootTime
 }
