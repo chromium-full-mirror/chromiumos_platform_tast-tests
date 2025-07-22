@@ -216,7 +216,14 @@ func ActivateTitleField(tconn *chrome.TestConn) action.Action {
 func ClickOnSlidesWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("click on slide web area",
+		reloadSlidesIfLoadingIssueDialogAppears(ui),
 		clickGotItIfExists(ui),
 		ui.LeftClick(SlidesWebArea),
 	)
+}
+
+// reloadSlidesIfLoadingIssueDialogAppears reloads the slide page if the
+// "Loading issue" dialog appears.
+func reloadSlidesIfLoadingIssueDialogAppears(ui *uiauto.Context) action.Action {
+	return reloadIfLoadingIssueDialogAppears(ui, SlidesWebArea)
 }

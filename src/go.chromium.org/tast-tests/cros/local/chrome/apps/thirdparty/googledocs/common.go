@@ -101,3 +101,17 @@ func clickGotItIfExists(ui *uiauto.Context) action.Action {
 		ui.WithTimeout(3*time.Second).WaitUntilGone(gotIt),
 	)
 }
+
+// reloadIfLoadingIssueDialogAppears reloads the page if the "Loading issue" dialog appears.
+func reloadIfLoadingIssueDialogAppears(ui *uiauto.Context, webArea *nodewith.Finder) action.Action {
+	application := nodewith.Role(role.Application).Ancestor(webArea)
+	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(application)
+	loadingIssueDialog := nodewith.Name("Loading issue").Role(role.Dialog).Ancestor(application)
+	reloadNowButton := nodewith.Name("Reload now").Role(role.Button).Ancestor(loadingIssueDialog)
+	reloadPage := uiauto.NamedCombine("reload page",
+		ui.DoDefault(reloadNowButton),
+		ui.WaitUntilGone(reloadNowButton),
+		ui.WithTimeout(time.Minute).WaitUntilExists(menuBar),
+	)
+	return uiauto.IfSuccessThen(ui.Exists(loadingIssueDialog), reloadPage)
+}

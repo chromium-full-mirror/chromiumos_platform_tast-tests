@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
@@ -154,14 +155,14 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		ac := uiauto.New(tconn)
 		slidesRootWebArea := nodewith.NameContaining("Google Slides").Role(role.RootWebArea)
 		documentContentFocused := nodewith.Name("Document content").Role(role.TextField).Ancestor(slidesRootWebArea).Focused()
-		if err := uiauto.Combine("click web area to focus on web content",
+		if err := uiauto.Retry(3, uiauto.Combine("click web area to focus on web content",
 			webutil.ReloadIfSiteUnreachable(ac, slidesConn, slidesRootWebArea),
-			ac.LeftClick(slidesRootWebArea),
+			googledocs.ClickOnSlidesWebArea(tconn),
 			// Click at |slidesRootWebArea| might focus on the web area or
 			// the document content.
 			// Both focused status indicate the web content is focused.
 			ac.WaitUntilAnyExists(slidesRootWebArea.Focused(), documentContentFocused),
-		)(ctx); err != nil {
+		))(ctx); err != nil {
 			return err
 		}
 

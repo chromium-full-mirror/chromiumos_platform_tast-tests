@@ -123,6 +123,7 @@ func ChangeSheetFontSize(tconn *chrome.TestConn, size string) action.Action {
 func ClickOnSheetsWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("click on sheet web area",
+		ReloadSheetsIfLoadingIssueDialogAppears(ui),
 		clickGotItIfExists(ui),
 		ui.LeftClick(SheetsWebArea),
 	)
@@ -133,6 +134,7 @@ func ClickOnSheetsCanvas(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	sheetsCanvas := nodewith.Role(role.Canvas).Ancestor(SheetsWebArea)
 	return uiauto.Combine("click on sheet canvas",
+		ReloadSheetsIfLoadingIssueDialogAppears(ui),
 		clickGotItIfExists(ui),
 		ui.LeftClick(sheetsCanvas),
 	)
@@ -150,4 +152,10 @@ func ShowTheSheetMenus(tconn *chrome.TestConn) action.Action {
 		),
 		showTheMenus(ui),
 	)
+}
+
+// ReloadSheetsIfLoadingIssueDialogAppears reloads the sheet page if the
+// "Loading issue" dialog appears.
+func ReloadSheetsIfLoadingIssueDialogAppears(ui *uiauto.Context) action.Action {
+	return reloadIfLoadingIssueDialogAppears(ui, SheetsWebArea)
 }

@@ -216,6 +216,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir str
 			return errors.Wrap(err, "failed to click the spreadsheet privacy button")
 		}
 
+		if err := googledocs.ReloadSheetsIfLoadingIssueDialogAppears(ui)(ctx); err != nil {
+			return errors.Wrap(err, "failed to reload page")
+		}
+
 		testing.ContextLogf(ctx, "Scrolling down the Google Sheets file for %s", overallScrollTimeout)
 
 		for _, scroller := range []struct {

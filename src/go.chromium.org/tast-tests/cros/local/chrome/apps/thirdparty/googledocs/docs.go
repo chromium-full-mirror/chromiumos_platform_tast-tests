@@ -246,21 +246,14 @@ func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) acti
 				),
 			),
 			ui.WaitUntilExists(menuBar),
-			reloadIfLoadingIssueDialogAppears(ui),
+			reloadDocsIfLoadingIssueDialogAppears(ui),
 			// In some cases, the toolbar is hidden in full screen.
 			uiauto.IfFailThen(ui.Exists(modeAndViewToolBar), exitFullScreen),
 			showTheMenus(ui)))
 }
 
-// reloadIfLoadingIssueDialogAppears reloads the page if the "Loading issue"
-// dialog appears.
-func reloadIfLoadingIssueDialogAppears(ui *uiauto.Context) action.Action {
-	menuBar := nodewith.Name("Menu bar").Role(role.Banner).Ancestor(docsApplication)
-	loadingIssueDialog := nodewith.Name("Loading issue").Role(role.Dialog).Ancestor(docsApplication)
-	reloadNowButton := nodewith.Name("Reload now").Role(role.Dialog).Ancestor(loadingIssueDialog)
-	reloadPage := uiauto.NamedCombine("reload page",
-		ui.DoDefault(reloadNowButton),
-		ui.WithTimeout(time.Minute).WaitUntilExists(menuBar),
-	)
-	return uiauto.IfSuccessThen(ui.Exists(loadingIssueDialog), reloadPage)
+// reloadDocsIfLoadingIssueDialogAppears reloads the doc page if the
+// "Loading issue" dialog appears.
+func reloadDocsIfLoadingIssueDialogAppears(ui *uiauto.Context) action.Action {
+	return reloadIfLoadingIssueDialogAppears(ui, DocsWebArea)
 }
