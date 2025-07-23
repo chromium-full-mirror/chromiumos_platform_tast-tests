@@ -198,22 +198,15 @@ func (ms *Ms365) AcceptPermissionIfNeeded(setupCompleteDialogFinder *nodewith.Fi
 }
 
 // LoginToMicrosoft365 logs into the Microsoft 365 app with the username and password in the instance.
-// If the account is logged in before, the auth flow will skip password screen, "skipPassword" flag is used to control that.
-func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder, skipPassword bool) uiauto.Action {
+func (ms *Ms365) LoginToMicrosoft365(setupCompleteDialogFinder *nodewith.Finder) uiauto.Action {
 	return uiauto.Combine("Login to Microsoft 365",
 		ms.InputUserName(ms.UserName),
-		func(ctx context.Context) error {
-			if skipPassword {
-				testing.ContextLog(ctx, "Skipping password")
-				return nil
-			}
-			return uiauto.Combine("Input password and stay signed in",
-				ms.InputPassword(ms.Password),
-				ms.DoNotSavePassword(),
-				ms.ConfirmSignIn(),
-				ms.StaySignedIn(),
-			)(ctx)
-		},
+		uiauto.Combine("Input password and stay signed in",
+			ms.InputPassword(ms.Password),
+			ms.DoNotSavePassword(),
+			ms.ConfirmSignIn(),
+			ms.StaySignedIn(),
+		),
 		ms.AcceptPermissionIfNeeded(setupCompleteDialogFinder),
 	)
 }
@@ -302,25 +295,16 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
-	// Installing Office PWA requires a valid login.
-	signInButton := nodewith.Role(role.Button).Name("Sign in")
-	if err := uiauto.Combine("Login to Office site",
-		ms.ui.WaitUntilExists(signInButton),
-		ms.ui.LeftClick(signInButton),
-		ms.InputUserName(ms.UserName),
-		ms.InputPassword(ms.Password),
-		ms.DoNotSavePassword(),
-		ms.StaySignedIn(),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to login to Office site")
-	}
-
-	windowAfterSignIn := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("Home | Microsoft 365.*"))
+	window := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile(".*Microsoft 365.*"))
 	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
 	installButton := nodewith.Name("Install").Role(role.Button)
 
+	// Somewhat hacky, but we install the PWA before logging in, as it's the only
+	// way to stop the site from redirecting from microsoft365.com, where the
+	// web app manifest is linked in the page (via ODFS), vs newer domains where
+	// it's not and installation via omnibox isn't possible.
 	if err := uiauto.Combine("Install Office PWA through omnibox",
-		ms.ui.WaitUntilExists(windowAfterSignIn),
+		ms.ui.WaitUntilExists(window),
 		ms.ui.WithTimeout(30*time.Second).WaitUntilExists(installIcon),
 		ms.ui.LeftClick(installIcon),
 		// The popup containing Install button takes time to appear sometimes.

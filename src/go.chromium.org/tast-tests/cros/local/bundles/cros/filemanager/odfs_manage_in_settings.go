@@ -90,7 +90,7 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
 		settingsApp.LeftClick(connectAccountButton),
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
 		settingsApp.Close,
 		filesApp.WaitUntilExists(nodewith.Name(filesapp.OneDrive).Role(role.TreeItem)),

@@ -134,7 +134,7 @@ func OdfsAutomatedIntegrationFallback(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(manuallyConnectButton),
 		ui.DoDefault(manuallyConnectButton),
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
 	)(ctx); err != nil {
 		s.Fatal("Failed to initiate OneDrive setup through notification: ", err)

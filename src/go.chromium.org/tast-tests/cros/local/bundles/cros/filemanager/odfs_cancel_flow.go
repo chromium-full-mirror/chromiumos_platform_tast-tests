@@ -113,7 +113,7 @@ func OdfsCancelFlow(ctx context.Context, s *testing.State) {
 		cloudUpload.WaitConnectOneDriveError(),
 		// Connect to OneDrive again.
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.SetupCompleteDialog, false /*=skipPassword*/),
+		ms365App.LoginToMicrosoft365(cloudupload.SetupCompleteDialog),
 		cloudUpload.WaitSetupCompleteDialogAndClickDone(),
 		// Move/copy confirmation dialog.
 		cloudUpload.WaitUploadConfirmationDialogAndClickToUpload(false /*=alwaysMove*/),

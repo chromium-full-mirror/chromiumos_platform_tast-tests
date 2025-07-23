@@ -89,7 +89,7 @@ func OdfsWithOneDriveConnected(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Connect to OneDrive via Files context menu",
 		files.ClickMoreMenuItem("Services", "Connect OneDrive"),
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click Connect OneDrive: ", err)

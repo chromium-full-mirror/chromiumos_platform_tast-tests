@@ -342,8 +342,7 @@ func (cu *CloudUpload) RunOneDriveSetupFlow(options *OneDriveSetupFlowOptions) u
 					// Connect/mount the ODFS.
 					cu.WaitConnectToOneDriveDialogAndClick(Next),
 					// Authenticate to OneDrive to mount ODFS.
-					// Skip password screen if PWA is already installed.
-					options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog, options.PWAInstalled /*=skipPassword*/),
+					options.Ms365App.LoginToMicrosoft365(SetupCompleteDialog),
 				)(ctx)
 			},
 			// Last step of the setup flow.

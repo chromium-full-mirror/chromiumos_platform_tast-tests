@@ -78,7 +78,7 @@ func ConnectToOneDrive(cr *chrome.Chrome, tconn *chrome.TestConn, files *filesap
 		LaunchOneDriveSettingsPage(cr, tconn),
 		settingsApp.LeftClick(connectAccountButton),
 		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog),
 		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
 		settingsApp.Close,
 		files.WaitUntilExists(nodewith.Name(filesapp.OneDrive).Role(role.TreeItem)),
