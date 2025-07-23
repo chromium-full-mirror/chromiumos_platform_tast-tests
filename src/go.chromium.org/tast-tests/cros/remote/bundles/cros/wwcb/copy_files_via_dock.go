@@ -8,7 +8,6 @@ package wwcb
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/topology"
-	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -99,48 +97,48 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	tf := s.FixtValue().(*topology.TestFixture)
-
-	// Get the first available dock.
-	docks := tf.Helper.DevicesByType(topology.DeviceTypeDockingStation)
-	if len(docks) != 1 {
-		s.Fatalf("Failed to find dock, expected 1 docks got: %d", len(docks))
+	// Push file to remote.
+	remoteTXTPath, err := pushFileToTmpDir(ctx, s, dut, sampleTXT)
+	if err != nil {
+		s.Fatal("Failed to push file to DUT's tmp directory: ", err)
 	}
-	dockID := docks[0]
+	defer dut.Conn().CommandContext(ctx, "rm", remoteTXTPath).Output()
 
-	// Make sure to switch off the Type-A fixture
-	// Enable any auxiliary USB devices that pass through the dock, these devices are categorized as "HID"
-	USBTypeAIDArray := tf.Helper.DevicesByTypeViaId(topology.DeviceTypeHID, dockID)
-	for _, ID := range USBTypeAIDArray {
-		if err := tf.Helper.DeactivateDeviceByID(ctx, ID); err != nil {
-			s.Fatal("Failed to disconnect USB Type-A device: ", err)
-		}
-	}
-
-	before, err := utils.GetUSBDevice(ctx, dut)
+	before, err := utils.GetUSBStorageDeviceCount(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
 
-	for _, ID := range USBTypeAIDArray {
-		if err := tf.Helper.ActivateDeviceByID(ctx, ID); err != nil {
-			s.Fatal("Failed to connect USB Type-A device: ", err)
-		}
+	// Get mount points before turning on External Storage fixture
+	beforeMountPoints, err := utils.RemovableMountPoints(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get initial mount points: ", err)
 	}
 
+	// TODO update to use dock path for storage
+	tf := s.FixtValue().(*topology.TestFixture)
+	if _, _, err := tf.Helper.ActivateDeviceByTypeVia(ctx, topology.DeviceTypeStorage, topology.DeviceTypeDockingStation); err != nil {
+		s.Fatal("Failed to plug the external storage media: ", err)
+	}
+
+	usbCount := 1
+	const verifyTimeout, verifyInterval = 1 * time.Minute, 1 * time.Second
 	// Expect number of USB devices is not less than number of input parameters.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, err := utils.GetUSBDevice(ctx, dut)
+		cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		after, err := utils.GetUSBStorageDeviceCount(cmdCtx, dut)
 		if err != nil {
-			s.Fatal("Failed to get USB devices after the dock connected to a list of USB devices: ", err)
+			return errors.Wrap(err, "failed to get USB devices after plug")
 		}
 
-		if len(after)-len(before) < len(USBTypeAIDArray) {
-			s.Fatalf("Unexpected change of number of USB devices after connecting to dock; expect: %d, actual: %d (from %d to %d)", len(USBTypeAIDArray), (len(after) - len(before)), len(before), len(after))
+		if after-before < usbCount {
+			return errors.Errorf("failed to unexpected change in the number of USB devices detected; expect: %d, actual: %d (from %d to %d) after plug", usbCount, after-before, before, after)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
-		s.Fatal("Failed to check number of USB devices: ", err)
+	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
+		s.Fatal("Failed to check number of USB devices after plug: ", err)
 	}
 
 	if _, ok := s.Var("newTestItem"); ok {
@@ -153,33 +151,27 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Push file to remote.
-	remoteTXTPath, err := pushFileToTmpDir(ctx, s, dut, sampleTXT)
-	if err != nil {
-		s.Fatal("Failed to push file to DUT's tmp directory: ", err)
-	}
-	defer dut.Conn().CommandContext(ctx, "rm", remoteTXTPath).Output()
+	var afterMountPoints = []string{}
 
-	// Retrieve USB storage drive directory location.
-	fs := dutfs.NewClient(cl.Conn)
-	removableFiles, err := fs.ReadDir(ctx, removableDirPath)
-	if err != nil {
-		s.Fatal("Failed to list files in removable dir after connecting storage device: ", err)
-	}
-
-	var removableDirs []os.FileInfo
-	for _, fi := range removableFiles {
-		if fi.IsDir() {
-			removableDirs = append(removableDirs, fi)
+	// Retrieve USB path.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		afterMountPoints, err = utils.GetMountPoints(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to get mount point")
 		}
+		return nil
+	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
+		s.Fatal("Failed to retrieve USB path after plug")
 	}
 
-	if len(removableDirs) == 0 {
+	var mountPoints = utils.FindDifference(afterMountPoints, beforeMountPoints)
+
+	if len(mountPoints) == 0 {
 		s.Fatal("Failed to detect any entry in removable directory")
 	}
 
-	for _, path := range removableDirs {
-		USBTXTPath := filepath.Join(removableDirPath, path.Name(), sampleTXT)
+	for _, path := range mountPoints {
+		USBTXTPath := filepath.Join(path, sampleTXT)
 		testing.ContextLogf(ctx, "Copy file to %s", USBTXTPath)
 
 		// Copy file to USB.
