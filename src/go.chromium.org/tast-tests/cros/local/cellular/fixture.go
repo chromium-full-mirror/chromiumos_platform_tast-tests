@@ -559,6 +559,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	// Check if the modem is exported by ModemManager before initializing Starfish/NewHelper().
 	if _, err := waitForModemToBeExported(ctx); err != nil {
+		if isL850(ctx, s) {
+			err = TagKnownBug(ctx, err, "b/407604639")
+		}
 		s.Fatal("Could not confirm if modem was exported: ", err)
 	}
 
@@ -977,18 +980,11 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	modem, waitForModemErr := modemmanager.NewModem(ctx)
 	if waitForModemErr != nil {
 		testing.ContextLog(ctx, "Failed to create modem object: ", waitForModemErr)
-		// We cannot use TagKnownBugOnModem to detect the modem type and FW version because
-		// TagKnownBugOnModem requires a live modem to query the modem FW version. If MR9 is ever
-		// released, we need to change this logic to exclude it.
-		modemType, err := GetModemType(ctx)
-		if err != nil {
-			s.Fatalf("Failed to get modem type: %s", err)
-		}
 		// b/407604639 :  When the L850 modem doesn't come back after reset, we need to reboot the
 		// device using the remote fixture. Since a reboot doesn't necessarily put the DUT into its
 		// previous clean state, run the TearDown/SetUp by returning an error on Reset(). We use
 		// dutBrokenUntilReboot to trigger a fixture TearDown/SetUp on Reset().
-		if modemType == cellularconst.ModemTypeL850 {
+		if isL850(ctx, s) {
 			f.dutBrokenUntilReboot = waitForModemErr
 			testing.ContextLog(ctx, "PostTest: L850 Modem not detected. Requesting a DUT reboot from remote fixture")
 			if err := os.WriteFile(RebootOnResetRequestedFlagPath, []byte("1"), 0666); err != nil {
@@ -1188,6 +1184,19 @@ func waitForModemToBeExported(ctx context.Context) (*modemmanager.Modem, error) 
 		return nil, err
 	}
 	return modem, nil
+}
+
+func isL850(ctx context.Context, s interface{}) bool {
+	// We cannot use TagKnownBugOnModem to detect the modem type and FW version because
+	// TagKnownBugOnModem requires a live modem to query the modem FW version. If MR9 is ever
+	// released, we need to change this logic to exclude it.
+	modemType, err := GetModemType(ctx)
+	if err != nil {
+		// Throw fatal to simplify its usage. If a fatal is not desired by the caller, modify
+		// this function to return an error.
+		s.(*testing.FixtState).Fatalf("Failed to get modem type: %s", err)
+	}
+	return modemType == cellularconst.ModemTypeL850
 }
 
 func triggerModemLoggingConditionally(ctx context.Context) (bool, error) {
