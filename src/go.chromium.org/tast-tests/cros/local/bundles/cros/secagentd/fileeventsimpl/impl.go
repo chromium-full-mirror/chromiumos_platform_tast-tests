@@ -67,16 +67,16 @@ type commandDetail struct {
 }
 
 type expectedResult struct {
-	command             string // useful for debug
-	process             *xdr.Process
-	processTimeUs       uint64
-	parentProcess       *xdr.Process
-	beforeStat          *syscall.Stat_t // stat taken before the command executes
-	afterStat           *syscall.Stat_t // stat taken after the command executes
-	filePath            string
-	eventType           fileEventType              // read or modify
-	eventSubType        *xdr.FileModify_ModifyType // modify, modify and write or write only
-	fileType            xdr.SensitiveFileType
+	command       string // useful for debug
+	process       *xdr.Process
+	processTimeUs uint64
+	parentProcess *xdr.Process
+	beforeStat    *syscall.Stat_t // stat taken before the command executes
+	afterStat     *syscall.Stat_t // stat taken after the command executes
+	filePath      string
+	eventType     fileEventType              // read or modify
+	eventSubType  *xdr.FileModify_ModifyType // modify, modify and write or write only
+	fileType      xdr.SensitiveFileType
 }
 
 // CreateForLocalTest - creates a FileEvent object suitable for running
@@ -185,7 +185,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 
 	// GoBigSleepLint first seen is measured in seconds, so wait some time
 	// to make sure no test processes are started within the same second interval.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		f.Fatal("Failed to sleep: ", err)
 	}
 
@@ -314,7 +314,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 	// ample time to process and post events to dbus and is an educated guess.
 	// TODO(b/278252387): Convert this to poll when tast's
 	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
+	if err := testing.Sleep(ctx, 3*batchIntervalS*time.Second); err != nil {
 		f.Fatal("Failed to sleep: ", err)
 	}
 
