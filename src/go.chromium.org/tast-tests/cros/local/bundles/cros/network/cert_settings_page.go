@@ -58,13 +58,13 @@ const clientCertPassword = "12345"
 const caCertName = "TEST_CA_ORG"
 
 // caOrg is a name for the org which has issued CA certificate, it is visible in the list of Authorities.
-const caOrg = "org-TEST_CA_ORG"
+const caOrg = "O=TEST_CA_ORG"
 
 // clientCertName is a cert name in list of certificates which is also equal to the org name of client.
 const clientCertName = "TEST_CLIENT_ORG"
 
 // clientOrg is name for client's organization used in the list of client's certificates.
-const clientOrg = "org-TEST_CLIENT_ORG"
+const clientOrg = "O=TEST_CLIENT_ORG"
 
 // pageLoadedRegex is a regex which expected to be found on loaded webpage.
 const pageLoadedRegex = ".*WEBSITE_LOADED.*"
@@ -95,7 +95,17 @@ func init() {
 			"miersh@google.com",                         // Test author
 		},
 		BugComponent: "b:1000044",
-		// TODO(b/354048099): Re-enable this test once the document is available in the background of MV3.
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+			"group:network",
+			"network_e2e",
+			"group:release-health",
+			"release-health_network",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedInDisableSearchEngineChoice,
 		Timeout:      5 * time.Minute,
@@ -182,7 +192,7 @@ func prepareCertificates(s *testing.State, downloadsPath string) {
 // importCACert imports CA certificate.
 func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
 	rootCertFileName := s.Param().(filesConfig).rootCertFileName
-	if err := utils.ImportCACert(ctx, ui, rootCertFileName); err != nil {
+	if err := utils.ImportCACertNewUI(ctx, ui, rootCertFileName); err != nil {
 		s.Fatal("Failed to import CA certificate: ", err)
 	}
 }
@@ -190,7 +200,7 @@ func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
 // importClientCert imports client certificate.
 func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
 	clientCertFileName := s.Param().(filesConfig).clientCertFileName
-	if err := utils.ImportClientCert(ctx, ui, clientCertFileName, clientCertPassword); err != nil {
+	if err := utils.ImportAndBindClientCertNewUI(ctx, ui, clientCertFileName, clientCertPassword); err != nil {
 		s.Fatal("Can not import client certificate: ", err)
 	}
 }
@@ -328,21 +338,21 @@ func checkCertInSystemSettings(ctx context.Context, s *testing.State,
 
 // deleteClientCert uses the Chrome's cert settings page to delete the client cert.
 func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context, ignoreErrors bool) {
-	if err := utils.DeleteClientCertWithRetry(ctx, ui, clientOrg); err != nil && !ignoreErrors {
+	if err := utils.DeleteUserCertNewUI(ctx, ui, clientOrg); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete client certificate: ", err)
 	}
 }
 
 // deleteCACert selects and deletes specific CA certificate on CA tab.
 func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, ignoreErrors bool) {
-	if err := utils.DeleteCACert(ctx, ui, conn, caOrg, caCertName); err != nil && !ignoreErrors {
+	if err := utils.DeleteCACertNewUI(ctx, ui, conn, caOrg, caCertName); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete CA certificate: ", err)
 	}
 }
 
 // setCACertTrust sets Web trust setting for CA certificate to true or false.
 func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, conn *chrome.Conn, targetState checked.Checked) {
-	if err := utils.SetCACertTrust(ctx, ui, conn, targetState, caOrg, caCertName); err != nil {
+	if err := utils.SetCACertTrustNewUI(ctx, ui, conn, targetState == checked.True, caOrg); err != nil {
 		s.Fatal("Failed to set CA trust: ", err)
 	}
 }
