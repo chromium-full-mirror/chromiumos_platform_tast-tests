@@ -30,7 +30,7 @@ func init() {
 		// TestBedDeps:  []string{tbdep.ServoStateWorking},
 		// TODO(b/240649924): Add this test to some GSC suite, or delete it.
 		Attr:         []string{"group:firmware"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.GSCUART()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART()),
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"gsc"},
 		Timeout:      60 * time.Minute, // Long timeout to account for the long PP sequence.
