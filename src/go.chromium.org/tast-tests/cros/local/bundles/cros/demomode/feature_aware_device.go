@@ -15,7 +15,22 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var cbxModels = []string{
+	"kanix",        // HB cbx-25h1
+	"karis",        // HB cbx-24h1
+	"markarth",     // HB cbx-23
+	"omnigul",      // HB cbx-23
+	"omniknight",   // HB cbx-24h1
+	"screebo",      // HB cbx-24h1
+	"yaviks",       // HB cbx-23
+	"dewatt",       // SB cbx-23
+	"frostflow",    // SB cbx-23
+	"pujjoteen15w", // SB sbx-23
+	"volmar",       // SB cbx-23
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -25,13 +40,14 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Demo Mode
 		BugComponent: "b:812312",
 		Fixture:      fixture.PostDemoModeOOBESkipResourcesComponentProd,
-		Attr:         []string{"group:demo-mode", "group:cbx", "cbx_feature_enabled", "cbx_unstable"},
+		Attr:         []string{"group:demo-mode"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
 		// is only shown for chrome-branded builds when the device is ARC-capable.
 		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "tpm_clear_allowed", "crossystem"},
+		HardwareDeps: hwdep.D(hwdep.Model(cbxModels...)),
 		// TODO (b/346725308): Refactor to use utility and known dependency list.
 		SearchFlags: []*testing.StringPair{{
 			Key: "external_dependency", Value: "DMServerProd",
