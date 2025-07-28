@@ -77,6 +77,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"shill", "object_proxy.cc", ".*Failed to call method: org.freedesktop.DBus.Properties.GetAll.*", 0},        // b/215373366
 		{"shill", "portal_detector.cc", ".*HTTP probe failed to start.*", 0},                                        // b/213611282
 		{"shill", "upstart_proxy.cc", ".*Error.AlreadyStarted Job is already running: shill-event", 0},              // b/213930243
+		{"shill", "utils.cc", ".*AddDBusError.*com.ubuntu.Upstart0_6.Error.AlreadyStarted, Message=Job is already running: shill-event", 0}, // b/413715354
 		// Need to try to get more info about these:
 		// {"shill", "unknown", ".*", 0},
 		// 'modem in failed state' errors are handled in shill. Because they are DBus errors, suppressing them is difficult:
