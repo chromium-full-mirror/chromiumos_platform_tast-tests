@@ -37,12 +37,13 @@ const (
 	vpnServerURL                 = "palo-okta.capse-iss.com"
 	vpnConnectedState            = "CONNECTED"
 
-	connectShieldButtonID = ":id/btnShield"
-	vpnAddressTextEntryID = ":id/etPortal"
-	connectButtonID       = ":id/btnSubmit"
-	okButtonID            = "android:id/button1"
-	vpnStateTextID        = ":id/state"
-	errorMessageTextID    = ":id/tvInfo"
+	connectShieldButtonID           = ":id/btnShield"
+	vpnAddressTextEntryID           = ":id/etPortal"
+	connectButtonID                 = ":id/btnSubmit"
+	okButtonID                      = "android:id/button1"
+	vpnStateTextID                  = ":id/state"
+	errorMessageTextID              = ":id/tvInfo"
+	skipEnableNotificationsButtonID = ":id/btnSkip"
 
 	arcCertInstallLogRegex = `ArcCertInstaller::InstallArcCert User_.*`
 	skipArcTermsLogRegex   = `Skip ARC Terms of Service negotiation`
@@ -80,7 +81,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	rl := &retry.Loop{Attempts: 1,
-		MaxAttempts: 2,
+		MaxAttempts: 3,
 		DoRetries:   true,
 		Errorf:      s.Errorf,
 		Logf:        s.Logf}
@@ -95,6 +96,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 		defer cr.Close(cleanupCtx)
 		defer a.Close(ctx)
 		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), s.HasError)
 
 		// Wait for Chrome logs to show ARC Certs installed.
 		s.Log("Waiting for ARC Certs to be installed")
@@ -115,7 +117,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 		}
 		defer kb.Close(cleanupCtx)
 
-		testing.ContextLog(ctx, "Launching GlobalProtect")
+		s.Log("Launching GlobalProtect")
 		app, err := apputil.NewApp(ctx, kb, tconn, a, d, vpnAppName, vpnPackage)
 		if err != nil {
 			return rl.Retry("create the instance of GlobalProtect app", err)
@@ -129,6 +131,12 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 			return rl.Exit("connect to VPN", err)
 		}
 		s.Log("Global Protect VPN successfully connected")
+
+		// Disconnect at the end of successful test.
+		connectButton := d.Object(ui.ID(vpnPackage + connectShieldButtonID))
+		if err := connectButton.Click(ctx); err != nil {
+			s.Log("Error while trying to disconnect from vpn during cleanup: ", err)
+		}
 		return nil
 	}, nil); err != nil {
 		s.Fatal("Enterprise VPN cert test failed: ", err)
@@ -289,7 +297,13 @@ func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
 	// Enter the VPN server URL in the app.
 	addressTextEntry := d.Object(ui.ID(vpnPackage + vpnAddressTextEntryID))
 	if err := addressTextEntry.WaitForExists(ctx, 10*time.Second); err != nil {
-		return err
+		// If addressTextEntry does not exist, there may be a screen showing about enabling notifications.
+		if err := skipEnableNotifications(ctx, d); err != nil {
+			return err
+		}
+		if err := addressTextEntry.WaitForExists(ctx, 10*time.Second); err != nil {
+			return err
+		}
 	}
 	if err := addressTextEntry.SetText(ctx, vpnServerURL); err != nil {
 		return err
@@ -346,7 +360,20 @@ func connectToVpnWithGlobalProtect(ctx context.Context, tconn *chrome.TestConn,
 		}
 		return err
 	}
+	return nil
+}
 
+// skipEnableNotifications clicks the "skip" button on the screen for enabling
+// notifications.
+func skipEnableNotifications(ctx context.Context, d *ui.Device) error {
+	testing.ContextLog(ctx, "Skipping enable notifications")
+	skipButton := d.Object(ui.ID(vpnPackage + skipEnableNotificationsButtonID))
+	if err := skipButton.WaitForExists(ctx, 10*time.Second); err != nil {
+		return err
+	}
+	if err := skipButton.Click(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
