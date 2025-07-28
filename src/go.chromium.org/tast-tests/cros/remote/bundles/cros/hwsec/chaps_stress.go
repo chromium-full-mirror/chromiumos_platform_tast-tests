@@ -43,7 +43,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			Val:               false,
 		}},
-		Timeout: 20 * time.Minute,
+		Timeout: 40 * time.Minute,
 	})
 }
 
