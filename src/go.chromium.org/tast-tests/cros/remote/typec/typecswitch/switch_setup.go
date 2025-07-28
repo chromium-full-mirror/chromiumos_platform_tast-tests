@@ -26,14 +26,7 @@ func SetupSwitch(ctx context.Context, sw usbswitch.Switch, testData TestSetupDat
 	}
 	testing.ContextLogf(ctx, "Switch USB mode set to %s", testData.ConnectionMode)
 
-	// Set flipped.
-	if err := sw.FlipOrientation(ctx, testData.Flipped); err != nil {
-		// It's ok to not fail the non-flipped case, as probably the wrong cable is used.
-		if testData.Flipped {
-			return errors.Wrap(err, "failed to set switch orientation during PreTest")
-		}
-	}
-	testing.ContextLogf(ctx, "Switch orientation set to %t", testData.Flipped)
+	// TODO(b/434628173) Unblock flipped tests once the bug is fixed.
 
 	return nil
 }

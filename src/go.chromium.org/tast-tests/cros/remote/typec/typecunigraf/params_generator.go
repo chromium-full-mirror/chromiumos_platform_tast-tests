@@ -25,7 +25,8 @@ func GenerateUnigrafParams(
 
 	// Iterate over Unigraf ports (0 and 1) and orientations (normal and flipped)
 	for _, portNum := range []int{0, 1} {
-		for _, flipped := range []bool{false, true} {
+		// TODO(b/434628173) Unblock flipped tests once the bug is fixed.
+		for _, flipped := range []bool{false} {
 			orientationStr := "normal"
 			if flipped {
 				orientationStr = "flipped"

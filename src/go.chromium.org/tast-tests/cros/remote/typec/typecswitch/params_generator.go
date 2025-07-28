@@ -22,6 +22,7 @@ func GenerateParams(timeout, iterations int, mode usbswitch.ConnectionMode, attr
 	timeoutStress := time.Duration(timeout) * stressMultiplier * time.Minute
 	iterationsStress := iterations * stressMultiplier
 
+	// TODO(b/434628173) Unblock flipped tests once the bug is fixed.
 	return []testing.Param{{
 		ExtraAttr: []string{attr, "typec_unigraf274"},
 		Val: TestSetupData{
@@ -30,27 +31,10 @@ func GenerateParams(timeout, iterations int, mode usbswitch.ConnectionMode, attr
 		},
 		Timeout: timeoutNormal,
 	}, {
-		Name:      "flipped",
-		ExtraAttr: []string{"typec_unigraf274"},
-		Val: TestSetupData{
-			ConnectionMode: mode,
-			Iterations:     iterations,
-			Flipped:        true,
-		},
-		Timeout: timeoutNormal,
-	}, {
 		Name: "stress",
 		Val: TestSetupData{
 			ConnectionMode: mode,
 			Iterations:     iterationsStress,
-		},
-		Timeout: timeoutStress,
-	}, {
-		Name: "stress_flipped",
-		Val: TestSetupData{
-			ConnectionMode: mode,
-			Iterations:     iterationsStress,
-			Flipped:        true,
 		},
 		Timeout: timeoutStress,
 	}}

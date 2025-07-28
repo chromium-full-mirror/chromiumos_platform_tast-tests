@@ -67,24 +67,7 @@ func SetupUnigraf(ctx context.Context, ug *unigraf.UsbTester, setup TestSetupDat
 		testing.ContextLogf(ctx, "Unigraf power role set to %s", setup.InitialPowerRole)
 	}
 
-	// Set cable orientation.
-	// To control orientation, Unigraf needs to be in ElecTest mode first.
-	if err := ug.SetCableMode(ctx, unigraf.CableModeElecTest); err != nil {
-		return errors.Wrap(err, "failed to set Unigraf cable mode to ElecTest for orientation change")
-	}
-
-	ccToSet := unigraf.ActiveCc1 // Normal (CC1)
-	if setup.Flipped {
-		ccToSet = unigraf.ActiveCc2 // Flipped (CC2)
-	}
-	if err := ug.SetActiveCc(ctx, ccToSet); err != nil {
-		// Attempt to revert to normal cable mode even if SetActiveCc fails.
-		if cableModeErr := ug.SetCableMode(ctx, unigraf.CableModeNormal); cableModeErr != nil {
-			testing.ContextLogf(ctx, "Additionally failed to set Unigraf cable mode back to Normal: %v", cableModeErr)
-		}
-		return errors.Wrapf(err, "failed to set Unigraf active CC to %s (flipped: %t)", ccToSet, setup.Flipped)
-	}
-	testing.ContextLogf(ctx, "Unigraf active CC set to %s (flipped: %t)", ccToSet, setup.Flipped)
+	// TODO(b/434628173) Unblock flipped tests once the bug is fixed.
 
 	// Replug the Unigraf to trigger negotiation.
 	testing.ContextLog(ctx, "Replugging Unigraf")
