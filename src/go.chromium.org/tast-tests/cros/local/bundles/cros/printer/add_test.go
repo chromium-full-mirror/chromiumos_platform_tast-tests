@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 // Run "TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test add_test.go" inside the chroot
-// from the directory containing this file to regenerate parameters for add.go, proxy_add.go.
+// from the directory containing this file to regenerate parameters for add.go.
 
 package printer
 
@@ -14,51 +14,50 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/ippprint"
 )
 
-// base adds two parameterized tests, one that uses the CUPS proxy for
-// printing and the other that does not.
+// base adds one parameterized test.
 type base struct {
 	PrintFile, Name, PPDFile, ExpectedFile string
 	ExtraAttr, ExtraSoftwareDeps, Options  []string
 }
 
-// test adds non-informational parameterized tests (one proxy, one regular)
+// test adds non-informational parameterized tests
 // that use "to_print.pdf" for printing.
 func test(name, ppdFile, expectedFile string, options ...string) base {
 	return base{PrintFile: "to_print.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// iTest adds informational parameterized tests (one proxy, one regular)
+// iTest adds informational parameterized tests
 // that use "to_print.pdf" for printing.
 func iTest(name, ppdFile, expectedFile string, options ...string) base {
 	return base{ExtraAttr: []string{"informational"}, PrintFile: "to_print.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// x86Test adds informational parameterized tests (one proxy, one regular)
+// x86Test adds informational parameterized tests
 // that use "to_print.pdf" for printing and require amd64.
 func x86Test(name, ppdFile, expectedFile string, options ...string) base {
 	return base{ExtraAttr: []string{"informational"}, PrintFile: "to_print.pdf", ExtraSoftwareDeps: []string{"amd64"}, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// intTest adds non-informational parameterized tests (one proxy, one regular)
+// intTest adds non-informational parameterized tests
 // that use "to_print.pdf" for printing and require cros_internal.
 func intTest(name, ppdFile, expectedFile string, options ...string) base {
 	return base{PrintFile: "to_print.pdf", ExtraSoftwareDeps: []string{"cros_internal"}, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// test2 adds non-informational parameterized tests (one proxy, one regular)
+// test2 adds non-informational parameterized tests
 // that use "2page.pdf" for printing.
 func test2(name, ppdFile, expectedFile string, options ...string) base {
 	return base{PrintFile: "2page.pdf", Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// iTestCustomInput adds informational parameterized tests (one proxy, one
-// regular) that use "testFile" for printing.
+// iTestCustomInput adds informational parameterized tests
+// that use "testFile" for printing.
 func iTestCustomInput(name, ppdFile, testFile, expectedFile string, options ...string) base {
 	return base{ExtraAttr: []string{"informational"}, PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
-// iTestCustomInputNoArm32 adds informational parameterized tests (one proxy, one
-// regular) that use "testFile" for printing and skips arm32 boards.
+// iTestCustomInputNoArm32 adds informational parameterized tests
+// that use "testFile" for printing and skips arm32 boards.
 func iTestCustomInputNoArm32(name, ppdFile, testFile, expectedFile string, options ...string) base {
 	return base{ExtraAttr: []string{"informational"}, ExtraSoftwareDeps: []string{"no_arm"}, PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
@@ -171,5 +170,4 @@ func TestAddParams(t *testing.T) {
 		iTestCustomInputNoArm32("tsc", "printer_add_tsc_printer_rastertobarcodetspl.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_tsc_printer_rastertobarcodetspl.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)
-	genparams.Ensure(t, "proxy_add.go", code)
 }

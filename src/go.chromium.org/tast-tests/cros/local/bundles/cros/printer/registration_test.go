@@ -14,5 +14,4 @@ func TestSoftwareDeps(t *testing.T) {
 	testcheck.SoftwareDeps(t, testcheck.Glob(t, "printer.*"), []string{"cups"})
 	testcheck.SoftwareDeps(t, testcheck.Glob(t, "printer.Add.*"), []string{"ghostscript"})
 	testcheck.SoftwareDeps(t, testcheck.Glob(t, "printer.Gs*"), []string{"ghostscript"})
-	testcheck.SoftwareDeps(t, testcheck.Glob(t, "printer.Proxy*"), []string{"chrome", "ghostscript", "plugin_vm"})
 }
