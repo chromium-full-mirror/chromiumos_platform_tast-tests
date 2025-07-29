@@ -6,6 +6,7 @@ package printer
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -14,6 +15,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -22,7 +24,9 @@ func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
 			chromePrintingService = ChromePrintingService{
-				sharedObject: common.SharedObjectsForServiceSingleton}
+				s:            s,
+				sharedObject: common.SharedObjectsForServiceSingleton,
+			}
 			pb.RegisterChromePrintingServiceServer(srv, &chromePrintingService)
 		},
 		// GuaranteeCompatibility allows non-Tast test harness clients to call this service.
@@ -35,6 +39,7 @@ type ChromePrintingService struct {
 	cr           *chrome.Chrome
 	tconn        *chrome.TestConn
 	mutex        sync.Mutex
+	s            *testing.ServiceState
 }
 
 // initializeChrome initializes the Chrome instance and the test API connection.
@@ -59,6 +64,92 @@ func (svc *ChromePrintingService) initializeChrome(ctx context.Context) error {
 	}
 	svc.cr = cr
 	svc.tconn = tconn
+	svc.s.Log("Initialized chrome and tconn")
+
+	// Add extension to allowlist to eliminate popup that appears when calling chrome.printing.submitJob.
+	if err := svc.tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", "printing.printing_api_extensions_whitelist", []string{chrome.TestExtensionID}); err != nil {
+		return errors.Wrap(err, "failed to set printing.printing_api_extensions_whitelist")
+	}
+
+	return nil
+}
+
+func (svc *ChromePrintingService) getSubmitJobScript(req *pb.SubmitJobRequest) (string, error) {
+	m := protojson.MarshalOptions{UseProtoNames: true}
+	jobBytes, err := m.Marshal(req.Job)
+	if err != nil {
+		return "", err
+	}
+
+	jobJSON := string(jobBytes)
+	// TODO (b/435280673): add support for submitting other contentTypes.
+	return fmt.Sprintf(`
+		const job = JSON.parse('%s');
+		// The chrome.printing API requires the document field to be a blob of contentType pdf or png.
+		job.document = new Blob(
+			[
+				new Uint8Array(
+				atob(job.document)
+					.split('')
+					.map(char => char.charCodeAt(0))
+				),
+			],
+			{ type: 'application/pdf' }
+		);
+		tast.promisify(chrome.printing.submitJob)({job:job})`, jobJSON), nil
+}
+
+func (svc *ChromePrintingService) validateSubmitJobRequest(req *pb.SubmitJobRequest) error {
+	if req == nil {
+		return errors.New("invalid request: request is missing")
+	}
+	if req.GetJob() == nil {
+		return errors.New("invalid request: Job is missing")
+	}
+	job := req.Job
+	if job.GetPrinterId() == "" {
+		return errors.New("invalid request: PrinterId is required")
+	}
+	if job.GetTitle() == "" {
+		return errors.New("invalid request: Title is required")
+	}
+	if job.GetDocument() == "" {
+		return errors.New("invalid request: Document is empty")
+	}
+	if job.GetTicket() == nil || job.GetTicket().GetPrint() == nil {
+		return errors.New("invalid request: Print ticket is missing")
+	}
+	if job.GetTicket().GetVersion() == "" {
+		return errors.New("invalid request: ticket.version is required")
+	}
+
+	// Validate the required fields within the print ticket
+	printTicket := job.GetTicket().GetPrint()
+	if printTicket.GetMediaSize() == nil {
+		return errors.New("invalid ticket: MediaSize is required")
+	}
+	if printTicket.GetCopies() == nil {
+		return errors.New("invalid ticket: Copies is required")
+	}
+	if printTicket.GetCopies().Copies <= 0 {
+		return errors.New("invalid copies: copies must be greater than zero")
+	}
+	if printTicket.GetPageOrientation() == nil {
+		return errors.New("invalid ticket: PageOrientation is required")
+	}
+	if printTicket.GetColor() == nil {
+		return errors.New("invalid ticket: Color is required")
+	}
+	if printTicket.GetCollate() == nil {
+		return errors.New("invalid ticket: Collate is required")
+	}
+	if printTicket.GetDuplex() == nil {
+		return errors.New("invalid ticket: Duplex is required")
+	}
+	if printTicket.GetDpi() == nil {
+		return errors.New("invalid ticket: Dpi is required")
+	}
+
 	return nil
 }
 
@@ -109,4 +200,33 @@ func (svc *ChromePrintingService) GetPrinters(ctx context.Context, _ *emptypb.Em
 	}
 
 	return &pb.GetPrintersResponse{Printers: pbPrinters}, nil
+}
+
+func (svc *ChromePrintingService) SubmitJob(ctx context.Context, req *pb.SubmitJobRequest) (*pb.SubmitJobResponse, error) {
+	if err := svc.validateSubmitJobRequest(req); err != nil {
+		return nil, errors.Wrap(err, "invalid submit job request")
+	}
+	svc.s.Log("request: ", req)
+
+	submitJobScript, err := svc.getSubmitJobScript(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal the job request")
+	}
+
+	var jobResult struct {
+		JobID  string
+		Status string
+	}
+	svc.s.Log("code: ", submitJobScript)
+	if err := svc.tconn.Eval(ctx, submitJobScript, &jobResult); err != nil {
+		return nil, errors.Wrap(err, "failed to call submitJob")
+	}
+	if jobResult.Status != "OK" {
+		return nil, errors.Wrap(errors.New(jobResult.Status), "unexpected status")
+	}
+	if len(jobResult.JobID) == 0 {
+		return nil, errors.New("empty JobID")
+	}
+
+	return &pb.SubmitJobResponse{JobId: jobResult.JobID}, nil
 }

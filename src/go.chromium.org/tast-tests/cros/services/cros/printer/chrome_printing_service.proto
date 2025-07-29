@@ -11,13 +11,17 @@ service ChromePrintingService {
   // chrome.printing.getPrinters API method.
   rpc GetPrinters(google.protobuf.Empty) returns (GetPrintersResponse) {}
 
-  // Close releastes the Chrome instance initialized after calling any other
+  // SubmitJob calls the chrome.printing.submitJob() API method. It takes a
+  // submitJobRequest and returns the jobID of the submitted job.
+  rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse) {}
+
+  // Close releases the Chrome instance initialized after calling any other
   // ChromePrintingService method.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 // GetPrintersResponse contains a list of available printers.
-message GetPrintersResponse { repeated Printer Printers = 1; }
+message GetPrintersResponse { repeated Printer printers = 1; }
 
 // Printer represents a single printer with its properties.
 message Printer {
@@ -29,3 +33,97 @@ message Printer {
   int32 recentlyUsedRank = 6;
   string source = 7;
 }
+
+// ---------------------------------------------------------------------------
+// NOTE: The following messages related to the print ticket (Job, Ticket, Print,
+// etc.) use snake_case for their field names (e.g., `media_size`).
+// This is a deliberate choice to directly map to the JSON format expected by
+// the chrome.printing.submitJob API, simplifying integration.
+// Cloud Job Ticket: https://developers.google.com/cloud-print/docs/cdd#cjt
+//
+// Other messages in this file follow the standard camelCase convention.
+// ---------------------------------------------------------------------------
+
+message SubmitJobRequest { Job job = 1; }
+
+message Job {
+  string title = 1;
+  Ticket ticket = 2;
+  string contentType = 3;
+  string document = 4;
+  string printerId = 5;
+}
+
+message Ticket {
+  string version = 1;
+  Print print = 2;
+}
+
+message Print {
+  MediaSize media_size = 1;
+  Copies copies = 2;
+  PageOrientation page_orientation = 3;
+  Color color = 4;
+  FitToPage fit_to_page = 5;
+  Collate collate = 6;
+  Duplex duplex = 7;
+  Dpi dpi = 8;
+  ReverseOrder reverse_order = 9;
+}
+
+message Color {
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    STANDARD_MONOCHROME = 1;
+    STANDARD_COLOR = 2;
+  }
+  optional Type type = 1;
+}
+
+message PageOrientation {
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    PORTRAIT = 1;
+    LANDSCAPE = 2;
+  }
+  optional Type type = 1;
+}
+
+message Copies { int32 copies = 1; }
+
+message MediaSize {
+  int32 height_microns = 1;
+  int32 width_microns = 2;
+}
+
+message FitToPage {
+  enum Type {
+    NO_FITTING = 0;
+    FIT_TO_PAGE = 1;
+    GROW_TO_PAGE = 2;
+    SHRINK_TO_PAGE = 3;
+    FILL_PAGE = 4;
+    AUTO = 5;
+  }
+  optional Type type = 1;
+}
+
+message Collate { optional bool collate = 1; }
+
+message Duplex {
+  enum Type {
+    NO_DUPLEX = 0;
+    LONG_EDGE = 1;
+    SHORT_EDGE = 2;
+  }
+  optional Type type = 1;
+}
+
+message Dpi {
+  int32 horizontal_dpi = 1;
+  int32 vertical_dpi = 2;
+}
+
+message ReverseOrder { optional bool reverse_order = 1; }
+
+message SubmitJobResponse { string jobId = 1; }

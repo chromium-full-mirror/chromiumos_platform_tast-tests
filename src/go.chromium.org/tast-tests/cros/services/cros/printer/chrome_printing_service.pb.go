@@ -26,10 +26,215 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Color_Type int32
+
+const (
+	Color_TYPE_UNSPECIFIED    Color_Type = 0
+	Color_STANDARD_MONOCHROME Color_Type = 1
+	Color_STANDARD_COLOR      Color_Type = 2
+)
+
+// Enum value maps for Color_Type.
+var (
+	Color_Type_name = map[int32]string{
+		0: "TYPE_UNSPECIFIED",
+		1: "STANDARD_MONOCHROME",
+		2: "STANDARD_COLOR",
+	}
+	Color_Type_value = map[string]int32{
+		"TYPE_UNSPECIFIED":    0,
+		"STANDARD_MONOCHROME": 1,
+		"STANDARD_COLOR":      2,
+	}
+)
+
+func (x Color_Type) Enum() *Color_Type {
+	p := new(Color_Type)
+	*p = x
+	return p
+}
+
+func (x Color_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Color_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_chrome_printing_service_proto_enumTypes[0].Descriptor()
+}
+
+func (Color_Type) Type() protoreflect.EnumType {
+	return &file_chrome_printing_service_proto_enumTypes[0]
+}
+
+func (x Color_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Color_Type.Descriptor instead.
+func (Color_Type) EnumDescriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{6, 0}
+}
+
+type PageOrientation_Type int32
+
+const (
+	PageOrientation_TYPE_UNSPECIFIED PageOrientation_Type = 0
+	PageOrientation_PORTRAIT         PageOrientation_Type = 1
+	PageOrientation_LANDSCAPE        PageOrientation_Type = 2
+)
+
+// Enum value maps for PageOrientation_Type.
+var (
+	PageOrientation_Type_name = map[int32]string{
+		0: "TYPE_UNSPECIFIED",
+		1: "PORTRAIT",
+		2: "LANDSCAPE",
+	}
+	PageOrientation_Type_value = map[string]int32{
+		"TYPE_UNSPECIFIED": 0,
+		"PORTRAIT":         1,
+		"LANDSCAPE":        2,
+	}
+)
+
+func (x PageOrientation_Type) Enum() *PageOrientation_Type {
+	p := new(PageOrientation_Type)
+	*p = x
+	return p
+}
+
+func (x PageOrientation_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PageOrientation_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_chrome_printing_service_proto_enumTypes[1].Descriptor()
+}
+
+func (PageOrientation_Type) Type() protoreflect.EnumType {
+	return &file_chrome_printing_service_proto_enumTypes[1]
+}
+
+func (x PageOrientation_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PageOrientation_Type.Descriptor instead.
+func (PageOrientation_Type) EnumDescriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{7, 0}
+}
+
+type FitToPage_Type int32
+
+const (
+	FitToPage_NO_FITTING     FitToPage_Type = 0
+	FitToPage_FIT_TO_PAGE    FitToPage_Type = 1
+	FitToPage_GROW_TO_PAGE   FitToPage_Type = 2
+	FitToPage_SHRINK_TO_PAGE FitToPage_Type = 3
+	FitToPage_FILL_PAGE      FitToPage_Type = 4
+	FitToPage_AUTO           FitToPage_Type = 5
+)
+
+// Enum value maps for FitToPage_Type.
+var (
+	FitToPage_Type_name = map[int32]string{
+		0: "NO_FITTING",
+		1: "FIT_TO_PAGE",
+		2: "GROW_TO_PAGE",
+		3: "SHRINK_TO_PAGE",
+		4: "FILL_PAGE",
+		5: "AUTO",
+	}
+	FitToPage_Type_value = map[string]int32{
+		"NO_FITTING":     0,
+		"FIT_TO_PAGE":    1,
+		"GROW_TO_PAGE":   2,
+		"SHRINK_TO_PAGE": 3,
+		"FILL_PAGE":      4,
+		"AUTO":           5,
+	}
+)
+
+func (x FitToPage_Type) Enum() *FitToPage_Type {
+	p := new(FitToPage_Type)
+	*p = x
+	return p
+}
+
+func (x FitToPage_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FitToPage_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_chrome_printing_service_proto_enumTypes[2].Descriptor()
+}
+
+func (FitToPage_Type) Type() protoreflect.EnumType {
+	return &file_chrome_printing_service_proto_enumTypes[2]
+}
+
+func (x FitToPage_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FitToPage_Type.Descriptor instead.
+func (FitToPage_Type) EnumDescriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{10, 0}
+}
+
+type Duplex_Type int32
+
+const (
+	Duplex_NO_DUPLEX  Duplex_Type = 0
+	Duplex_LONG_EDGE  Duplex_Type = 1
+	Duplex_SHORT_EDGE Duplex_Type = 2
+)
+
+// Enum value maps for Duplex_Type.
+var (
+	Duplex_Type_name = map[int32]string{
+		0: "NO_DUPLEX",
+		1: "LONG_EDGE",
+		2: "SHORT_EDGE",
+	}
+	Duplex_Type_value = map[string]int32{
+		"NO_DUPLEX":  0,
+		"LONG_EDGE":  1,
+		"SHORT_EDGE": 2,
+	}
+)
+
+func (x Duplex_Type) Enum() *Duplex_Type {
+	p := new(Duplex_Type)
+	*p = x
+	return p
+}
+
+func (x Duplex_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Duplex_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_chrome_printing_service_proto_enumTypes[3].Descriptor()
+}
+
+func (Duplex_Type) Type() protoreflect.EnumType {
+	return &file_chrome_printing_service_proto_enumTypes[3]
+}
+
+func (x Duplex_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Duplex_Type.Descriptor instead.
+func (Duplex_Type) EnumDescriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{12, 0}
+}
+
 // GetPrintersResponse contains a list of available printers.
 type GetPrintersResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Printers      []*Printer             `protobuf:"bytes,1,rep,name=Printers,proto3" json:"Printers,omitempty"`
+	Printers      []*Printer             `protobuf:"bytes,1,rep,name=printers,proto3" json:"printers,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -164,6 +369,743 @@ func (x *Printer) GetSource() string {
 	return ""
 }
 
+type SubmitJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitJobRequest) Reset() {
+	*x = SubmitJobRequest{}
+	mi := &file_chrome_printing_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitJobRequest) ProtoMessage() {}
+
+func (x *SubmitJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitJobRequest.ProtoReflect.Descriptor instead.
+func (*SubmitJobRequest) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SubmitJobRequest) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
+type Job struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Ticket        *Ticket                `protobuf:"bytes,2,opt,name=ticket,proto3" json:"ticket,omitempty"`
+	ContentType   string                 `protobuf:"bytes,3,opt,name=contentType,proto3" json:"contentType,omitempty"`
+	Document      string                 `protobuf:"bytes,4,opt,name=document,proto3" json:"document,omitempty"`
+	PrinterId     string                 `protobuf:"bytes,5,opt,name=printerId,proto3" json:"printerId,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Job) Reset() {
+	*x = Job{}
+	mi := &file_chrome_printing_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Job) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Job) ProtoMessage() {}
+
+func (x *Job) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Job.ProtoReflect.Descriptor instead.
+func (*Job) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Job) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Job) GetTicket() *Ticket {
+	if x != nil {
+		return x.Ticket
+	}
+	return nil
+}
+
+func (x *Job) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *Job) GetDocument() string {
+	if x != nil {
+		return x.Document
+	}
+	return ""
+}
+
+func (x *Job) GetPrinterId() string {
+	if x != nil {
+		return x.PrinterId
+	}
+	return ""
+}
+
+// https://developers.google.com/cloud-print/docs/cdd#cjt
+type Ticket struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       string                 `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	Print         *Print                 `protobuf:"bytes,2,opt,name=print,proto3" json:"print,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ticket) Reset() {
+	*x = Ticket{}
+	mi := &file_chrome_printing_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ticket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ticket) ProtoMessage() {}
+
+func (x *Ticket) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ticket.ProtoReflect.Descriptor instead.
+func (*Ticket) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Ticket) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *Ticket) GetPrint() *Print {
+	if x != nil {
+		return x.Print
+	}
+	return nil
+}
+
+type Print struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	MediaSize       *MediaSize             `protobuf:"bytes,1,opt,name=media_size,json=mediaSize,proto3" json:"media_size,omitempty"`
+	Copies          *Copies                `protobuf:"bytes,2,opt,name=copies,proto3" json:"copies,omitempty"`
+	PageOrientation *PageOrientation       `protobuf:"bytes,3,opt,name=page_orientation,json=pageOrientation,proto3" json:"page_orientation,omitempty"`
+	Color           *Color                 `protobuf:"bytes,4,opt,name=color,proto3" json:"color,omitempty"`
+	FitToPage       *FitToPage             `protobuf:"bytes,5,opt,name=fit_to_page,json=fitToPage,proto3" json:"fit_to_page,omitempty"`
+	Collate         *Collate               `protobuf:"bytes,6,opt,name=collate,proto3" json:"collate,omitempty"`
+	Duplex          *Duplex                `protobuf:"bytes,7,opt,name=duplex,proto3" json:"duplex,omitempty"`
+	Dpi             *Dpi                   `protobuf:"bytes,8,opt,name=dpi,proto3" json:"dpi,omitempty"`
+	ReverseOrder    *ReverseOrder          `protobuf:"bytes,9,opt,name=reverse_order,json=reverseOrder,proto3" json:"reverse_order,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *Print) Reset() {
+	*x = Print{}
+	mi := &file_chrome_printing_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Print) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Print) ProtoMessage() {}
+
+func (x *Print) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Print.ProtoReflect.Descriptor instead.
+func (*Print) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Print) GetMediaSize() *MediaSize {
+	if x != nil {
+		return x.MediaSize
+	}
+	return nil
+}
+
+func (x *Print) GetCopies() *Copies {
+	if x != nil {
+		return x.Copies
+	}
+	return nil
+}
+
+func (x *Print) GetPageOrientation() *PageOrientation {
+	if x != nil {
+		return x.PageOrientation
+	}
+	return nil
+}
+
+func (x *Print) GetColor() *Color {
+	if x != nil {
+		return x.Color
+	}
+	return nil
+}
+
+func (x *Print) GetFitToPage() *FitToPage {
+	if x != nil {
+		return x.FitToPage
+	}
+	return nil
+}
+
+func (x *Print) GetCollate() *Collate {
+	if x != nil {
+		return x.Collate
+	}
+	return nil
+}
+
+func (x *Print) GetDuplex() *Duplex {
+	if x != nil {
+		return x.Duplex
+	}
+	return nil
+}
+
+func (x *Print) GetDpi() *Dpi {
+	if x != nil {
+		return x.Dpi
+	}
+	return nil
+}
+
+func (x *Print) GetReverseOrder() *ReverseOrder {
+	if x != nil {
+		return x.ReverseOrder
+	}
+	return nil
+}
+
+type Color struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          *Color_Type            `protobuf:"varint,1,opt,name=type,proto3,enum=tast.cros.printer.Color_Type,oneof" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Color) Reset() {
+	*x = Color{}
+	mi := &file_chrome_printing_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Color) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Color) ProtoMessage() {}
+
+func (x *Color) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Color.ProtoReflect.Descriptor instead.
+func (*Color) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Color) GetType() Color_Type {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return Color_TYPE_UNSPECIFIED
+}
+
+type PageOrientation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          *PageOrientation_Type  `protobuf:"varint,1,opt,name=type,proto3,enum=tast.cros.printer.PageOrientation_Type,oneof" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PageOrientation) Reset() {
+	*x = PageOrientation{}
+	mi := &file_chrome_printing_service_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PageOrientation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageOrientation) ProtoMessage() {}
+
+func (x *PageOrientation) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageOrientation.ProtoReflect.Descriptor instead.
+func (*PageOrientation) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PageOrientation) GetType() PageOrientation_Type {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return PageOrientation_TYPE_UNSPECIFIED
+}
+
+type Copies struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Copies        int32                  `protobuf:"varint,1,opt,name=copies,proto3" json:"copies,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Copies) Reset() {
+	*x = Copies{}
+	mi := &file_chrome_printing_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Copies) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Copies) ProtoMessage() {}
+
+func (x *Copies) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Copies.ProtoReflect.Descriptor instead.
+func (*Copies) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Copies) GetCopies() int32 {
+	if x != nil {
+		return x.Copies
+	}
+	return 0
+}
+
+type MediaSize struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeightMicrons int32                  `protobuf:"varint,1,opt,name=height_microns,json=heightMicrons,proto3" json:"height_microns,omitempty"`
+	WidthMicrons  int32                  `protobuf:"varint,2,opt,name=width_microns,json=widthMicrons,proto3" json:"width_microns,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MediaSize) Reset() {
+	*x = MediaSize{}
+	mi := &file_chrome_printing_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MediaSize) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MediaSize) ProtoMessage() {}
+
+func (x *MediaSize) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MediaSize.ProtoReflect.Descriptor instead.
+func (*MediaSize) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MediaSize) GetHeightMicrons() int32 {
+	if x != nil {
+		return x.HeightMicrons
+	}
+	return 0
+}
+
+func (x *MediaSize) GetWidthMicrons() int32 {
+	if x != nil {
+		return x.WidthMicrons
+	}
+	return 0
+}
+
+type FitToPage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          *FitToPage_Type        `protobuf:"varint,1,opt,name=type,proto3,enum=tast.cros.printer.FitToPage_Type,oneof" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FitToPage) Reset() {
+	*x = FitToPage{}
+	mi := &file_chrome_printing_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FitToPage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FitToPage) ProtoMessage() {}
+
+func (x *FitToPage) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FitToPage.ProtoReflect.Descriptor instead.
+func (*FitToPage) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *FitToPage) GetType() FitToPage_Type {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return FitToPage_NO_FITTING
+}
+
+type Collate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Collate       *bool                  `protobuf:"varint,1,opt,name=collate,proto3,oneof" json:"collate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Collate) Reset() {
+	*x = Collate{}
+	mi := &file_chrome_printing_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Collate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Collate) ProtoMessage() {}
+
+func (x *Collate) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Collate.ProtoReflect.Descriptor instead.
+func (*Collate) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *Collate) GetCollate() bool {
+	if x != nil && x.Collate != nil {
+		return *x.Collate
+	}
+	return false
+}
+
+type Duplex struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          *Duplex_Type           `protobuf:"varint,1,opt,name=type,proto3,enum=tast.cros.printer.Duplex_Type,oneof" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Duplex) Reset() {
+	*x = Duplex{}
+	mi := &file_chrome_printing_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Duplex) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Duplex) ProtoMessage() {}
+
+func (x *Duplex) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Duplex.ProtoReflect.Descriptor instead.
+func (*Duplex) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Duplex) GetType() Duplex_Type {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return Duplex_NO_DUPLEX
+}
+
+type Dpi struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HorizontalDpi int32                  `protobuf:"varint,1,opt,name=horizontal_dpi,json=horizontalDpi,proto3" json:"horizontal_dpi,omitempty"`
+	VerticalDpi   int32                  `protobuf:"varint,2,opt,name=vertical_dpi,json=verticalDpi,proto3" json:"vertical_dpi,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Dpi) Reset() {
+	*x = Dpi{}
+	mi := &file_chrome_printing_service_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Dpi) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Dpi) ProtoMessage() {}
+
+func (x *Dpi) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Dpi.ProtoReflect.Descriptor instead.
+func (*Dpi) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Dpi) GetHorizontalDpi() int32 {
+	if x != nil {
+		return x.HorizontalDpi
+	}
+	return 0
+}
+
+func (x *Dpi) GetVerticalDpi() int32 {
+	if x != nil {
+		return x.VerticalDpi
+	}
+	return 0
+}
+
+type ReverseOrder struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ReverseOrder  *bool                  `protobuf:"varint,1,opt,name=reverse_order,json=reverseOrder,proto3,oneof" json:"reverse_order,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReverseOrder) Reset() {
+	*x = ReverseOrder{}
+	mi := &file_chrome_printing_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReverseOrder) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReverseOrder) ProtoMessage() {}
+
+func (x *ReverseOrder) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReverseOrder.ProtoReflect.Descriptor instead.
+func (*ReverseOrder) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ReverseOrder) GetReverseOrder() bool {
+	if x != nil && x.ReverseOrder != nil {
+		return *x.ReverseOrder
+	}
+	return false
+}
+
+type SubmitJobResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=jobId,proto3" json:"jobId,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitJobResponse) Reset() {
+	*x = SubmitJobResponse{}
+	mi := &file_chrome_printing_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitJobResponse) ProtoMessage() {}
+
+func (x *SubmitJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_chrome_printing_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitJobResponse.ProtoReflect.Descriptor instead.
+func (*SubmitJobResponse) Descriptor() ([]byte, []int) {
+	return file_chrome_printing_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SubmitJobResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
 var File_chrome_printing_service_proto protoreflect.FileDescriptor
 
 var file_chrome_printing_service_proto_rawDesc = string([]byte{
@@ -173,10 +1115,10 @@ var file_chrome_printing_service_proto_rawDesc = string([]byte{
 	0x65, 0x72, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
 	0x4d, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x36, 0x0a, 0x08, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x36, 0x0a, 0x08, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65,
 	0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
 	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x50, 0x72, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x52, 0x08, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x22, 0xc3,
+	0x6e, 0x74, 0x65, 0x72, 0x52, 0x08, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x22, 0xc3,
 	0x01, 0x0a, 0x07, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65,
 	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0e, 0x0a, 0x02,
@@ -189,13 +1131,134 @@ var file_chrome_printing_service_proto_rawDesc = string([]byte{
 	0x52, 0x61, 0x6e, 0x6b, 0x18, 0x06, 0x20, 0x01, 0x28, 0x05, 0x52, 0x10, 0x72, 0x65, 0x63, 0x65,
 	0x6e, 0x74, 0x6c, 0x79, 0x55, 0x73, 0x65, 0x64, 0x52, 0x61, 0x6e, 0x6b, 0x12, 0x16, 0x0a, 0x06,
 	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x6f,
-	0x75, 0x72, 0x63, 0x65, 0x32, 0xa3, 0x01, 0x0a, 0x15, 0x43, 0x68, 0x72, 0x6f, 0x6d, 0x65, 0x50,
-	0x72, 0x69, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4f,
-	0x0a, 0x0b, 0x47, 0x65, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x12, 0x16, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
-	0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x75, 0x72, 0x63, 0x65, 0x22, 0x3c, 0x0a, 0x10, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4a, 0x6f,
+	0x62, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x28, 0x0a, 0x03, 0x6a, 0x6f, 0x62, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
+	0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x4a, 0x6f, 0x62, 0x52, 0x03, 0x6a,
+	0x6f, 0x62, 0x22, 0xaa, 0x01, 0x0a, 0x03, 0x4a, 0x6f, 0x62, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69,
+	0x74, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65,
+	0x12, 0x31, 0x0a, 0x06, 0x74, 0x69, 0x63, 0x6b, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x2e, 0x54, 0x69, 0x63, 0x6b, 0x65, 0x74, 0x52, 0x06, 0x74, 0x69, 0x63,
+	0x6b, 0x65, 0x74, 0x12, 0x20, 0x0a, 0x0b, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x54, 0x79,
+	0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
+	0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e,
+	0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e,
+	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x49, 0x64, 0x22,
+	0x52, 0x0a, 0x06, 0x54, 0x69, 0x63, 0x6b, 0x65, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70,
+	0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x52, 0x05, 0x70, 0x72,
+	0x69, 0x6e, 0x74, 0x22, 0x8d, 0x04, 0x0a, 0x05, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x12, 0x3b, 0x0a,
+	0x0a, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x65, 0x64, 0x69, 0x61, 0x53, 0x69, 0x7a, 0x65, 0x52,
+	0x09, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x53, 0x69, 0x7a, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x63, 0x6f,
+	0x70, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x74, 0x61, 0x73,
+	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x43,
+	0x6f, 0x70, 0x69, 0x65, 0x73, 0x52, 0x06, 0x63, 0x6f, 0x70, 0x69, 0x65, 0x73, 0x12, 0x4d, 0x0a,
+	0x10, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x6f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
+	0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x4f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0f, 0x70, 0x61, 0x67,
+	0x65, 0x4f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2e, 0x0a, 0x05,
+	0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e,
+	0x43, 0x6f, 0x6c, 0x6f, 0x72, 0x52, 0x05, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x12, 0x3c, 0x0a, 0x0b,
+	0x66, 0x69, 0x74, 0x5f, 0x74, 0x6f, 0x5f, 0x70, 0x61, 0x67, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72,
+	0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x46, 0x69, 0x74, 0x54, 0x6f, 0x50, 0x61, 0x67, 0x65, 0x52,
+	0x09, 0x66, 0x69, 0x74, 0x54, 0x6f, 0x50, 0x61, 0x67, 0x65, 0x12, 0x34, 0x0a, 0x07, 0x63, 0x6f,
+	0x6c, 0x6c, 0x61, 0x74, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e,
+	0x43, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x07, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65,
+	0x12, 0x31, 0x0a, 0x06, 0x64, 0x75, 0x70, 0x6c, 0x65, 0x78, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x2e, 0x44, 0x75, 0x70, 0x6c, 0x65, 0x78, 0x52, 0x06, 0x64, 0x75, 0x70,
+	0x6c, 0x65, 0x78, 0x12, 0x28, 0x0a, 0x03, 0x64, 0x70, 0x69, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x16, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x2e, 0x44, 0x70, 0x69, 0x52, 0x03, 0x64, 0x70, 0x69, 0x12, 0x44, 0x0a,
+	0x0d, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x5f, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x18, 0x09,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
+	0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65,
+	0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x0c, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x4f, 0x72,
+	0x64, 0x65, 0x72, 0x22, 0x93, 0x01, 0x0a, 0x05, 0x43, 0x6f, 0x6c, 0x6f, 0x72, 0x12, 0x36, 0x0a,
+	0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1d, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e,
+	0x43, 0x6f, 0x6c, 0x6f, 0x72, 0x2e, 0x54, 0x79, 0x70, 0x65, 0x48, 0x00, 0x52, 0x04, 0x74, 0x79,
+	0x70, 0x65, 0x88, 0x01, 0x01, 0x22, 0x49, 0x0a, 0x04, 0x54, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a,
+	0x10, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45,
+	0x44, 0x10, 0x00, 0x12, 0x17, 0x0a, 0x13, 0x53, 0x54, 0x41, 0x4e, 0x44, 0x41, 0x52, 0x44, 0x5f,
+	0x4d, 0x4f, 0x4e, 0x4f, 0x43, 0x48, 0x52, 0x4f, 0x4d, 0x45, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e,
+	0x53, 0x54, 0x41, 0x4e, 0x44, 0x41, 0x52, 0x44, 0x5f, 0x43, 0x4f, 0x4c, 0x4f, 0x52, 0x10, 0x02,
+	0x42, 0x07, 0x0a, 0x05, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x22, 0x97, 0x01, 0x0a, 0x0f, 0x50, 0x61,
+	0x67, 0x65, 0x4f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x40, 0x0a,
+	0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x27, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e,
+	0x50, 0x61, 0x67, 0x65, 0x4f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e,
+	0x54, 0x79, 0x70, 0x65, 0x48, 0x00, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x88, 0x01, 0x01, 0x22,
+	0x39, 0x0a, 0x04, 0x54, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x10, 0x54, 0x59, 0x50, 0x45, 0x5f,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a,
+	0x08, 0x50, 0x4f, 0x52, 0x54, 0x52, 0x41, 0x49, 0x54, 0x10, 0x01, 0x12, 0x0d, 0x0a, 0x09, 0x4c,
+	0x41, 0x4e, 0x44, 0x53, 0x43, 0x41, 0x50, 0x45, 0x10, 0x02, 0x42, 0x07, 0x0a, 0x05, 0x5f, 0x74,
+	0x79, 0x70, 0x65, 0x22, 0x20, 0x0a, 0x06, 0x43, 0x6f, 0x70, 0x69, 0x65, 0x73, 0x12, 0x16, 0x0a,
+	0x06, 0x63, 0x6f, 0x70, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x63,
+	0x6f, 0x70, 0x69, 0x65, 0x73, 0x22, 0x57, 0x0a, 0x09, 0x4d, 0x65, 0x64, 0x69, 0x61, 0x53, 0x69,
+	0x7a, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x5f, 0x6d, 0x69, 0x63,
+	0x72, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0d, 0x68, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x6e, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x77, 0x69, 0x64,
+	0x74, 0x68, 0x5f, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x0c, 0x77, 0x69, 0x64, 0x74, 0x68, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x6e, 0x73, 0x22, 0xb8,
+	0x01, 0x0a, 0x09, 0x46, 0x69, 0x74, 0x54, 0x6f, 0x50, 0x61, 0x67, 0x65, 0x12, 0x3a, 0x0a, 0x04,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x21, 0x2e, 0x74, 0x61, 0x73,
+	0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x46,
+	0x69, 0x74, 0x54, 0x6f, 0x50, 0x61, 0x67, 0x65, 0x2e, 0x54, 0x79, 0x70, 0x65, 0x48, 0x00, 0x52,
+	0x04, 0x74, 0x79, 0x70, 0x65, 0x88, 0x01, 0x01, 0x22, 0x66, 0x0a, 0x04, 0x54, 0x79, 0x70, 0x65,
+	0x12, 0x0e, 0x0a, 0x0a, 0x4e, 0x4f, 0x5f, 0x46, 0x49, 0x54, 0x54, 0x49, 0x4e, 0x47, 0x10, 0x00,
+	0x12, 0x0f, 0x0a, 0x0b, 0x46, 0x49, 0x54, 0x5f, 0x54, 0x4f, 0x5f, 0x50, 0x41, 0x47, 0x45, 0x10,
+	0x01, 0x12, 0x10, 0x0a, 0x0c, 0x47, 0x52, 0x4f, 0x57, 0x5f, 0x54, 0x4f, 0x5f, 0x50, 0x41, 0x47,
+	0x45, 0x10, 0x02, 0x12, 0x12, 0x0a, 0x0e, 0x53, 0x48, 0x52, 0x49, 0x4e, 0x4b, 0x5f, 0x54, 0x4f,
+	0x5f, 0x50, 0x41, 0x47, 0x45, 0x10, 0x03, 0x12, 0x0d, 0x0a, 0x09, 0x46, 0x49, 0x4c, 0x4c, 0x5f,
+	0x50, 0x41, 0x47, 0x45, 0x10, 0x04, 0x12, 0x08, 0x0a, 0x04, 0x41, 0x55, 0x54, 0x4f, 0x10, 0x05,
+	0x42, 0x07, 0x0a, 0x05, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x22, 0x34, 0x0a, 0x07, 0x43, 0x6f, 0x6c,
+	0x6c, 0x61, 0x74, 0x65, 0x12, 0x1d, 0x0a, 0x07, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00, 0x52, 0x07, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65,
+	0x88, 0x01, 0x01, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65, 0x22,
+	0x80, 0x01, 0x0a, 0x06, 0x44, 0x75, 0x70, 0x6c, 0x65, 0x78, 0x12, 0x37, 0x0a, 0x04, 0x74, 0x79,
+	0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1e, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x44, 0x75, 0x70,
+	0x6c, 0x65, 0x78, 0x2e, 0x54, 0x79, 0x70, 0x65, 0x48, 0x00, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65,
+	0x88, 0x01, 0x01, 0x22, 0x34, 0x0a, 0x04, 0x54, 0x79, 0x70, 0x65, 0x12, 0x0d, 0x0a, 0x09, 0x4e,
+	0x4f, 0x5f, 0x44, 0x55, 0x50, 0x4c, 0x45, 0x58, 0x10, 0x00, 0x12, 0x0d, 0x0a, 0x09, 0x4c, 0x4f,
+	0x4e, 0x47, 0x5f, 0x45, 0x44, 0x47, 0x45, 0x10, 0x01, 0x12, 0x0e, 0x0a, 0x0a, 0x53, 0x48, 0x4f,
+	0x52, 0x54, 0x5f, 0x45, 0x44, 0x47, 0x45, 0x10, 0x02, 0x42, 0x07, 0x0a, 0x05, 0x5f, 0x74, 0x79,
+	0x70, 0x65, 0x22, 0x4f, 0x0a, 0x03, 0x44, 0x70, 0x69, 0x12, 0x25, 0x0a, 0x0e, 0x68, 0x6f, 0x72,
+	0x69, 0x7a, 0x6f, 0x6e, 0x74, 0x61, 0x6c, 0x5f, 0x64, 0x70, 0x69, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x0d, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x6f, 0x6e, 0x74, 0x61, 0x6c, 0x44, 0x70, 0x69,
+	0x12, 0x21, 0x0a, 0x0c, 0x76, 0x65, 0x72, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x64, 0x70, 0x69,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0b, 0x76, 0x65, 0x72, 0x74, 0x69, 0x63, 0x61, 0x6c,
+	0x44, 0x70, 0x69, 0x22, 0x4a, 0x0a, 0x0c, 0x52, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x4f, 0x72,
+	0x64, 0x65, 0x72, 0x12, 0x28, 0x0a, 0x0d, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x5f, 0x6f,
+	0x72, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00, 0x52, 0x0c, 0x72, 0x65,
+	0x76, 0x65, 0x72, 0x73, 0x65, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x88, 0x01, 0x01, 0x42, 0x10, 0x0a,
+	0x0e, 0x5f, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x5f, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x22,
+	0x29, 0x0a, 0x11, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4a, 0x6f, 0x62, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6a, 0x6f, 0x62, 0x49, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x05, 0x6a, 0x6f, 0x62, 0x49, 0x64, 0x32, 0xfd, 0x01, 0x0a, 0x15, 0x43,
+	0x68, 0x72, 0x6f, 0x6d, 0x65, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x12, 0x4f, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x74,
+	0x65, 0x72, 0x73, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x26, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e,
+	0x47, 0x65, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x58, 0x0a, 0x09, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4a,
+	0x6f, 0x62, 0x12, 0x23, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x70,
+	0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x4a, 0x6f, 0x62,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
+	0x72, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x2e, 0x53, 0x75, 0x62, 0x6d,
+	0x69, 0x74, 0x4a, 0x6f, 0x62, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
 	0x39, 0x0a, 0x05, 0x43, 0x6c, 0x6f, 0x73, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
 	0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
@@ -218,23 +1281,60 @@ func file_chrome_printing_service_proto_rawDescGZIP() []byte {
 	return file_chrome_printing_service_proto_rawDescData
 }
 
-var file_chrome_printing_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_chrome_printing_service_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_chrome_printing_service_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_chrome_printing_service_proto_goTypes = []any{
-	(*GetPrintersResponse)(nil), // 0: tast.cros.printer.GetPrintersResponse
-	(*Printer)(nil),             // 1: tast.cros.printer.Printer
-	(*emptypb.Empty)(nil),       // 2: google.protobuf.Empty
+	(Color_Type)(0),             // 0: tast.cros.printer.Color.Type
+	(PageOrientation_Type)(0),   // 1: tast.cros.printer.PageOrientation.Type
+	(FitToPage_Type)(0),         // 2: tast.cros.printer.FitToPage.Type
+	(Duplex_Type)(0),            // 3: tast.cros.printer.Duplex.Type
+	(*GetPrintersResponse)(nil), // 4: tast.cros.printer.GetPrintersResponse
+	(*Printer)(nil),             // 5: tast.cros.printer.Printer
+	(*SubmitJobRequest)(nil),    // 6: tast.cros.printer.SubmitJobRequest
+	(*Job)(nil),                 // 7: tast.cros.printer.Job
+	(*Ticket)(nil),              // 8: tast.cros.printer.Ticket
+	(*Print)(nil),               // 9: tast.cros.printer.Print
+	(*Color)(nil),               // 10: tast.cros.printer.Color
+	(*PageOrientation)(nil),     // 11: tast.cros.printer.PageOrientation
+	(*Copies)(nil),              // 12: tast.cros.printer.Copies
+	(*MediaSize)(nil),           // 13: tast.cros.printer.MediaSize
+	(*FitToPage)(nil),           // 14: tast.cros.printer.FitToPage
+	(*Collate)(nil),             // 15: tast.cros.printer.Collate
+	(*Duplex)(nil),              // 16: tast.cros.printer.Duplex
+	(*Dpi)(nil),                 // 17: tast.cros.printer.Dpi
+	(*ReverseOrder)(nil),        // 18: tast.cros.printer.ReverseOrder
+	(*SubmitJobResponse)(nil),   // 19: tast.cros.printer.SubmitJobResponse
+	(*emptypb.Empty)(nil),       // 20: google.protobuf.Empty
 }
 var file_chrome_printing_service_proto_depIdxs = []int32{
-	1, // 0: tast.cros.printer.GetPrintersResponse.Printers:type_name -> tast.cros.printer.Printer
-	2, // 1: tast.cros.printer.ChromePrintingService.GetPrinters:input_type -> google.protobuf.Empty
-	2, // 2: tast.cros.printer.ChromePrintingService.Close:input_type -> google.protobuf.Empty
-	0, // 3: tast.cros.printer.ChromePrintingService.GetPrinters:output_type -> tast.cros.printer.GetPrintersResponse
-	2, // 4: tast.cros.printer.ChromePrintingService.Close:output_type -> google.protobuf.Empty
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5,  // 0: tast.cros.printer.GetPrintersResponse.printers:type_name -> tast.cros.printer.Printer
+	7,  // 1: tast.cros.printer.SubmitJobRequest.job:type_name -> tast.cros.printer.Job
+	8,  // 2: tast.cros.printer.Job.ticket:type_name -> tast.cros.printer.Ticket
+	9,  // 3: tast.cros.printer.Ticket.print:type_name -> tast.cros.printer.Print
+	13, // 4: tast.cros.printer.Print.media_size:type_name -> tast.cros.printer.MediaSize
+	12, // 5: tast.cros.printer.Print.copies:type_name -> tast.cros.printer.Copies
+	11, // 6: tast.cros.printer.Print.page_orientation:type_name -> tast.cros.printer.PageOrientation
+	10, // 7: tast.cros.printer.Print.color:type_name -> tast.cros.printer.Color
+	14, // 8: tast.cros.printer.Print.fit_to_page:type_name -> tast.cros.printer.FitToPage
+	15, // 9: tast.cros.printer.Print.collate:type_name -> tast.cros.printer.Collate
+	16, // 10: tast.cros.printer.Print.duplex:type_name -> tast.cros.printer.Duplex
+	17, // 11: tast.cros.printer.Print.dpi:type_name -> tast.cros.printer.Dpi
+	18, // 12: tast.cros.printer.Print.reverse_order:type_name -> tast.cros.printer.ReverseOrder
+	0,  // 13: tast.cros.printer.Color.type:type_name -> tast.cros.printer.Color.Type
+	1,  // 14: tast.cros.printer.PageOrientation.type:type_name -> tast.cros.printer.PageOrientation.Type
+	2,  // 15: tast.cros.printer.FitToPage.type:type_name -> tast.cros.printer.FitToPage.Type
+	3,  // 16: tast.cros.printer.Duplex.type:type_name -> tast.cros.printer.Duplex.Type
+	20, // 17: tast.cros.printer.ChromePrintingService.GetPrinters:input_type -> google.protobuf.Empty
+	6,  // 18: tast.cros.printer.ChromePrintingService.SubmitJob:input_type -> tast.cros.printer.SubmitJobRequest
+	20, // 19: tast.cros.printer.ChromePrintingService.Close:input_type -> google.protobuf.Empty
+	4,  // 20: tast.cros.printer.ChromePrintingService.GetPrinters:output_type -> tast.cros.printer.GetPrintersResponse
+	19, // 21: tast.cros.printer.ChromePrintingService.SubmitJob:output_type -> tast.cros.printer.SubmitJobResponse
+	20, // 22: tast.cros.printer.ChromePrintingService.Close:output_type -> google.protobuf.Empty
+	20, // [20:23] is the sub-list for method output_type
+	17, // [17:20] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_chrome_printing_service_proto_init() }
@@ -242,18 +1342,25 @@ func file_chrome_printing_service_proto_init() {
 	if File_chrome_printing_service_proto != nil {
 		return
 	}
+	file_chrome_printing_service_proto_msgTypes[6].OneofWrappers = []any{}
+	file_chrome_printing_service_proto_msgTypes[7].OneofWrappers = []any{}
+	file_chrome_printing_service_proto_msgTypes[10].OneofWrappers = []any{}
+	file_chrome_printing_service_proto_msgTypes[11].OneofWrappers = []any{}
+	file_chrome_printing_service_proto_msgTypes[12].OneofWrappers = []any{}
+	file_chrome_printing_service_proto_msgTypes[14].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_chrome_printing_service_proto_rawDesc), len(file_chrome_printing_service_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      4,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_chrome_printing_service_proto_goTypes,
 		DependencyIndexes: file_chrome_printing_service_proto_depIdxs,
+		EnumInfos:         file_chrome_printing_service_proto_enumTypes,
 		MessageInfos:      file_chrome_printing_service_proto_msgTypes,
 	}.Build()
 	File_chrome_printing_service_proto = out.File
@@ -276,7 +1383,10 @@ type ChromePrintingServiceClient interface {
 	// GetPrinters returns the list of available printers using the
 	// chrome.printing.getPrinters API method.
 	GetPrinters(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPrintersResponse, error)
-	// Close releastes the Chrome instance initialized after calling any other
+	// SubmitJob calls the chrome.printing.submitJob() API method it takes the printerID,
+	// and the submitJobRequest as a string. Returns the jobID.
+	SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error)
+	// Close releases the Chrome instance initialized after calling any other
 	// ChromePrintingService method.
 	Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -298,6 +1408,15 @@ func (c *chromePrintingServiceClient) GetPrinters(ctx context.Context, in *empty
 	return out, nil
 }
 
+func (c *chromePrintingServiceClient) SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error) {
+	out := new(SubmitJobResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.printer.ChromePrintingService/SubmitJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chromePrintingServiceClient) Close(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/tast.cros.printer.ChromePrintingService/Close", in, out, opts...)
@@ -312,7 +1431,10 @@ type ChromePrintingServiceServer interface {
 	// GetPrinters returns the list of available printers using the
 	// chrome.printing.getPrinters API method.
 	GetPrinters(context.Context, *emptypb.Empty) (*GetPrintersResponse, error)
-	// Close releastes the Chrome instance initialized after calling any other
+	// SubmitJob calls the chrome.printing.submitJob() API method it takes the printerID,
+	// and the submitJobRequest as a string. Returns the jobID.
+	SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error)
+	// Close releases the Chrome instance initialized after calling any other
 	// ChromePrintingService method.
 	Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
@@ -323,6 +1445,9 @@ type UnimplementedChromePrintingServiceServer struct {
 
 func (*UnimplementedChromePrintingServiceServer) GetPrinters(context.Context, *emptypb.Empty) (*GetPrintersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPrinters not implemented")
+}
+func (*UnimplementedChromePrintingServiceServer) SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
 }
 func (*UnimplementedChromePrintingServiceServer) Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Close not implemented")
@@ -346,6 +1471,24 @@ func _ChromePrintingService_GetPrinters_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ChromePrintingServiceServer).GetPrinters(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChromePrintingService_SubmitJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChromePrintingServiceServer).SubmitJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.printer.ChromePrintingService/SubmitJob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChromePrintingServiceServer).SubmitJob(ctx, req.(*SubmitJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -375,6 +1518,10 @@ var _ChromePrintingService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPrinters",
 			Handler:    _ChromePrintingService_GetPrinters_Handler,
+		},
+		{
+			MethodName: "SubmitJob",
+			Handler:    _ChromePrintingService_SubmitJob_Handler,
 		},
 		{
 			MethodName: "Close",
