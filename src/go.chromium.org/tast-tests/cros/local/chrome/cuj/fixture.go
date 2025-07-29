@@ -1098,27 +1098,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithImageICA",
-		Desc: "CUJ fixture with image search ICA indexing enabled in the background",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"chromeos-launcher-search@google",
-		},
-		BugComponent: "b:1281467", // ChromeOS > Software > Consumer > Machine Intelligence > ICA
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("LauncherImageSearchIca"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithForceComposition",
 		Desc: "Chrome from a pre-built image with composition forced on",
 		Contacts: []string{

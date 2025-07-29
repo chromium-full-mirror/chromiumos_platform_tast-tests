@@ -6,12 +6,10 @@ package ui
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/docscuj"
 	"go.chromium.org/tast/core/testing"
@@ -65,14 +63,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
-			// TODO(b/343320265): Remove after cbx device launches the feature.
-			{
-				Name:              "image_indexing",
-				Val:               docscuj.TestParam{},
-				Fixture:           "loggedInToCUJUserWithImageICA",
-				ExtraData:         []string{launcher.ImageSearchPowerTestPictureName},
-				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-			},
 		},
 	})
 }
@@ -83,16 +73,6 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(docscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
-
-	if strings.HasSuffix(s.TestName(), "image_indexing") {
-		user := cr.NormalizedUser()
-		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
-		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, 500)
-		if err != nil {
-			s.Fatal("Failed to prepare image search files: ", err)
-		}
-		defer cleanup()
-	}
 
 	if _, err := docscuj.Run(ctx, cr, testParam, s.OutDir(), traceConfigPath, s.TestName(), cujrecorder.RecorderOptions{}); err != nil {
 		s.Fatal("Failed to run DocsCUJ: ", err)
