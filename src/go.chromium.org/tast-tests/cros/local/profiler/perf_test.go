@@ -148,15 +148,16 @@ func TestParseStatInstructionsAtIntervals(t *testing.T) {
 
 	expected := make([]valueWithTimestamp, 2)
 	expected[0].Timestamp, _ = time.ParseDuration("0.500642977s")
-	expected[0].Value = 356311273
+	expected[0].InstructionsPerCPU = []instructionsPerCPU{instructionsPerCPU{"cpu_core", 356311273}}
 	expected[1].Timestamp, _ = time.ParseDuration("1.001999299s")
-	expected[1].Value = 376048978
+	expected[1].InstructionsPerCPU = []instructionsPerCPU{instructionsPerCPU{"cpu_core", 376048978}}
 
 	if len(timestampedData) != len(expected) {
 		t.Errorf("Unexpected number of timestamped values: got %d; want %d", len(timestampedData), len(expected))
 	}
 	for i, expectedData := range expected {
-		if expectedData != timestampedData[i] {
+		data := timestampedData[i]
+		if expectedData.Timestamp != data.Timestamp || expectedData.InstructionsPerCPU[0].Value != data.InstructionsPerCPU[0].Value {
 			t.Errorf("Unexpected data at index %d: got %v, want %v", i, timestampedData[i], expectedData)
 		}
 	}

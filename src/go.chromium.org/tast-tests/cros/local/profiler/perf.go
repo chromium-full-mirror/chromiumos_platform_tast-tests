@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -83,7 +84,10 @@ var (
 	// Regexp for CPU instructions with timestamp.
 	// Sample input:
 	//   5.005296106           73734125      instructions
-	instructionsWithTimeRegexp = regexp.MustCompile(`(?s)\s+([0-9]*\.?[0-9]*)\s+(\d+)\s+instructions`)
+	// Alternate input:
+	//   5.005064456        11322515068      cpu_core/instructions/
+	//   5.005064456         4673446192      cpu_atom/instructions/
+	instructionsWithTimeRegexp = regexp.MustCompile(`(?s)\s+([0-9]*\.?[0-9]*)\s+(\d+)\s+(cpu_(?:core|atom))?\/?instructions`)
 )
 
 type cyclesPerSecond struct {
@@ -93,8 +97,13 @@ type cyclesPerSecond struct {
 
 type valueWithTimestamp struct {
 	// Timestamp of the sample relative to when perf stat starts.
-	Timestamp time.Duration
-	Value     int64
+	Timestamp          time.Duration
+	InstructionsPerCPU []instructionsPerCPU
+}
+
+type instructionsPerCPU struct {
+	CoreType string
+	Value    int64
 }
 
 // PerfStatCyclesPerSecondOutput holds output of "perf stat -e cycles".
@@ -444,14 +453,14 @@ func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
 		return nil, errors.Wrapf(err, "failed to read %q", path)
 	}
 
-	var values []valueWithTimestamp
+	timestampMap := make(map[time.Duration]map[string]int64)
 	for _, l := range strings.Split(string(b), "\n") {
 		m := instructionsWithTimeRegexp.FindStringSubmatch(l)
 		if m == nil {
 			continue
 		}
 
-		if len(m) != 3 {
+		if len(m) != 3 && len(m) != 4 {
 			return nil, errors.Errorf("unexpected output: %q", l)
 		}
 
@@ -462,9 +471,29 @@ func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
 			return nil, errors.Wrap(err, "failed to parse cycles")
 		}
 
-		values = append(values, valueWithTimestamp{t, instructions})
+		cpuName := "cpu_core"
+		if len(m) == 4 {
+			cpuName = m[3]
+		}
+		if _, ok := timestampMap[t]; !ok {
+			timestampMap[t] = make(map[string]int64)
+		}
+		timestampMap[t][cpuName] = instructions
+
+	}
+	var values []valueWithTimestamp
+	for t, value := range timestampMap {
+		var instPerCPU []instructionsPerCPU
+		for v, inst := range value {
+			instPerCPU = append(instPerCPU, instructionsPerCPU{v, inst})
+		}
+		values = append(values, valueWithTimestamp{t, instPerCPU})
 	}
 
+	// Need to sort since map doesn't retain order.
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Timestamp < values[j].Timestamp
+	})
 	return values, nil
 }
 

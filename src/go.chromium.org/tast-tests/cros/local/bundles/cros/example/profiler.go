@@ -53,7 +53,9 @@ func Profiler(ctx context.Context, s *testing.State) {
 		s.Log("All CPU cycle count per second: ", perfStatCyclesPerSecondOutput.CyclesPerSecond)
 		s.Log("Instructions at intervals:")
 		for _, inst := range perfStatInstuctionsAtIntervalsOutput.InstructionsAtIntervals {
-			s.Log("  t=", inst.Timestamp, ",  inst=", inst.Value)
+			for _, values := range inst.InstructionsPerCPU {
+				s.Log("  t=", inst.Timestamp, ", core=", values.CoreType, ", inst=", values.Value)
+			}
 		}
 	}()
 

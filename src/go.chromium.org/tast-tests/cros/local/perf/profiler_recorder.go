@@ -76,24 +76,48 @@ func (t *ProfilerRecorder) Record(pv *perf.Values) {
 		Unit:     "s",
 		Multiple: true,
 	}
-	instructionsMetric := perf.Metric{
-		Name:      baseName,
-		Unit:      "count",
-		Multiple:  true,
-		Direction: perf.SmallerIsBetter,
-		Interval:  intervalName,
-	}
 
-	var total int64
+	var metricMap = make(map[string]perf.Metric)
+	var totalMap = make(map[string]int64)
 	for _, data := range t.statInst.InstructionsAtIntervals {
 		pv.Append(timeMetric, data.Timestamp.Seconds())
-		pv.Append(instructionsMetric, float64(data.Value))
-		total += data.Value
+
+		for _, instPerCPU := range data.InstructionsPerCPU {
+			core := instPerCPU.CoreType
+			if _, ok := metricMap[core]; !ok {
+				metricMap[core] = perf.Metric{
+					Name:      baseName + "." + core,
+					Unit:      "count",
+					Multiple:  true,
+					Direction: perf.SmallerIsBetter,
+					Interval:  intervalName,
+				}
+			}
+
+			pv.Append(metricMap[core], float64(instPerCPU.Value))
+
+			if total, ok := totalMap[core]; ok {
+				totalMap[core] = total + instPerCPU.Value
+			} else {
+				totalMap[core] = instPerCPU.Value
+			}
+		}
+	}
+
+	var grandTotal int64
+	for core, total := range totalMap {
+		pv.Set(perf.Metric{
+			Name:      baseName + "." + core + ".Total",
+			Unit:      "count",
+			Direction: perf.SmallerIsBetter,
+		}, float64(total))
+		grandTotal += total
 	}
 
 	pv.Set(perf.Metric{
 		Name:      baseName + ".Total",
 		Unit:      "count",
 		Direction: perf.SmallerIsBetter,
-	}, float64(total))
+	}, float64(grandTotal))
+
 }
