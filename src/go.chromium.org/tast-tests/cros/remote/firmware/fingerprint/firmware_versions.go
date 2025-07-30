@@ -23,15 +23,15 @@ import "go.chromium.org/tast-tests/cros/common/fingerprint"
 var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 	fingerprint.BoardNameBloonchipper: {
 		"bloonchipper_v2.0.4277-9f652bb3-RO_v2.0.28117-ef558fa-RW.bin": {
-			sha256sum: "2439c1431fe4d8ac5e72e1735f4dba602beacac57eaf2c11354b27532fd87632",
+			sha256sum: "5c6d6755551836a002ee171cfe7c8b26c80e69cc059369dd9f9f23787bc4e422",
 			roVersion: "bloonchipper_v2.0.4277-9f652bb3",
-			rwVersion: "bloonchipper_v2.0.28117-ef558fa",
+			rwVersion: "bloonchipper-v2.0.28117-ef558fa",
 			keyID:     "1c590ef36399f6a2b2ef87079c135b69ef89eb60",
 		},
 		"bloonchipper_v2.0.5938-197506c1-RO_v2.0.28117-ef558fa-RW.bin": {
-			sha256sum: "3bd53adeb15033f4cf246ee9b0cd4e9b921a8640c518ae1dde8fe1f102bcc58b",
+			sha256sum: "55211a49411ea7b8bdb4615168f7e0d800d451aa18280cac5a6d7d898dae3980",
 			roVersion: "bloonchipper_v2.0.5938-197506c1",
-			rwVersion: "bloonchipper_v2.0.28117-ef558fa",
+			rwVersion: "bloonchipper-v2.0.28117-ef558fa",
 			keyID:     "1c590ef36399f6a2b2ef87079c135b69ef89eb60",
 		},
 	},
