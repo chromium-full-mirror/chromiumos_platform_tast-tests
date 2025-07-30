@@ -460,7 +460,7 @@ func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
 			continue
 		}
 
-		if len(m) != 3 && len(m) != 4 {
+		if len(m) != 4 {
 			return nil, errors.Errorf("unexpected output: %q", l)
 		}
 
@@ -472,7 +472,7 @@ func parseStatFileInstructions(path string) ([]valueWithTimestamp, error) {
 		}
 
 		cpuName := "cpu_core"
-		if len(m) == 4 {
+		if m[3] != "" {
 			cpuName = m[3]
 		}
 		if _, ok := timestampMap[t]; !ok {
