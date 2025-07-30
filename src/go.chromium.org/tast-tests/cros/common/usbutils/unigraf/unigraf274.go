@@ -158,7 +158,7 @@ func New(ctx context.Context, uri, serial string, pasitTopology *labapi.PasitHos
 		uri:           uri,
 		switchPortNum: 0,
 	}
-	openctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	openctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	testers, err := ctl.client.GetTesters(openctx, &passport.GetTestersRequest{})
@@ -215,7 +215,7 @@ func (s *UsbTester) doCapabilitySetRequest(
 	ctx context.Context,
 	req *passport.SetUsbTesterCapabilityRequest,
 ) error {
-	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	reqctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	req.Id = s.tester
@@ -343,7 +343,7 @@ func (s *UsbTester) doCapabilityGetRequest(
 	ctx context.Context,
 	req *passport.GetUsbTesterCapabilityRequest,
 ) (*passport.GetUsbTesterCapabilityReply, error) {
-	reqctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	reqctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	req.Id = s.tester
@@ -504,11 +504,33 @@ func (s *UsbTester) HardReset(ctx context.Context) error {
 
 // SetTestPort will set the active test port.
 func (s *UsbTester) SetTestPort(ctx context.Context, portID int) error {
+
+	if currentPort, err := s.TestPort(ctx); err != nil {
+		return errors.Wrap(err, "failed to get port")
+	} else if currentPort == portID {
+		return nil
+	} else {
+		req := &passport.SetActivePortRequest{
+			Id:     s.tester,
+			PortId: uint32(currentPort),
+			State:  passport.PortState_PORT_STATE_OFF,
+		}
+		if reply, err := s.client.SetActivePort(ctx, req); err != nil || reply.GetErrCode() != 0 {
+			return errors.Wrapf(
+				err,
+				"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
+				reply.GetErrCode(),
+				reply.GetErrorMsg(),
+			)
+		}
+	}
+
 	reply, err := s.client.SetActivePort(
 		ctx,
 		&passport.SetActivePortRequest{
 			Id:     s.tester,
 			PortId: uint32(portID),
+			State:  passport.PortState_PORT_STATE_ON,
 		},
 	)
 	if err != nil || reply.GetErrCode() != 0 {
@@ -516,7 +538,6 @@ func (s *UsbTester) SetTestPort(ctx context.Context, portID int) error {
 			"failed to do set request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
 			reply.GetErrorMsg())
-
 	}
 
 	return nil
@@ -535,7 +556,6 @@ func (s *UsbTester) TestPort(ctx context.Context) (int, error) {
 			"failed to do get request, internal sdk error code was %d, internal sdk error message was %s",
 			reply.GetErrCode(),
 			reply.GetErrorMsg())
-
 	}
 
 	return int(reply.GetPortId()), nil
