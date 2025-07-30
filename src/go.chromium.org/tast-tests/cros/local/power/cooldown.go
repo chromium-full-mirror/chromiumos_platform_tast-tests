@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -113,7 +114,7 @@ type CooldownConfig struct {
 	// Wait for CPU usage to idle.
 	CPUIdle bool
 	// Wait for CPU package state to idle.
-	PackageStateIdle bool
+	PackageStateIdleConfig *cpu.IdleConfig
 	// Wait for IO to idle.
 	IOIdle bool
 }
@@ -164,11 +165,11 @@ func afterIOCooldown(ctx context.Context, cfg CooldownConfig) <-chan error {
 
 func afterPackageStateIdle(ctx context.Context, cfg CooldownConfig) <-chan error {
 	return async(ctx, func(ctx context.Context) error {
-		if !cfg.PackageStateIdle {
+		if cfg.PackageStateIdleConfig == nil {
 			return nil
 		}
 		if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
-			if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, cpu.DefaultPkgIdleConfig()); err != nil {
+			if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, *cfg.PackageStateIdleConfig); err != nil {
 				return errors.Wrap(err, "failed to wait until CPU package c-state is idle")
 			}
 		}
@@ -248,6 +249,21 @@ func ConfigurableCooldown(ctx context.Context, cfg CooldownConfig) (_ []cooldown
 // To skip cooldown for debugging, use
 // -var=cpu.Cooldown.skipCooldown=true.
 func Cooldown(ctx context.Context) ([]cooldownDuration, error) {
+	// Some models take longer to cooldown package state.
+	extendedPackageStateCooldown := map[string]time.Duration{
+		// rammus
+		"leona":   5 * time.Minute,
+		"shyvana": 5 * time.Minute,
+	}
+
+	var packageStateCooldownConfig = cpu.DefaultPkgIdleConfig()
+	if model, err := crosconfig.Get(ctx, "/", "name"); err != nil {
+		testing.ContextLog(ctx, "Failed to get model name")
+	} else if timeout, ok := extendedPackageStateCooldown[model]; ok {
+		packageStateCooldownConfig.Timeout = timeout
+		testing.ContextLogf(ctx, "Package state cooldown for %s is extended", model)
+	}
+
 	cfg := CooldownConfig{
 		// Accelerate cooldown when possible.
 		UseFan: true,
@@ -263,9 +279,9 @@ func Cooldown(ctx context.Context) ([]cooldownDuration, error) {
 			MaxTempAtTimeout:     37.5,
 		},
 		// Cooldown in other areas as well.
-		CPUIdle:          true,
-		PackageStateIdle: true,
-		IOIdle:           true,
+		CPUIdle:                true,
+		PackageStateIdleConfig: &packageStateCooldownConfig,
+		IOIdle:                 true,
 	}
 
 	result, err := ConfigurableCooldown(ctx, cfg)
