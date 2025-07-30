@@ -97,6 +97,7 @@ func init() {
 					pmfRequiredAP2: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_NOT_U6PLUS_ROUTER"},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
@@ -108,6 +109,7 @@ func init() {
 					pmfRequiredAP1: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_NOT_U6PLUS_ROUTER"},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
