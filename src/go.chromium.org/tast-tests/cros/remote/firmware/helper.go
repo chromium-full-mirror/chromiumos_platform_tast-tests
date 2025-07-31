@@ -312,19 +312,15 @@ func (h *Helper) RequireRPCClient(ctx context.Context) error {
 	if h.rpcHint == nil {
 		return errors.New("cannot create RPC client connection without rpcHint")
 	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancelWaitConnect()
+
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
+		return errors.Wrap(err, "dut not connected")
+	}
 	testing.ContextLog(ctx, "Opening RPCClient connection")
-	var cl *rpc.Client
-	const rpcConnectTimeout = 5 * time.Minute
-	if err := testing.Poll(ctx, func(innerCtx context.Context) error {
-		if !h.DUT.Connected(innerCtx) {
-			if err := h.DUT.Connect(innerCtx); err != nil {
-				return err
-			}
-		}
-		var err error
-		cl, err = rpc.Dial(ctx, h.DUT, h.rpcHint)
-		return err
-	}, &testing.PollOptions{Timeout: rpcConnectTimeout}); err != nil {
+	cl, err := rpc.Dial(ctx, h.DUT, h.rpcHint)
+	if err != nil {
 		return errors.Wrap(err, "dialing RPC connection")
 	}
 	h.RPCClient = cl
