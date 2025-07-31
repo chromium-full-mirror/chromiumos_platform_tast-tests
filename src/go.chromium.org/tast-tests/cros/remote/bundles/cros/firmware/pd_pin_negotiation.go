@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PDPinNegotiation,
-		Desc: "Tests if the DUT properly handles pin negotiations",
+		Desc: "Tests if the DUT properly handles pin negotiations for DP alt mode",
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list
 			"jasonyuan@google.com",     // Test author
@@ -34,7 +34,7 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.TypecStatus()),
 		Timeout:      60 * time.Minute,
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
+		Attr:         []string{"group:firmware", "firmware_pd", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Params: []testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
