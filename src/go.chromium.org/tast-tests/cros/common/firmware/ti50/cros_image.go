@@ -141,10 +141,9 @@ var (
 	sysinfoTPMModeRE     = `TPM [ModeODE]+:\s+(?P<tpmMode>enabled|disabled) \((?P<tpmModeStatus>[0-9])\)\s*`
 	sysinfoKeyladderRE   = `Key Ladder:\s+(?P<keyladder>\S*)\s*`
 	sysinfoEKCertRE      = `(EK Cert:\s+(?P<ekCert>\S+))?\s*`
-	sysinfoUnknownKeyRE  = `(RW signed with an unknown key!)?\s*`
 	sysinfoFactoryModeRE = `(?P<factoryMode>` + sysinfoFactoryMode + `)?`
 
-	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoRollbackDetectedRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoUnknownKeyRE + sysinfoFactoryModeRE)
+	sysinfoRE = regexp.MustCompile(sysinfoResetFlagRE + sysinfoRollbackDetectedRE + sysinfoResetCountRE + sysinfoBreadcrumbRE + sysinfoChipRE + sysinfoROKeyidRE + sysinfoRWKeyidRE + sysinfoDevidRE + sysinfoRollbackRE + sysinfoTPMModeRE + sysinfoKeyladderRE + sysinfoEKCertRE + sysinfoFactoryModeRE)
 	// regex to parse the chip bid output
 	// ex Cr50 output: Board ID: ffffffff:00000000, flags 00000010
 	// ex Ti50 output: Board ID: ffffffff:00000000, flags: 00000010
