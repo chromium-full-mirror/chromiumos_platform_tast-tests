@@ -2589,3 +2589,29 @@ func (h *Helper) SupportAPFwState(ctx context.Context, dutFeatures *protocol.DUT
 	}
 	return nil
 }
+
+// GSCResetAfterWPEnable triggers a GSC reboot by shutting down the AP after WP has been enabled.
+func (h *Helper) GSCResetAfterWPEnable(ctx context.Context) error {
+	// Don't do anything if the board isn't running a Ti50 image that resets after WP is enabled.
+	if !h.Servo.ExpectTi50WPEventReboot(ctx) {
+		return nil
+	}
+
+	// Ti50 should reboot when it sees the AP shut down.
+	if err := h.DUT.Conn().CommandContext(ctx, "shutdown", "-P", "now").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+		return errors.Wrap(err, "failed to run shutdown command")
+	}
+
+	h.Servo.WaitForGSCReset(ctx, 10*time.Second)
+
+	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancel()
+	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
+		currPowerState, stateErr := h.Servo.GetECSystemPowerState(ctx)
+		if stateErr != nil {
+			return errors.Wrap(stateErr, "failed to reconnect to DUT, failed to check powerstate")
+		}
+		return errors.Wrapf(err, "failed to reconnect to DUT, got power state: %v", currPowerState)
+	}
+	return nil
+}

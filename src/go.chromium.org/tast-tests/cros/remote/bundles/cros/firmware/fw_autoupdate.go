@@ -627,6 +627,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
 			s.Fatal("Failed to enable hardware write protect: ", err)
 		}
+		if err := h.GSCResetAfterWPEnable(ctx); err != nil {
+			s.Fatal("Failed to reset GSC after write protect enable: ", err)
+		}
 		testing.ContextLog(ctx, "Rebooting the DUT")
 		// The EC has to reboot to pick up the new WP state
 		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
@@ -882,7 +885,7 @@ func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	}()
 
 	testing.ContextLog(speedometerCtx, "Sleep 120 seconds before running Speedometer")
-	testing.Sleep(speedometerCtx, 120 * time.Second)
+	testing.Sleep(speedometerCtx, 120*time.Second)
 
 	testing.ContextLog(speedometerCtx, "Running speedometer test")
 	sptest, err := speedometerService.PerformSpeedometerTest(speedometerCtx, &empty.Empty{})
