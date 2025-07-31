@@ -230,3 +230,26 @@ func (svc *ChromePrintingService) SubmitJob(ctx context.Context, req *pb.SubmitJ
 
 	return &pb.SubmitJobResponse{JobId: jobResult.JobID}, nil
 }
+
+func (svc *ChromePrintingService) GetJobStatus(ctx context.Context, req *pb.GetJobStatusRequest) (*pb.GetJobStatusResponse, error) {
+	var jobStatus string
+	if err := svc.tconn.Call(ctx, &jobStatus, "tast.promisify(chrome.printing.getJobStatus)", req.JobId); err != nil {
+		return nil, errors.Wrap(err, "failed to call getJobStatus")
+	}
+
+	var jobStatusStringToEnum = map[string]pb.JobStatus{
+		"PENDING":     pb.JobStatus_PENDING,
+		"IN_PROGRESS": pb.JobStatus_IN_PROGRESS,
+		"FAILED":      pb.JobStatus_FAILED,
+		"CANCELED":    pb.JobStatus_CANCELED,
+		"PRINTED":     pb.JobStatus_PRINTED,
+	}
+
+	statusEnum, ok := jobStatusStringToEnum[jobStatus]
+	if !ok {
+		return nil, errors.Wrap(errors.New(jobStatus), "unexpected job status")
+	}
+
+	svc.s.Log("jobStatus: ", statusEnum)
+	return &pb.GetJobStatusResponse{Status: statusEnum}, nil
+}

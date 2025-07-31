@@ -21,8 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromePrintingService,
-		Desc:         "Test the gRPC Tast Service ChromePrintingService",
+		Func:         ChromePrintingServiceSubmitJob,
+		Desc:         "Test the ChromePrintingService submit job workflow",
 		Contacts:     []string{"project-bolton@google.com", "alepgn@google.com"},
 		BugComponent: "b:430578866",
 		Attr: []string{
@@ -40,8 +40,9 @@ func init() {
 
 const androidPDF = "android.pdf"
 
-// ChromePrintingService test all methods implemented by the tast gRPC service 'ChromePrintingService'.
-func ChromePrintingService(ctx context.Context, s *testing.State) {
+// ChromePrintingServiceSubmitJob test the workflow of looking for a printer, submitting a job, and
+// tracking the jobStatus until a terminated state.
+func ChromePrintingServiceSubmitJob(ctx context.Context, s *testing.State) {
 	androidPDFPath := s.DataPath(androidPDF)
 	androidPDFBytes, err := os.ReadFile(androidPDFPath)
 	if err != nil {
@@ -129,10 +130,34 @@ func ChromePrintingService(ctx context.Context, s *testing.State) {
 		},
 	}
 
-	resp, err := svc.SubmitJob(ctx, submitJobRequest)
+	submitJobResp, err := svc.SubmitJob(ctx, submitJobRequest)
 	if err != nil {
 		s.Fatal("Failed to call submitJob: ", err)
 	}
 
-	s.Log("jobId: ", resp.JobId)
+	s.Log("jobId: ", submitJobResp.JobId)
+	getJobStatusReq := &pb.GetJobStatusRequest{JobId: submitJobResp.JobId}
+
+	// Track the status of the job until it reaches a termination status.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		getJobStatusResp, err := svc.GetJobStatus(ctx, getJobStatusReq)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to call getJobStatus"))
+		}
+		s.Log("JobStatus: ", getJobStatusResp.Status)
+		if getJobStatusResp.Status == pb.JobStatus_PRINTED {
+			return nil
+		}
+		if getJobStatusResp.Status == pb.JobStatus_FAILED || getJobStatusResp.Status == pb.JobStatus_CANCELED {
+			return testing.PollBreak(errors.Errorf("jobStatus returned %s status", getJobStatusResp.Status))
+		}
+
+		return errors.New("job is still in progress")
+	}, &testing.PollOptions{
+		// Arbitrary, if the job takes more than one minute we can assume it's stuck.
+		Timeout:  1 * time.Minute,
+		Interval: 3 * time.Second,
+	}); err != nil {
+		s.Fatal("Failed to finish submitJob: ", err)
+	}
 }
