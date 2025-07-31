@@ -815,8 +815,18 @@ func (a *ARC) frozenPackages(ctx context.Context) (map[string]struct{}, error) {
 	return packages, nil
 }
 
+// WaitForPackagesWithTimeout waits for Android packages being installed until the timeout.
+func (a *ARC) WaitForPackagesWithTimeout(ctx context.Context, packages []string, timeout time.Duration) error {
+	return a.waitForPackages(ctx, packages, &testing.PollOptions{Interval: time.Second, Timeout: timeout})
+}
+
 // WaitForPackages waits for Android packages being installed.
 func (a *ARC) WaitForPackages(ctx context.Context, packages []string) error {
+	return a.waitForPackages(ctx, packages, &testing.PollOptions{Interval: time.Second})
+}
+
+// waitForPackages waits for Android packages being installed, with the given poll options.
+func (a *ARC) waitForPackages(ctx context.Context, packages []string, opts *testing.PollOptions) error {
 	ctx, st := timing.Start(ctx, "wait_packages")
 	defer st.End()
 
@@ -854,7 +864,7 @@ func (a *ARC) WaitForPackages(ctx context.Context, packages []string) error {
 				strings.Join(makeList(notInstalledPackages), ", "))
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Second})
+	}, opts)
 }
 
 // State holds the ARC state returned from autotestPrivate.getArcState() call.

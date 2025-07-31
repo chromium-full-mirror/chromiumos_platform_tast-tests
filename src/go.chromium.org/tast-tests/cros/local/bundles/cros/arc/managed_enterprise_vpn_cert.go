@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -61,7 +62,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
+		Timeout:      20 * time.Minute,
 		SoftwareDeps: []string{"android_vm", "chrome", "no_qemu"},
 		VarDeps:      []string{managedEntVpnAccountPoolName},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
@@ -89,7 +90,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		performSecondLoginFlag := s.Param().(managedEntVpnCertTestParam).performSecondLoginFlag
 		cr, a, tconn, err := logInAndStartArc(
-			ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError, performSecondLoginFlag)
+			ctx, s.RequiredVar(managedEntVpnAccountPoolName), s.OutDir(), s.HasError, performSecondLoginFlag, rl.Attempts)
 		if err != nil {
 			return rl.Retry("prepare device for testing", err)
 		}
@@ -97,6 +98,8 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 		defer a.Close(ctx)
 		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), s.HasError)
+		// Dump logcat on error since it gets overwritten by subsequent attempts.
+		defer dumpLogcatOnError(cleanupCtx, a, s.OutDir(), s.HasError, rl.Attempts)
 
 		// Wait for Chrome logs to show ARC Certs installed.
 		s.Log("Waiting for ARC Certs to be installed")
@@ -144,7 +147,7 @@ func ManagedEnterpriseVpnCert(ctx context.Context, s *testing.State) {
 }
 
 // logInAndStartArc logs into the device with credentials from the specified pool and starts ARC.
-func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError func() bool, performSecondLogin bool) (*chrome.Chrome, *arc.ARC, *chrome.TestConn, error) {
+func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError func() bool, performSecondLogin bool, attemptNum int) (*chrome.Chrome, *arc.ARC, *chrome.TestConn, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -188,6 +191,9 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 		return nil, nil, nil, errors.Wrap(err, "failed to start ARC")
 	}
 
+	// Dump logcat on error since it gets overwritten by subsequent attempts.
+	defer dumpLogcatOnError(cleanupCtx, a, outDir, hasError, attemptNum)
+
 	// Wait for Play Store to be ready.
 	testing.ContextLog(ctx, "Waiting for Play Store Ready")
 	if err := optin.WaitForPlayStoreReady(ctx, tconn); err != nil {
@@ -198,7 +204,7 @@ func logInAndStartArc(ctx context.Context, poolName, outDir string, hasError fun
 	packages := []string{vpnPackage}
 	installCtx, cancel := context.WithTimeout(ctx, arcent.InstallTimeout)
 	defer cancel()
-	if err := a.WaitForPackages(installCtx, packages); err != nil {
+	if err := a.WaitForPackagesWithTimeout(installCtx, packages, 5*time.Minute); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to install GlobalProtect")
 	}
 
@@ -411,4 +417,11 @@ func checkForErrorMessage(ctx context.Context, d *ui.Device) error {
 
 	// There was no error message.
 	return nil
+}
+
+func dumpLogcatOnError(ctx context.Context, a *arc.ARC, outDir string, hasError func() bool, attemptNum int) {
+	if hasError() {
+		logcatPath := filepath.Join(outDir, fmt.Sprintf("logcat_attempt_%d.txt", attemptNum))
+		a.DumpLogcat(ctx, logcatPath)
+	}
 }
