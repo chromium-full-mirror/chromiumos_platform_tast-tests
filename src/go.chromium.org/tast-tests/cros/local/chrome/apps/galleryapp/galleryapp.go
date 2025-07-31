@@ -324,12 +324,20 @@ func (g *Gallery) Save() uiauto.Action {
 	saveButton := nodewith.Name("Save").Role(role.Button).Ancestor(RootFinder).Focusable()
 	savingText := nodewith.Name("Saving…").Role(role.StaticText).Ancestor(RootFinder).First()
 	savedText := nodewith.Name("Saved").Role(role.StaticText).Ancestor(RootFinder).First()
-	return uiauto.NamedCombine("save file",
-		ui.LeftClick(saveButton),
-		ui.WaitUntilAnyExists(savingText, savedText),
-		ui.WithTimeout(longUITimeout).WaitUntilGone(savingText),
-		ui.WaitUntilExists(savedText),
-	)
+	return func(ctx context.Context) error {
+		startTime := time.Now()
+		if err := uiauto.NamedCombine("save file",
+			ui.LeftClick(saveButton),
+			ui.WithTimeout(time.Minute).WaitUntilAnyExists(savingText, savedText),
+			ui.WithTimeout(longUITimeout).WaitUntilGone(savingText),
+			ui.WaitUntilExists(savedText),
+		)(ctx); err != nil {
+			return err
+		}
+		saveDuration := time.Since(startTime)
+		testing.ContextLog(ctx, "File save completed in ", saveDuration)
+		return nil
+	}
 }
 
 // WaitUntilSpinnerGone returns a function that waits until the spinner
