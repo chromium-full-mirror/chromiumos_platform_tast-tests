@@ -467,7 +467,9 @@ func checkECWakesFromACReconnected(ctx context.Context, h *firmware.Helper, lidO
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Cr50 goes to sleep during hibernation, and when DUT wakes, CCD state might be locked.
 		// Open CCD before talking to the EC.
-		if err := h.OpenCCD(ctx, true, true); err != nil {
+		shortCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		if err := h.OpenCCD(shortCtx, true, true); err != nil {
 			return errors.Wrap(err, "failed to open CCD")
 		}
 		if _, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`.`}); err != nil {

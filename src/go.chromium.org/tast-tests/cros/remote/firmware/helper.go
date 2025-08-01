@@ -1119,41 +1119,41 @@ func (h *Helper) GetCCDLevel(ctx context.Context) (string, error) {
 	var ccdLevel string
 	if hasCCDLevel {
 		ccdLevel, err = h.Servo.GetStringTimeout(ctx, servo.GSCCCDLevel, 20*time.Second)
-		if err != nil {
-			testing.ContextLog(ctx, "WARNING! failed to get gsc_ccd_level: ", err)
+		if err == nil {
+			return ccdLevel, nil
+		}
+		testing.ContextLog(ctx, "WARNING! failed to get gsc_ccd_level: ", err)
+	}
+	testing.ContextLog(ctx, "WARNING! using ssh to get ccd level")
+
+	if !h.DUT.Connected(ctx) {
+		if err := h.DUT.Connect(ctx); err != nil {
+			return "", errors.Wrap(err, "failed to connect before gsctool")
 		}
 	}
+	out, err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-I").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to run 'gsctool -a -I'")
+	}
 
+	re := regexp.MustCompile(`State:(\s*\w*)`)
+	ccdLevel = re.FindString(string(out))
 	if ccdLevel == "" {
-		if !h.DUT.Connected(ctx) {
-			if err := h.DUT.Connect(ctx); err != nil {
-				return "", errors.Wrap(err, "failed to connect before gsctool")
-			}
-		}
-		out, err := h.DUT.Conn().CommandContext(ctx, "gsctool", "-a", "-I").Output(ssh.DumpLogOnError)
-		if err != nil {
-			return "", errors.Wrap(err, "failed to run 'gsctool -a -I'")
-		}
+		return "", errors.New("unable to tell ccd level")
+	}
+	levelSplit := strings.Split(string(ccdLevel), " ")
+	ccdLevel = levelSplit[1]
 
-		re := regexp.MustCompile(`State:(\s*\w*)`)
-		ccdLevel = re.FindString(string(out))
-		if ccdLevel == "" {
-			return "", errors.New("unable to tell ccd level")
-		}
-		levelSplit := strings.Split(string(ccdLevel), " ")
-		ccdLevel = levelSplit[1]
-
-		// Match the gsctool string output with the ones defined for servo.
-		switch ccdLevel {
-		case "Locked":
-			ccdLevel = servo.Lock
-		case "Opened":
-			ccdLevel = servo.Open
-		case "Unlocked":
-			ccdLevel = servo.Unlock
-		default:
-			return "", errors.New("unhandled ccd level, found " + ccdLevel)
-		}
+	// Match the gsctool string output with the ones defined for servo.
+	switch ccdLevel {
+	case "Locked":
+		ccdLevel = servo.Lock
+	case "Opened":
+		ccdLevel = servo.Open
+	case "Unlocked":
+		ccdLevel = servo.Unlock
+	default:
+		return "", errors.New("unhandled ccd level, found " + ccdLevel)
 	}
 
 	return ccdLevel, nil
