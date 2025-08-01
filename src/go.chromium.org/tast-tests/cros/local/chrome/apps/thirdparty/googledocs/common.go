@@ -112,6 +112,7 @@ func reloadIfLoadingIssueDialogAppears(ui *uiauto.Context, webArea *nodewith.Fin
 		ui.DoDefault(reloadNowButton),
 		ui.WaitUntilGone(reloadNowButton),
 		ui.WithTimeout(time.Minute).WaitUntilExists(menuBar),
+		ui.EnsureGoneFor(loadingIssueDialog, 5*time.Second),
 	)
-	return uiauto.IfSuccessThen(ui.Exists(loadingIssueDialog), reloadPage)
+	return uiauto.Retry(3, uiauto.IfSuccessThen(ui.Exists(loadingIssueDialog), reloadPage))
 }
