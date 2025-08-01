@@ -20,6 +20,11 @@ service ChromePrintingService {
   // doesn't exist, otherwise returns the status of the job.
   rpc GetJobStatus(GetJobStatusRequest) returns (GetJobStatusResponse) {}
 
+  // CancelJob calls the chrome.printing.CancelJob(jobId) to cancel a submitted
+  // job. It takes the jobId returned by SubmitJob, returns an error if there
+  // are no active print jobs with the given jobId.
+  rpc CancelJob(CancelJobRequest) returns (google.protobuf.Empty) {}
+
   // Close releases the Chrome instance initialized after calling any other
   // ChromePrintingService method.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -145,3 +150,5 @@ enum JobStatus {
   CANCELED = 4;
   PRINTED = 5;
 }
+
+message CancelJobRequest { string jobId = 1; }

@@ -253,3 +253,10 @@ func (svc *ChromePrintingService) GetJobStatus(ctx context.Context, req *pb.GetJ
 	svc.s.Log("jobStatus: ", statusEnum)
 	return &pb.GetJobStatusResponse{Status: statusEnum}, nil
 }
+
+func (svc *ChromePrintingService) CancelJob(ctx context.Context, req *pb.CancelJobRequest) (*emptypb.Empty, error) {
+	if err := svc.tconn.Call(ctx, nil, "tast.promisify(chrome.printing.cancelJob)", req.JobId); err != nil {
+		return nil, errors.Wrap(err, "failed to call cancelJob")
+	}
+	return &emptypb.Empty{}, nil
+}

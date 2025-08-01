@@ -20,29 +20,23 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ChromePrintingServiceSubmitJob,
-		Desc:         "Test the ChromePrintingService submit job workflow",
+		Func:         ChromePrintingServiceCancelJob,
+		Desc:         "Test the ChromePrintingService submit job and canceling a job workflow",
 		Contacts:     []string{"project-bolton@google.com", "alepgn@google.com"},
-		BugComponent: "b:430578866",
-		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:paper-io",
-			"paper-io_printing",
-		},
-		Data:         []string{androidPDF},
+		BugComponent: "b:167231",
+		Data:         []string{cancelAndroidPDF},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.printer.ChromePrintingService"},
 		Vars:         []string{"printer.targetPrinterName"},
 	})
 }
 
-const androidPDF = "android.pdf"
+const cancelAndroidPDF = "android.pdf"
 
-// ChromePrintingServiceSubmitJob test the workflow of looking for a printer, submitting a job, and
-// tracking the jobStatus until a terminated state.
-func ChromePrintingServiceSubmitJob(ctx context.Context, s *testing.State) {
-	androidPDFPath := s.DataPath(androidPDF)
+// ChromePrintingServiceCancelJob test the workflow of looking for a printer, submitting a job,
+// canceling the job and tracking the jobStatus until it is cancelled.
+func ChromePrintingServiceCancelJob(ctx context.Context, s *testing.State) {
+	androidPDFPath := s.DataPath(cancelAndroidPDF)
 	androidPDFBytes, err := os.ReadFile(androidPDFPath)
 	if err != nil {
 		s.Fatal("Failed to read android PDF")
@@ -97,28 +91,35 @@ func ChromePrintingServiceSubmitJob(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("jobId: ", submitJobResp.JobId)
+	// Get the initial job status
 	getJobStatusReq := &pb.GetJobStatusRequest{JobId: submitJobResp.JobId}
+	initialStatusResponse, err := svc.GetJobStatus(ctx, getJobStatusReq)
+	if err != nil {
+		s.Fatal("Failed to call getJobStatus: ", err)
+	}
+	s.Log("Initial Job Status: ", initialStatusResponse.Status)
 
-	// Track the status of the job until it reaches a termination status.
+	// Cancel the job
+	if _, err := svc.CancelJob(ctx, &pb.CancelJobRequest{JobId: submitJobResp.JobId}); err != nil {
+		s.Fatal("Failed to call cancelJob: ", err)
+	}
+	// Track the status until it changes to canceled or times out.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		getJobStatusResp, err := svc.GetJobStatus(ctx, getJobStatusReq)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to call getJobStatus"))
 		}
 		s.Log("JobStatus: ", getJobStatusResp.Status)
-		if getJobStatusResp.Status == pb.JobStatus_PRINTED {
+		if getJobStatusResp.Status == pb.JobStatus_CANCELED {
 			return nil
 		}
-		if getJobStatusResp.Status == pb.JobStatus_FAILED || getJobStatusResp.Status == pb.JobStatus_CANCELED {
-			return testing.PollBreak(errors.Errorf("jobStatus returned %s status", getJobStatusResp.Status))
-		}
 
-		return errors.New("job is still in progress")
+		return errors.New("job status is not canceled")
 	}, &testing.PollOptions{
 		// Arbitrary, if the job takes more than one minute we can assume it's stuck.
 		Timeout:  1 * time.Minute,
 		Interval: 3 * time.Second,
 	}); err != nil {
-		s.Fatal("Failed to finish submitJob: ", err)
+		s.Fatal("Failed to cancel job: ", err)
 	}
 }
