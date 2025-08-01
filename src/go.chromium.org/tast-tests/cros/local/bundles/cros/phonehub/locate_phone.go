@@ -36,6 +36,7 @@ func init() {
 				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
 				ExtraAttr:         []string{"cross-device_cq"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
+				ExtraSoftwareDeps: []string{"gaia"},
 			},
 			{
 				Name:              "unstable",
