@@ -32,6 +32,9 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Fixture: "arcBooted",
+		}, {
+			Name:    "root_ns",
+			Fixture: "arcBootedWithRootNsDnsProxy",
 		}},
 	})
 }

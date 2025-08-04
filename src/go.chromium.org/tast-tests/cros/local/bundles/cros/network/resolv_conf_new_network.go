@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -46,6 +47,14 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
+			Name: "root_ns_low_priority",
+			Val: resolvConfNewNetworkTestParams{
+				priority:        dns.LowPriority,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational"},
+		}, {
 			Name: "high_priority_proxy_disabled",
 			Val: resolvConfNewNetworkTestParams{
 				priority: dns.HighPriority,
@@ -58,6 +67,14 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "root_ns_high_priority",
+			Val: resolvConfNewNetworkTestParams{
+				priority:        dns.HighPriority,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "vpn_proxy_disabled",
 			Val: resolvConfNewNetworkTestParams{
@@ -73,6 +90,15 @@ func init() {
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
+		}, {
+			Name: "root_ns_vpn",
+			Val: resolvConfNewNetworkTestParams{
+				priority:        dns.HighPriority,
+				vpn:             true,
+				dnsProxyEnabled: true,
+			},
+			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
