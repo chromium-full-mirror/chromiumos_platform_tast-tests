@@ -106,6 +106,7 @@ func init() {
 				// Guybrush
 				"nipperkin",
 				//Nirva,
+				"ruken",
 				"telithn50",
 				"telticn50",
 				// Nissa
