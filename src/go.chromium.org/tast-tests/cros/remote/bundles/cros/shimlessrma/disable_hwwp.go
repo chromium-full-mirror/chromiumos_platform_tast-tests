@@ -302,7 +302,7 @@ func setAllowUnverifiedRoToAlways(ctx context.Context, firmwareHelper *firmware.
 		if !forceReboot {
 			return nil
 		}
-		return servoutil.RebootGSC(ctx, firmwareHelper)
+		return firmwareHelper.DUT.Reboot(ctx)
 	}
 
 	// Wait rmad for leaving factory mode.
