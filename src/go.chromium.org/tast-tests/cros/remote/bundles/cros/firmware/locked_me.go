@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 
 	"go.chromium.org/tast/core/ssh"
@@ -37,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoPresent},
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw"},
 		SoftwareDeps: []string{"flashrom"},
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),

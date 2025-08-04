@@ -49,7 +49,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
 		Attr:         []string{"group:intel-cswitch-set1"},
 		Vars:         []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Params: []testing.Param{{
 			Name:    "usb2_warmboot",
 			Val:     usbTypeATestParam{warmboot, "480M", 0, "4"},

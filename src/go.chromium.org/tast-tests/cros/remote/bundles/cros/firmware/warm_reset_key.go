@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -20,9 +21,9 @@ func init() {
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:167186", // ChromeOS > Platform > baseOS > Firmware > AP
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:    []string{"group:firmware", "firmware_unstable"},
-		Fixture: fixture.NormalMode,
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_unstable"},
+		Fixture:     fixture.NormalMode,
 	})
 }
 

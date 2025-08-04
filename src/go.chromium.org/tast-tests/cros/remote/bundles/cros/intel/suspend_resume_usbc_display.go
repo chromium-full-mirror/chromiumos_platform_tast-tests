@@ -34,7 +34,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Attr:         []string{"group:intel-type-c-display"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Timeout:      8 * time.Minute,
 	})
 }

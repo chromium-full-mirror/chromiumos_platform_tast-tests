@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.security.BootLockboxService"},
 		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.NormalMode,

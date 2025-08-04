@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -24,8 +25,8 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr: []string{"group:firmware", "firmware_ec", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_ec", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// b/183899510: icarus boards reserve half of the flash for saving EC logs, and therefore report the wrong size via ectool
 			"cozmo", "pico", "pico6",

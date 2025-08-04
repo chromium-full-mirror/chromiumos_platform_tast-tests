@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
@@ -32,7 +33,7 @@ func init() {
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoPresent},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.power.BatteryService",

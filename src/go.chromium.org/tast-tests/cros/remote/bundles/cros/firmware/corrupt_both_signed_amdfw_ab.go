@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	rbios "go.chromium.org/tast-tests/cros/remote/firmware/bios"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/dut"
@@ -27,8 +28,8 @@ func init() {
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr: []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// AMD devices before skyrim don't have the separate signed AMDFW section.
 			// grunt

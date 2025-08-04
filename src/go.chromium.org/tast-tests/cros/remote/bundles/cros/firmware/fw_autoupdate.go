@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -48,7 +49,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoPresent},
 		Vars:         []string{"firmware.apro", "firmware.aprw", "firmware.ecro", "firmware.ecrw"},
 		Timeout:      2 * time.Hour,
 		Fixture:      fixture.NormalMode,

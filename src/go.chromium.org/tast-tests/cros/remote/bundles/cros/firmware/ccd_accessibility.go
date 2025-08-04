@@ -10,6 +10,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -27,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		// TODO(b/240649924): Add this test to some GSC suite, or delete it.
 		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART()),

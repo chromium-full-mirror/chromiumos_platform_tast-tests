@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:1296600", // Chrome Operations > Fleet > ChromeOS Fleet Reliability
 		Fixture:      fixture.NormalMode,
 		VarDeps:      []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 	})
 }
 

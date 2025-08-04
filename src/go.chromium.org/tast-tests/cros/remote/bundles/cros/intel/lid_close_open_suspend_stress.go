@@ -27,7 +27,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo", "intel.LidCloseOpenSuspendStress.iterations"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.X86()),
 		Timeout:      1 * time.Hour,
 	})

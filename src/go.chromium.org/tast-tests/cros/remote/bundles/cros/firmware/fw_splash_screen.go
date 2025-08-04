@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -23,10 +24,10 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		HardwareDeps: hwdep.D(hwdep.FirmwareSplashScreen()),
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr:    []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
-		Fixture: fixture.NormalMode,
-		Timeout: 5 * time.Minute,
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		Fixture:     fixture.NormalMode,
+		Timeout:     5 * time.Minute,
 	})
 }
 

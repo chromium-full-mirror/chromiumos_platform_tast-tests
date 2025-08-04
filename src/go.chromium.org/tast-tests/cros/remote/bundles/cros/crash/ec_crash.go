@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
@@ -39,7 +40,7 @@ func init() {
 		},
 		BugComponent: "b:167114",
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		Attr:        []string{"group:mainline", "informational", "group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		Timeout:     10 * time.Minute,
 		Fixture:     fixture.NormalMode,

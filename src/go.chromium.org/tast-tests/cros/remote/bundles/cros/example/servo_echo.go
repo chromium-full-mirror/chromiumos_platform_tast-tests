@@ -20,7 +20,7 @@ func init() {
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "informational"},
 		VarDeps:      []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 	})
 }
 

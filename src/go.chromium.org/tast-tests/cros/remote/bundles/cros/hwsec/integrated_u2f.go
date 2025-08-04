@@ -53,13 +53,13 @@ func init() {
 			ExtraSoftwareDeps: []string{"no_tpm2_simulator"},
 			Val:               integratedU2fParam{isSimulator: false},
 			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-			// ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
+			ExtraTestBedDeps: []string{tbdep.ServoPresent},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
 			ExtraSoftwareDeps: []string{"tpm2_simulator"},
 			Val:               integratedU2fParam{isSimulator: true},
-			ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+			ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 		}},
 		Timeout: 10 * time.Minute,
 	})

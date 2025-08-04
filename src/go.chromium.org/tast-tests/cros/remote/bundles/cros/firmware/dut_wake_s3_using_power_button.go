@@ -39,7 +39,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:         []string{"group:intel-sleep"},

@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		SoftwareDeps: []string{"crossystem"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		Params: []testing.Param{{
 			Name:      "normal",
 			Val:       fixtureParams{expectedMode: common.BootModeNormal},

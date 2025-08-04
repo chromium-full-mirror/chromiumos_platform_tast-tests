@@ -19,6 +19,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -41,7 +42,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"firmware.suspendStressFailFast", "firmware.suspendStressIters"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoPresent},
 		Attr:         []string{"group:firmware", "group:dsp"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.firmware.TPMService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),

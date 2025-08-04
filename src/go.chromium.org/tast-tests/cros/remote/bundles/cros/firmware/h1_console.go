@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -24,7 +25,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  []string{tbdep.ServoPresent},
 		HardwareDeps: hwdep.D(hwdep.GSCUART()),
 	})
 }

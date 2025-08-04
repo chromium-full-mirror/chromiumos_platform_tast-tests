@@ -12,6 +12,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -32,8 +33,8 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
-		Attr: []string{"group:firmware", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw", "firmware_cr50", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw", "firmware_cr50", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		// Don't run on EFS1 devices (fizz & kalista), there is a test firmware.ECUpdateID that tests those.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnPlatform("fizz", "kalista")),
 		Timeout:      15 * time.Minute,

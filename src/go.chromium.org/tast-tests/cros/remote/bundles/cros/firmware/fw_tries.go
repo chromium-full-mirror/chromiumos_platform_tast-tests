@@ -8,6 +8,7 @@ import (
 	"context"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
@@ -27,7 +28,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Vars:         []string{"servo"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		Params: []testing.Param{
 			testing.Param{
 				Name:      "normal",

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -42,7 +43,7 @@ func init() {
 		Timeout: 8 * time.Minute,
 		Vars:    []string{"servo"},
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		//TestBedDeps: []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesRebootECAP{

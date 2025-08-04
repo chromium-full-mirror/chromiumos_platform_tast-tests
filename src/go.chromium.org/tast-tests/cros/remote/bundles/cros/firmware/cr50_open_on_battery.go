@@ -11,6 +11,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	FwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -31,7 +32,7 @@ func init() {
 		Contacts:     []string{"chromeos-faft@google.com", "tj@semihalf.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		// TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps: []string{tbdep.ServoPresent},
 		// TODO: When stable, change firmware_unstable to a different attr.
 		// TODO(b/194908238): This test never passes, when it does add firmware_unstable for stability testing.
 		Attr:         []string{"group:firmware"},
