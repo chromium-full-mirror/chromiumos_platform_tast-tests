@@ -256,6 +256,10 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if err := h.ReturnToDeveloperScreen(ctx); err != nil {
+		s.Fatal("Failed to return to developer screen: ", err)
+	}
+
 	if testOpt.enableDevBootUSB && !testOpt.setUpValidUSB {
 		// Verify that Ctrl-U doesn't boot up the DUT from the USB.
 		testing.ContextLog(ctx, "Pressing Ctrl-U")
