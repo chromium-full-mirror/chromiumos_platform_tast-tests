@@ -39,7 +39,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		Vars:         []string{"servo", "newTestItem"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Data:         []string{"Capabilities.json"},
 		Fixture:      "wwcb.dock",
 		Timeout:      utils.TestingTimeout,

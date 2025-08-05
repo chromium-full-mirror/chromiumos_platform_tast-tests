@@ -44,7 +44,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		VarDeps:      []string{"servo", "typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 
 		Params: []testing.Param{{
 			Name: "tbt_dock",

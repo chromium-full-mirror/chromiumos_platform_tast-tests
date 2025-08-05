@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Verify that when suspending with an external storage device connected, upon device wake-up, it can correctly copy files",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{
+		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
 			"pasit_storage",
@@ -41,7 +41,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.ui.ChromeUIService"},
 		Data:         []string{"sample.txt"},

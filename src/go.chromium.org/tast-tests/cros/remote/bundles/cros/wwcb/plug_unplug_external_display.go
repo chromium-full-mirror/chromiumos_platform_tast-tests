@@ -40,7 +40,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      "wwcb.dock",
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",

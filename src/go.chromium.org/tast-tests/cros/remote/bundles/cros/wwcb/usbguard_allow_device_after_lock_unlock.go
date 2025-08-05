@@ -36,7 +36,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      "wwcb.storage",
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Timeout:      10 * time.Minute,

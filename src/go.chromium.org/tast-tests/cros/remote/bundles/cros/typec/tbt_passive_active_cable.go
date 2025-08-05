@@ -43,7 +43,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		Data:         []string{"test_config.json", "testcert.p12"},
 		Vars:         []string{"servo", "typec.cSwitchPort", "typec.dutTbtPort", "typec.domainIP"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		// TODO(b/207569436): Define hardware dependency and get rid of hard-coding the models.
 		HardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel", "redrix", "brya")),
 		Params: []testing.Param{{

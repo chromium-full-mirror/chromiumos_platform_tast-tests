@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.SkipOnModel("fievel", "habokay", "tiger"), hwdep.ChromeEC()),
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      "typeCServo",
 	})
 }

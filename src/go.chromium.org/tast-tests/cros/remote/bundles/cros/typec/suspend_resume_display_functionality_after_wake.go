@@ -41,7 +41,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12", "1080p_60fps_600frames.vp8.webm", "video.html", "test_config.json", "playback.js"},
 		VarDeps:      []string{"servo", "typec.dutTbtPort", "typec.cSwitchPort", "typec.domainIP"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		HardwareDeps: hwdep.D(setup.ThunderboltSupportedDevices()),
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{{

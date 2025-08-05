@@ -45,7 +45,7 @@ func init() {
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"servo"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Params: []testing.Param{
 			{
 				Val:               timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},

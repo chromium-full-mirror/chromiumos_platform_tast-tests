@@ -99,7 +99,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_dock"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "newTestItem"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Data:         []string{"Capabilities.json"},
 		Fixture:      "wwcb.dock",
 		ServiceDeps: []string{

@@ -31,7 +31,7 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit", "pasit_pd"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "USBTypeCID"},
-		TestBedDeps:  []string{tbdep.ServoStateWorking},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
