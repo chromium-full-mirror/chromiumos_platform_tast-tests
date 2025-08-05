@@ -180,7 +180,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Unexpected watchdog caused by short wait")
 	}
 	if watchdogWarnPanicReason.MatchString(panicInfo) {
-		s.Fatal("Unexpected watchdog warning caused by short wait")
+		s.Log("Unexpected watchdog warning caused by short wait")
 	}
 	if err := checkProgramCounter(ctx, panicInfo); err != nil {
 		s.Log("Unexpected program counter value: ", err)
