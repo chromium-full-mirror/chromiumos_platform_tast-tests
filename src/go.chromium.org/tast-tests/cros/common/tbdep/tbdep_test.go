@@ -406,18 +406,18 @@ func TestSimpleDeps(t *testing.T) {
 			"servo_component:servo_v4",
 		},
 		{
-			"ServoState(BROKEN)",
+			"servoState(WORKING)",
 			func() string {
-				return ServoState("BROKEN")
+				return servoState("WORKING")
 			},
-			"servo_state:BROKEN",
+			"servo_state:WORKING",
 		},
 		{
 			"ServoTopology(<val>)",
 			func() string {
-				return ServoState("eyJtYWluIjp7InR5cGUiOiJzZXJ2b192NCIsInN5c2ZzX3Byb2R1Y3QiOiJTZXJ2byBWNCIsInNlcmlhbCI6IkMxOTAzMTQ1NTkxIiwidXNiX2h1Yl9wb3J0IjoiNi40LjEifSwiY2hpbGRyZW4iOlt7InR5cGUiOiJjY2RfY3I1MCIsInN5c2ZzX3Byb2R1Y3QiOiJDcjUwIiwic2VyaWFsIjoiMDY4MUQwM0EtOTJEQ0NENjQiLCJ1c2JfaHViX3BvcnQiOiI2LjQuMiJ9XX0")
+				return ServoTopology("eyJtYWluIjp7InR5cGUiOiJzZXJ2b192NCIsInN5c2ZzX3Byb2R1Y3QiOiJTZXJ2byBWNCIsInNlcmlhbCI6IkMxOTAzMTQ1NTkxIiwidXNiX2h1Yl9wb3J0IjoiNi40LjEifSwiY2hpbGRyZW4iOlt7InR5cGUiOiJjY2RfY3I1MCIsInN5c2ZzX3Byb2R1Y3QiOiJDcjUwIiwic2VyaWFsIjoiMDY4MUQwM0EtOTJEQ0NENjQiLCJ1c2JfaHViX3BvcnQiOiI2LjQuMiJ9XX0")
 			},
-			"servo_state:eyJtYWluIjp7InR5cGUiOiJzZXJ2b192NCIsInN5c2ZzX3Byb2R1Y3QiOiJTZXJ2byBWNCIsInNlcmlhbCI6IkMxOTAzMTQ1NTkxIiwidXNiX2h1Yl9wb3J0IjoiNi40LjEifSwiY2hpbGRyZW4iOlt7InR5cGUiOiJjY2RfY3I1MCIsInN5c2ZzX3Byb2R1Y3QiOiJDcjUwIiwic2VyaWFsIjoiMDY4MUQwM0EtOTJEQ0NENjQiLCJ1c2JfaHViX3BvcnQiOiI2LjQuMiJ9XX0",
+			"servo_topology:eyJtYWluIjp7InR5cGUiOiJzZXJ2b192NCIsInN5c2ZzX3Byb2R1Y3QiOiJTZXJ2byBWNCIsInNlcmlhbCI6IkMxOTAzMTQ1NTkxIiwidXNiX2h1Yl9wb3J0IjoiNi40LjEifSwiY2hpbGRyZW4iOlt7InR5cGUiOiJjY2RfY3I1MCIsInN5c2ZzX3Byb2R1Y3QiOiJDcjUwIiwic2VyaWFsIjoiMDY4MUQwM0EtOTJEQ0NENjQiLCJ1c2JfaHViX3BvcnQiOiI2LjQuMiJ9XX0",
 		},
 		{
 			"ServoType(servo_v3)",

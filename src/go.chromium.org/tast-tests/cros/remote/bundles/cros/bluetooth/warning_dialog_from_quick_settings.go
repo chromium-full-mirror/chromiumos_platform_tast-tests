@@ -34,8 +34,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		BugComponent:   "b:1131776", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Bluetooth
 		Attr:           []string{"group:bluetooth"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.BluetoothStateNormal,
-			tbdep.ServoPresent, tbdep.ServoStateWorking, tbdep.WorkingBluetoothPeers(2)},
+		TestBedDeps: append([]string{tbdep.Wificell, tbdep.BluetoothStateNormal,
+			tbdep.WorkingBluetoothPeers(2)}, tbdep.ServoPresentAndWorking...),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",

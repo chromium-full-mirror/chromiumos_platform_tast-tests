@@ -151,14 +151,11 @@ var (
 	// with the NORMAL state.
 	BluetoothStateNormal = BluetoothState("NORMAL")
 
-	// ServoStateWorking is a shortcut for calling ServoState with the WORKING state.
-	ServoStateWorking = ServoState("WORKING")
-
 	// ServoPresent indicates that the servo is present, but doesn't tell you if it is healthy.
 	ServoPresent = keyValueDep("servo_deployed", "True")
 
 	// ServoPresentAndWorking is both ServoPresent and servo healthy.
-	ServoPresentAndWorking = []string{ServoPresent, ServoStateWorking}
+	ServoPresentAndWorking = []string{ServoPresent, servoState("WORKING")}
 )
 
 // keyValueDep returns a formatted a dependency with key depKey and an optional
@@ -460,9 +457,9 @@ func ServoComponent(servoComponent string) string {
 	return keyValueDep("servo_component", servoComponent)
 }
 
-// ServoState returns a "servo_state" dependency with the given PeripheralState
+// servoState returns a "servo_state" dependency with the given PeripheralState
 // value.
-func ServoState(peripheralState string) string {
+func servoState(peripheralState string) string {
 	return keyValueDep("servo_state", peripheralState)
 }
 

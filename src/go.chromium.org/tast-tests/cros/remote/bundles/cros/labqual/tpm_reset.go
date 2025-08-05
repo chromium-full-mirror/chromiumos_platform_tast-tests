@@ -29,7 +29,7 @@ func init() {
 			},
 		},
 		VarDeps:     []string{"servo"},
-		TestBedDeps: []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoPresent, tbdep.ServoStateWorking},
+		TestBedDeps: append([]string{tbdep.ServoUSBState("NORMAL")}, tbdep.ServoPresentAndWorking...),
 	})
 }
 
