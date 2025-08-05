@@ -82,6 +82,7 @@ var unsupportedModel = []string{
 	"krane", "kakadu", "kodama", "katsu", // kukui
 	"coachz", "homestar", "mrbland", "wormdingler", "quackingstick", // strongbad
 	"rex4es", "screebo4es", "rex", // rex es
+	"voema", // volteer (b/436205097)
 }
 
 func init() {
