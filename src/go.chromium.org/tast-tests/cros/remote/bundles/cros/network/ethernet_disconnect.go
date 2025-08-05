@@ -46,7 +46,7 @@ func init() {
 		Attr:           []string{"group:network", "network_e2e_unstable"},
 		// The servo_v4p1 is required to use the servo.OnOff() API with servo.DutEthPwrEn.
 		// See b/359743894 for more details.
-		TestBedDeps:  []string{tbdep.ServoStateWorking, tbdep.ServoComponent("servo_v4p1")},
+		TestBedDeps:  []string{tbdep.ServoPresent, tbdep.ServoStateWorking, tbdep.ServoComponent("servo_v4p1")},
 		VarDeps:      []string{"servo"},
 		SoftwareDeps: []string{"reboot"},
 		ServiceDeps: []string{

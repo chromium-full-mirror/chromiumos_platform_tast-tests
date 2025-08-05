@@ -33,7 +33,7 @@ func init() {
 			},
 		},
 		VarDeps:     []string{"servo"},
-		TestBedDeps: []string{tbdep.ServoStateWorking},
+		TestBedDeps: tbdep.ServoPresentAndWorking,
 	})
 }
 

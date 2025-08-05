@@ -205,7 +205,7 @@ func init() {
 			},
 		},
 		Vars:        []string{"servo", "subtest", "meta.PowerServodWrapper.interval"},
-		TestBedDeps: []string{tbdep.ServoStateWorking},
+		TestBedDeps: tbdep.ServoPresentAndWorking,
 		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService",
 			"tast.cros.power.BatteryService"},
 	})

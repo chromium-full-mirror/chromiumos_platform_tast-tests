@@ -108,7 +108,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
-				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 			{
 				Name:              "from_g3",
@@ -116,7 +116,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
-				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 			{
 				Name:              "from_s5",
@@ -125,7 +125,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
-				ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 			// Variants of each test case that checks against defined bounds
 			{
@@ -138,7 +138,7 @@ func init() {
 				Val:       bootPerfWarmReboot,
 				ExtraAttr: []string{"group:firmware", "firmware_unstable"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				// ExtraTestBedDeps: []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
 			{
 				Name:              "fw_qual_ec_reboot",
@@ -147,7 +147,7 @@ func init() {
 				Val:               bootPerfEcReboot,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				// ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
 			{
 				Name:              "fw_qual_from_g3",
@@ -156,7 +156,7 @@ func init() {
 				Val:               bootPerfFromG3,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				// ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
 			{
 				Name:              "fw_qual_from_s5",
@@ -166,7 +166,7 @@ func init() {
 				Val:               bootPerfFromS5,
 				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				// ExtraTestBedDeps:  []string{tbdep.ServoStateWorking},
+				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
 		},
 
