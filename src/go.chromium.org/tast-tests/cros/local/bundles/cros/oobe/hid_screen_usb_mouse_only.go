@@ -33,7 +33,7 @@ func init() {
 		Attr:            []string{"group:cr_oobe", "cr_oobe_chromebox_chromebase"},
 		SoftwareDeps:    []string{"chrome"},
 		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
-		TestBedDeps:     []string{tbdep.ServoStateWorking},
+		TestBedDeps:     tbdep.ServoPresentAndWorking,
 		Fixture:         "chromeEnterOobeHidDetectionServoOff",
 		Timeout:         time.Second * 60,
 		VariantCategory: `{"name": "Formfactor:Every_Chromebox"}`,
