@@ -34,7 +34,7 @@ func init() {
 			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
-		Fixture: fixture.SystemDevboard,
+		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "dbg_crash",
 			Val: testUpdateRollbackConfig{
@@ -158,6 +158,7 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	}
 
 	earlyPrint := false
+	rollbackDetected := false
 	lastResetCount := uint32(0)
 	for attempt := 0; attempt < 10; attempt++ {
 		// Give the device a little more time than normal to reboot since we are
@@ -182,6 +183,7 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		lastResetCount = sysinfo.ResetCount
 
 		if sysinfo.RollbackDetected {
+			rollbackDetected = true
 			if version.ActiveRw().Version == targetVer.String() {
 				break
 			}
@@ -219,7 +221,13 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Reset count after %s commands: %d", config.cmd, lastResetCount)
-	if lastResetCount < 5 || lastResetCount > 8 {
+	if !rollbackDetected {
+		if b.TestbedType != ti50.GscH1Shield && config.invalidateRW {
+			s.Logf("%s command: invalidRW: Ti50 still responsive after %d resets", config.cmd, lastResetCount)
+		} else {
+			s.Errorf("%s command: did not detect rollback after %d resets ", config.cmd, lastResetCount)
+		}
+	} else if lastResetCount < 5 || lastResetCount > 8 {
 		s.Errorf("%s command: Reset count %d out of range", config.cmd, lastResetCount)
 	}
 	if earlyPrint {
