@@ -24,12 +24,6 @@ func init() {
 		Desc:         "Test the ChromePrintingService submit job workflow",
 		Contacts:     []string{"project-bolton@google.com", "alepgn@google.com"},
 		BugComponent: "b:430578866",
-		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:paper-io",
-			"paper-io_printing",
-		},
 		Data:         []string{androidPDF},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.printer.ChromePrintingService"},

@@ -3,6 +3,7 @@ syntax = "proto3";
 package tast.cros.printer;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/printer";
 
@@ -24,6 +25,13 @@ service ChromePrintingService {
   // job. It takes the jobId returned by SubmitJob, returns an error if there
   // are no active print jobs with the given jobId.
   rpc CancelJob(CancelJobRequest) returns (google.protobuf.Empty) {}
+
+  // GetPrinterInfo retrieves the capabilities and status for a specified
+  // printer.
+  //
+  // Takes a GetPrinterInfoRequest containing the printer's ID and returns a
+  // GetPrinterInfoResponse with its printer status and capabilities.
+  rpc GetPrinterInfo(GetPrinterInfoRequest) returns (GetPrinterInfoResponse) {}
 
   // Close releases the Chrome instance initialized after calling any other
   // ChromePrintingService method.
@@ -152,3 +160,32 @@ enum JobStatus {
 }
 
 message CancelJobRequest { string jobId = 1; }
+
+message GetPrinterInfoRequest { string printerId = 1; }
+
+message GetPrinterInfoResponse {
+  Capabilities capabilities = 1;
+  PrinterStatus status = 2;
+}
+
+message Capabilities {
+  string version = 1;
+  google.protobuf.Struct printer = 2;
+}
+
+// See Chrome Printing API PrinterStatus:
+// https://developer.chrome.com/docs/extensions/reference/api/printing#type-PrinterStatus
+enum PrinterStatus {
+  PRINTER_STATUS_UNKNOWN = 0;
+  PRINTER_STATUS_AVAILABLE = 1;
+  PRINTER_STATUS_DOOR_OPEN = 2;
+  PRINTER_STATUS_TRAY_MISSING = 3;
+  PRINTER_STATUS_OUT_OF_INK = 4;
+  PRINTER_STATUS_OUT_OF_PAPER = 5;
+  PRINTER_STATUS_OUTPUT_FULL = 6;
+  PRINTER_STATUS_PAPER_JAM = 7;
+  PRINTER_STATUS_STOPPED = 8;
+  PRINTER_STATUS_GENERIC_ISSUE = 9;
+  PRINTER_STATUS_UNREACHABLE = 10;
+  PRINTER_STATUS_EXPIRED_CERTIFICATE = 11;
+}

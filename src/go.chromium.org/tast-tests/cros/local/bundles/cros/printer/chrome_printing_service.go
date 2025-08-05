@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func init() {
@@ -259,4 +260,50 @@ func (svc *ChromePrintingService) CancelJob(ctx context.Context, req *pb.CancelJ
 		return nil, errors.Wrap(err, "failed to call cancelJob")
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (svc *ChromePrintingService) GetPrinterInfo(ctx context.Context, req *pb.GetPrinterInfoRequest) (*pb.GetPrinterInfoResponse, error) {
+	var info struct {
+		Capabilities struct {
+			Version string
+			Printer map[string]interface{}
+		}
+		Status string
+	}
+
+	if err := svc.tconn.Call(ctx, &info, "tast.promisify(chrome.printing.getPrinterInfo)", req.PrinterId); err != nil {
+		return nil, errors.Wrap(err, "failed to call getPrinterInfo")
+	}
+	svc.s.Log("Printer info: ", info)
+	printerStruct, err := structpb.NewStruct(info.Capabilities.Printer)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new printerStruct")
+	}
+
+	var printerStatusStringToEnum = map[string]pb.PrinterStatus{
+		"AVAILABLE":           pb.PrinterStatus_PRINTER_STATUS_AVAILABLE,
+		"DOOR_OPEN":           pb.PrinterStatus_PRINTER_STATUS_DOOR_OPEN,
+		"TRAY_MISSING":        pb.PrinterStatus_PRINTER_STATUS_TRAY_MISSING,
+		"OUT_OF_INK":          pb.PrinterStatus_PRINTER_STATUS_OUT_OF_INK,
+		"OUT_OF_PAPER":        pb.PrinterStatus_PRINTER_STATUS_OUT_OF_PAPER,
+		"OUTPUT_FULL":         pb.PrinterStatus_PRINTER_STATUS_OUTPUT_FULL,
+		"PAPER_JAM":           pb.PrinterStatus_PRINTER_STATUS_PAPER_JAM,
+		"STOPPED":             pb.PrinterStatus_PRINTER_STATUS_STOPPED,
+		"GENERIC_ISSUE":       pb.PrinterStatus_PRINTER_STATUS_GENERIC_ISSUE,
+		"UNREACHABLE":         pb.PrinterStatus_PRINTER_STATUS_UNREACHABLE,
+		"EXPIRED_CERTIFICATE": pb.PrinterStatus_PRINTER_STATUS_EXPIRED_CERTIFICATE,
+	}
+
+	statusEnum, ok := printerStatusStringToEnum[info.Status]
+	if !ok {
+		return nil, errors.Wrap(errors.New(info.Status), "unexpected printer status")
+	}
+
+	return &pb.GetPrinterInfoResponse{
+		Capabilities: &pb.Capabilities{
+			Version: info.Capabilities.Version,
+			Printer: printerStruct,
+		},
+		Status: statusEnum,
+	}, nil
 }
