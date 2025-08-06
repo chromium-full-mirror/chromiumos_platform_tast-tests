@@ -966,8 +966,14 @@ func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wa
 func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Duration) (cancelfunc, error) {
 	testing.ContextLog(ctx, "Starting PD Stress Task")
 	// Enabling dual role port (DRP) will cause more stress on EC PD stack
-	if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
-		return nil, errors.Wrap(err, "could not enable DRP on Servo")
+	originalServoDualRoleState, err := h.Servo.ServoGetDualRoleState(ctx)
+	if err != nil {
+		originalServoDualRoleState = ""
+		testing.ContextLog(ctx, "Failed to get DRP state on Servo")
+	} else if originalServoDualRoleState != servo.USBPdDualRoleOn {
+		if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOn); err != nil {
+			testing.ContextLog(ctx, "Failed to enable DRP on Servo")
+		}
 	}
 
 	// GoBigSleepLint: Setting DRP on ServoV4 ('usbc_action drp') triggers reconnect
@@ -994,8 +1000,10 @@ func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Dur
 		},
 		func(pdCtx context.Context) error {
 			testing.ContextLogf(ctx, "PD Stress Task Done; %v Disconnects", disconnectCount)
-			if err := h.Servo.ServoSetDualRole(ctx, servo.USBPdDualRoleOff); err != nil {
-				return errors.Wrap(err, "failed to disable DRP on Servo")
+			if originalServoDualRoleState != "" {
+				if err := h.Servo.ServoSetDualRole(ctx, originalServoDualRoleState); err != nil {
+					testing.ContextLog(ctx, "Failed to restore DRP on Servo")
+				}
 			}
 			return nil
 		},
