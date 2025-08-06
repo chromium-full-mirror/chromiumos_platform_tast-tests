@@ -565,6 +565,13 @@ func startTask(ctx context.Context, timeout time.Duration, task, done func(conte
 	}
 }
 
+func getDutFs(ctx context.Context, h *firmware.Helper) (*dutfs.Client, error) {
+	if err := h.RequireRPCClient(ctx); err != nil || h.RPCClient == nil {
+		return nil, errors.Wrap(err, "failed to connect rpc client on DUT")
+	}
+	return dutfs.NewClient(h.RPCClient.Conn), nil
+}
+
 // ****** Utilities for managing background processes on remote DUT *****
 
 func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, outputFile string, timeout time.Duration) (cancelfunc, error) {
@@ -647,7 +654,10 @@ func processIsRunning(ctx context.Context, h *firmware.Helper, pid int) (bool, e
 func getSensors(ctx context.Context, h *firmware.Helper) ([]*sensor, error) {
 	var ret []*sensor
 
-	fs := dutfs.NewClient(h.RPCClient.Conn)
+	fs, err := getDutFs(ctx, h)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get fs client while getting sensors")
+	}
 
 	// Some systems will not have any iio devices; this case should not be an error.
 	if _, err := fs.Stat(ctx, iioBasePath); os.IsNotExist(err) {
@@ -818,13 +828,19 @@ func startSensorStressTask(ctx context.Context, h *firmware.Helper, sn *sensor, 
 
 func enableKeyboardWakeup(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Enabling keyboard wakeup")
-	fs := dutfs.NewClient(h.RPCClient.Conn)
+	fs, err := getDutFs(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to get fs client while enabling keyboard wakeup")
+	}
 	return fs.WriteFile(ctx, keyboardWakeupPath, []byte("enabled"), 0644)
 }
 
 func disableKeyboardWakeup(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Disabling keyboard wakeup")
-	fs := dutfs.NewClient(h.RPCClient.Conn)
+	fs, err := getDutFs(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "failed to get fs client while disabling keyboard wakeup")
+	}
 	return fs.WriteFile(ctx, keyboardWakeupPath, []byte("disabled"), 0644)
 }
 
@@ -890,7 +906,10 @@ func startFlashStressTask(ctx context.Context, h *firmware.Helper, timeout time.
 			if err := remoteFlashStressCancel(); err != nil {
 				return errors.Wrap(err, "failed to stop flash stress task")
 			}
-			fs := dutfs.NewClient(h.RPCClient.Conn)
+			fs, err := getDutFs(ctx, h)
+			if err != nil {
+				return errors.Wrap(err, "failed to get fs client while stopping flash task")
+			}
 			logOutput, err := fs.ReadFile(ctx, logOutputPath)
 			if err != nil {
 				return errors.Wrap(err, "failed to stop flash stress task")
