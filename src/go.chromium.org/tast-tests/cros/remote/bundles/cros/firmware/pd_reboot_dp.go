@@ -31,7 +31,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoPresent},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.TypecStatus()),
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
