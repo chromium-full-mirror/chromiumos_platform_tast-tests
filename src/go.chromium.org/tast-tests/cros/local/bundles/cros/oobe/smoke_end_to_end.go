@@ -515,62 +515,6 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	shouldSkipAssistant := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.AssistantScreen.shouldSkip()", &shouldSkipAssistant); err != nil {
-		s.Fatal("Failed to evaluate whether to skip assistant screen: ", err)
-	}
-
-	// TODO(b/279775853): Remove assistant handling logic after we remove it from OOBE.
-	if shouldSkipAssistant {
-		s.Log("Skipping the assistant screen")
-	} else {
-		s.Log("Waiting for the assistant screen")
-		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.AssistantScreen.isReadyForTesting()"); err != nil {
-			s.Fatal("Failed to wait for the assistant screen to be visible: ", err)
-		}
-		var assistantSkipButton string
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.AssistantScreen.getSkipButtonName()", &assistantSkipButton); err != nil {
-			s.Fatal("Failed to get assistant next button name: ", err)
-		}
-		var previousUserFlowShown bool
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.AssistantScreen.isPreviousUserFlowShown()", &previousUserFlowShown); err != nil {
-			s.Fatal("Failed to get which assitant flow we currently show: ", err)
-		}
-		if previousUserFlowShown {
-			s.Log("Showing assistant flow for the existing assistant user")
-		} else {
-			s.Log("Showing assistant flow for a new assistant user")
-		}
-		skipButton := nodewith.Role(role.Button).Name(assistantSkipButton)
-		if err := uiauto.Combine("click skip on the assistant screen",
-			ui.WaitUntilExists(skipButton),
-			ui.LeftClick(skipButton),
-		)(ctx); err != nil {
-			s.Fatal("Failed to click assistant skip button: ", err)
-		}
-		if previousUserFlowShown {
-			if err := uiauto.Combine("click skip on the assistant screen for the existing assistant user",
-				ui.WaitUntilExists(skipButton),
-				ui.LeftClick(skipButton),
-			)(ctx); err != nil {
-				s.Fatal("Failed to click assistant skip button: ", err)
-			}
-		} else {
-			var newUserSecondScreenShown bool
-			if err := oobeConn.Eval(ctx, "OobeAPI.screens.AssistantScreen.isVisible()", &newUserSecondScreenShown); err != nil {
-				s.Fatal("Failed to get whether assistant screen is still shown: ", err)
-			}
-			if newUserSecondScreenShown {
-				if err := uiauto.Combine("click skip on the second assistant screen for a new assistant user",
-					ui.WaitUntilExists(skipButton),
-					ui.LeftClick(skipButton),
-				)(ctx); err != nil {
-					s.Fatal("Failed to click assistant skip button: ", err)
-				}
-			}
-		}
-	}
-
 	shouldSkipSmartPrivacyProtection := false
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.SmartPrivacyProtectionScreen.shouldSkip()", &shouldSkipSmartPrivacyProtection); err != nil {
 		s.Fatal("Failed to evaluate whether to skip smart privacy protection screen: ", err)
