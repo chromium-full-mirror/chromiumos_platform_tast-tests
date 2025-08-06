@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -465,6 +466,13 @@ const (
 	activity string = "cros-ec-activity"
 )
 
+var supportedSensors = []string{
+	accel,
+	gyro,
+	mag,
+	light,
+}
+
 const (
 	// Base means that the sensor is located in the base of the DUT.
 	base string = "accel-base"
@@ -792,6 +800,8 @@ func startSensorStressTask(ctx context.Context, h *firmware.Helper, sn *sensor, 
 		channels += " anglvel_x anglvel_y anglvel_z"
 	} else if sn.Name == mag {
 		channels += " magn_x magn_y magn_z"
+	} else if sn.Name == light {
+		channels += " illuminance"
 	} else if sn.Name == ring {
 		return nil, errors.New("Kernel must be compiled with USE=iioservice")
 	} else {
@@ -1117,8 +1127,8 @@ func EcStress(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find any sensors")
 		}
 		for _, sn := range sensors {
-			if sn.Name == "cros-ec-activity" {
-				// Skip this sensor
+			if !slices.Contains(supportedSensors, sn.Name) {
+				s.Logf("Skip unsupported sensor %s", sn.Name)
 				continue
 			}
 			cancel, err := startSensorStressTask(ctx, h, sn, stressPeriod+timeoutPadding)
