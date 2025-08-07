@@ -83,7 +83,7 @@ func Usb3StorageHotplug(ctx context.Context, s *testing.State) {
 func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw usbswitch.Switch) error {
 
 	// Get the devices when switch is off
-	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+	devicesWhenOff, err := typecutils.Usb3GetStorageList(ctx, cl)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage list before hotplug")
 	}
@@ -95,7 +95,7 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 
 	// Check for enumeration
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+		devices, err := typecutils.Usb3GetStorageList(ctx, cl)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after hotplug")
 		}
@@ -119,7 +119,7 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 
 	// Check for disconnection
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+		devices, err := typecutils.Usb3GetStorageList(ctx, cl)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after disconnection")
 		}

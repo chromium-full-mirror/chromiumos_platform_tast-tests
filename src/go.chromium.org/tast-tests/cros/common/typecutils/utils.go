@@ -366,31 +366,31 @@ func ListBlockDevices(ctx context.Context, d *dut.DUT) ([]string, error) {
 	return ret, nil
 }
 
-// Usb3GetExternalStorageList returns a list of currently connected external USB storage devices
-// based on the removable property and interface classes. The returned value is an array of
-// strings containing each devices address (example: "3-2.1.3").
-func Usb3GetExternalStorageList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
-	var externalStorageList []string
+// Usb3GetStorageList returns a list of currently connected USB storage devices
+// The returned value is an array of strings containing each devices
+// address (example: "3-2.1.3").
+func Usb3GetStorageList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
+	var storageList []string
 
 	deviceMap, err := cl.GetDevices(ctx, &empty.Empty{})
 	if err != nil {
-		return externalStorageList, errors.Wrap(err, "unable to get USB device map")
+		return storageList, errors.Wrap(err, "unable to get USB device map")
 	}
 
 	for addr, device := range deviceMap.Devices {
-		if device.Removable == usb.RemovableAttribute_REMOVABLE_ATTRIBUTE_FIXED || device.Speed <= 480 {
+		if device.Speed <= 480 {
 			continue
 		}
 
 		for _, interf := range device.Interfaces {
 			if interf.InterfaceClass == ClassMassStorage {
-				externalStorageList = append(externalStorageList, addr)
+				storageList = append(storageList, addr)
 				break
 			}
 		}
 	}
 
-	return externalStorageList, nil
+	return storageList, nil
 }
 
 // Usb2GetDeviceList returns a list of currently connected external USB 2.0 devices. The returned

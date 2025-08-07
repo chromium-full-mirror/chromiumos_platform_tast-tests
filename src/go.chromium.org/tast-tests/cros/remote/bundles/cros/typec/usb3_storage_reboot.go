@@ -85,7 +85,7 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get the device count when switch is off
-	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	devicesWhenOff, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list before reboot")
 	}
@@ -97,7 +97,7 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 
 	// Check for enumeration
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		devices, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after hotplug")
 		}
@@ -109,7 +109,7 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 		return err
 	}
 
-	externalStorageBefore, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	externalStorageBefore, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage list after hotplug")
 	}
@@ -131,7 +131,7 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 	usbClient = usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get device count after rebooting.
-	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	externalStorageAfter, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list after reboot")
 	}
@@ -151,7 +151,7 @@ func performUsb3StorageRebootIteration(ctx context.Context, s *testing.State, d 
 
 	// Check for disconnection
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		devices, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after disconnection")
 		}

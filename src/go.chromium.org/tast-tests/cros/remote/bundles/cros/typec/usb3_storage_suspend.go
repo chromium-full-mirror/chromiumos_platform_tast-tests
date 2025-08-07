@@ -88,7 +88,7 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 	usbClient := usb.NewSysfsServiceClient(cl.Conn)
 
 	// Get the device count when switch is off
-	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	devicesWhenOff, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage device list before reboot")
 	}
@@ -100,7 +100,7 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 
 	// Check for enumeration
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		devices, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after hotplug")
 		}
@@ -113,7 +113,7 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 	}
 
 	// Create a list of external USB 3.X mass storage devices connected to the DUT.
-	devicesWhenOn, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+	devicesWhenOn, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 	if err != nil {
 		return errors.Wrap(err, "could not get external storage list after hotplug")
 	}
@@ -182,7 +182,7 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 
 	// Check for device disconnection
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, usbClient)
+		devices, err := typecutils.Usb3GetStorageList(ctx, usbClient)
 		if err != nil {
 			return errors.Wrap(err, "could not get HID device list after disconnection")
 		}

@@ -93,7 +93,7 @@ func Usb3StorageSpeed(ctx context.Context, s *testing.State) {
 // performUsb3StorageSpeedIteration runs 1 iteration of the USB 3.0 storage speed test.
 func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.SysfsServiceClient, sw usbswitch.Switch, minPassingSpeed float64) error {
 	// Get the devices when switch is off
-	devicesWhenOff, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+	devicesWhenOff, err := typecutils.Usb3GetStorageList(ctx, cl)
 	if err != nil {
 		return errors.Wrap(err, "could not get device list before hotplug")
 	}
@@ -175,7 +175,7 @@ func performUsb3StorageSpeedIteration(ctx context.Context, d *dut.DUT, cl usb.Sy
 
 	// Check for disconnection
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		devices, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
+		devices, err := typecutils.Usb3GetStorageList(ctx, cl)
 		if err != nil {
 			return errors.Wrap(err, "could not get external storage list after disconnection")
 		}
