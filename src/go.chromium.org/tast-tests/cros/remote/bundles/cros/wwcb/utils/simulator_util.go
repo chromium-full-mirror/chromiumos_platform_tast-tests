@@ -38,7 +38,8 @@ func InitSimulator(ctx context.Context) error {
 	for _, port := range ports {
 		usbPort, err := serial.Open(port, mode)
 		if err != nil {
-			return errors.Wrap(err, "serial open error")
+			testing.ContextLogf(ctx, "Failed to open serial port %s: %v", port, err)
+			continue
 		}
 
 		var t = 3 * time.Second
