@@ -394,6 +394,10 @@ func (s *stack) pop() string {
 // path traverses the topology graph using a simple DFS to find the devices (nodes) between the
 // host and the first device that matches devicePredicate.
 func (t *Helper) path(destination, ignore devicePredicate) ([]string, error) {
+	if _, ok := t.devices[t.hostname]; !ok {
+		return nil, errors.Errorf("failed to find root node %v", t.hostname)
+	}
+
 	// create a queue to traverse our graph
 	currentPath := stack{}
 	stack := stack{t.hostname}

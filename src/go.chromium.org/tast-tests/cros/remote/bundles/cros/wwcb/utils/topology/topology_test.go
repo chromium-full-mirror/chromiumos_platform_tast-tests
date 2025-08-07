@@ -190,8 +190,8 @@ func TestPaths(t *testing.T) {
 			name:                 "empty_matching",
 			topology:             emptyTopology(),
 			find:                 func(d *labapi.PasitHost_Device) bool { return true },
-			expectedPath:         []string{"localhost"},
-			expectedDocklessPath: []string{"localhost"},
+			pathNotFound:         true,
+			docklessPathNotFound: true,
 		},
 		{
 			name:                 "empty_non_matching",
