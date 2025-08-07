@@ -120,6 +120,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 
 					// TODO(b/184683272): Reenable everywhere.
 					if cat == "frm_resize" || cat == "sub8x8_sf" {
+						// TODO(b/436839084): Reenable when supported.
+						if vaapiTestParam.testNamePrefix == "cros_codecs_" {
+							continue
+						}
 						hardwareDeps = append(hardwareDeps, "hwdep.SkipGPUFamily(\"picasso\")")
 					}
 

@@ -1042,19 +1042,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_group1_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group1"]["frm_resize"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_group1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["gf_dist"],
@@ -1094,19 +1081,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_group1_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group1"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group1"]["sub8x8_sf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_group2_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["buf"],
@@ -1117,19 +1091,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group2"]["buf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_group2_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group2"]["frm_resize"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
@@ -1172,19 +1133,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_group2_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group2"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group2"]["sub8x8_sf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_group3_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["buf"],
@@ -1195,19 +1143,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group3"]["buf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_group3_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group3"]["frm_resize"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
@@ -1250,19 +1185,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_group3_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group3"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group3"]["sub8x8_sf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_group4_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["buf"],
@@ -1273,19 +1195,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group4"]["buf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_group4_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group4"]["frm_resize"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
@@ -1328,19 +1237,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_group4_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["group4"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_1080_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["group4"]["sub8x8_sf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_level5_0_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["buf"],
@@ -1351,19 +1247,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs()),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_30"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["buf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_level5_0_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["frm_resize"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
@@ -1406,19 +1289,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
-				Name: "cros_codecs_vaapi_vp9_0_level5_0_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs()),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_30"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_0"]["sub8x8_sf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
 				Name: "cros_codecs_vaapi_vp9_0_level5_1_buf",
 				Val: platformDecodingParams{
 					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["buf"],
@@ -1429,19 +1299,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs(), hwdep.MinMemory(7169)),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_60"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["buf"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_level5_1_frm_resize",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["frm_resize"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs(), hwdep.MinMemory(7169)),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_60"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["frm_resize"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
@@ -1481,19 +1338,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsCrosCodecs(), hwdep.MinMemory(7169)),
 				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_60"},
 				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["sub8x8"]),
-				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
-			},
-			{
-				Name: "cros_codecs_vaapi_vp9_0_level5_1_sub8x8_sf",
-				Val: platformDecodingParams{
-					filenames:          test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["sub8x8_sf"],
-					decoder:            "ccdec",
-					decoderArgsBuilder: platform.VP9DecodeCrosCodecsargs,
-				},
-				Timeout:           24 * time.Hour,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("picasso"), hwdep.SupportsCrosCodecs(), hwdep.MinMemory(7169)),
-				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_vp9_2160_60"},
-				ExtraData:         test_vectors.AppendJSONFiles(test_vectors.VP9WebmFiles["profile_0"]["level5_1"]["sub8x8_sf"]),
 				ExtraAttr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 			},
 			{
