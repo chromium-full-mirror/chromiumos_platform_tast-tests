@@ -14,8 +14,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testUpdateRollbackCmd string
+
+const crashCmd testUpdateRollbackCmd = "crash"
+const rebootCmd testUpdateRollbackCmd = "reboot"
+const rollbackCmd testUpdateRollbackCmd = "rollback"
+
 type testUpdateRollbackConfig struct {
-	cmd          string
+	cmd          testUpdateRollbackCmd
 	useDBG       bool
 	invalidateRW bool
 }
@@ -31,48 +37,48 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
+			"gsc_dt_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "dbg_crash",
 			Val: testUpdateRollbackConfig{
-				cmd:          "crash",
+				cmd:          crashCmd,
 				useDBG:       true,
 				invalidateRW: false,
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_shield"},
 		}, {
 			Name: "dbg_crash_invalid_rw",
 			Val: testUpdateRollbackConfig{
-				cmd:          "crash",
+				cmd:          crashCmd,
 				useDBG:       true,
 				invalidateRW: true,
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_shield"},
 		}, {
 			Name: "console_reboot_invalid_rw",
 			Val: testUpdateRollbackConfig{
-				cmd:          "reboot",
+				cmd:          rebootCmd,
 				useDBG:       false,
 				invalidateRW: true,
 			},
 		}, {
 			Name: "console_reboot",
 			Val: testUpdateRollbackConfig{
-				cmd:          "reboot",
+				cmd:          rebootCmd,
 				useDBG:       false,
 				invalidateRW: false,
 			},
 		}, {
 			Name: "dbg_rollback",
 			Val: testUpdateRollbackConfig{
-				cmd:          "rollback",
+				cmd:          rollbackCmd,
 				useDBG:       true,
 				invalidateRW: false,
 			},
-			ExtraAttr: []string{"gsc_h1_shield"},
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_shield"},
 		}},
 	})
 }
@@ -126,20 +132,12 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 
 	s.Log("Enabling CCD mode and resetting")
 	tpmBus := b.GscProperties().PreferredTPMBus()
-	b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CCDModeOn, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// AP turns on so TPM bus will be active
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	b.GSCToolCommandViaTPM(ctx, tpmBus, startImage)
-
-	if config.invalidateRW {
-		s.Log("Invalidate RW")
-		tpm := b.ResetAndTpmStartupForBus(ctx, i, tpmBus, ti50.CCDModeOn, ti50.FfClamshell)
-		err = tpm.TpmvInvalidateInactiveRW()
-		th.MustSucceed(err, "failed to send invalidate RW")
-
-	}
 
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	version, err := i.VersionInfo(ctx)
@@ -147,6 +145,17 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	s.Log("Setup GSC")
 	s.Logf("RW_A: %+v", version.RwA)
 	s.Logf("RW_B: %+v", version.RwB)
+
+	if config.invalidateRW {
+		s.Log("Invalidate RW")
+		b.WaitForTpmStartup(ctx, tpm)
+		err = tpm.TpmvInvalidateInactiveRW()
+		th.MustSucceed(err, "failed to send invalidate RW")
+		version, err := i.VersionInfo(ctx)
+		th.MustSucceed(err, "failed to get version")
+		s.Logf("RW_A: %+v", version.RwA)
+		s.Logf("RW_B: %+v", version.RwB)
+	}
 
 	if version.ActiveRw().Version != startVer.String() {
 		s.Fatalf("Unable to flash %s", startImage)
@@ -160,7 +169,8 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 	earlyPrint := false
 	rollbackDetected := false
 	lastResetCount := uint32(0)
-	for attempt := 0; attempt < 10; attempt++ {
+	attempt := 0
+	for ; attempt < 10; attempt++ {
 		// Give the device a little more time than normal to reboot since we are
 		// using the watchdog reset.
 		err := i.CommandImage.WaitUntilBooted(ctx, 8*time.Second)
@@ -175,9 +185,18 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		sysinfo, err := i.Sysinfo(ctx)
 		th.MustSucceed(err, "get sysinfo")
 		s.Logf("sysinfo on attempt %d: %+v", attempt, sysinfo)
-		if attempt != 0 {
-			if lastResetCount == sysinfo.ResetCount {
-				s.Errorf("attempt %d: %s did not increment reset count", attempt, config.cmd)
+
+		// Rollback should work after the 1st attempt
+		if attempt == 1 && config.cmd == rollbackCmd {
+			if version.ActiveRw().Version == targetVer.String() {
+				rollbackDetected = true
+			}
+			break
+		}
+		if attempt != 0 && lastResetCount == sysinfo.ResetCount {
+			// OT doesn't increment the reset count if there is no pending update
+			if b.GscProperties().ChipType() != ti50.GscOT && config.invalidateRW {
+				s.Errorf("attempt %d: %s did not increment reset count (%d)", attempt, config.cmd, lastResetCount)
 			}
 		}
 		lastResetCount = sysinfo.ResetCount
@@ -199,7 +218,8 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		}
 
 		switch config.cmd {
-		case "crash":
+		case crashCmd:
+			s.Log("Running crash")
 			th.MustSucceed(i.SendDBGConsoleCrashCmd(ctx), "calling crash cmd")
 			immediateCtx, cancel := context.WithTimeout(ctx, 12*time.Second)
 			defer cancel()
@@ -207,11 +227,11 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 			// otherwise other console matches will return an error when they detect
 			// the crash output.
 			_, _, err = i.ReadSerialSubmatch(immediateCtx, ti50.FatalMsg)
-			th.MustSucceed(err, "No fatal reset found in UART")
-		case "rollback":
+			th.MustSucceed(err, "failed to find fatal reset found in UART")
+		case rollbackCmd:
 			s.Log("Running GSC rollback")
 			th.MustSucceed(i.Rollback(ctx), "failed to send rollback command")
-		case "reboot":
+		case rebootCmd:
 			s.Log("Rebooting GSC")
 			th.MustSucceed(i.Reboot(ctx), "failed to send reboot command")
 		default:
@@ -220,21 +240,28 @@ func GSCUpdateRollback(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Logf("Reset count after %s commands: %d", config.cmd, lastResetCount)
+	s.Logf("Reset count after %s commands: %d", config.cmd, attempt)
 	if !rollbackDetected {
 		if b.TestbedType != ti50.GscH1Shield && config.invalidateRW {
-			s.Logf("%s command: invalidRW: Ti50 still responsive after %d resets", config.cmd, lastResetCount)
+			s.Logf("%s command: invalidRW: Ti50 still responsive after %d resets", config.cmd, attempt)
 		} else {
-			s.Errorf("%s command: did not detect rollback after %d resets ", config.cmd, lastResetCount)
+			s.Errorf("%s command: did not detect rollback after %d resets ", config.cmd, attempt)
 		}
-	} else if lastResetCount < 5 || lastResetCount > 8 {
-		s.Errorf("%s command: Reset count %d out of range", config.cmd, lastResetCount)
+	} else if config.cmd == rollbackCmd {
+		if attempt != 1 {
+			s.Errorf("%s command: Reset count %d out of range", config.cmd, attempt)
+		}
+	} else if attempt < 5 || attempt > 8 {
+		s.Errorf("%s command: Reset count %d out of range", config.cmd, attempt)
 	}
 	if earlyPrint {
-		s.Errorf("%s command: actual rollback reset count %d", config.cmd, lastResetCount)
+		s.Errorf("%s command: actual rollback reset count %d", config.cmd, attempt)
 	}
 
-	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after "+config.cmd)
+	// Give the device a little more time than normal to reboot since we are
+	// using the watchdog reset.
+	err = i.CommandImage.WaitUntilBooted(ctx, 8*time.Second)
+	th.MustSucceed(err, "GSC revives after %s", config.cmd)
 
 	version, err = i.VersionInfo(ctx)
 	th.MustSucceed(err, "get version info")
