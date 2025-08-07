@@ -85,16 +85,22 @@ func GSCBIDMismatchRollback(ctx context.Context, s *testing.State) {
 	s.Log("Enabling CCD mode and resetting")
 	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	version, err := i.VersionInfo(ctx)
+	th.MustSucceed(err, "failed to get version")
+	s.Logf("RW_A: %+v", version.RwA)
+	s.Logf("RW_B: %+v", version.RwB)
+	s.Logf("Image BID: %+v", version.BID)
+	if version.BID.Flags == 0 {
+		s.Fatal("Image Under Test image is not board id locked")
+	}
+
 	b.WaitUntilCCDConnected(ctx)
 
 	err = b.RollbackUpdate(ctx, i, debugLowVerImage, debugImage, true)
 	th.MustSucceed(err, "failed to rollback to the low version debug image")
 
-	version, err := i.VersionInfo(ctx)
+	version, err = i.VersionInfo(ctx)
 	th.MustSucceed(err, "failed to get version")
-	if err != nil {
-		s.Error("Failed to get version")
-	}
 	s.Logf("RW_A: %+v", version.RwA)
 	s.Logf("RW_B: %+v", version.RwB)
 	startVersion := version.ActiveRw().Version
