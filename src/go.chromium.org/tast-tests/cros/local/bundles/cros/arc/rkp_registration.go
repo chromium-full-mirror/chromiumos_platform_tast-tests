@@ -30,7 +30,7 @@ func init() {
 		Contacts: []string{"arc-commercial@google.com", "batoon@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
 		VarDeps:      []string{},
