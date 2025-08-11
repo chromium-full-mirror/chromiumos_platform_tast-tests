@@ -8,6 +8,7 @@ package runtimeprobe
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/google/go-cmp/cmp"
@@ -21,7 +22,8 @@ import (
 )
 
 type verifySandboxTestParams struct {
-	probeConfig probeConfig
+	probeConfig   probeConfig
+	helperTimeout int
 }
 
 func init() {
@@ -112,7 +114,9 @@ func init() {
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"ec_component"},
-				}}},
+				}},
+				helperTimeout: 15,
+			},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix", "karis", "uldrenite", "uldrenite360")),
 		}, {
 			Name: "tpm",
@@ -129,6 +133,7 @@ func init() {
 func VerifySandbox(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(verifySandboxTestParams)
 	pc := testParam.probeConfig
+	helperTimeout := testParam.helperTimeout
 
 	// Debugd is used by runtime_probe. Check we can connect to it to make the
 	// error more specific.
@@ -136,7 +141,7 @@ func VerifySandbox(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to debugd: ", err)
 	}
 
-	res, err := getRuntimeProbeResult(ctx, pc)
+	res, err := getRuntimeProbeResult(ctx, pc, helperTimeout)
 	if err != nil {
 		s.Fatal("Failed to run runtime_probe: ", err)
 	}
@@ -178,7 +183,7 @@ func (ps probeStatement) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func getRuntimeProbeResult(ctx context.Context, pc probeConfig) ([]byte, error) {
+func getRuntimeProbeResult(ctx context.Context, pc probeConfig, helperTimeout int) ([]byte, error) {
 	f, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create tmp file for runtime probe")
@@ -197,7 +202,11 @@ func getRuntimeProbeResult(ctx context.Context, pc probeConfig) ([]byte, error) 
 		return nil, errors.Wrap(err, "cannot close probe config")
 	}
 
-	cmd := testexec.CommandContext(ctx, "runtime_probe", "--config_file_path="+f.Name(), "--to_stdout")
+	args := []string{"--config_file_path=" + f.Name(), "--to_stdout"}
+	if helperTimeout > 0 {
+		args = append(args, fmt.Sprintf("--helper_timeout=%d", helperTimeout))
+	}
+	cmd := testexec.CommandContext(ctx, "runtime_probe", args...)
 	return cmd.Output(testexec.DumpLogOnError)
 }
 
