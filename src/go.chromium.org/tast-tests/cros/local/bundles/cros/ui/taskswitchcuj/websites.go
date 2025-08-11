@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // simpleWebsites are websites to be opened in individual browsers
@@ -94,6 +95,8 @@ func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (fu
 
 		// pwaURL is the url used to install the PWA.
 		pwaURL = "https://meet.google.com"
+
+		installTimeout = 2 * time.Minute
 	)
 
 	appID := apps.Meet.ID
@@ -108,9 +111,12 @@ func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (fu
 			return nil, errors.Wrapf(err, "failed to launch %s PWA", nameInSettingsApp)
 		}
 	} else {
-		if err := apps.InstallPWAForURL(ctx, cr, pwaURL, 30*time.Second); err != nil {
+		var startTime = time.Now()
+		if err := apps.InstallPWAForURL(ctx, cr, pwaURL, installTimeout); err != nil {
 			return nil, errors.Wrapf(err, "failed to install and launch %s PWA", nameInSettingsApp)
 		}
+		duration := time.Since(startTime)
+		testing.ContextLogf(ctx, "Install of %s PWA completed in %v", nameInSettingsApp, duration)
 	}
 	return func(ctx context.Context) error {
 		return ossettings.UninstallApp(ctx, tconn, cr, nameInSettingsApp, appID)
