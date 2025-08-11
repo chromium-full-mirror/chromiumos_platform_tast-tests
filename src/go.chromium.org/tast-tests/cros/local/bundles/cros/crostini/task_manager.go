@@ -11,6 +11,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/taskmanager"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/ctxutil"
@@ -62,6 +64,18 @@ func TaskManager(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Task Manager: ", err)
 	}
 	defer tm.Close(cleanupCtx, tconn)
+
+	// In the new Task Manager UI, processes are split into tabs.
+	// Check if the "All tasks" tab exists and click it to ensure all processes are visible.
+	allTasksTab := nodewith.Name("All tasks").Role(role.Tab)
+	if err := ui.Exists(allTasksTab)(ctx); err == nil {
+		// If err is nil, the node was found.
+		s.Log("New Task Manager UI detected, clicking 'All tasks' tab")
+		if err := ui.LeftClick(allTasksTab)(ctx); err != nil {
+			faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+			s.Fatal("Failed to click 'All tasks' tab in Task Manager: ", err)
+		}
+	}
 
 	crostiniProcessName := "Linux Virtual Machine: termina"
 
