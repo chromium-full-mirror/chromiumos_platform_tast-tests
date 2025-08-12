@@ -50,15 +50,6 @@ const (
 	// Slot can be left empty, or set to either 'A' or 'B'.
 	Slot = "slot"
 
-	// imageBin is the name of the image file, it is the same for both images.
-	// It may be signed with the PrePVT or Nightly target
-	//     - ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin
-	//     - ti50_Unknown_Nightly_ti50-accessory-nodelocked-ro-premp.bin
-	imageBin = "ti50_Unknown_*_ti50-accessory-nodelocked-ro-premp.bin"
-
-	// branchImageBin is used instead of imageBin on branch builders.
-	branchImageBin = "ti50_Unknown_PrePVT_ti50-accessory-mp.bin"
-
 	// imageBinGlob matches signed image bin files.
 	imageBinGlob = "*.bin"
 
@@ -83,7 +74,7 @@ const (
 	// DevGSCImageBucket is the bucket where node locked GSC test images are stored.
 	DevGSCImageBucket  = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/"
 	debugImageTemplate = "*.dbg%s.0x%s_0x%s.bin.*"
-	efiImageTemplate   = "*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
+	efiImageTemplate   = "*_Unknown_NodeLocked-%s_*.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
 	qualBucket         = "chromeos-localmirror/distfiles/"
 	postsubmitBucket   = "chromeos-image-archive"
@@ -227,33 +218,21 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			if fullGlob == "" {
 				tastURL := gsPrefix + filepath.Join(strings.TrimPrefix(inputURL, gsPrefix), "tast")
 				testing.ContextLogf(ctx, "Looking for tast directory %s", tastURL)
-				if gsURLExists(ctx, tastURL) {
-					// Cloud directory has a "tast/" subdirectory, use images from there.
-					imageDir, err := ti50ImageDirectory(testbedProperties.TestbedType, imageType)
-					if err != nil {
-						return nil, err
-					}
-					imageGlob, jsonGlob, exists := tastImageAndJSONExists(ctx, inputURL, imageDir)
-					if !exists {
-						return nil, errors.New("Image or json files missing")
-					}
-					fullURL = imageGlob
-					jsonURL = jsonGlob
-					testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
-				} else {
-					// Legacy artifact directory structure.
-					// Assume branch builds have a -channel in the URL.
-					var subDir string
-					bin := branchImageBin
-					if !strings.Contains(inputURL, "-channel/") {
-						p := ti50ImageTypeToProject(imageType)
-						// Postsubmit builder images are 1 subdir deeper.
-						subDir = p + ".tar.bz2"
-						bin = imageBin
-					}
-					fullURL = gsPrefix + filepath.Join(strings.TrimPrefix(inputURL, gsPrefix), subDir, bin)
-					testing.ContextLogf(ctx, "Legacy artifact URL: %s", fullURL)
+				if !gsURLExists(ctx, tastURL) {
+					return nil, errors.New("Missing tast directory")
 				}
+				// Cloud directory has a "tast/" subdirectory, use images from there.
+				imageDir, err := ti50ImageDirectory(testbedProperties.TestbedType, imageType)
+				if err != nil {
+					return nil, err
+				}
+				imageGlob, jsonGlob, exists := tastImageAndJSONExists(ctx, inputURL, imageDir)
+				if !exists {
+					return nil, errors.New("Image or json files missing")
+				}
+				fullURL = imageGlob
+				jsonURL = jsonGlob
+				testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
 			} else {
 				fullURL = fullGlob
 				jsonURL = jsonGlob
@@ -531,7 +510,7 @@ func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.Testbed
 	return findGSCImage(ctx, imageDir+"/"+debugImageGlob)
 }
 
-// findGSCEFIImage finds the eraseflashinfo image for cr50 board.
+// findGSCEFIImage finds the eraseflashinfo image for gsc board.
 func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
 	imageDir := imageDir(testbedProperties.TestbedType)
 	efiDevidStr := strings.ToLower(testbedProperties.UsbSerial)
