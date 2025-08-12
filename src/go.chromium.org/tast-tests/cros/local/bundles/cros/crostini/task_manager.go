@@ -65,12 +65,8 @@ func TaskManager(ctx context.Context, s *testing.State) {
 	}
 	defer tm.Close(cleanupCtx, tconn)
 
-	// In the new Task Manager UI, processes are split into tabs.
-	// Check if the "All tasks" tab exists and click it to ensure all processes are visible.
 	allTasksTab := nodewith.Name("All tasks").Role(role.Tab)
 	if err := ui.Exists(allTasksTab)(ctx); err == nil {
-		// If err is nil, the node was found.
-		s.Log("New Task Manager UI detected, clicking 'All tasks' tab")
 		if err := ui.LeftClick(allTasksTab)(ctx); err != nil {
 			faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 			s.Fatal("Failed to click 'All tasks' tab in Task Manager: ", err)
