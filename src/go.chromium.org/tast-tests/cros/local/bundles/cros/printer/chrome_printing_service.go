@@ -85,19 +85,21 @@ func (svc *ChromePrintingService) getSubmitJobScript(req *pb.SubmitJobRequest) (
 	jobJSON := string(jobBytes)
 	// TODO (b/435280673): add support for submitting other contentTypes.
 	return fmt.Sprintf(`
-		const job = JSON.parse('%s');
-		// The chrome.printing API requires the document field to be a blob of contentType pdf or png.
-		job.document = new Blob(
-			[
-				new Uint8Array(
-				atob(job.document)
-					.split('')
-					.map(char => char.charCodeAt(0))
-				),
-			],
-			{ type: 'application/pdf' }
-		);
-		tast.promisify(chrome.printing.submitJob)({job:job})`, jobJSON), nil
+		(function() {
+			const job = JSON.parse('%s');
+			// The chrome.printing API requires the document field to be a blob of contentType pdf or png.
+			job.document = new Blob(
+				[
+					new Uint8Array(
+					atob(job.document)
+						.split('')
+						.map(char => char.charCodeAt(0))
+					),
+				],
+				{ type: 'application/pdf' }
+			);
+			return tast.promisify(chrome.printing.submitJob)({job: job});
+		})();`, jobJSON), nil
 }
 
 func (svc *ChromePrintingService) validateSubmitJobRequest(req *pb.SubmitJobRequest) error {
