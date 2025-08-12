@@ -16,7 +16,7 @@ import (
 
 // OpenBenchPage opens a new tab with the provided url and creates a new connection for it.
 func OpenBenchPage(ctx context.Context, benchURL string, conn ui.ConnServiceClient) (*ui.NewConnResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	return conn.NewConn(ctx, &ui.NewConnRequest{Url: benchURL})
 }

@@ -24,6 +24,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+const benchmarkTimeout = 5 * time.Minute // Timeout for the benchmark to run.
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TabOpenLatencyPerfRaw,
@@ -31,6 +33,7 @@ func init() {
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Contacts:     []string{"baseos-perf@google.com", "mtomoya@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
+		Timeout:      benchmarkTimeout + 10*time.Second, // 5 min in run() plus some buffer.
 		Data: []string{
 			"tab_open_latency_perf_raw/manifest.json",
 			"tab_open_latency_perf_raw/bench.js",
@@ -97,7 +100,7 @@ type tabOpenLatencyTestRawResult struct {
 
 func run(ctx context.Context, s *testing.State, cl *rpc.Client, extDir, hostExtDir string) ui.ChromeServiceClient {
 	s.Log("Setting up bluebench extension")
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, benchmarkTimeout)
 	defer cancel()
 
 	extID, err := extension.ComputeExtensionID(hostExtDir)
