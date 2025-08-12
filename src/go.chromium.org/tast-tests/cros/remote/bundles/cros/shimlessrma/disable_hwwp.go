@@ -25,7 +25,6 @@ type param struct {
 	wp          rmaweb.WriteProtectDisableOption
 	enroll      bool
 	destination rmaweb.DestinationOption
-	bypassRacc  bool
 }
 
 func init() {
@@ -57,7 +56,6 @@ func init() {
 				wp:          rmaweb.Manual,
 				enroll:      false,
 				destination: rmaweb.SameUser,
-				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -66,7 +64,6 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      false,
 				destination: rmaweb.SameUser,
-				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -75,7 +72,6 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      false,
 				destination: rmaweb.DifferentUser,
-				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_nodelocked"},
@@ -84,7 +80,6 @@ func init() {
 				wp:          rmaweb.Rsu,
 				enroll:      true,
 				destination: rmaweb.DifferentUser,
-				bypassRacc:  false,
 			},
 		}, {
 			ExtraAttr: []string{"shimless_rma_pretest"},
@@ -93,7 +88,6 @@ func init() {
 				wp:          rmaweb.Manual,
 				enroll:      false,
 				destination: rmaweb.SameUser,
-				bypassRacc:  true,
 			},
 		}},
 	})
@@ -110,7 +104,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	wpOption := p.wp
 	enroll := p.enroll
 	destination := p.destination
-	bypassRacc := p.bypassRacc
+	bypassRacc := !isRaccEnabled(s)
 
 	// TODO(b/349959175): Test firmware update from rootfs.
 	firmwareUpdateOption := rmaweb.FirmwareUpdateOptionSkip
@@ -253,6 +247,24 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	if err := uiHelper.RepairCompletedPageOperation(ctx); err != nil {
 		s.Fatal("Fail to navigate to Repair Complete page: ", err)
 	}
+}
+
+func isRaccEnabled(s *testing.State) bool {
+	features := s.Features("").Hardware
+	cond := hwdep.RuntimeProbeConfig()
+	satisfied, reason, err := cond.Satisfied(features)
+	if err != nil {
+		s.Log("isRaccEnabled: failed to check RuntimeProbeConfig condition: ", err)
+		return false
+	}
+
+	if !satisfied {
+		s.Log("RuntimeProbeConfig not present: ", reason)
+		return false
+	}
+
+	s.Log("RuntimeProbeConfig is present")
+	return true
 }
 
 func generateActionCombinedToDisableWP(option rmaweb.WriteProtectDisableOption, enroll bool, destination rmaweb.DestinationOption, uiHelper *rmaweb.UIHelper) action.Action {
