@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package hooks contains code for support adding custom hooks to root fixture.
 package hooks
 
 import (
@@ -14,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -24,12 +24,12 @@ import (
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/infra/proto/go/satlabrpcserver"
 
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/servers"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -301,12 +301,13 @@ func (sc *sshConnector) cleanup(ctx context.Context) {
 }
 
 type containerConnector struct {
-	servoHost   string
-	keyFile     string
-	keyDir      string
-	dutTopology *labapi.Dut
-	connInfo    *servo.ConnectInfo
-	proxy       *servo.Proxy
+	servoHost          string
+	keyFile            string
+	keyDir             string
+	dutTopology        *labapi.Dut
+	connInfo           *servo.ConnectInfo
+	proxy              *servo.Proxy
+	currentLogFileName string
 }
 
 func newContainerConnector(ctx context.Context, servoHost, keyFile, keyDir string,
@@ -329,6 +330,29 @@ func (cc *containerConnector) startServo(ctx context.Context) (err error) {
 	if cc == nil {
 		return nil
 	}
+
+	defer func() {
+		if err != nil {
+			// Don't try to get log file name if there was an error starting servo.
+			return
+		}
+		if cc.currentLogFileName != "" {
+			return
+		}
+		if cc.proxy == nil {
+			testing.ContextLog(ctx, "Proxy not available to get current log file name")
+			return
+		}
+		port := cc.connInfo.ServoPort
+		logLink := fmt.Sprintf("/var/log/servod_%d/latest.DEBUG", port)
+		out, err := cc.proxy.OutputCommand(ctx, false, "realpath", logLink)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to get realpath for %s: %v", logLink, err)
+		} else {
+			cc.currentLogFileName = filepath.Base(strings.TrimSpace(string(out)))
+		}
+	}()
+
 	if proxyRunning(ctx, cc.proxy) {
 		testing.ContextLog(ctx, "Servo has already been running")
 		return nil
@@ -409,19 +433,100 @@ func (cc *containerConnector) collectLogs(ctx context.Context, dst string) (retE
 }
 
 func (cc *containerConnector) downloadServodLogs(ctx context.Context, servodLogDir, destDir string) {
-	fn := "latest.DEBUG"
-	src := filepath.Join(servodLogDir, fn)
-	dst := filepath.Join(destDir, fn)
-
-	out, err := cc.proxy.OutputCommand(ctx, false, "realpath", src)
-	if err != nil {
-		testing.ContextLogf(ctx, "Failed to get real servo log path %s: %v", fn, err)
+	if cc == nil || cc.proxy == nil {
+		testing.ContextLog(ctx, "Proxy not available, cannot download servod logs")
 		return
 	}
-	realpath := strings.TrimSpace(string(out))
-	testing.ContextLog(ctx, "Saving servo log ", realpath)
-	if err := cc.proxy.GetFile(ctx, false, realpath, dst); err != nil {
-		testing.ContextLogf(ctx, "Failed to servod log %s: %v", src, err)
+
+	if cc.currentLogFileName == "" {
+		testing.ContextLog(ctx, "currentLogFileName is empty, falling back to downloading latest.DEBUG")
+		fn := "latest.DEBUG"
+		src := filepath.Join(servodLogDir, fn)
+		dst := filepath.Join(destDir, fn)
+
+		out, err := cc.proxy.OutputCommand(ctx, false, "realpath", src)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to get real servo log path %s: %v", fn, err)
+			return
+		}
+		realpath := strings.TrimSpace(string(out))
+		testing.ContextLog(ctx, "Saving servo log ", realpath)
+		if err := cc.proxy.GetFile(ctx, false, realpath, dst); err != nil {
+			testing.ContextLogf(ctx, "Failed to get servod log %s: %v", src, err)
+		}
+		return
+	}
+
+	// Find all files in the servod log directory.
+	findCmd := fmt.Sprintf("find %s -maxdepth 1 -type f -printf '%%f\\n'", shutil.Escape(servodLogDir))
+	out, stderr, err := cc.proxy.SeparatedOutputCommand(ctx, false, "sh", "-c", findCmd)
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to list files in %s (stderr: %q): %v", servodLogDir, string(stderr), err)
+		return
+	}
+	allFiles := strings.Split(strings.TrimSpace(string(out)), "\n")
+
+	var filesToDownload []string
+	startFile := cc.currentLogFileName
+	// Verify CurrentLogFileName exists in the container.
+	found := false
+	for _, f := range allFiles {
+		if f == startFile {
+			found = true
+			break
+		}
+	}
+	if found {
+		filesToDownload = append(filesToDownload, startFile)
+	} else {
+		testing.ContextLogf(ctx, "Initial log file %s not found in %s", startFile, servodLogDir)
+	}
+
+	// Find all newer log files.
+	logPattern := regexp.MustCompile(`^log\.\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2}\.\d{3}\.DEBUG$`)
+	var newerFiles []string
+	for _, f := range allFiles {
+		if logPattern.MatchString(f) && f > startFile {
+			newerFiles = append(newerFiles, f)
+		}
+	}
+	sort.Strings(newerFiles)
+	filesToDownload = append(filesToDownload, newerFiles...)
+
+	if len(filesToDownload) == 0 {
+		testing.ContextLog(ctx, "No specific log files found to process, falling back to downloading latest.DEBUG")
+		src := filepath.Join(servodLogDir, "latest.DEBUG")
+		dest := filepath.Join(destDir, "latest.DEBUG")
+		if err := cc.proxy.GetFile(ctx, false, src, dest); err != nil {
+			testing.ContextLogf(ctx, "Failed to get servod log %s: %v", src, err)
+		}
+		return
+	}
+
+	testing.ContextLogf(ctx, "Concatenating the following servo log files: %s", strings.Join(filesToDownload, ", "))
+	var remotePaths []string
+	for _, f := range filesToDownload {
+		remotePaths = append(remotePaths, shutil.Escape(filepath.Join(servodLogDir, f)))
+	}
+
+	out, stderr, err = cc.proxy.SeparatedOutputCommand(ctx, false, "mktemp")
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to create remote temp file (stderr: %q): %v", string(stderr), err)
+		return
+	}
+	remoteTempPath := strings.TrimSpace(string(out))
+	defer cc.proxy.RunCommand(ctx, false, "rm", remoteTempPath)
+
+	catCmdStr := fmt.Sprintf("cat %s > %s", strings.Join(remotePaths, " "), shutil.Escape(remoteTempPath))
+	if out, stderr, err := cc.proxy.SeparatedOutputCommand(ctx, false, "sh", "-c", catCmdStr); err != nil {
+		// Log error but continue, as some logs might have been concatenated successfully.
+		testing.ContextLogf(ctx, "Concatenating remote log files with command `%s` failed with output %q (stderr: %q): %v", catCmdStr, string(out), string(stderr), err)
+	}
+
+	destPath := filepath.Join(destDir, "latest.DEBUG")
+	testing.ContextLog(ctx, "Saving concatenated servo log to ", destPath)
+	if err := cc.proxy.GetFile(ctx, false, remoteTempPath, destPath); err != nil {
+		testing.ContextLogf(ctx, "Failed to get concatenated servod log from %s: %v", remoteTempPath, err)
 	}
 }
 
