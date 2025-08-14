@@ -68,8 +68,8 @@ func VmcExtraDisk(ctx context.Context, s *testing.State) {
 
 	const vmName = "tast_extra_disk_vm"
 
-	// Run `vmc create $vmName`
-	if err := vmc.Command(ctx, hash, "create", vmName).Run(testexec.DumpLogOnError); err != nil {
+	// Run `vmc create --vm-type crostini $vmName`
+	if err := vmc.Command(ctx, hash, "create", "--vm-type", "crostini", vmName).Run(testexec.DumpLogOnError); err != nil {
 		s.Fatalf("Failed to create %s VM: %v", vmName, err)
 	}
 	defer func() {
