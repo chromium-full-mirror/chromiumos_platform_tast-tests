@@ -54,6 +54,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/printer"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/remotecommands"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/rollback"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/fixture"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/secagentd"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/security"

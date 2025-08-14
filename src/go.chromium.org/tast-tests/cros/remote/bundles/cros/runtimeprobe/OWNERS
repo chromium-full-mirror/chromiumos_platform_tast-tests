@@ -1,0 +1,6 @@
+set noparent
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# The ChromeOS RACC team owns the code in this dir.
+include chromiumos/owners:v1:/factory/OWNERS.racc
