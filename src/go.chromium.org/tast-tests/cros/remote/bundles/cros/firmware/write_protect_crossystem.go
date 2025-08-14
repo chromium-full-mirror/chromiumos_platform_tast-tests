@@ -9,6 +9,7 @@ import (
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -49,6 +51,14 @@ func init() {
 	})
 }
 
+func isDutHasAPIdle(dutFeatures *protocol.DUTFeatures) (bool) {
+	switch dutFeatures.GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
+	case api.HardwareFeatures_FormFactor_CHROMEBOX:
+		return true
+	}
+	return false
+}
+
 func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	pv := s.FixtValue().(*fixture.Value)
 	h := pv.Helper
@@ -58,6 +68,9 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to require configs: ", err)
 	}
+
+	hasAPIdle := isDutHasAPIdle(s.Features(""))
+
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	defer cancel()
@@ -82,7 +95,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	rebootFuncs := map[string]func(context.Context, *firmware.Helper, fwCommon.BootMode) error{
+	rebootFuncs := map[string]func(context.Context, *firmware.Helper, fwCommon.BootMode, bool) error{
 		"mode aware reboot":        performModeAwareReboot,
 		"reboot with shutdown cmd": performRebootWithShutdownCmd,
 		"reboot with reboot cmd":   performRebootWithRebootCmd,
@@ -91,20 +104,20 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	}
 
 	for rebootType, rebootFunc := range rebootFuncs {
-		if err := checkWPOverReboot(ctx, h, rebootFunc, pv.BootMode); err != nil {
+		if err := checkWPOverReboot(ctx, h, rebootFunc, pv.BootMode, hasAPIdle); err != nil {
 			s.Fatalf("Failed to preserve WP over %q: %v", rebootType, err)
 		}
 	}
 }
 
-func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(context.Context, *firmware.Helper, fwCommon.BootMode) error, fromMode fwCommon.BootMode) error {
+func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(context.Context, *firmware.Helper, fwCommon.BootMode, bool) error, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
 		return errors.Wrap(err, "failed to disable hardware WP")
 	}
-	if err := rebootFunc(ctx, h, fromMode); err != nil {
+	if err := rebootFunc(ctx, h, fromMode, DutHasAPIdle); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
-	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing, false); err != nil {
 		return errors.Wrap(err, "failed to recover from ti50 reset")
 	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
@@ -113,10 +126,10 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
 		return errors.Wrap(err, "failed to enable hardware WP")
 	}
-	if err := rebootFunc(ctx, h, fromMode); err != nil {
+	if err := rebootFunc(ctx, h, fromMode, DutHasAPIdle); err != nil {
 		return errors.Wrap(err, "failed to reboot")
 	}
-	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+	if _, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing, false); err != nil {
 		return errors.Wrap(err, "failed to recover from ti50 reset")
 	}
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 1); err != nil {
@@ -125,7 +138,7 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	return nil
 }
 
-func performRebootWithECReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
+func performRebootWithECReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with EC reboot command")
 	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
 		return errors.Wrap(err, "failed to ping EC console")
@@ -153,7 +166,7 @@ func performRebootWithECReboot(ctx context.Context, h *firmware.Helper, fromMode
 	return nil
 }
 
-func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
+func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with a reboot command in VT2")
 	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run reboot command")
@@ -181,13 +194,13 @@ func performRebootWithRebootCmd(ctx context.Context, h *firmware.Helper, fromMod
 	return nil
 }
 
-func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
+func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	testing.ContextLog(ctx, "Powering off the DUT with a shutdown command in VT2")
 	if err := h.DUT.Conn().CommandContext(ctx, "shutdown", "-P", "now").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to run shutdown command")
 	}
 
-	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing, DutHasAPIdle); err != nil {
 		return errors.Wrap(err, "failed to recover from ti50 reset")
 	} else if gscReset {
 		// If Ti50 resets to do AP RO verification, run the shutdown command again.
@@ -224,13 +237,13 @@ func performRebootWithShutdownCmd(ctx context.Context, h *firmware.Helper, fromM
 	return nil
 }
 
-func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
+func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	testing.ContextLog(ctx, "Pressing the power button to power off the DUT")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 		return errors.Wrapf(err, "failed to power off the DUT by pressing the power button for %v", h.Config.HoldPwrButtonPowerOff)
 	}
 
-	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing); err != nil {
+	if gscReset, err := waitForTi50Reset(ctx, h, h.Config.DelayRebootToPing, DutHasAPIdle); err != nil {
 		return errors.Wrap(err, "failed to recover from ti50 reset")
 	} else if gscReset {
 		// If Ti50 resets to do AP RO verification, run the power button press to turn off the DUT again.
@@ -267,7 +280,7 @@ func performRebootWithPowerBtn(ctx context.Context, h *firmware.Helper, fromMode
 	return nil
 }
 
-func performModeAwareReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode) error {
+func performModeAwareReboot(ctx context.Context, h *firmware.Helper, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -284,7 +297,7 @@ func performModeAwareReboot(ctx context.Context, h *firmware.Helper, fromMode fw
 }
 
 // waitForTi50Reset waits for Ti50 to reset. Return true if GSC reset. False if it didn't
-func waitForTi50Reset(ctx context.Context, h *firmware.Helper, reconnectTimeout time.Duration) (bool, error) {
+func waitForTi50Reset(ctx context.Context, h *firmware.Helper, reconnectTimeout time.Duration, pressPowerBTN bool) (bool, error) {
 	// Don't do anything if the board isn't running a Ti50 image that resets
 	// after WP is enabled.
 	if !h.Servo.ExpectTi50WPEventReboot(ctx) {
@@ -292,6 +305,16 @@ func waitForTi50Reset(ctx context.Context, h *firmware.Helper, reconnectTimeout 
 	}
 
 	h.Servo.WaitForGSCReset(ctx, 10*time.Second)
+
+	if pressPowerBTN {
+		testing.ContextLog(ctx, "The DUT is off for AP_IDLE")
+		// wait 5s for EC_RST released and EC finished init
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return false, errors.Wrap(err, "failed to sleep")
+		}
+		testing.ContextLog(ctx, "Powering on the DUT by pressing power button for ", h.Config.HoldPwrButtonPowerOn)
+		h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn))
+	}
 
 	waitConnectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancel()

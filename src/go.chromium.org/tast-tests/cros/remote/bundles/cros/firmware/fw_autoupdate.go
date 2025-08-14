@@ -628,7 +628,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
 			s.Fatal("Failed to enable hardware write protect: ", err)
 		}
-		if err := h.GSCResetAfterWPEnable(ctx); err != nil {
+		if err := h.GSCResetAfterWPEnable(ctx, s.Features("")); err != nil {
 			s.Fatal("Failed to reset GSC after write protect enable: ", err)
 		}
 		testing.ContextLog(ctx, "Rebooting the DUT")

@@ -19,6 +19,7 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
@@ -2591,7 +2592,7 @@ func (h *Helper) SupportAPFwState(ctx context.Context, dutFeatures *protocol.DUT
 }
 
 // GSCResetAfterWPEnable triggers a GSC reboot by shutting down the AP after WP has been enabled.
-func (h *Helper) GSCResetAfterWPEnable(ctx context.Context) error {
+func (h *Helper) GSCResetAfterWPEnable(ctx context.Context, dutFeatures *protocol.DUTFeatures) error {
 	// Don't do anything if the board isn't running a Ti50 image that resets after WP is enabled.
 	if !h.Servo.ExpectTi50WPEventReboot(ctx) {
 		return nil
@@ -2603,6 +2604,17 @@ func (h *Helper) GSCResetAfterWPEnable(ctx context.Context) error {
 	}
 
 	h.Servo.WaitForGSCReset(ctx, 10*time.Second)
+
+	switch dutFeatures.GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
+	case api.HardwareFeatures_FormFactor_CHROMEBOX:
+		testing.ContextLog(ctx, "The DUT is probably off for AP_IDLE")
+		// wait 5s for EC_RST released and EC finished init
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+		testing.ContextLog(ctx, "Powering on the DUT by pressing power button for ", h.Config.HoldPwrButtonPowerOn)
+		h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn))
+	}
 
 	waitConnectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancel()
