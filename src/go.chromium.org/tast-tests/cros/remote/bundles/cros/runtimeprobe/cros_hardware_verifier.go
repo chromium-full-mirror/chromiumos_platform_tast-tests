@@ -28,6 +28,7 @@ import (
 	hvpb "go.chromium.org/chromiumos/hardware_verifier"
 	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
 
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/utils"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -102,7 +103,7 @@ func CrosHardwareVerifier(ctx context.Context, s *testing.State) {
 	}
 	s.Log("ComponentValueAllowlists:", fieldsMapping)
 
-	err = waitServiceState(ctx, s.DUT(), s, "hardware_verifier", "stop/waiting")
+	err = utils.WaitServiceState(ctx, s.DUT(), "hardware_verifier", "stop/waiting")
 	if err != nil {
 		s.Fatal("Service hardware_verifier timed out: ", err)
 	}
@@ -397,7 +398,7 @@ func report(ctx context.Context, s *testing.State, fieldsMapping requiredFieldSe
 		return nil, errors.Wrap(err, "failed to reboot DUT")
 	}
 	// TODO(crbug/1097710): Remove this check when this is the default behavior.
-	if err := waitServiceState(ctx, d, s, "system-services", "start/running"); err != nil {
+	if err := utils.WaitServiceState(ctx, d, "system-services", "start/running"); err != nil {
 		return nil, err
 	}
 	if err := pollResultFile(ctx, d, s, resultFilePath, outPath); err != nil {
@@ -463,29 +464,6 @@ func pollResultFile(ctx context.Context, d *dut.DUT, s *testing.State, resultFil
 		return nil
 	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout}); err != nil {
 		return errors.Wrap(err, "result file does not exist")
-	}
-	return nil
-}
-
-// waitServiceState waits for a service to be specific state.
-func waitServiceState(ctx context.Context, d *dut.DUT, s *testing.State, service, state string) error {
-	const (
-		pollInterval = time.Second
-		pollTimeout  = 2 * time.Minute
-	)
-
-	s.Logf("Wait for %s to be %s state", service, state)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		output, err := d.Conn().CommandContext(ctx, "initctl", "status", service).Output()
-		if err != nil {
-			return err
-		}
-		if strings.Contains(string(output), state) {
-			return nil
-		}
-		return errors.Errorf("%s is not %s state", service, state)
-	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout}); err != nil {
-		return err
 	}
 	return nil
 }
