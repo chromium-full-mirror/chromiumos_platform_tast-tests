@@ -8,6 +8,7 @@ package apps
 import (
 	"context"
 	"net/url"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -611,7 +612,8 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 
 	ui := uiauto.New(tconn).WithInterval(2 * time.Second)
 	statusBubble := nodewith.Role(role.Window).ClassName("StatusBubble").First()
-	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
+	installIconRegexp := regexp.MustCompile("PwaInstallView|PageActionView")
+	installIcon := nodewith.ClassNameRegex(installIconRegexp).Role(role.Button)
 	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.Dialog).HasClass("Widget")
 	installButton := nodewith.Name("Install").Role(role.Button).Ancestor(installAppDialog)
 
