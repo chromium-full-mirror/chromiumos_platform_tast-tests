@@ -64,6 +64,14 @@ func GSCTPMI2CCorners(ctx context.Context, s *testing.State) {
 		s.Error("Unexpected TPM DID_VID after partial I2C transaction: ", didVid)
 	}
 
+	// Perform irregular I2C transaction, ask for data when there isn't any.
+	// This ensure that the GSC doesn't lock up the I2C bus if the AP gets
+	// out of sync and tries to read when there is no data.
+	_, err = b.OpenTitanToolCommand(ctx, "i2c", "--bus", "0", "--addr", "80", "raw-read", "--length", "50")
+	if err != nil {
+		s.Fatal("Could not read i2c data when not available: ", err)
+	}
+
 	// Perform irregular I2C transaction, ask for other I2C addresses.
 	for addr := 0; addr <= 127; addr++ {
 		if addr == 0x50 {
