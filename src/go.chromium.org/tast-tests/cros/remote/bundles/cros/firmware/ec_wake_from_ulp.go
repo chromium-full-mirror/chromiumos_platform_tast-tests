@@ -154,6 +154,7 @@ func init() {
 				"uldren360",
 				"xivu",
 				"xivu360",
+				"yahiko",
 				"yavijo",
 				"yaviks",
 				"yavikso",
