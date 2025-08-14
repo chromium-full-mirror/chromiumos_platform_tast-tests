@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
-		Fixture:      "shillReset",
+		Fixture:      "vpnEnv",
 	})
 }
 
