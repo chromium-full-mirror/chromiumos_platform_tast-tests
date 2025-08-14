@@ -168,7 +168,7 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	// Currently we don't have a good way to check this status (and we don't want
 	// to verify the iptables rules), so use a sleep here to have relatively
 	// looser check. See b/269431032.
-	testing.Sleep(ctx, 1*time.Second)
+	testing.Sleep(ctx, 2*time.Second)
 
 	// Test system traffic is not blocked if the VPN is not connectable for both modes.
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, physicalAddr, "root", 10*time.Second); err != nil {
