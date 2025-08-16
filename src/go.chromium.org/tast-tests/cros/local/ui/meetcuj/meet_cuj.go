@@ -247,11 +247,19 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 	defer bc.Close()
 
+	startTime := time.Now()
 	meetingCode, err := bc.CreateConference(ctx)
 	if err != nil {
 		return pv, errors.Wrap(err, "failed to create a conference room")
 	}
-	testing.ContextLog(ctx, "Created a room with the code ", meetingCode)
+	createDuration := time.Since(startTime)
+	pv.Set(perf.Metric{
+		Name:      "TPS.Meet.CreateDuration",
+		Unit:      "s",
+		Direction: perf.SmallerIsBetter,
+	}, createDuration.Seconds())
+
+	testing.ContextLogf(ctx, "Created a room with the code %s in %f seconds", meetingCode, createDuration.Seconds())
 
 	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
@@ -1320,7 +1328,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 	// Some DUTs need more time to wait for quiescence. Add log for debugging
 	// loading duration.
-	startTime := time.Now()
+	startTime = time.Now()
 	if err := webutil.WaitForQuiescence(ctx, webrtcInternals, 2*time.Minute); err != nil {
 		return pv, errors.Wrap(err, "failed to wait for quiescence")
 	}
