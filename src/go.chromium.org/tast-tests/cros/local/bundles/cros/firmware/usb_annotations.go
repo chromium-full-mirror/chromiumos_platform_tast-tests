@@ -29,8 +29,7 @@ func init() {
 			"drmasquatch@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/438260660): This test doesn't work at all.
-		// Attr:         []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		// Based on known un-annotated platforms that might not be updated.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...), hwdep.X86()),
 	})
@@ -66,24 +65,6 @@ func USBAnnotations(ctx context.Context, s *testing.State) {
 	}
 }
 
-// TODO: confirm currently un-annotated platforms. below is a list of known
-//
-//	annotated ones.
-//
-//	var AnnotatedPlatforms = []string{
-//		"brya",
-//		"dedede",
-//		"guybrush",
-//		"hatch",
-//		"nissa",
-//		"octopus",
-//		"puff",
-//		"rex",
-//		"skolas",
-//		"skyrim",
-//		"volteer",
-//		"zork",
-//	}
 var unannotatedPlatforms = []string{
 	"elm",
 	"hana",
