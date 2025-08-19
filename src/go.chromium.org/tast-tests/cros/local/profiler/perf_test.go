@@ -125,12 +125,16 @@ func TestParseStatFileNoCycle(t *testing.T) {
 	}
 }
 
-func TestParseStatInstructionsAtIntervals(t *testing.T) {
+func TestParseStatValuesAtIntervals(t *testing.T) {
 	// The test data comes from command like
 	// perf stat -a -e instructions -I 500 --output perf_stat_instructions_at_intervals.data
 	const data = `#           time             counts unit events
-     0.500642977          356311273      instructions
-     1.001999299          376048978      instructions
+	 0.500642977          356311273      instructions
+	 1.001999299          376048978      cycles
+	 5.005064456        11322515068      cpu_core/instructions/
+	 6.005064456         4673446192      cpu_atom/instructions/
+	 7.005064456        12322515068      cpu_core/cycles/
+	 8.005064456         5673446192      cpu_atom/cycles/
 	`
 
 	dir := testutil.TempDir(t)
@@ -141,23 +145,34 @@ func TestParseStatInstructionsAtIntervals(t *testing.T) {
 		t.Fatal("Failed to create perf_stat_instructions_at_intervals.data: ", err)
 	}
 
-	timestampedData, err := parseStatFileInstructions(path)
+	timestampedData, err := parseStatFileIntervals(path)
 	if err != nil {
 		t.Fatal("Failed to parse stat file: ", err)
 	}
 
-	expected := make([]valueWithTimestamp, 2)
+	expected := make([]valuesWithTimestamp, 6)
 	expected[0].Timestamp, _ = time.ParseDuration("0.500642977s")
-	expected[0].InstructionsPerCPU = []instructionsPerCPU{instructionsPerCPU{"cpu_core", 356311273}}
+	expected[0].ValuesWithCPU = []valueWithCPU{valueWithCPU{"instructions", "cpu_core", 356311273}}
 	expected[1].Timestamp, _ = time.ParseDuration("1.001999299s")
-	expected[1].InstructionsPerCPU = []instructionsPerCPU{instructionsPerCPU{"cpu_core", 376048978}}
+	expected[1].ValuesWithCPU = []valueWithCPU{valueWithCPU{"cycles", "cpu_core", 376048978}}
+	expected[2].Timestamp, _ = time.ParseDuration("5.005064456s")
+	expected[2].ValuesWithCPU = []valueWithCPU{valueWithCPU{"instructions", "cpu_core", 11322515068}}
+	expected[3].Timestamp, _ = time.ParseDuration("6.005064456s")
+	expected[3].ValuesWithCPU = []valueWithCPU{valueWithCPU{"instructions", "cpu_atom", 4673446192}}
+	expected[4].Timestamp, _ = time.ParseDuration("7.005064456s")
+	expected[4].ValuesWithCPU = []valueWithCPU{valueWithCPU{"cycles", "cpu_core", 12322515068}}
+	expected[5].Timestamp, _ = time.ParseDuration("8.005064456s")
+	expected[5].ValuesWithCPU = []valueWithCPU{valueWithCPU{"cycles", "cpu_atom", 5673446192}}
 
 	if len(timestampedData) != len(expected) {
 		t.Errorf("Unexpected number of timestamped values: got %d; want %d", len(timestampedData), len(expected))
 	}
 	for i, expectedData := range expected {
 		data := timestampedData[i]
-		if expectedData.Timestamp != data.Timestamp || expectedData.InstructionsPerCPU[0].Value != data.InstructionsPerCPU[0].Value {
+		if expectedData.Timestamp != data.Timestamp ||
+			expectedData.ValuesWithCPU[0].Value != data.ValuesWithCPU[0].Value ||
+			expectedData.ValuesWithCPU[0].Event != data.ValuesWithCPU[0].Event ||
+			expectedData.ValuesWithCPU[0].CoreType != data.ValuesWithCPU[0].CoreType {
 			t.Errorf("Unexpected data at index %d: got %v, want %v", i, timestampedData[i], expectedData)
 		}
 	}

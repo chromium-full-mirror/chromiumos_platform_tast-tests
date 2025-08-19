@@ -27,7 +27,7 @@ func init() {
 
 func Profiler(ctx context.Context, s *testing.State) {
 	var perfStatCyclesPerSecondOutput profiler.PerfStatCyclesPerSecondOutput
-	var perfStatInstuctionsAtIntervalsOutput profiler.PerfStatInstructionsAtIntervalsOutput
+	var perfStatInstuctionsAtIntervalsOutput profiler.PerfStatValuesAtIntervalsOutput
 
 	profs := []profiler.Profiler{
 		profiler.Top(&profiler.TopOpts{
@@ -52,8 +52,8 @@ func Profiler(ctx context.Context, s *testing.State) {
 		}
 		s.Log("All CPU cycle count per second: ", perfStatCyclesPerSecondOutput.CyclesPerSecond)
 		s.Log("Instructions at intervals:")
-		for _, inst := range perfStatInstuctionsAtIntervalsOutput.InstructionsAtIntervals {
-			for _, values := range inst.InstructionsPerCPU {
+		for _, inst := range perfStatInstuctionsAtIntervalsOutput.ValuesAtIntervals {
+			for _, values := range inst.ValuesWithCPU {
 				s.Log("  t=", inst.Timestamp, ", core=", values.CoreType, ", inst=", values.Value)
 			}
 		}
