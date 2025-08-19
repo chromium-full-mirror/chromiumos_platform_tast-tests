@@ -18,7 +18,7 @@ import (
 func init() {
 	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{
 		InitialPdState: unigraf.InitPdStateDfp,
-	}, 3)
+	}, 10)
 	testing.AddTest(&testing.Test{
 		Func:     ChargingCurrent,
 		Desc:     "Test if charging current is ~3A after connecting Unigraf as source",

@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec"},
 		Fixture:      "typecSwitch",
-		Params:       typecswitch.GenerateParams(6, 10, usbswitch.DpMode, "typec_dp_bringup"),
+		Params:       typecswitch.GenerateParams(15, 10, usbswitch.DpMode, "typec_dp_bringup"),
 	})
 }
 

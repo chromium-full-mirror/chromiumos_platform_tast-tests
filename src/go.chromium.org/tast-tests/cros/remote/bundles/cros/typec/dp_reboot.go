@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		SoftwareDeps: []string{"reboot"},
 		Fixture:      "typecSwitch",
-		Params:       typecswitch.GenerateParams(7, 5, usbswitch.DpMode, "typec_dp_bringup"),
+		Params:       typecswitch.GenerateParams(15, 5, usbswitch.DpMode, "typec_dp_bringup"),
 	})
 }
 

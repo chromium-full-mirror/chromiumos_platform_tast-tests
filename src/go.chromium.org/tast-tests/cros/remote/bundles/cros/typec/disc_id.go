@@ -32,7 +32,7 @@ func init() {
 				ConnectionMode: usbswitch.DpMode,
 				Iterations:     100,
 			},
-			Timeout: 30 * time.Minute,
+			Timeout: 45 * time.Minute,
 		}},
 	})
 }

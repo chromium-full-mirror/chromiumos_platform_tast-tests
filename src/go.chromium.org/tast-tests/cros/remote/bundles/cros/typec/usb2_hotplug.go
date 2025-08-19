@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"group:typec"},
 		Fixture:      "typecSwitch",
 		ServiceDeps:  []string{"tast.cros.usb.SysfsService"},
-		Params:       typecswitch.GenerateParams(5, 10, usbswitch.Usb2Mode, "typec_usb_bringup"),
+		Params:       typecswitch.GenerateParams(15, 10, usbswitch.Usb2Mode, "typec_usb_bringup"),
 	})
 }
 

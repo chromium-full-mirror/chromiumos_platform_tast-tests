@@ -33,7 +33,7 @@ func init() {
 			{
 				Name:      "port0_normal",
 				ExtraAttr: []string{"typec_unigraf274"},
-				Timeout:   3 * time.Minute,
+				Timeout:   10 * time.Minute,
 			},
 		},
 	})

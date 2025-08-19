@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 3)
+	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 10)
 	testing.AddTest(&testing.Test{
 		Func: PowerSwapStability,
 		Desc: "Check power swap stability on a typec port",

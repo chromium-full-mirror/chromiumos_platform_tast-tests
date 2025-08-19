@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 3)
+	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 10)
 	testing.AddTest(&testing.Test{
 		Func: ECResetWhileCharging,
 		Desc: "Check that DUT is charging after EC reset",

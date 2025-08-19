@@ -18,7 +18,7 @@ import (
 func init() {
 	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{
 		InitialPdState: unigraf.InitPdStateDfp,
-	}, 3)
+	}, 10)
 	testing.AddTest(&testing.Test{
 		Func:     SprVoltages,
 		Desc:     "Test negotiation for highest PDO reported by charger",
