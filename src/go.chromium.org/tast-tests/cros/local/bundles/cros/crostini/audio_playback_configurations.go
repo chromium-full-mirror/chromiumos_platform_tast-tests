@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Tests different channel number on the container's audio (through alsa) using a pre-built crostini image",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini+oncall@google.com", "judyhsiao@chromium.org"},
 		Attr:         []string{"group:mainline", "group:audio"},
-		SoftwareDeps: []string{"chrome", "vm_host"},
+		SoftwareDeps: []string{"chrome", "vm_host", "non_meet_device"},
 		HardwareDeps: hwdep.D(
 			// TODO(b/171808591) Test is flaky on some models due to this memory issue.
 			// Skip the flaky models until the issue is fixed.
