@@ -123,6 +123,7 @@ func init() {
 				"domika",
 				"domilly",
 				"domiso",
+				"epic",
 				"gallida360",
 				"gana",
 				"glassway",
