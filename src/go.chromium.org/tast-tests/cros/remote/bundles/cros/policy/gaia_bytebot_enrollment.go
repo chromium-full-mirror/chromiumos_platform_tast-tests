@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -35,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1111632",
 		Attr:         []string{"group:dmserver-enrollment-daily"},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
 		// b/365541979: Skip on the reven\nuc11.
 		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.tape.Service", "tast.cros.graphics.ScreenshotService"},
@@ -88,7 +89,7 @@ func init() {
 func GAIABytebotEnrollment(ctx context.Context, s *testing.State) {
 	param := s.Param().(gaiaenrollment.TestParams)
 	dmServerURL := param.DMServer
-	poolID := param.PoolID
+	poolID := dma.TapePool(param.PoolID)
 
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {

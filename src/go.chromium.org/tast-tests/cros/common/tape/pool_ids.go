@@ -50,6 +50,7 @@ const (
 	DmaBuiltInCertProvisioningAPITesting = "dma_built_in_cert_provisioning_api_testing"
 	DmaDeviceTrustDisabled               = "dma_device_trust_disabled"
 	DmaDeviceTrustEnabled                = "dma_device_trust_enabled"
+	DmaChromeosbytebotCom                = "dma_chromeosbytebot_com"
 )
 
 // PoolIds for unmanaged owned test accounts.

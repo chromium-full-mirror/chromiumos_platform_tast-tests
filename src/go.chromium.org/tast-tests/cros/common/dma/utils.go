@@ -149,6 +149,7 @@ func tapePools() map[string]string {
 		tape.BuiltInCertProvisioningAPITesting: tape.DmaBuiltInCertProvisioningAPITesting,
 		tape.DeviceTrustDisabled:               tape.DmaDeviceTrustDisabled,
 		tape.DeviceTrustEnabled:                tape.DmaDeviceTrustEnabled,
+		tape.ChromeosbytebotCom:                tape.DmaChromeosbytebotCom,
 	}
 }
 
