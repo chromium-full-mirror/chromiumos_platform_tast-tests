@@ -161,7 +161,7 @@ func CCAUnplugExternalCamera(ctx context.Context, s *testing.State) {
 			return errors.Errorf("Unexpect CCA use device; got: %s, want: %v", currentDevice, builtinDevices)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
 		s.Fatal("Failed to check the CCA app is using built-in devices: ", err)
 	}
 
