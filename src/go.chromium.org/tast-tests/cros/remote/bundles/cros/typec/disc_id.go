@@ -25,7 +25,7 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_unigraf274", "typec_informational"},
+		Attr:         []string{"group:typec", "typec_utc274", "typec_informational"},
 		Fixture:      "typecSwitch",
 		Params: []testing.Param{{
 			Val: typecswitch.TestSetupData{
@@ -90,8 +90,8 @@ var hpG4DiscIDParams = discIDParams{
 	},
 }
 
-// unigrafDiscIDParams contains parameters for Unigraf.
-var unigrafDiscIDParams = discIDParams{
+// utcDiscIDParams contains parameters for utc.
+var utcDiscIDParams = discIDParams{
 	partnerIdentity: identityParams{
 		certStat:        "0xf0000003",
 		idHeader:        "0x550016a6",
@@ -103,7 +103,7 @@ var unigrafDiscIDParams = discIDParams{
 	partnerModes: []modeParams{
 		{svid: "ff01", vdo: "0x001c0045"},
 	},
-	// Currently Unigraf setup does not have active cable.
+	// Currently utc setup does not have active cable.
 	cableIdentity: identityParams{
 		certStat:        "0x00000000",
 		idHeader:        "0x00000000",
@@ -150,8 +150,8 @@ func DiscID(ctx context.Context, s *testing.State) {
 	// Select parameters based on the switch type.
 	switch sw.GetType() {
 	case usbswitch.UTC274:
-		params = unigrafDiscIDParams
-		s.Log("Detected Unigraf UTC-274, using Unigraf parameters")
+		params = utcDiscIDParams
+		s.Log("Detected utc UTC-274, using utc parameters")
 	case usbswitch.Mcci:
 		params = hpG4DiscIDParams // Use HP G4 for MCCI.
 		s.Log("Detected MCCI switch, using HP G4 parameters")

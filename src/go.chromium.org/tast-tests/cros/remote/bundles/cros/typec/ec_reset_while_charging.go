@@ -9,19 +9,19 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecutc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 10)
+	params := typecutc.GenerateUtcParams(typecutc.TestSetupData{}, 10)
 	testing.AddTest(&testing.Test{
 		Func: ECResetWhileCharging,
 		Desc: "Check that DUT is charging after EC reset",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigrafAndServo",
+		Fixture:      "typecUtcAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		Attr:         []string{"group:typec", "typec_informational"},
 		Params:       params,
@@ -31,16 +31,16 @@ func init() {
 func ECResetWhileCharging(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	// Get Unigraf controller from fixture.
-	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	// Get utc controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecutc.FixtureData)
 	if !ok {
-		s.Fatal("Failed to get Unigraf controller from fixture")
+		s.Fatal("Failed to get utc controller from fixture")
 	}
-	unigrafctl := fixtData.Unigraf
+	utcctl := fixtData.Utc
 
-	// Setup Unigraf.
-	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
-		s.Fatal("Failed to setup Unigraf: ", err)
+	// Setup utc.
+	if err := typecutc.SetupUtc(ctx, utcctl, s.Param().(typecutc.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup utc: ", err)
 	}
 
 	// Verify that the DUT is charging within 10 seconds.

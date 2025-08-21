@@ -12,7 +12,7 @@ import (
 
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 
-	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
+	"go.chromium.org/tast-tests/cros/common/usbutils/utc"
 	"go.chromium.org/tast-tests/cros/common/usbutils/usbswitch"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast/core/errors"
@@ -22,7 +22,7 @@ import (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "typecSwitch",
-		Desc:     "Initializes and provides a Type-C switch (MCCI or Unigraf) interface",
+		Desc:     "Initializes and provides a Type-C switch (MCCI or utc) interface",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
@@ -33,9 +33,9 @@ func init() {
 		Vars: []string{
 			"typec.McciSerial",
 			"typec.McciPath",
-			"typec.UnigrafUri",
+			"typec.UtcUri",
 			"typec.SwitchPort",
-			"typec.UnigrafSerial",
+			"typec.UtcSerial",
 		},
 	})
 }
@@ -119,7 +119,7 @@ func (f *SwitchFixture) Reset(ctx context.Context) error {
 
 	// Attempt to reset to USB3 mode as a common default.
 	if err := f.TestSwitch.EnterMode(ctx, usbswitch.Usb3Mode); err != nil {
-		return errors.Wrap(err, "failed to reset Unigraf to USB3 mode during fixture reset")
+		return errors.Wrap(err, "failed to reset utc to USB3 mode during fixture reset")
 	}
 	return nil
 }
@@ -134,7 +134,7 @@ func (f *SwitchFixture) PostTest(ctx context.Context, s *testing.FixtTestState) 
 
 // newSwitch returns an interface for the usb switch.
 func newSwitch(ctx context.Context, s *testing.FixtState) (usbswitch.Switch, error) {
-	if unigrafURI, unigrafPresent := s.Var("typec.UnigrafUri"); unigrafPresent {
+	if utcURI, utcPresent := s.Var("typec.UtcUri"); utcPresent {
 		var pasitTopology *labapi.PasitHost
 		if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
 			if dutConfig.GetChromeos().GetPasitHost() != nil {
@@ -142,12 +142,12 @@ func newSwitch(ctx context.Context, s *testing.FixtState) (usbswitch.Switch, err
 				s.Log("Loaded DUT info from lab config")
 			}
 		}
-		unigrafSerial, _ := s.Var("typec.UnigrafSerial")
-		unigrafObj, err := unigraf.New(ctx, unigrafURI, unigrafSerial, pasitTopology)
+		utcSerial, _ := s.Var("typec.UtcSerial")
+		utcObj, err := utc.New(ctx, utcURI, utcSerial, pasitTopology)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to create unigraf object")
+			return nil, errors.Wrap(err, "failed to create utc object")
 		}
-		return unigrafObj, nil
+		return utcObj, nil
 
 	} else if mcciSerial, mcciPresent := s.Var("typec.McciSerial"); mcciPresent {
 		path, _ := s.Var("typec.McciPath")

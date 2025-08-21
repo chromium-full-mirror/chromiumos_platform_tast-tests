@@ -9,19 +9,19 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
-	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
+	"go.chromium.org/tast-tests/cros/common/usbutils/utc"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecutc"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{}, 10)
+	params := typecutc.GenerateUtcParams(typecutc.TestSetupData{}, 10)
 	testing.AddTest(&testing.Test{
 		Func: PowerSwapStability,
 		Desc: "Check power swap stability on a typec port",
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigrafAndServo",
+		Fixture:      "typecUtcAndServo",
 		Contacts:     []string{"chromeos-usb-champs@google.com", "danielgeorgem@google.com"},
 		Attr:         []string{"group:typec", "typec_informational"},
 		Params:       params,
@@ -31,44 +31,44 @@ func init() {
 func PowerSwapStability(ctx context.Context, s *testing.State) {
 	numIterations := 30
 	dutTestPortID := 1
-	if s.Param().(typecunigraf.TestSetupData).PortNum == 1 {
+	if s.Param().(typecutc.TestSetupData).PortNum == 1 {
 		dutTestPortID = 0
 	}
 
-	// Get Unigraf controller from fixture.
-	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	// Get utc controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecutc.FixtureData)
 	if !ok {
-		s.Fatal("Failed to get Unigraf controller from fixture")
+		s.Fatal("Failed to get utc controller from fixture")
 	}
-	unigrafctl := fixtData.Unigraf
+	utcctl := fixtData.Utc
 
-	// Setup Unigraf.
-	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
-		s.Fatal("Failed to setup Unigraf: ", err)
+	// Setup utc.
+	if err := typecutc.SetupUtc(ctx, utcctl, s.Param().(typecutc.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup utc: ", err)
 	}
 
 	// We want to do the toggle operation a bunch of time.
 	for i := 0; i < numIterations; i++ {
-		prevRole, err := unigrafctl.PowerRole(ctx)
+		prevRole, err := utcctl.PowerRole(ctx)
 		if err != nil {
 			s.Fatal("Failed to get power role: ", err)
 		}
 
-		newRole := unigraf.PowerRoleSnk
-		if prevRole == unigraf.PowerRoleSnk {
-			newRole = unigraf.PowerRoleSrc
+		newRole := utc.PowerRoleSnk
+		if prevRole == utc.PowerRoleSnk {
+			newRole = utc.PowerRoleSrc
 		}
-		s.Logf("Unigraf power role is %s, switch to %s", prevRole.String(), newRole.String())
+		s.Logf("utc power role is %s, switch to %s", prevRole.String(), newRole.String())
 
-		if err := unigrafctl.SetPowerRole(ctx, newRole); err != nil {
+		if err := utcctl.SetPowerRole(ctx, newRole); err != nil {
 			s.Fatalf("Failed to set power role to %s, err=%v", newRole, err)
 		}
 
 		// Verify the new power state on the dut.
 		pollParams := testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second}
 		pollFunc := func(ctx context.Context) error {
-			// We set the unigraf to newRole, so after the swap the DUT should have
-			// the role of the unigraf before the swap.
+			// We set the utc to newRole, so after the swap the DUT should have
+			// the role of the utc before the swap.
 			return typecutils.CheckPowerRole(ctx, s.DUT(), prevRole.String(), dutTestPortID)
 		}
 		if err := testing.Poll(ctx, pollFunc, &pollParams); err != nil {

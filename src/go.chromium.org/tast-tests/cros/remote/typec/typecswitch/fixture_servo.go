@@ -16,7 +16,7 @@ import (
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "typecSwitchAndServo",
-		Desc:     "Initializes and provides a Type-C switch (MCCI or Unigraf) interface while deactivating the servo if present.",
+		Desc:     "Initializes and provides a Type-C switch (MCCI or utc) interface while deactivating the servo if present.",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
@@ -27,7 +27,7 @@ func init() {
 		Vars: []string{
 			"typec.McciSerial",
 			"typec.McciPath",
-			"typec.UnigrafUri",
+			"typec.utcUri",
 			"typec.SwitchPort",
 			"servo",
 		},
@@ -98,7 +98,7 @@ func (f *SwitchAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState)
 			s.Fatal("Failed to change servo power role to snk: ", err)
 		}
 
-		// On Unigraf setup, ethernet is connected by servo, wait for the connection to resume.
+		// On utc setup, ethernet is connected by servo, wait for the connection to resume.
 		connectCtx, connectCtxCancel := context.WithTimeout(ctx, 10*time.Second)
 		if err := d.WaitConnect(connectCtx); err != nil {
 			s.Fatal("DUT not reachable in time: ", err)

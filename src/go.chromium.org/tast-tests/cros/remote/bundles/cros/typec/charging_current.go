@@ -9,23 +9,23 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
-	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
+	"go.chromium.org/tast-tests/cros/common/usbutils/utc"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecutc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{
-		InitialPdState: unigraf.InitPdStateDfp,
+	params := typecutc.GenerateUtcParams(typecutc.TestSetupData{
+		InitialPdState: utc.InitPdStateDfp,
 	}, 10)
 	testing.AddTest(&testing.Test{
 		Func:     ChargingCurrent,
-		Desc:     "Test if charging current is ~3A after connecting Unigraf as source",
+		Desc:     "Test if charging current is ~3A after connecting utc as source",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigrafAndServo",
+		Fixture:      "typecUtcAndServo",
 		Attr:         []string{"group:typec", "typec_informational"},
 		Params:       params,
 	})
@@ -34,16 +34,16 @@ func init() {
 func ChargingCurrent(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	// Get Unigraf controller from fixture.
-	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	// Get utc controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecutc.FixtureData)
 	if !ok {
-		s.Fatal("Failed to get Unigraf controller from fixture")
+		s.Fatal("Failed to get utc controller from fixture")
 	}
-	unigrafctl := fixtData.Unigraf
+	utcctl := fixtData.Utc
 
-	// Setup Unigraf.
-	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
-		s.Fatal("Failed to setup Unigraf: ", err)
+	// Setup utc.
+	if err := typecutc.SetupUtc(ctx, utcctl, s.Param().(typecutc.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup utc: ", err)
 	}
 
 	// Expected current in mA and tolerance buffer (e.g., +/- 10%)
@@ -62,16 +62,16 @@ func ChargingCurrent(ctx context.Context, s *testing.State) {
 			return errors.Wrapf(err, "DUT reported current %dmA, expected %dmA", reportedCurrentDUT, expectedCurrent)
 		}
 
-		// Check Unigraf's reported current.
-		reportedCurrentUnigraf, err := unigrafctl.VbusCurrent(ctx)
+		// Check utc's reported current.
+		reportedCurrentutc, err := utcctl.VbusCurrent(ctx)
 		if err != nil {
-			return errors.Wrap(err, "failed to get unigraf current report")
+			return errors.Wrap(err, "failed to get utc current report")
 		}
-		if reportedCurrentUnigraf < expectedCurrent-currentBuffer || reportedCurrentUnigraf > expectedCurrent+currentBuffer {
-			return errors.Wrapf(err, "Unigraf reported current %dmA, expected %dmA", reportedCurrentUnigraf, expectedCurrent)
+		if reportedCurrentutc < expectedCurrent-currentBuffer || reportedCurrentutc > expectedCurrent+currentBuffer {
+			return errors.Wrapf(err, "utc reported current %dmA, expected %dmA", reportedCurrentutc, expectedCurrent)
 		}
 
-		s.Logf("DUT: %dmA, Unigraf: %dmA. Current is within expected range", reportedCurrentDUT, reportedCurrentUnigraf)
+		s.Logf("DUT: %dmA, utc: %dmA. Current is within expected range", reportedCurrentDUT, reportedCurrentutc)
 		return nil
 	}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("DUT failed to negotiate expected current: ", err)

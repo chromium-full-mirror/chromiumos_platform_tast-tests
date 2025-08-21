@@ -124,7 +124,7 @@ func performUsb3StorageSuspendIteration(ctx context.Context, s *testing.State, d
 		return errors.Wrap(err, "failed to get USB devices before suspend")
 	}
 
-	// GoBigSleepLint: Give enough time for a new Unigraf display modeset after hot plug,
+	// GoBigSleepLint: Give enough time for a new utc display modeset after hot plug,
 	// otherwise the system won't sleep.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep for display unplug modeset")

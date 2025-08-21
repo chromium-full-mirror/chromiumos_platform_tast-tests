@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package unigraf provides support for interacting with a unigraf utc274 tester.
-package unigraf
+// Package utc provides support for interacting with a utc274 tester.
+package utc
 
 import (
 	"context"
@@ -129,7 +129,7 @@ const (
 	CableModeElecTest CableMode = CableMode(passport.CableMode_ELEC_TEST)
 )
 
-// UsbTester is data type to model a unigraf utc274 usb tester.
+// UsbTester is data type to model a utc274 usb tester.
 type UsbTester struct {
 	conn          *grpc.ClientConn
 	client        passport.UsbTesterServiceClient
@@ -138,7 +138,7 @@ type UsbTester struct {
 	switchPortNum int
 }
 
-// New Unigraf tester. It will connect to the the remote grcp server passed as
+// New utc tester. It will connect to the the remote grcp server passed as
 // an argument.
 func New(ctx context.Context, uri, serial string, pasitTopology *labapi.PasitHost) (*UsbTester, error) {
 
@@ -149,7 +149,7 @@ func New(ctx context.Context, uri, serial string, pasitTopology *labapi.PasitHos
 
 	client := passport.NewUsbTesterServiceClient(conn)
 	if client == nil {
-		return nil, errors.Errorf("failed create unigraf client but dial was OK uri=%s", uri)
+		return nil, errors.Errorf("failed create utc client but dial was OK uri=%s", uri)
 	}
 
 	ctl := &UsbTester{
@@ -200,11 +200,11 @@ func (s *UsbTester) Close(ctx context.Context) error {
 	}
 
 	if _, err := s.client.CloseTester(ctx, &passport.CloseTesterRequest{Id: s.tester}); err != nil {
-		return errors.Errorf("failed to close unigraf tester serial=%s, uri=%s", s.tester, s.uri)
+		return errors.Errorf("failed to close utc tester serial=%s, uri=%s", s.tester, s.uri)
 	}
 
 	if err := s.conn.Close(); err != nil {
-		return errors.Wrap(err, "failed to close passport unigraf testing connection")
+		return errors.Wrap(err, "failed to close passport utc testing connection")
 	}
 
 	return nil

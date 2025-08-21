@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/typecutils"
-	"go.chromium.org/tast-tests/cros/common/usbutils/unigraf"
-	"go.chromium.org/tast-tests/cros/remote/typec/typecunigraf"
+	"go.chromium.org/tast-tests/cros/common/usbutils/utc"
+	"go.chromium.org/tast-tests/cros/remote/typec/typecutc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
-	params := typecunigraf.GenerateUnigrafParams(typecunigraf.TestSetupData{
-		InitialPdState: unigraf.InitPdStateDfp,
+	params := typecutc.GenerateUtcParams(typecutc.TestSetupData{
+		InitialPdState: utc.InitPdStateDfp,
 	}, 10)
 	testing.AddTest(&testing.Test{
 		Func:     SprVoltages,
@@ -25,7 +25,7 @@ func init() {
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Fixture:      "typecUnigrafAndServo",
+		Fixture:      "typecUtcAndServo",
 		Attr:         []string{"group:typec", "typec_informational"},
 		Params:       params,
 	})
@@ -34,16 +34,16 @@ func init() {
 func SprVoltages(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
-	// Get Unigraf controller from fixture.
-	fixtData, ok := s.FixtValue().(*typecunigraf.FixtureData)
+	// Get utc controller from fixture.
+	fixtData, ok := s.FixtValue().(*typecutc.FixtureData)
 	if !ok {
-		s.Fatal("Failed to get Unigraf controller from fixture")
+		s.Fatal("Failed to get utc controller from fixture")
 	}
-	unigrafctl := fixtData.Unigraf
+	utcctl := fixtData.Utc
 
-	// Perform unigraf setup.
-	if err := typecunigraf.SetupUnigraf(ctx, unigrafctl, s.Param().(typecunigraf.TestSetupData)); err != nil {
-		s.Fatal("Failed to setup Unigraf: ", err)
+	// Perform utc setup.
+	if err := typecutc.SetupUtc(ctx, utcctl, s.Param().(typecutc.TestSetupData)); err != nil {
+		s.Fatal("Failed to setup utc: ", err)
 	}
 
 	// Voltages are in mV
@@ -52,7 +52,7 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 		pdoCnt := index + 1
 		voltageBuf := voltage / 10
 		s.Logf("Setting SrcPdoCount to %d for voltage %dV", pdoCnt, voltage)
-		if err := unigrafctl.SetSrcPdoCount(ctx, int64(pdoCnt)); err != nil {
+		if err := utcctl.SetSrcPdoCount(ctx, int64(pdoCnt)); err != nil {
 			s.Fatalf("Failed to set SrcPdoCount to %d: %v", pdoCnt, err)
 		}
 
@@ -69,10 +69,10 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "DUT reported voltage %d, expected %d", reportedVoltageDUT, voltage)
 			}
 
-			if reportedVoltageUnigraf, err := unigrafctl.VbusVoltage(ctx); err != nil {
-				return errors.Wrap(err, "failed to get unigraf voltage report")
-			} else if reportedVoltageUnigraf < voltage-voltageBuf || reportedVoltageUnigraf > voltage+voltageBuf {
-				return errors.Wrapf(err, "Unigraf reported voltage %d, expected %d", reportedVoltageUnigraf, voltage)
+			if reportedVoltageutc, err := utcctl.VbusVoltage(ctx); err != nil {
+				return errors.Wrap(err, "failed to get utc voltage report")
+			} else if reportedVoltageutc < voltage-voltageBuf || reportedVoltageutc > voltage+voltageBuf {
+				return errors.Wrapf(err, "utc reported voltage %d, expected %d", reportedVoltageutc, voltage)
 			}
 			return nil
 		}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {

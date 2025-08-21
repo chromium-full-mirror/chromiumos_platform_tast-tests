@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package typecunigraf
+package typecutc
 
 import (
 	"context"
@@ -14,25 +14,25 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:     "typecUnigrafAndServo",
-		Desc:     "Initializes Unigraf and deactivates Servo if present by setting it to SNK role.",
+		Name:     "typecUtcAndServo",
+		Desc:     "Initializes Utc and deactivates Servo if present by setting it to SNK role.",
 		Contacts: []string{"chromeos-usb-champs@google.com", "bszpila@google.com"},
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
-		Impl:            &UnigrafAndServoFixture{},
+		Impl:            &UtcAndServoFixture{},
 		SetUpTimeout:    30 * time.Second, // Includes parent SetUp and Servo init.
-		ResetTimeout:    15 * time.Second, // Parent Reset handles Unigraf.
+		ResetTimeout:    15 * time.Second, // Parent Reset handles Utc.
 		TearDownTimeout: 30 * time.Second, // Includes Servo teardown and parent TearDown.
 		Vars: []string{
 			"servo", // Optional: Servo spec if a servo is in the testbed.
 		},
-		Parent: "typecUnigraf", // Depends on the typecUnigraf fixture.
+		Parent: "typecUtc", // Depends on the typecutc fixture.
 	})
 }
 
-// UnigrafAndServoFixture holds the state for this composite fixture.
-type UnigrafAndServoFixture struct {
-	// Data from the parent typecUnigraf fixture.
+// UtcAndServoFixture holds the state for this composite fixture.
+type UtcAndServoFixture struct {
+	// Data from the parent typecutc fixture.
 	parentData *FixtureData
 
 	// Servo related state.
@@ -40,12 +40,12 @@ type UnigrafAndServoFixture struct {
 	servoActive bool // True if servo was found and configured.
 }
 
-// SetUp initializes the Unigraf (via parent) and then configures Servo.
-func (f *UnigrafAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// Get the Unigraf controller from the parent fixture.
+// SetUp initializes the utc (via parent) and then configures Servo.
+func (f *UtcAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Get the utc controller from the parent fixture.
 	parentData, ok := s.ParentValue().(*FixtureData)
 	if !ok {
-		s.Fatal("Failed to get Unigraf data from parent fixture")
+		s.Fatal("Failed to get utc data from parent fixture")
 	}
 	f.parentData = parentData
 
@@ -84,26 +84,26 @@ func (f *UnigrafAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState
 		}
 		s.Log("Servo set to SNK role.")
 
-		// If Unigraf setup involves Ethernet via Servo, DUT might disconnect and reconnect.
-		s.Log("Waiting for DUT to be connectable after Servo/Unigraf setup")
+		// If utc setup involves Ethernet via Servo, DUT might disconnect and reconnect.
+		s.Log("Waiting for DUT to be connectable after Servo/utc setup")
 		connectCtx, connectCancel := context.WithTimeout(ctx, 30*time.Second)
 		defer connectCancel()
 		if err := dut.WaitConnect(connectCtx); err != nil {
-			s.Logf("DUT not reachable after Servo/Unigraf setup (this might be expected for some setups): %v", err)
+			s.Logf("DUT not reachable after Servo/utc setup (this might be expected for some setups): %v", err)
 		} else {
 			s.Log("DUT is connectable.")
 		}
 	} else {
-		s.Log("No servo specified, proceeding with Unigraf only.")
+		s.Log("No servo specified, proceeding with utc only.")
 		f.servoActive = false
 	}
 
-	// Return the FixtureData from the parent (which contains the Unigraf controller).
+	// Return the FixtureData from the parent (which contains the utc controller).
 	return f.parentData
 }
 
 // TearDown restores Servo state if it was active and closes the proxy.
-func (f *UnigrafAndServoFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *UtcAndServoFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.servoActive && f.servoProxy != nil {
 		s.Log("Restoring Servo state in TearDown.")
 		svo := f.servoProxy.Servo()
@@ -119,15 +119,15 @@ func (f *UnigrafAndServoFixture) TearDown(ctx context.Context, s *testing.FixtSt
 	}
 }
 
-// Reset is called after each test. Parent's Reset handles Unigraf.
-func (f *UnigrafAndServoFixture) Reset(ctx context.Context) error {
+// Reset is called after each test. Parent's Reset handles Utc.
+func (f *UtcAndServoFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
 // PreTest is called before each test.
-func (f *UnigrafAndServoFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *UtcAndServoFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // PostTest is called after each test.
-func (f *UnigrafAndServoFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *UtcAndServoFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }

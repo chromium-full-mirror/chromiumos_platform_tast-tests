@@ -24,7 +24,7 @@ func GenerateParams(timeout, iterations int, mode usbswitch.ConnectionMode, attr
 
 	// TODO(b/434628173) Unblock flipped tests once the bug is fixed.
 	return []testing.Param{{
-		ExtraAttr: []string{attr, "typec_unigraf274"},
+		ExtraAttr: []string{attr, "typec_utc274"},
 		Val: TestSetupData{
 			ConnectionMode: mode,
 			Iterations:     iterations,
