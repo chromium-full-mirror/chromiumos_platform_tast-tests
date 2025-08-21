@@ -396,23 +396,10 @@ func verifyDlcManifest(ctx context.Context, dlcID string, modemType cellularcons
 	if (modemType != cellularconst.ModemTypeL850) && !metadata.Manifest.LoadPinVerityDigest {
 		return errors.Errorf("DLC_LOADPIN_VERITY_DIGEST was not set in DLC %s", dlcID)
 	}
-
-	// Start with nissa only, and update the list as we enable the attribute on more boards. When
-	// all boards include the property, the board check can be removed.
-	var variantDlcAttributeShouldExistOnBoard = (board == "brox" || board == "brya" || board == "corsola" || board == "guybrush" || board == "nissa" || board == "rex" || board == "skyrim" || board == "skywalker" || board == "staryu")
-	// Until we move to crosworkon ebuilds, some DLCs in other boards will use a cached version
-	// of the package which does not have the DLC attribute `modem`, so skip this check on them.
-	if variantDlcAttributeShouldExistOnBoard {
-		if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
-			return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
-		}
+	if _, ok := metadata.Manifest.Attributes["modem"]; !ok {
+		return errors.Errorf("attributes missing the `modem` attribute. DLC: %s. Attributes: %q", dlcID, metadata.Manifest.Attributes)
 	}
-	// Note: The following check is equivalent to an XOR check. We are checking that boards listed
-	// in variantDlcAttributeShouldExistOnBoard have the variant as DLC attribute
-	// (based on MODEM_FW_DLC_FIRMWARE_VARIANT), and boards that are not listed, don't have it. The
-	// reason to do it this way is to ensure that variantDlcAttributeShouldExistOnBoard is updated
-	// as soon as the DLC attribute is added to other boards.
-	if _, ok := metadata.Manifest.Attributes[variantInManifest]; ok != variantDlcAttributeShouldExistOnBoard {
+	if _, ok := metadata.Manifest.Attributes[variantInManifest]; !ok {
 		return errors.Errorf("attributes missing variant. Variant: '%q' DLC: %q Attributes: '%q'", variantInManifest, dlcID, metadata.Manifest.Attributes)
 	}
 	return nil
