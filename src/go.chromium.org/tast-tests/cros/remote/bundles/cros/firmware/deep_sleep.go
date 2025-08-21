@@ -31,6 +31,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bringup", "firmware_ec", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw"},
 		Vars:         []string{"firmware.hibernate_time", "board", "model"},
 		HardwareDeps: hwdep.D(hwdep.Battery(), hwdep.ChromeEC()),
+		SoftwareDeps: []string{"ec_hibernate"},
 		Timeout:      260 * time.Minute, // 4hrs 20mins
 		Fixture:      fixture.NormalMode,
 	})
