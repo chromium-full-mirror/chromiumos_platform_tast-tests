@@ -34,7 +34,7 @@ func init() {
 			"raging@google.com",         // Owner for VM tests.
 		},
 		BugComponent: "b:883059",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Params: []testing.Param{{
 			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			ExtraSoftwareDeps: []string{"android_container"},
