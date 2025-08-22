@@ -57,9 +57,10 @@ func init() {
 				ExtraAttr: []string{"firmware_stress", "dsp_small"},
 			},
 			{
-				Name:    "medium",
-				Timeout: 400 * time.Minute,
-				Val:     250, ExtraAttr: []string{"dsp_medium"},
+				Name:      "medium",
+				Timeout:   400 * time.Minute,
+				Val:       250,
+				ExtraAttr: []string{"dsp_medium"},
 			},
 			{
 				Name:      "fw_qual",
@@ -219,7 +220,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		func() {
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 30*time.Second)
 			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
+			if err := h.WaitConnect(waitConnectCtx, firmware.FromHibernation); err != nil {
 				logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
 			}
 		}()
