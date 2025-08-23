@@ -51,6 +51,7 @@ const (
 	DmaDeviceTrustDisabled               = "dma_device_trust_disabled"
 	DmaDeviceTrustEnabled                = "dma_device_trust_enabled"
 	DmaChromeosbytebotCom                = "dma_chromeosbytebot_com"
+	DmaLogUploadEnabled                  = "dma_log_upload_enabled"
 )
 
 // PoolIds for unmanaged owned test accounts.

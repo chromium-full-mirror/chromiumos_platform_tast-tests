@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/dma"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
@@ -44,7 +45,7 @@ func init() {
 		Desc: "Verifies that remote log upload with FETCH_SUPPORT_PACKET command works",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com", // Team
-			"iremuguz@google.com",                           // Test author
+			"iremuguz@google.com",                              // Test author
 		},
 		BugComponent: "b:1111615",
 		Attr: []string{
@@ -54,7 +55,7 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "vpd"},
+		SoftwareDeps: []string{"chrome", "vpd", "gaia"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service"},
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
@@ -85,6 +86,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	param := s.Param().(testingParam)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
+	poolID := dma.TapePool(tape.LogUploadEnabled)
 
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
@@ -111,7 +113,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 
 	timeout := int32(fetchSupportPacketTestTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, false, tape.WithTimeout(timeout), tape.WithPoolID(tape.LogUploadEnabled))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient /*lock=*/, false, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}

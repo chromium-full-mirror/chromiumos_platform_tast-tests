@@ -150,6 +150,7 @@ func tapePools() map[string]string {
 		tape.DeviceTrustDisabled:               tape.DmaDeviceTrustDisabled,
 		tape.DeviceTrustEnabled:                tape.DmaDeviceTrustEnabled,
 		tape.ChromeosbytebotCom:                tape.DmaChromeosbytebotCom,
+		tape.LogUploadEnabled:                  tape.DmaLogUploadEnabled,
 	}
 }
 
