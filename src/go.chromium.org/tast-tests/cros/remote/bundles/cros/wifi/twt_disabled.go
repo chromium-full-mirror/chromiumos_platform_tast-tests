@@ -6,7 +6,6 @@ package wifi
 
 import (
 	"context"
-	"net"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -19,6 +18,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"net"
 )
 
 func init() {
@@ -122,11 +122,10 @@ func TwtDisabled(ctx context.Context, s *testing.State) {
 			}
 			// Extended Capabilities
 			if element.ID == 0x7F {
-				if int(element.Length) >= 10 && (element.Info[9] & 0x20) != 0 {
+				if int(element.Length) >= 10 && (element.Info[9]&0x20) != 0 {
 					return errors.New("TWT Requester enabled in Ext Cap")
-				} else {
-					s.Log("TWT Requester disabled in Ext Cap")
 				}
+				s.Log("TWT Requester disabled in Ext Cap")
 			}
 
 		}
