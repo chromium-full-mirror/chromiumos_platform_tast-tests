@@ -39,9 +39,13 @@ var (
 		"AHS20079_A00_01": "2007901",
 		"AHS20079_A00_02": "2007902",
 
-		// HDMI v2.1 Fixtures:
+		// Old HDMI v2.1 Fixtures:
 		"AHS24067_B00_01": "2406701",
 		"AHS24067_B00_02": "2406702",
+
+		// New HDMI v2.1 Fixtures:
+		"AHS24067_C00_01": "2406701",
+		"AHS24067_C00_02": "2406702",
 
 		// Old Type-A fixtures:
 		"AUS20019_D00_01": "2001901",
