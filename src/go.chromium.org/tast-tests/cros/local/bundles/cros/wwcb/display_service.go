@@ -77,7 +77,7 @@ func (ds *DisplayService) SetMirrorDisplay(ctx context.Context, req *wwcb.QueryR
 
 	// Expect the display is changed. Return err after poll timeout.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		intDispInfo, err := display.GetInternalInfo(ctx, tconn)
+		intDispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get display infos in mirror mode")
 		}
