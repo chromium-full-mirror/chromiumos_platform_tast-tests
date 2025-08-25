@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"regexp"
+	"strconv"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -147,7 +148,23 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	slowG3 := false
 	if tc.SetRecScreen {
+		// Some devices passed fw qual before power_button_from_ro is required(b/434814366).
+		// We enlarge the wait time for these firmware version.
+		// `ectool version` in older firmware only output commit hash and do not
+		// contain build version like 15194.190.0 so we read ap firmware version.
+		roVersion, _, err := h.Reporter.GetFWRORWVersion(ctx)
+		if err != nil {
+			s.Fatal("Failed to determine RO AP version: ", err)
+		}
+		re := regexp.MustCompile(`\b(\d+)\.(\d+).(\d+)\b`)
+
+		match := re.FindStringSubmatch(roVersion)
+		branchVersion, err := strconv.Atoi(match[2])
+		if err == nil && len(match) > 0 && match[1] == "15194" && branchVersion <= 190 {
+			slowG3 = true
+		}
 		s.Log("Booting the DUT to the recovery screen")
 		if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to boot to recovery screen: ", err)
@@ -185,7 +202,11 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	s.Log("Check for G3 powerstate")
 	powerStateTimeout := firmware.PowerStateTimeout
 	if tc.PowerStateTimeout > 0 {
-		powerStateTimeout = tc.PowerStateTimeout
+		if slowG3 {
+			powerStateTimeout = 30 * time.Second
+		} else {
+			powerStateTimeout = tc.PowerStateTimeout
+		}
 	}
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, powerStateTimeout, "G3"); err != nil {
 		s.Fatal("Failed to get G3 powerstate: ", err)
