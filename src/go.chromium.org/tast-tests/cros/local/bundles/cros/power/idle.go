@@ -234,8 +234,8 @@ func Idle(ctx context.Context, s *testing.State) {
 		defer session.Stop(cleanupCtx)
 	}
 
-	// Double the netdev budget to mitigate network noise.
-	if err := testexec.CommandContext(ctx, "sysctl", "net.core.netdev_budget_usecs=4000", "net.core.netdev_budget=600").Run(); err != nil {
+	// Triple the netdev budget to mitigate network noise.
+	if err := testexec.CommandContext(ctx, "sysctl", "net.core.netdev_budget_usecs=6000", "net.core.netdev_budget=900").Run(); err != nil {
 		s.Fatal("Can't set netdev budget: ", err)
 	}
 	defer testexec.CommandContext(cleanupCtx, "sysctl", "net.core.netdev_budget_usecs=2000", "net.core.netdev_budget=300").Run()
