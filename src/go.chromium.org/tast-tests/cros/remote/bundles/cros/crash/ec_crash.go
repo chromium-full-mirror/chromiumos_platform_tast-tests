@@ -16,12 +16,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -71,8 +70,16 @@ func init() {
 	})
 }
 
-func isPanicLogEnabled(dutFeatures *protocol.DUTFeatures) (bool, error) {
-	satisfied, _, err := hwdep.ECBuildConfigOptions("PANIC_LOG", "PLATFORM_EC_PANIC_LOG").Satisfied(dutFeatures.GetHardware())
+func isPanicLogEnabled(ctx context.Context, s *testing.State) (bool, error) {
+	if s.Features("").GetHardware().GetHardwareFeatures().GetEmbeddedController().GetBuildConfig() == nil {
+		// BuildConfig is missing, fallback to using ectool to for Panic Log support
+		err := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain).Command(ctx, "paniclog", "info").Run()
+		if err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	satisfied, _, err := hwdep.ECBuildConfigOptions("PANIC_LOG", "PLATFORM_EC_PANIC_LOG").Satisfied(s.Features("").GetHardware())
 	if err != nil {
 		return false, errors.Wrap(err, "failed to check PANIC_LOG")
 	}
@@ -86,6 +93,9 @@ func isPanicLogEnabled(dutFeatures *protocol.DUTFeatures) (bool, error) {
 // ECCrash verifies that crash files are generated when the EC crashes.
 func ECCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
+	const base = `embedded_controller\.\d{8}\.\d{6}\.\d+\.0`
+	suffixes := []string{"eccrash", "meta", "log"}
+
 	d := s.DUT()
 
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -138,6 +148,17 @@ func ECCrash(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	panicLogEnabled, err := isPanicLogEnabled(ctx, s)
+	if err != nil {
+		s.Fatal("Failed to check if panic log is enabled: ", err)
+	}
+	if panicLogEnabled {
+		s.Log("Panic log is enabled")
+		suffixes = append(suffixes, ".panic.log")
+	} else {
+		s.Log("Panic log is disabled")
+	}
+
 	if out, err := d.Conn().CommandContext(ctx, "logger", "Running ECCrash").CombinedOutput(); err != nil {
 		s.Logf("WARNING: Failed to log info message: %s", out)
 	}
@@ -182,18 +203,6 @@ func ECCrash(ctx context.Context, s *testing.State) {
 	}
 	fs = crash_service.NewFixtureServiceClient(cl.Conn)
 
-	const base = `embedded_controller\.\d{8}\.\d{6}\.\d+\.0`
-	suffixes := []string{"eccrash", "meta", "log"}
-	panicLogEnabled, err := isPanicLogEnabled(s.Features(""))
-	if err != nil {
-		s.Fatal("Failed to check if panic log is enabled: ", err)
-	}
-	if panicLogEnabled {
-		s.Log("Panic log is enabled")
-		suffixes = append(suffixes, ".panic.log")
-	} else {
-		s.Log("Panic log is disabled")
-	}
 	waitReq := &crash_service.WaitForCrashFilesRequest{
 		Dirs:    []string{systemCrashDir},
 		Regexes: []string{base + `\.(` + strings.Join(suffixes, "|") + `)`},
