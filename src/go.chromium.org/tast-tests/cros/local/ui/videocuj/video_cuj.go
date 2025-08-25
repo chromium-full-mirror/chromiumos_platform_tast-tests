@@ -218,6 +218,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 				testing.ContextLogf(ctx, "Failed to wait for the tab %s to quiesce", videoURL)
 			}
 
+			crosVideoWebArea := nodewith.NameContaining("CrosVideo").Role(role.RootWebArea)
+			if err := webutil.ReloadIfSiteUnreachable(ui, videoConn, crosVideoWebArea)(ctx); err != nil {
+				return errors.Wrap(err, "failed to reload the page")
+			}
+
 			// Switch between each video format (Normal, PIP, Fullscreen).
 			for _, format := range setVideoFormats {
 				if err := tabChecker.Check(ctx); err != nil {
@@ -241,6 +246,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 
 				if err := ui.WithTimeout(3*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed to wait until no event after focusing window: ", err)
+				}
+
+				video := nodewith.Role(role.Video)
+				if err := ui.WaitUntilExists(video)(ctx); err != nil {
+					return errors.Wrap(err, "failed to wait for the video")
 				}
 
 				// Ensure the video is playing before we set up the video format.
@@ -315,8 +325,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, testParam TestPa
 				// Collect input latency metrics by toggling and dragging
 				// the volume slider. Move the mouse in clamshell/tablet for
 				// consistency in making the media control buttons appear.
-				video := nodewith.Role(role.Video)
-
 				// Match the volume button by regex to account for both mute
 				// and unmute buttons.
 				volumeButton := nodewith.NameRegex(regexp.MustCompile("mute$")).Role(role.Button)
