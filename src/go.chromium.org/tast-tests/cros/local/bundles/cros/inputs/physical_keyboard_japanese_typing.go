@@ -68,13 +68,14 @@ func validateInputFieldFromNthCandidate(its *testserver.InputsTestServer, tconn 
 }
 
 // changeJapaneseInputMode changes the Japanese input mode via Quick Settings.
-func changeJapaneseInputMode(ui *uiauto.Context, inputMode string) uiauto.Action {
+func changeJapaneseInputMode(ui *uiauto.Context, kb *input.KeyboardEventWriter, inputMode string) uiauto.Action {
 	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
 	inputModeButtonFinder := nodewith.Name(inputMode).Role(role.CheckBox).Ancestor(nodewith.Name("IME menu button").Role(role.Dialog).First())
 	return uiauto.Combine("input options in shelf is enabled automatically by adding second IME",
 		ui.LeftClick(imeMenuTrayButtonFinder),
 		ui.ScrollToVisible(inputModeButtonFinder),
-		ui.LeftClickUntil(inputModeButtonFinder, ui.Gone(inputModeButtonFinder)),
+		ui.LeftClick(inputModeButtonFinder),
+		kb.AccelAction("Esc"), // dismiss the shelf menu
 	)
 }
 
@@ -520,23 +521,23 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 			scenario: "Change input mode via Quick Settings",
 			action: uiauto.Combine("Select input modes one by one and try typing 'hoge'",
 				its.ClearThenClickFieldAndWaitForActive(inputField),
-				changeJapaneseInputMode(ui, "Katakana"),
+				changeJapaneseInputMode(ui, kb, "Katakana"),
 				kb.TypeAction("hoge"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ホゲ"),
 				kb.AccelAction("Esc"),
-				changeJapaneseInputMode(ui, "Wide Latin"),
+				changeJapaneseInputMode(ui, kb, "Wide Latin"),
 				kb.TypeAction("hoge"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ｈｏｇｅ"),
 				kb.AccelAction("Esc"),
-				changeJapaneseInputMode(ui, "Half width katakana"),
+				changeJapaneseInputMode(ui, kb, "Half width katakana"),
 				kb.TypeAction("hoge"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "ﾎｹﾞ"),
 				kb.AccelAction("Esc"),
-				changeJapaneseInputMode(ui, "Latin"),
+				changeJapaneseInputMode(ui, kb, "Latin"),
 				kb.TypeAction("hoge"),
 				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "hoge"),
 				kb.AccelAction("Esc"),
-				changeJapaneseInputMode(ui, "Direct input"),
+				changeJapaneseInputMode(ui, kb, "Direct input"),
 				kb.TypeAction("hoge"),
 				// 'hoge' should be inserted without composition, so pressing Esc should be a no-op.
 				kb.AccelAction("Esc"),
