@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell_network_cellular", "group:wificell", "wificell_e2e"},
+		Attr:           []string{"group:wificell_network_cellular"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{

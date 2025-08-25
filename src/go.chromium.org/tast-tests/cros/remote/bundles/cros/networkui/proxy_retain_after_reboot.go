@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
 		// TODO(b/275127708): Move this test to network suite.
-		Attr:        []string{"group:wificell_network_cellular", "group:wificell", "wificell_e2e", "group:release-health", "release-health_network"},
+		Attr:        []string{"group:wificell_network_cellular", "group:release-health", "release-health_network"},
 		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
