@@ -16,7 +16,6 @@ import (
 	"github.com/mafredri/cdp/protocol/target"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -93,27 +92,6 @@ func (vkbCtx *VirtualKeyboardContext) UIConn(ctx context.Context) (*chrome.Conn,
 	const extURLPrefix = "chrome-extension://jkghodnilhceideoidjikpgommlajknk/inputview.html"
 	f := func(t *target.Info) bool { return strings.HasPrefix(t.URL, extURLPrefix) }
 	return vkbCtx.cr.NewConnForTarget(ctx, f)
-}
-
-// BackgroundConn returns a connection to the virtual keyboard background page,
-// where JavaScript can be executed to simulate interactions with IME.
-func (vkbCtx *VirtualKeyboardContext) BackgroundConn(ctx context.Context) (*chrome.Conn, error) {
-	const bgPageURLPrefix = "chrome-extension://jkghodnilhceideoidjikpgommlajknk/background"
-	bgTargetFilter := func(t *driver.Target) bool {
-		return strings.HasPrefix(t.URL, bgPageURLPrefix)
-	}
-	// Background target from login persists for a few seconds, causing 2 background targets.
-	// Polling until connected to the unique target.
-	var bconn *chrome.Conn
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		bconn, err = vkbCtx.cr.NewConnForTarget(ctx, bgTargetFilter)
-		return err
-	}, &testing.PollOptions{Timeout: 60 * time.Second, Interval: 3 * time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for unique virtual keyboard background target")
-	}
-
-	return bconn, nil
 }
 
 // ShowVirtualKeyboard returns an action forcing the virtual keyboard show up via Chrome API.
@@ -472,7 +450,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToKeyboard() uiauto.Action {
 func (vkbCtx *VirtualKeyboardContext) SwitchToVoiceInput() uiauto.Action {
 	// Call background API to switch.
 	callSwitchAPI := func(ctx context.Context) error {
-		bconn, err := vkbCtx.BackgroundConn(ctx)
+		bconn, err := vkbCtx.UIConn(ctx)
 		if err != nil {
 			return err
 		}
@@ -496,7 +474,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToVoiceInput() uiauto.Action {
 func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context) (*HandwritingContext, error) {
 	// Set local storage to override the LF first time tutorial prompt.
 	// It does not apply to legacy handwriting.
-	bconn, err := vkbCtx.BackgroundConn(ctx)
+	bconn, err := vkbCtx.UIConn(ctx)
 	if err != nil {
 		return nil, err
 	}
