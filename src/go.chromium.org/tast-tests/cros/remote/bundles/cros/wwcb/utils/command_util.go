@@ -29,19 +29,28 @@ const (
 	pollInterval = 200 * time.Millisecond
 )
 
+type chargeInfo struct {
+	status     string
+	voltage    float64
+	voltageMax float64
+	currentMax float64
+}
+
 // VerifyPowerStatus verifies battery is charging or discharging.
 func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/CROS_USBPD_CHARGER1/status").Output()
+		chargeInfo, err := getChargeInfo(ctx, dut)
 		if err != nil {
-			return errors.Wrap(err, "retrieve power supply info from DUT")
+			testing.ContextLog(ctx, "Failed to get charge info: ", err)
+			return errors.Wrap(err, "retrieve charge info from DUT")
 		}
-
-		var chargingState bool
-		if strings.TrimSpace(string(out)) != "Discharging" {
-			chargingState = true
-		} else {
-			chargingState = false
+		chargingState := false
+		for _, info := range chargeInfo {
+			if info.status == "Charging" {
+				// Any Charger is charging means DUT is charging, while
+				// all chargers == discharging means DUT is not charging.
+				chargingState = true
+			}
 		}
 		if chargingState != isBatteryCharging {
 			return errors.Errorf("unexpected power state, got: %t, want: %t", chargingState, isBatteryCharging)
@@ -616,51 +625,108 @@ func CurrentTime(ctx context.Context, dut *dut.DUT) (time.Time, error) {
 
 // FindDockingPowerPath returns the power_supply path of docking.
 func FindDockingPowerPath(ctx context.Context, dut *dut.DUT) (string, error) {
-	out, err := dut.Conn().CommandContext(ctx, "ls", "/sys/class/power_supply").Output(exec.DumpLogOnError)
+	chargeInfoMap, err := getChargeInfo(ctx, dut)
 	if err != nil {
-		return "", errors.Wrap(err, "reterieve power supply")
+		return "", errors.Wrap(err, "failed to get charge info")
 	}
-	powerChargers := strings.Split(strings.TrimSpace(string(out)), "\n")
-	for i := 0; i < len(powerChargers); i++ {
-		if !strings.Contains(powerChargers[i], "CROS_USBPD_CHARGER") {
-			continue
-		}
-		powerSupply := fmt.Sprintf("/sys/class/power_supply/%s/voltage_now", powerChargers[i])
-		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", powerSupply).Output()
-		if err != nil {
-			return "", errors.Wrap(err, "retrieve power voltage from DUT")
-		}
-		testing.ContextLogf(ctx, "voltage_now:%s", string(out))
-		if strings.TrimSpace(string(out)) == "0" {
-			return fmt.Sprint(powerChargers[i]), nil
+	for charger, info := range chargeInfoMap {
+		if info.voltage == 0 {
+			return charger, nil
 		}
 	}
 	return "", errors.New("can't find docking power path")
 }
 
-// VerifyDockingPower verifys the docking power > 45W.
+// parseMicroValueToFloat parses out and converts it to float value.
+//
+// All the values from power supply are in micro (eg microVolts, microAmps, etc)
+// so we need to divide the value by 1000000 to get the float value in the
+// unit of volts, amps, etc.
+func parseMicroValueToFloat(out []byte) (float64, error) {
+	const baseValue = 1000000.0 // convert micro to float
+	val, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "unabled to convert to float")
+	}
+	return val / baseValue, nil
+}
+
+func getChargeInfo(ctx context.Context, dut *dut.DUT) (map[string]chargeInfo, error) {
+	out, err := dut.Conn().CommandContext(ctx, "ls", "/sys/class/power_supply").Output(exec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "reterieve power supply")
+	}
+	powerChargers := strings.Split(strings.TrimSpace(string(out)), "\n")
+	chargeInfoMap := make(map[string]chargeInfo)
+	for _, charger := range powerChargers {
+		chargeInfo := chargeInfo{}
+		checkIfChargerPath := fmt.Sprintf("/sys/class/power_supply/%s/current_max", charger)
+		// If the file does not exist, skip this since it is not a charger.
+		if _, err := dut.Conn().CommandContext(ctx, "sudo", "stat", checkIfChargerPath).Output(); err != nil {
+			continue
+		}
+
+		// Get the voltage.
+		voltagePath := fmt.Sprintf("/sys/class/power_supply/%s/voltage_now", charger)
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", voltagePath).Output()
+		if err != nil {
+			return nil, errors.Wrap(err, "retrieve charger voltage from DUT")
+		}
+		chargeInfo.voltage, err = parseMicroValueToFloat(out)
+		if err != nil {
+			return nil, err
+		}
+		// Get the max voltage two different paths one for newer devices and one for older.
+		maxVoltagePath := fmt.Sprintf("/sys/class/power_supply/%s/voltage_max", charger)
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", maxVoltagePath).Output()
+		if err != nil {
+			maxVoltagePath = maxVoltagePath + "_design"
+			out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", maxVoltagePath).Output()
+			if err != nil {
+				return nil, errors.Wrap(err, "retrieve charger max voltage from DUT")
+			}
+		}
+		chargeInfo.voltageMax, err = parseMicroValueToFloat(out)
+		if err != nil {
+			return nil, err
+		}
+		// Get the max current.
+		maxCurrentPath := fmt.Sprintf("/sys/class/power_supply/%s/current_max", charger)
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", maxCurrentPath).Output()
+		if err != nil {
+			return nil, errors.Wrap(err, "retrieve charger max current from DUT")
+		}
+		chargeInfo.currentMax, err = parseMicroValueToFloat(out)
+		if err != nil {
+			return nil, err
+		}
+		// Get the status.
+		statusPath := fmt.Sprintf("/sys/class/power_supply/%s/status", charger)
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", statusPath).Output()
+		if err != nil {
+			return nil, errors.Wrap(err, "retrieve power status from DUT")
+		}
+		chargeInfo.status = strings.TrimSpace(string(out))
+		chargeInfoMap[charger] = chargeInfo
+	}
+	testing.ContextLog(ctx, "chargeInfoMap: ", chargeInfoMap)
+	return chargeInfoMap, nil
+
+}
+
+// VerifyDockingPower verifies the docking power > 45W.
 func VerifyDockingPower(ctx context.Context, dut *dut.DUT, powerPath string) error {
-	baseValue := 1000000
+	chargeInfoMap, err := getChargeInfo(ctx, dut)
+	if err != nil {
+		return errors.Wrap(err, "failed to get charge info")
+	}
+	if _, ok := chargeInfoMap[powerPath]; !ok {
+		return errors.Errorf("can't find charge info for %s", powerPath)
+	}
+	chargeInfo := chargeInfoMap[powerPath]
 	const powerWattage = 45
-	out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/current_max").Output()
-	if err != nil {
-		return errors.Wrap(err, "retrieve electric current from DUT")
-	}
-	currentMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
-	if err != nil {
-		return errors.Wrap(err, "converter electric current to float")
-	}
-	currentMax = currentMax / float64(baseValue)
-	out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/voltage_max_design").Output()
-	if err != nil {
-		return errors.Wrap(err, "retrieve voltage from DUT")
-	}
-	voltageMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
-	if err != nil {
-		return errors.Wrap(err, "converter voltage to float")
-	}
-	voltageMax = voltageMax / float64(baseValue)
-	power := voltageMax * currentMax
+
+	power := chargeInfo.voltageMax * chargeInfo.currentMax
 	if power < powerWattage {
 		return errors.New("the power got:" + strconv.FormatFloat(power, 'f', -1, 64) + " want:" + strconv.Itoa(powerWattage))
 	}
