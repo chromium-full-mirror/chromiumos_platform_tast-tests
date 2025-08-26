@@ -155,45 +155,31 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
 
-	fw := FindFwName(testbedProperties.TestbedType)
 	// For inputURL that is in the form of release-*, extract the version and lookup the corresponding GS path.
 	if strings.HasPrefix(inputURL, ReleasePrefix) {
 		v := inputURL[len(ReleasePrefix):]
-		inputURL, err = LookupGSCReleaseTarball(ctx, v, fw)
+		inputURL, err = LookupGSCReleaseTarball(ctx, v, FindFwName(testbedProperties.TestbedType))
 		if err != nil {
 			return nil, err
 		}
 	} else if strings.HasPrefix(inputURL, LatestPrefix) {
 		// For inputURL that is in the form of latest-*, convert it to the corresponding GS path.
-		var latestURL string
 		branch := inputURL[len(LatestPrefix):]
-		switch branch {
-		case ToTBranch:
+		if branch == ToTBranch {
 			fullGlob, jsonGlob, err = findLatestCompletedTi50PostsubmitBuildURL(ctx, testbedProperties.TestbedType, imageType)
 			if err != nil {
 				return nil, err
 			}
 			testing.ContextLogf(ctx, "Found image: %s, config: %s for %s", fullGlob, jsonGlob, inputURL)
-			latestURL = jsonGlob
-		case Cr50QualBranch:
-			latestURL, err = lookupLatestGSCQualTarball(ctx, "cr50")
+			inputURL = jsonGlob
+		} else if strings.HasSuffix(branch, "qual") {
+			inputURL, err = lookupLatestGSCQualTarball(ctx, testbedProperties.TestbedType)
 			if err != nil {
 				return nil, err
 			}
-		case GSCQualBranch:
-			latestURL, err = lookupLatestGSCQualTarball(ctx, fw)
-			if err != nil {
-				return nil, err
-			}
-		case Ti50QualBranch:
-			latestURL, err = lookupLatestGSCQualTarball(ctx, "ti50")
-			if err != nil {
-				return nil, err
-			}
-		default:
+		} else {
 			return nil, errors.New("unrecognized branch " + branch)
 		}
-		inputURL = latestURL
 	}
 
 	// For inputURL that is in the form of gs://*.tbz2, convert it to a local file by downloading.
@@ -567,8 +553,13 @@ func LookupGSCReleaseTarball(ctx context.Context, version, fwName string) (strin
 }
 
 // lookupLatestGSCQualTarball downloads the image binary indicated in the qual file.
-func lookupLatestGSCQualTarball(ctx context.Context, fwName string) (string, error) {
-	gsURL := gsPrefix + fmt.Sprintf(latestQualFile, fwName)
+func lookupLatestGSCQualTarball(ctx context.Context, t ti50.TestbedType) (string, error) {
+	fwName := FindFwName(t)
+	qualFilePart := fwName
+	if GetFwAndDevicePrefix(t) == "ti50-nt" {
+		qualFilePart = "ti50-nt"
+	}
+	gsURL := gsPrefix + fmt.Sprintf(latestQualFile, qualFilePart)
 	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsURL)
 	if err != nil {
 		return "", err
