@@ -38,6 +38,7 @@ const (
 	CarrierSysmocom // aleksandermj test network
 	CarrierVerizon
 	CarrierTmobile
+	CarrierGoogleFi
 	CarrierAtt
 	CarrierSoftbank
 	CarrierKDDI
@@ -67,28 +68,34 @@ const (
 	source      = shillconst.DevicePropertyCellularAPNInfoApnSource
 )
 
+type carrierKeyTuple struct {
+	OperatorID string
+	Gid1       string
+}
+
 var (
 	// When updating this list, please also update the list in cellular/data/test_no_apns.textproto
 	// and regenerate the *.pbf files by following the directions in cellular/data/README.md.
-	carrierMapping = map[string]Carrier{
-		"00101":  CarrierAmarisoft,
-		"001010": CarrierAmarisoft,
-		"90170":  CarrierSysmocom,
-		"99970":  CarrierSysmocom,
-		"23415":  CarrierVodafoneUK,
-		"23430":  CarrierEEUK,
-		"302220": CarrierTelus,
-		"302720": CarrierRoger,
-		"310260": CarrierTmobile,
-		"311882": CarrierTmobile,
-		"310280": CarrierAtt,
-		"310410": CarrierAtt,
-		"311480": CarrierVerizon,
-		"44010":  CarrierDocomo,
-		"44011":  CarrierRakuten,
-		"44020":  CarrierSoftbank,
-		"44051":  CarrierKDDI,
-		"99940":  CarrierCBRS,
+	carrierMapping = map[carrierKeyTuple]Carrier{
+		carrierKeyTuple{"00101", ""}:      CarrierAmarisoft,
+		carrierKeyTuple{"001010", ""}:     CarrierAmarisoft,
+		carrierKeyTuple{"90170", ""}:      CarrierSysmocom,
+		carrierKeyTuple{"99970", ""}:      CarrierSysmocom,
+		carrierKeyTuple{"23415", ""}:      CarrierVodafoneUK,
+		carrierKeyTuple{"23430", ""}:      CarrierEEUK,
+		carrierKeyTuple{"302220", ""}:     CarrierTelus,
+		carrierKeyTuple{"302720", ""}:     CarrierRoger,
+		carrierKeyTuple{"310240", "4276"}: CarrierGoogleFi,
+		carrierKeyTuple{"310260", ""}:     CarrierTmobile,
+		carrierKeyTuple{"311882", ""}:     CarrierTmobile,
+		carrierKeyTuple{"310280", ""}:     CarrierAtt,
+		carrierKeyTuple{"310410", ""}:     CarrierAtt,
+		carrierKeyTuple{"311480", ""}:     CarrierVerizon,
+		carrierKeyTuple{"44010", ""}:      CarrierDocomo,
+		carrierKeyTuple{"44011", ""}:      CarrierRakuten,
+		carrierKeyTuple{"44020", ""}:      CarrierSoftbank,
+		carrierKeyTuple{"44051", ""}:      CarrierKDDI,
+		carrierKeyTuple{"99940", ""}:      CarrierCBRS,
 	}
 )
 
@@ -109,6 +116,9 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		CarrierTmobile: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
+		},
+		CarrierGoogleFi: []KnownAPN{
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "h2g2.com", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierAtt: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6, source: "ui"}, APNTypes: []string{typeDefault, typeIA}},
@@ -172,9 +182,9 @@ func (knownAPN KnownAPN) IsAttachAPN() bool {
 }
 
 // GetKnownAPNsForOperator returns a modifiable list of known APNs for a carrier.
-func GetKnownAPNsForOperator(operatorID string) ([]KnownAPN, error) {
+func GetKnownAPNsForOperator(operatorID, gid1 string) ([]KnownAPN, error) {
 	carrierAPNs := initializeCarrierAPNs()
-	carrier, err := GetCarrier(operatorID)
+	carrier, err := GetCarrier(operatorID, gid1)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get KnownAPNs")
 	}
@@ -186,20 +196,29 @@ func GetKnownAPNsForOperator(operatorID string) ([]KnownAPN, error) {
 }
 
 // GetCarrier returns the carrier that matches the operatorID.
-func GetCarrier(operatorID string) (Carrier, error) {
+func GetCarrier(operatorID, gid1 string) (Carrier, error) {
 	if len(operatorID) < 5 || len(operatorID) > 6 {
 		return CarrierUnknown, errors.Errorf("operator ID %q is malformed", operatorID)
 	}
-
-	carrier, ok := carrierMapping[operatorID]
-	if !ok {
-		operatorID1 := operatorID[0:5]
-		carrier, ok = carrierMapping[operatorID1]
-		if !ok {
-			return CarrierUnknown, errors.Errorf("cannot find carrier for operators %q or %q", operatorID, operatorID1)
-		}
+	// Try finding a carrier that matches the GID1 and operator ID
+	if carrier, ok := carrierMapping[carrierKeyTuple{operatorID, gid1}]; ok {
+		return carrier, nil
 	}
-	return carrier, nil
+	// Check if the operator ID should have 5 digits
+	if carrier, ok := carrierMapping[carrierKeyTuple{operatorID[0:5], gid1}]; ok {
+		return carrier, nil
+	}
+
+	// Repeat the same logic, but exclude the GID1
+	if carrier, ok := carrierMapping[carrierKeyTuple{operatorID, ""}]; ok {
+		return carrier, nil
+	}
+	if carrier, ok := carrierMapping[carrierKeyTuple{operatorID[0:5], ""}]; ok {
+		return carrier, nil
+	}
+
+	return CarrierUnknown, errors.Errorf("cannot find carrier for operators %q or %q. GID1: %q", operatorID, operatorID[0:5], gid1)
+
 }
 
 // CheckThatApnListIsEmpty is used to navigate to the APN details page and check that the APN list is empty.

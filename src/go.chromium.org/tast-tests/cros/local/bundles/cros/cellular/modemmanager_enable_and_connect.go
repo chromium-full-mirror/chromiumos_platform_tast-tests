@@ -35,12 +35,12 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		s.Fatal("Cannot get the OperatorIdentifier: ", err)
+		s.Fatal("Cannot get the Operator and GID1 Identifiers: ", err)
 	}
 
-	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
+	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID, gid1)
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
 	}

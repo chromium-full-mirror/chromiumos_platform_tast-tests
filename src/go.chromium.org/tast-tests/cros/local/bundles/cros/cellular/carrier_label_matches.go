@@ -76,9 +76,8 @@ func init() {
 				ExtraAttr: []string{"cellular_carrier_docomo"},
 			},
 			{
-				Name: "fi",
-				// FI shares operator number with T-MOBILE since it's an MVNO.
-				Val:       cellular.CarrierTmobile,
+				Name:      "fi",
+				Val:       cellular.CarrierGoogleFi,
 				ExtraAttr: []string{"cellular_carrier_fi"},
 			},
 			{
@@ -101,12 +100,12 @@ func CarrierLabelMatches(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
 
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		s.Fatal("Cannot get the OperatorIdentifier: ", err)
+		s.Fatal("Cannot get the Operator and GID1 Identifiers: ", err)
 	}
 
-	carrier, err := cellular.GetCarrier(operatorID)
+	carrier, err := cellular.GetCarrier(operatorID, gid1)
 	if err != nil {
 		s.Fatal("Failed to get carrier from operator ID: ", err)
 	}

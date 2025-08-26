@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,11 +43,11 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 	if err := modem.EnsureRegistered(ctx); err != nil {
 		s.Fatal("Modem not registered: ", err)
 	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		s.Fatal("Cannot get the OperatorIdentifier: ", err)
+		s.Fatal("Cannot get the Operator and GID1 Identifiers: ", err)
 	}
-	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
+	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID, gid1)
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
 	}

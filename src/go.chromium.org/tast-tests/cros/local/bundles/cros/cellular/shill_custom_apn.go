@@ -53,9 +53,9 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		s.Fatal("Cannot get the OperatorIdentifier: ", err)
+		s.Fatal("Cannot get the Operator and GID1 Identifiers: ", err)
 	}
 
 	helper, err := cellular.NewHelper(ctx)
@@ -120,11 +120,11 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
 		s.Fatal("Failed to get HomeProvider from shill: ", err)
 	}
-	carrier, err := cellular.GetCarrier(operatorID)
+	carrier, err := cellular.GetCarrier(operatorID, gid1)
 	if err != nil {
 		s.Fatal("Failed to match operator ID to carrier: ", err)
 	}
-	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
+	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID, gid1)
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
 	}

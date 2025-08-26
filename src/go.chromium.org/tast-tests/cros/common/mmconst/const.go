@@ -48,6 +48,7 @@ const (
 
 // ModemManager1.Sim properties
 const (
+	SimPropertySimGID1               = "Gid1"
 	SimPropertySimIMSI               = "Imsi"
 	SimPropertySimIdentifier         = "SimIdentifier"
 	SimPropertySimEid                = "Eid"

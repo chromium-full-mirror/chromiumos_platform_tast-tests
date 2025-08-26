@@ -6,6 +6,7 @@ package modemmanager
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -14,7 +15,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -820,12 +820,20 @@ func (m *Modem) GetSimProperty(ctx context.Context, propertyName string) (string
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read sim properties")
 	}
-	info, err := simProps.GetString(propertyName)
-	if err != nil {
-		return "", errors.Wrapf(err, "error getting property %q", propertyName)
+	// Try to read a string, otherwise try to read an array of ints(GID1 is an array).
+	if info, err := simProps.GetString(propertyName); err == nil {
+		return info, nil
+	}
+	if info, err := simProps.GetUint8s(propertyName); err == nil {
+		var hexStrings []string
+		for _, num := range info {
+			hexStrings = append(hexStrings, fmt.Sprintf("%02x", num))
+		}
+		return strings.Join(hexStrings, ""), nil
 	}
 
-	return info, nil
+	return "", errors.Wrapf(err, "error getting property %q", propertyName)
+
 }
 
 // GetEid gets current modem sim eid, return eid if esim is active.
@@ -846,6 +854,24 @@ func (m *Modem) GetOperatorIdentifier(ctx context.Context) (string, error) {
 // GetSimIdentifier gets current modem sim Identifier, return Identifier if sim is active.
 func (m *Modem) GetSimIdentifier(ctx context.Context) (string, error) {
 	return m.GetSimProperty(ctx, mmconst.SimPropertySimIdentifier)
+}
+
+// GetGID1dentifier gets current modem sim GID1 Identifier, return GID1 Identifier if sim is active.
+func (m *Modem) GetGID1dentifier(ctx context.Context) (string, error) {
+	return m.GetSimProperty(ctx, mmconst.SimPropertySimGID1)
+}
+
+// GetOperatorAndGid1Identifiers gets current modem sim Operator and GID1 Identifiers, return values if sim is active.
+func (m *Modem) GetOperatorAndGid1Identifiers(ctx context.Context) (string, string, error) {
+	operatorIdentifier, err := m.GetOperatorIdentifier(ctx)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to read Operator Identifier from modemmanager")
+	}
+	gid1Identifier, err := m.GetGID1dentifier(ctx)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to read GID1 Identifier from modemmanager")
+	}
+	return operatorIdentifier, gid1Identifier, nil
 }
 
 // GetOperatorCode gets current operator code, return operator code if sim is active.

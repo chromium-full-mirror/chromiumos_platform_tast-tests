@@ -147,12 +147,12 @@ func isL850Verizon(ctx context.Context, modem *modemmanager.Modem) bool {
 	if modemType != cellularconst.ModemTypeL850 {
 		return false
 	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get operator identifier: ", err)
+		testing.ContextLog(ctx, "Failed to get operator and GID1 identifiers: ", err)
 		return false
 	}
-	carrier, err := GetCarrier(operatorID)
+	carrier, err := GetCarrier(operatorID, gid1)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get carrier: ", err)
 		return false
@@ -1835,14 +1835,13 @@ func GetKnownApns(ctx context.Context) ([]KnownAPN, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new modem with SIM")
 	}
-
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	operatorID, gid1, err := modem.GetOperatorAndGid1Identifiers(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get operator ID")
+		return nil, errors.Wrap(err, "cannot get the Operator and GID1 Identifiers")
 	}
-	testing.ContextLog(ctx, "operatorID: ", operatorID)
+	testing.ContextLog(ctx, "operatorID: ", operatorID, " GID1: ", gid1)
 
-	knownAPNs, err := GetKnownAPNsForOperator(operatorID)
+	knownAPNs, err := GetKnownAPNsForOperator(operatorID, gid1)
 	if err != nil {
 		return nil, errors.Errorf("there are no APNs for operator %q", operatorID)
 	}
