@@ -64,6 +64,11 @@ func (ds *DisplayService) SetMirrorDisplay(ctx context.Context, req *wwcb.QueryR
 		return nil, errors.Wrap(err, "failed to create Test API connection")
 	}
 
+	// set internal back to primary as this method expects that mirror mode is set when internal is primary
+	if _, err := ds.SetPrimaryDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: 0}); err != nil {
+		return nil, errors.Wrap(err, "failed to set internal display as primary")
+	}
+
 	// Set mirror display.
 	var want checked.Checked
 	if bool(req.Enable) {
