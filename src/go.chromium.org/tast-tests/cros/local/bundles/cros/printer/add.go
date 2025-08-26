@@ -160,6 +160,16 @@ func init() {
 				ExtraData:         []string{"to_print.pdf", "printer_add_brother_printer.ppd", "printer_add_brother_printer_golden.bin"},
 				ExtraSoftwareDeps: []string{"cros_internal"},
 			}, {
+				Name: "brother_ql820nwb",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_brother_ql820nwb_printer.ppd.gz",
+					PrintFile:    "label_29x90mm.pdf",
+					ExpectedFile: "printer_add_brother_ql820nwb_printer.bin",
+				},
+				ExtraData:         []string{"label_29x90mm.pdf", "printer_add_brother_ql820nwb_printer.ppd.gz", "printer_add_brother_ql820nwb_printer.bin"},
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"cros_internal"},
+			}, {
 				Name: "canon",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_add_canonmg2900.ppd",
