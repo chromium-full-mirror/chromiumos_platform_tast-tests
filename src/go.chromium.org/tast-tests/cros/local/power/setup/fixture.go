@@ -1112,6 +1112,9 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		// Prevents media provider from scanning external volumes which causes
 		// high CPU usage for a long period of time.
 		chrome.DisableFeatures("ArcExternalStorageAccess"),
+		// Disable the optimization model downloads which caused extra power consumption
+		// on page loading.
+		chrome.ExtraArgs("--disable-optimization-guide-model-downloads-for-benchmarking"),
 	}
 	opts = append(opts, f.powerFixtureOption.BrowserExtraOpts...)
 	if keepAudioVar.Value() == "true" {
