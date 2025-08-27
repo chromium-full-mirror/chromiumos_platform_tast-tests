@@ -111,6 +111,12 @@ type versionJSON map[string]firmwareVersions
 
 const minChargePercent = 30
 
+// The firmware update should take about 5 minutes.
+const firmwareUpdateTimeout = 20 * time.Minute
+
+// Other various commands get less time
+const execTimeout = 2 * time.Minute
+
 // FWAutoupdate expects the DUT to have the released RO/RW installed on the DUT as a precondition (--mode=recovery),
 // then it will autoupdate to the version under test which is provided in the command line vars.
 // Next it will attempt to downgrade back to the prior version.
@@ -217,7 +223,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}, candidateFilenames...)
 		args = append(args, extraFilenames...)
 		testing.ContextLog(ctx, "Trying to extract files from local archive: tar ", args)
-		out, tarErr := exec.CommandContext(ctx, "tar", args...).CombinedOutput()
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		out, tarErr := exec.CommandContext(shortCtx, "tar", args...).CombinedOutput()
 		for _, filename := range candidateFilenames {
 			binFile := path.Join(outputDir, filename)
 			if _, err = os.Stat(binFile); err == nil {
@@ -350,14 +358,21 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Make a temp dir on the DUT
-	tmpDirOut, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "/usr/local/tmp/tast.firmware.FWAutoupdate.XXXXXXXXXX").Output(ssh.DumpLogOnError)
+	shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	tmpDirOut, err := h.DUT.Conn().CommandContext(shortCtx, "mktemp", "-d", "/usr/local/tmp/tast.firmware.FWAutoupdate.XXXXXXXXXX").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to create a temp dir: ", err)
 	}
 	tmpDir := strings.TrimSpace(string(tmpDirOut))
 
 	defer func(ctx context.Context) {
-		err := h.DUT.Conn().CommandContext(ctx, "rm", "-rf", tmpDir).Run(ssh.DumpLogOnError)
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Error("Failed to boot dut: ", err)
+		}
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err := h.DUT.Conn().CommandContext(shortCtx, "rm", "-rf", tmpDir).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Error("Failed to delete temp dir: ", err)
 		}
@@ -369,7 +384,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to extract AP RO from %q: %+v", apROURL, err)
 	}
-	out, err := h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--image", apROFile).Output(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	out, err := h.DUT.Conn().CommandContext(shortCtx, "futility", "update", "--manifest", "--image", apROFile).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility update --manifest --image %q: %+v", apROFile, err)
 	}
@@ -389,7 +406,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to extract AP RW from %q: %+v", apRWURL, err)
 		}
-		out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--image", apRWFile).Output(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		out, err = h.DUT.Conn().CommandContext(shortCtx, "futility", "update", "--manifest", "--image", apRWFile).Output(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to futility update --manifest --image %q: %+v", apRWFile, err)
 		}
@@ -407,7 +426,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to extract EC RO from %q: %+v", ecROURL, err)
 	}
-	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--ec_image", ecROFile).Output(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, "futility", "update", "--manifest", "--ec_image", ecROFile).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility update --manifest --ec_image %q: %+v", ecROFile, err)
 	}
@@ -430,7 +451,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to extract EC RW from %q: %+v", ecRWURL, err)
 			}
 		}
-		out, err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--manifest", "--ec_image", ecRWFile).Output(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		out, err = h.DUT.Conn().CommandContext(shortCtx, "futility", "update", "--manifest", "--ec_image", ecRWFile).Output(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to futility update --manifest --ec_image %q: %+v", ecRWFile, err)
 		}
@@ -448,47 +471,67 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	s.Log("Repacking shellball with new FW")
 	// Create directory structure expected by chromeos-firmwareupdate --repack
 	newMergedDir := fmt.Sprintf("%s/new", tmpDir)
-	err = h.DUT.Conn().CommandContext(ctx, "mkdir", newMergedDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "mkdir", newMergedDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to mkdir a %q: %+v", newMergedDir, err)
 	}
 	newTargetDir := fmt.Sprintf("%s/%s", newMergedDir, fwTargets.FirmwareManifestKey)
-	err = h.DUT.Conn().CommandContext(ctx, "mkdir", newTargetDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "mkdir", newTargetDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to mkdir a %q: %+v", newTargetDir, err)
 	}
 	// Copy RO files to newMergedDir
 	mergedAPFile := fmt.Sprintf("%s/image-%s.bin", newMergedDir, fwTargets.FirmwareManifestKey)
-	err = h.DUT.Conn().CommandContext(ctx, "cp", apROFile, mergedAPFile).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "cp", apROFile, mergedAPFile).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to cp apro to %q: %+v", newMergedDir, err)
 	}
-	err = h.DUT.Conn().CommandContext(ctx, "cp", ecROFile, fmt.Sprintf("%s/ec.bin", newTargetDir)).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "cp", ecROFile, fmt.Sprintf("%s/ec.bin", newTargetDir)).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to cp ecro to %q: %+v", newTargetDir, err)
 	}
 	// Pack AP-RW into merged.bin (RW_LEGACY & RW_MISC are optional)
 	if apRWFile != "" {
-		err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_SECTION_A:%s/a.bin", tmpDir), "-x", fmt.Sprintf("RW_SECTION_B:%s/b.bin", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err := h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_SECTION_A:%s/a.bin", tmpDir), "-x", fmt.Sprintf("RW_SECTION_B:%s/b.bin", tmpDir)).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to futility dump_fmap: %+v", err)
 		}
-		err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_SECTION_A:%s/a.bin", tmpDir), fmt.Sprintf("RW_SECTION_B:%s/b.bin", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err = h.DUT.Conn().CommandContext(shortCtx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_SECTION_A:%s/a.bin", tmpDir), fmt.Sprintf("RW_SECTION_B:%s/b.bin", tmpDir)).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to futility load_fmap: %+v", err)
 		}
 		// RW_LEGACY is optional
-		err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_LEGACY:%s/legacy.bin", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err = h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_LEGACY:%s/legacy.bin", tmpDir)).Run(ssh.DumpLogOnError)
 		if err == nil {
-			err := h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_LEGACY:%s/legacy.bin", tmpDir)).Run(ssh.DumpLogOnError)
+			shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+			defer cancel()
+			err := h.DUT.Conn().CommandContext(shortCtx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_LEGACY:%s/legacy.bin", tmpDir)).Run(ssh.DumpLogOnError)
 			if err != nil {
 				s.Fatalf("Failed to futility load_fmap: %+v", err)
 			}
 		}
 		// RW_MISC is optional
-		err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_MISC:%s/misc.bin", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err = h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", apRWFile, "-x", fmt.Sprintf("RW_MISC:%s/misc.bin", tmpDir)).Run(ssh.DumpLogOnError)
 		if err == nil {
-			err := h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_MISC:%s/misc.bin", tmpDir)).Run(ssh.DumpLogOnError)
+			shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+			defer cancel()
+			err := h.DUT.Conn().CommandContext(shortCtx, "futility", "load_fmap", mergedAPFile, fmt.Sprintf("RW_MISC:%s/misc.bin", tmpDir)).Run(ssh.DumpLogOnError)
 			if err != nil {
 				s.Fatalf("Failed to futility load_fmap: %+v", err)
 			}
@@ -498,17 +541,23 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if ecRWFile != "" {
 		args := []string{"-i", mergedAPFile, "-e", ecRWFile}
 		configFile := strings.Replace(ecRWFile, ".bin", ".config", 1)
-		err := h.DUT.Conn().CommandContext(ctx, "test", "-f", configFile).Run(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err := h.DUT.Conn().CommandContext(shortCtx, "test", "-f", configFile).Run(ssh.DumpLogOnError)
 		if err != nil {
 			args = append(args, "--ec_config", configFile)
 		}
-		err = h.DUT.Conn().CommandContext(ctx, "/usr/share/vboot/bin/swap_ec_rw", args...).Run(ssh.DumpLogOnError)
+		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err = h.DUT.Conn().CommandContext(shortCtx, "/usr/share/vboot/bin/swap_ec_rw", args...).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to swap_ec_rw: %+v", err)
 		}
 	}
 	// Pack EC-RW into ec.bin
-	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", ecROFile, "-p").Output(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", ecROFile, "-p").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility dump_fmap: %+v", err)
 	}
@@ -526,27 +575,37 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Fatalf("Did not locate EC RW FMAP section in: %s", string(out))
 	}
 	if ecRWFile != "" {
-		err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", ecRWFile, "-x", fmt.Sprintf("EC_RW:%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err := h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", ecRWFile, "-x", fmt.Sprintf("EC_RW:%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to futility dump_fmap: %+v", err)
 		}
 	} else {
-		err := h.DUT.Conn().CommandContext(ctx, "cbfstool", mergedAPFile, "extract", "-r", "FW_MAIN_A", "-n", "ecrw", "-f", fmt.Sprintf("%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
+		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
+		defer cancel()
+		err := h.DUT.Conn().CommandContext(shortCtx, "cbfstool", mergedAPFile, "extract", "-r", "FW_MAIN_A", "-n", "ecrw", "-f", fmt.Sprintf("%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatalf("Failed to cbfstool extract: %+v", err)
 		}
 	}
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", fmt.Sprintf("%s/ec.bin", newTargetDir), fmt.Sprintf("EC_RW:%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "futility", "load_fmap", fmt.Sprintf("%s/ec.bin", newTargetDir), fmt.Sprintf("EC_RW:%s/ecrw.raw", tmpDir)).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility load_fmap: %+v", err)
 	}
 	// Repack
 	shellBallNew := fmt.Sprintf("%s/chromeos-firmwareupdate-new", tmpDir)
-	err = h.DUT.Conn().CommandContext(ctx, "cp", "/usr/sbin/chromeos-firmwareupdate", shellBallNew).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "cp", "/usr/sbin/chromeos-firmwareupdate", shellBallNew).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to copy chromeos-firmwareupdate: %+v", err)
 	}
-	err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--repack", newMergedDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, shellBallNew, "--repack", newMergedDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to repack chromeos-firmwareupdate-new: %+v", err)
 	}
@@ -554,18 +613,24 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	// Now repack chromeos-firmwareupdate-old
 	s.Log("Repacking shellball with old FW")
 	oldMergedDir := fmt.Sprintf("%s/old", tmpDir)
-	err = h.DUT.Conn().CommandContext(ctx, "mkdir", oldMergedDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "mkdir", oldMergedDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to mkdir a %q: %+v", oldMergedDir, err)
 	}
 	oldTargetDir := fmt.Sprintf("%s/%s", oldMergedDir, fwTargets.FirmwareManifestKey)
-	err = h.DUT.Conn().CommandContext(ctx, "mkdir", oldTargetDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "mkdir", oldTargetDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to mkdir a %q: %+v", oldTargetDir, err)
 	}
 	// Read current AP FW
 	oldAPFile := fmt.Sprintf("%s/image-%s.bin", oldMergedDir, fwTargets.FirmwareManifestKey)
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "read", oldAPFile).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, firmwareUpdateTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "futility", "read", oldAPFile).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility read to %q: %+v", oldAPFile, err)
 	}
@@ -578,28 +643,38 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	activeSection := "RW_SECTION_" + activeFw
 	inactiveSection := "RW_SECTION_" + inactiveFw
 	s.Logf("Copying section %s to %s for chromeos-firmwareupdate-old", activeSection, inactiveSection)
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", oldAPFile, "-x", fmt.Sprintf("%s:%s/active_rw.bin", activeSection, tmpDir)).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "futility", "dump_fmap", oldAPFile, "-x", fmt.Sprintf("%s:%s/active_rw.bin", activeSection, tmpDir)).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility dump_fmap: %+v", err)
 	}
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", oldAPFile, fmt.Sprintf("%s:%s/active_rw.bin", inactiveSection, tmpDir)).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "futility", "load_fmap", oldAPFile, fmt.Sprintf("%s:%s/active_rw.bin", inactiveSection, tmpDir)).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to futility load_fmap: %+v", err)
 	}
 
 	// Read current EC FW
 	oldECFile := fmt.Sprintf("%s/%s/ec.bin", oldMergedDir, fwTargets.FirmwareManifestKey)
-	err = h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", oldECFile).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, firmwareUpdateTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "flashrom", "-p", "ec", "-r", oldECFile).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to flashrom read ec to %q: %+v", oldECFile, err)
 	}
 	// Repack
 	shellBallOld := fmt.Sprintf("%s/chromeos-firmwareupdate-old", tmpDir)
-	err = h.DUT.Conn().CommandContext(ctx, "cp", "/usr/sbin/chromeos-firmwareupdate", shellBallOld).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, "cp", "/usr/sbin/chromeos-firmwareupdate", shellBallOld).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to copy chromeos-firmwareupdate: %+v", err)
 	}
-	err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--repack", oldMergedDir).Run(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	err = h.DUT.Conn().CommandContext(shortCtx, shellBallOld, "--repack", oldMergedDir).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to repack chromeos-firmwareupdate-old: %+v", err)
 	}
@@ -622,7 +697,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 	if s.Param().(*testMode).WriteProtect {
 		s.Log("Enabling write protect")
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-enable").Run(ssh.DumpLogOnError); err != nil {
+		shortCtx, cancel := context.WithTimeout(ctx, firmwareUpdateTimeout)
+		defer cancel()
+		if err := h.DUT.Conn().CommandContext(shortCtx, "futility", "flash", "--wp-enable").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to enable software write protect: ", err)
 		}
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
@@ -646,7 +723,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
 			s.Fatal("Failed to perform mode aware reboot: ", err)
 		}
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(ssh.DumpLogOnError); err != nil {
+		shortCtx, cancel := context.WithTimeout(ctx, firmwareUpdateTimeout)
+		defer cancel()
+		if err := h.DUT.Conn().CommandContext(shortCtx, "futility", "flash", "--wp-disable").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to enable software write protect: ", err)
 		}
 	}
@@ -697,7 +776,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}, baselineSpeedMetric)
 	}
 
-	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--manifest").Output(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, shellBallNew, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-new --manifest: %+v", err)
 	}
@@ -720,7 +801,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Updating firmware to new version")
-	out, err = h.DUT.Conn().CommandContext(ctx, shellBallNew, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, firmwareUpdateTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, shellBallNew, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-new --mode=autoupdate: %+v", err)
 	}
@@ -783,7 +866,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Logf("Speedometer metric is acceptable (%f >= %f)", speedMetric, baselineSpeedMetric*0.95)
 	}
 
-	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--manifest").Output(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, shellBallOld, "--manifest").Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-old --manifest: %+v", err)
 	}
@@ -806,7 +891,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Rolling back firmware to old version")
-	out, err = h.DUT.Conn().CommandContext(ctx, shellBallOld, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
+	shortCtx, cancel = context.WithTimeout(ctx, firmwareUpdateTimeout)
+	defer cancel()
+	out, err = h.DUT.Conn().CommandContext(shortCtx, shellBallOld, "--mode=autoupdate").CombinedOutput(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("Failed to chromeos-firmwareupdate-old --mode=autoupdate: %+v", err)
 	}
@@ -886,6 +973,7 @@ func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	}()
 
 	testing.ContextLog(speedometerCtx, "Sleep 120 seconds before running Speedometer")
+	// GoBigSleepLint: Running speedometer right after boot gets weird results.
 	testing.Sleep(speedometerCtx, 120*time.Second)
 
 	testing.ContextLog(speedometerCtx, "Running speedometer test")
