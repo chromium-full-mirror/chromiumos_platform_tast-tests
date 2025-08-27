@@ -31,7 +31,7 @@ func (t StreamType) String() string {
 	case OutputStream:
 		return "OutputStream"
 	default:
-		return fmt.Sprintf("StreamType(%#x)", t)
+		return fmt.Sprintf("StreamType(%#x)", uint(t))
 	}
 }
 

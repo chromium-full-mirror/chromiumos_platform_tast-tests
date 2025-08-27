@@ -86,7 +86,7 @@ func killDrmProcessesAndServices(ctx context.Context) error {
 		}
 
 		if err := p.Kill(); err != nil {
-			testing.ContextLogf(ctx, "Warning: Could not kill process %q, it may have been transient: %s", p, err)
+			testing.ContextLogf(ctx, "Warning: Could not kill process %v, it may have been transient: %s", p, err)
 		}
 	}
 

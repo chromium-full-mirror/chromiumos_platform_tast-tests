@@ -141,7 +141,7 @@ func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	out, err := b.GSCToolCommand(ctx, "", "--boot_trace")
 	th.MustSucceed(err, "read boot trace")
-	s.VLogf(string(out))
+	s.VLogf("%s", string(out))
 	totalTime := 0
 	times := bootTraceRe.FindAllStringSubmatch(string(out), -1)
 	var stages []string
@@ -168,7 +168,7 @@ func checkMetrics(ctx context.Context, s *testing.State, b utils.DevboardHelper,
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	out, err := b.GSCToolCommand(ctx, "", "--metrics")
 	th.MustSucceed(err, "read metrics")
-	s.VLogf(string(out))
+	s.VLogf("%s", string(out))
 	times := metricsRe.FindAllStringSubmatch(string(out), -1)
 	for _, t := range times {
 		v, err := strconv.Atoi(t[2])

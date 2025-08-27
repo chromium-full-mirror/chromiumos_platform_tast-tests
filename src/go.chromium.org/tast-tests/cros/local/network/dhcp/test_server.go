@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -112,7 +113,7 @@ func (s *testServer) setupAndBindSocket(ctx context.Context) (retErr error) {
 		LocalAddr: &net.UDPAddr{IP: s.inAddr, Port: s.sendPort},
 		Control:   controlFunc,
 	}
-	bcastAddr := fmt.Sprintf("%s:%d", s.bcastAddr, ClientPort)
+	bcastAddr := net.JoinHostPort(s.bcastAddr.String(), strconv.Itoa(ClientPort))
 	sendConn, err := dialer.Dial("udp", bcastAddr)
 	if err != nil {
 		return errors.Wrapf(err, "failed to connect to %s", bcastAddr)

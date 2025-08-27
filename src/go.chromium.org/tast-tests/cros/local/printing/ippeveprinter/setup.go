@@ -170,7 +170,7 @@ func Start(ctx context.Context, opts ...Option) (*IppEverywherePrinter, error) {
 
 func waitUntilListening(ctx context.Context, host string, port int, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+		_, err := net.Dial("tcp", net.JoinHostPort(host, strconv.Itoa(port)))
 		return err
 	}, &testing.PollOptions{Timeout: timeout})
 }

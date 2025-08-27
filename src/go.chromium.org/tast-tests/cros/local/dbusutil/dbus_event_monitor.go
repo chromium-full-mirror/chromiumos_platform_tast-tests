@@ -179,7 +179,7 @@ func dbusCallMember(dbusMessage *dbus.Message, allowlistDBusCmd []string) (strin
 	if !ok {
 		return "", errors.Errorf("failed dbus message doesn't have field member: %s", dbusMessage)
 	}
-	msg := fmt.Sprintf(v.String()[1 : len(v.String())-1])
+	msg := fmt.Sprintf("%s", v.String()[1 : len(v.String())-1])
 	for _, cmd := range allowlistDBusCmd {
 		if msg == cmd {
 			return cmd, nil
