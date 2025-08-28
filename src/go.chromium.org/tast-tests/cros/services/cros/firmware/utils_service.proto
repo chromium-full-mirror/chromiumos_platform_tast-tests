@@ -12,9 +12,6 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/firmware";
 
 // UtilsService provides some basic operations used by firmware tests.
 service UtilsService {
-  // BlockingSync syncs the root device and internal device.
-  rpc BlockingSync(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-
   // FindPhysicalKeyboard finds /dev/input/event* file for physical a keyboard.
   rpc FindPhysicalKeyboard(google.protobuf.Empty) returns (InputDevicePath) {}
 

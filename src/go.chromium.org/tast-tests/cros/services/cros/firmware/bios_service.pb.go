@@ -1273,14 +1273,20 @@ type BiosServiceClient interface {
 	// SetAPSoftwareWriteProtect sets the software AP write protect.
 	SetAPSoftwareWriteProtect(ctx context.Context, in *WPRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CorruptFWSection writes garbage bytes to the entire section specified.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	CorruptFWSection(ctx context.Context, in *FWSectionInfo, opts ...grpc.CallOption) (*FWSectionInfo, error)
 	// BackupImageSection backs up the current fw region locally and returns its
 	// path.
 	BackupImageSection(ctx context.Context, in *FWSectionInfo, opts ...grpc.CallOption) (*FWSectionInfo, error)
 	// RestoreImageSection restores the fw region from path.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	RestoreImageSection(ctx context.Context, in *FWSectionInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// WriteImageFromMultiSectionFile writes the provided multi section file in
 	// the specified section.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	WriteImageFromMultiSectionFile(ctx context.Context, in *FWSectionInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// ChromeosFirmwareUpdate will perform the firmware update in the desired
 	// mode.
@@ -1288,6 +1294,8 @@ type BiosServiceClient interface {
 	// ParseFMAP reads and parses FMAP section for given programmer.
 	ParseFMAP(ctx context.Context, in *FMAP, opts ...grpc.CallOption) (*FMAP, error)
 	// CorruptCBFSFWSection corrupts CBFS file in specified section in chosen way.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	CorruptCBFSFWSection(ctx context.Context, in *CBFSCorruptInfo, opts ...grpc.CallOption) (*FWSectionInfo, error)
 }
 
@@ -1376,14 +1384,20 @@ type BiosServiceServer interface {
 	// SetAPSoftwareWriteProtect sets the software AP write protect.
 	SetAPSoftwareWriteProtect(context.Context, *WPRequest) (*emptypb.Empty, error)
 	// CorruptFWSection writes garbage bytes to the entire section specified.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	CorruptFWSection(context.Context, *FWSectionInfo) (*FWSectionInfo, error)
 	// BackupImageSection backs up the current fw region locally and returns its
 	// path.
 	BackupImageSection(context.Context, *FWSectionInfo) (*FWSectionInfo, error)
 	// RestoreImageSection restores the fw region from path.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	RestoreImageSection(context.Context, *FWSectionInfo) (*emptypb.Empty, error)
 	// WriteImageFromMultiSectionFile writes the provided multi section file in
 	// the specified section.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	WriteImageFromMultiSectionFile(context.Context, *FWSectionInfo) (*emptypb.Empty, error)
 	// ChromeosFirmwareUpdate will perform the firmware update in the desired
 	// mode.
@@ -1391,6 +1405,8 @@ type BiosServiceServer interface {
 	// ParseFMAP reads and parses FMAP section for given programmer.
 	ParseFMAP(context.Context, *FMAP) (*FMAP, error)
 	// CorruptCBFSFWSection corrupts CBFS file in specified section in chosen way.
+	// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN
+	// WITH THE FLASH BLOCK SIZE DO NOT USE THIS FUNCTION
 	CorruptCBFSFWSection(context.Context, *CBFSCorruptInfo) (*FWSectionInfo, error)
 }
 
