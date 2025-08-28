@@ -123,7 +123,7 @@ func init() {
 }
 
 type offlinePipelineBenchmarkParam struct {
-	plugin            *audioprocessor.DLCPlugin
+	plugin            audioprocessor.PluginInstaller
 	blockSizeFrames   int
 	inputWavFrameRate int
 	inputWavChannels  int

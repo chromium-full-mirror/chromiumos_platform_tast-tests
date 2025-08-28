@@ -15,6 +15,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// PluginInstaller is an interface that provides an Install method
+// that returns a *Plugin or an error.
+type PluginInstaller interface {
+	Install(ctx context.Context) (*Plugin, error)
+}
+
 // Plugin is an audio processor plugin.
 type Plugin struct {
 	// The path of the plugin.
@@ -23,6 +29,13 @@ type Plugin struct {
 	// The name of the processor_create function.
 	// See also plugin_processor.h.
 	Constructor string
+}
+
+var _ PluginInstaller = &Plugin{}
+
+// Install returns the Plugin itself.
+func (p *Plugin) Install(ctx context.Context) (*Plugin, error) {
+	return p, nil
 }
 
 // DLCPlugin is an audio processor plugin from DLC.
@@ -38,6 +51,8 @@ type DLCPlugin struct {
 	// See also plugin_processor.h.
 	Constructor string
 }
+
+var _ PluginInstaller = &DLCPlugin{}
 
 // ConstOrVar is a constant string or a cras_processor_vars defined in board.ini.
 type ConstOrVar struct {
