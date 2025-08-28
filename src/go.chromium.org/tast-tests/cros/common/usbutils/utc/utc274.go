@@ -33,9 +33,6 @@ type InitPdState passport.InitPdState
 // ActiveCc is a wrapper around passport.ActiveCc
 type ActiveCc passport.ActiveCc
 
-// CableMode is a wrapper around passport.CableMode
-type CableMode passport.CableMode
-
 // Constants for PowerRole
 const (
 	PowerRoleNotSet PowerRole = PowerRole(passport.PowerRole_POWER_ROLE_NOT_SET)
@@ -121,13 +118,6 @@ func (x ActiveCc) String() string {
 		return "Active CC not set"
 	}
 }
-
-// Constants for CableMode
-const (
-	CableModeNotSet   CableMode = CableMode(passport.CableMode_CABLE_MODE_NOT_SET)
-	CableModeNormal   CableMode = CableMode(passport.CableMode_NORMAL)
-	CableModeElecTest CableMode = CableMode(passport.CableMode_ELEC_TEST)
-)
 
 // UsbTester is data type to model a utc274 usb tester.
 type UsbTester struct {
@@ -320,19 +310,6 @@ func (s *UsbTester) SetActiveCc(ctx context.Context, cc ActiveCc) error {
 			Capability: passport.Capability_ACTIVE_CC,
 			Value: &passport.SetUsbTesterCapabilityRequest_ActiveCc{
 				ActiveCc: passport.ActiveCc(cc),
-			},
-		},
-	)
-}
-
-// SetCableMode will set the cable mode.
-func (s *UsbTester) SetCableMode(ctx context.Context, mode CableMode) error {
-	return s.doCapabilitySetRequest(
-		ctx,
-		&passport.SetUsbTesterCapabilityRequest{
-			Capability: passport.Capability_CABLE_MODE,
-			Value: &passport.SetUsbTesterCapabilityRequest_CableMode{
-				CableMode: passport.CableMode(mode),
 			},
 		},
 	)
@@ -607,10 +584,6 @@ func (s *UsbTester) EnterMode(ctx context.Context, mode usbswitch.ConnectionMode
 
 // FlipOrientation sets the orientation of USB plug.
 func (s *UsbTester) FlipOrientation(ctx context.Context, flipped bool) error {
-	if err := s.SetCableMode(ctx, CableModeElecTest); err != nil {
-		return errors.Wrap(err, "failed to set cable mode to elec test before flipping orientation")
-	}
-
 	if flipped {
 		return s.SetActiveCc(ctx, ActiveCc2)
 	}
