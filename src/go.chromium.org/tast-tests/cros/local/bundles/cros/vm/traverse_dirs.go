@@ -70,6 +70,7 @@ func init() {
 				Val: testParam{
 					device: pmemExt2,
 				},
+				ExtraSoftwareDeps: []string{"vm_pmem"},
 			},
 			{
 				Name: "pmem_ext2_dax",
@@ -77,6 +78,7 @@ func init() {
 					device: pmemExt2,
 					dax:    true,
 				},
+				ExtraSoftwareDeps: []string{"vm_pmem"},
 			},
 			{
 				Name: "virtiofs",
