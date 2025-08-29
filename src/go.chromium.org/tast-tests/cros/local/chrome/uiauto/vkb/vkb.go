@@ -489,7 +489,9 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context) (
 		return nil, err
 	}
 
-	if err := vkbCtx.ui.WaitUntilExists(NodeFinder.Role(role.Canvas))(ctx); err != nil {
+	// Longform and non-Longform handwriting canvases have Aria roles
+	// "canvas" and "application", respectively.
+	if err := vkbCtx.ui.WaitUntilAnyExists(NodeFinder.Role(role.Canvas), NodeFinder.Role(role.Application))(ctx); err != nil {
 		return nil, err
 	}
 

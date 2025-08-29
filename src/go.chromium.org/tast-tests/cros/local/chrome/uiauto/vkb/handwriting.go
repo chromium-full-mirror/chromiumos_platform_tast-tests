@@ -283,8 +283,13 @@ func (hwCtx *HandwritingContext) drawStrokesFromFile(filePath string, numStrokes
 			sg.strokes = sg.strokes[0:numStrokes]
 		}
 
+		hwCanvasRole := role.Application
+		if hwCtx.isLongForm {
+			hwCanvasRole = role.Canvas
+		}
+
 		// Find the handwriting canvas location.
-		hwCanvasFinder := NodeFinder.Role(role.Canvas)
+		hwCanvasFinder := NodeFinder.Role(hwCanvasRole)
 		loc, err := hwCtx.ui.Location(ctx, hwCanvasFinder)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get location of %v", hwCanvasFinder)
