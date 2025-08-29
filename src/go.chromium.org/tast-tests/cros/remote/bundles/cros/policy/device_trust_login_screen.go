@@ -56,7 +56,8 @@ func init() {
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		Params: []testing.Param{{
 			Name: "host_allowed",
@@ -96,7 +97,7 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(cleanupCtx)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

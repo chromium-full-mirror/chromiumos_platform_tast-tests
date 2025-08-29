@@ -44,7 +44,8 @@ func init() {
 		Timeout:      freTestTimeout,
 		Vars: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		Fixture: fixture.CleanOwnership,
 		Params: []testing.Param{
@@ -93,7 +94,7 @@ func ForcedReEnrollment(ctx context.Context, s *testing.State) {
 	}()
 
 	// Deprovision the device after the test.
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

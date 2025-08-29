@@ -72,7 +72,10 @@ func init() {
 				}},
 			},
 		},
-		Vars: []string{tape.ServiceAccountVar},
+		Vars: []string{
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
+		},
 	})
 }
 
@@ -112,7 +115,7 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

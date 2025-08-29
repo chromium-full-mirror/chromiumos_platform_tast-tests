@@ -73,7 +73,8 @@ func init() {
 		},
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 }
@@ -95,7 +96,6 @@ func verifyInfo(event reportingutil.InputEvent, validator func(info *reportingut
 func InfoReporting(ctx context.Context, s *testing.State) {
 	param := s.Param().(infoReportingParameters)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
-	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
 	defer func(ctx context.Context) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
@@ -128,7 +128,8 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 
 	pc := pspb.NewPolicyServiceClient(cl.Conn)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	serviceAccounts := []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -156,6 +157,9 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the policy: ", err)
 	}
 
+	// Defer deprovision before the enrollment in case enrollement fails after provisioning.
+	defer reportingutil.Deprovision(ctx, cl.Conn, serviceAccounts)
+
 	testStartTime := time.Now()
 	if _, err := pc.GAIAEnrollForReporting(ctx, &pspb.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
@@ -168,7 +172,6 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(ctx, &empty.Empty{})
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 
 	c, err := pc.ClientID(ctx, &empty.Empty{})
 	if err != nil {

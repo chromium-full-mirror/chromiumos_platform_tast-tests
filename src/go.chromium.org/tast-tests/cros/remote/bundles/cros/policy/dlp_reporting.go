@@ -75,7 +75,8 @@ func init() {
 			dlputil.RestrictionWarnReportingEnabledPasswordAsh,
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		Params: []testing.Param{
 			{
@@ -163,7 +164,6 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	password := s.RequiredVar(params.Password)
 	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
-	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 
 	// Reset the DUT state once the test is finished.
 	defer func(ctx context.Context) {
@@ -183,7 +183,8 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(cleanupCtx)
-	defer reportingutil.Deprovision(cleanupCtx, cl.Conn, sa)
+	// Defer deprovision before the enrollment in case enrollement fails after provisioning.
+	defer reportingutil.Deprovision(ctx, cl.Conn, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 
 	// Create client instance of the DataLeakPrevention service.
 	service := dlp.NewDataLeakPreventionServiceClient(cl.Conn)

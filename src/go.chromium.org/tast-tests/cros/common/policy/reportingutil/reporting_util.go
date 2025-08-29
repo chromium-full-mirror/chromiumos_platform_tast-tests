@@ -182,8 +182,8 @@ func LookupProdEvents(ctx context.Context, obfuscatedCustomerID, clientID, apiKe
 }
 
 // Deprovision deprovisions the DUT. This should be used after the test is over.
-func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccountVar []byte) error {
-	tapeClient, err := tape.NewClient(ctx, serviceAccountVar)
+func Deprovision(ctx context.Context, cc grpc.ClientConnInterface, serviceAccounts []string) error {
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tape client")
 	}

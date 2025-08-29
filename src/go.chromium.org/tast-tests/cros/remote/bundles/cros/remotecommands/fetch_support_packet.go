@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -59,7 +60,8 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.hwsec.OwnershipService", "tast.cros.tape.Service"},
 		VarDeps: []string{
 			reportingutil.EventsAPIKeyPath,
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.LogUploadEnabled{}, pci.VerifiedFunctionalityOS),
@@ -85,7 +87,6 @@ func init() {
 func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	param := s.Param().(testingParam)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
-	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 	poolID := dma.TapePool(tape.LogUploadEnabled)
 
 	defer func(ctx context.Context) {
@@ -106,7 +107,8 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 
 	pc := ps.NewPolicyServiceClient(cl.Conn)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	serviceAccounts := []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -122,7 +124,7 @@ func FetchSupportPacket(ctx context.Context, s *testing.State) {
 	testStartTime := time.Now()
 
 	// Defer deprovision before the enrollment in case enrollement fails after provisioning.
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
+	defer reportingutil.Deprovision(ctx, cl.Conn, serviceAccounts)
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,

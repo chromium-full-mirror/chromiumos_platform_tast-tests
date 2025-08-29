@@ -76,7 +76,8 @@ func init() {
 		},
 		Vars: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 			"policy.ZeroTouchEnrollment.serial_number",
 			"policy.ZeroTouchEnrollment.hardware_model",
 			"policy.ZeroTouchEnrollment.device_provision_token",
@@ -132,7 +133,7 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		captureScreenshot(cleanupCtx, "test-failure", s)
 	}()
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

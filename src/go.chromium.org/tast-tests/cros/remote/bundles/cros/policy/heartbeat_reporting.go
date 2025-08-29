@@ -48,7 +48,8 @@ func init() {
 			reportingutil.ManagedChromeCustomerIDPath,
 			reportingutil.EventsAPIKeyPath,
 			reportingutil.ProdEventsAPIKeyPath,
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		Params: []testing.Param{
 			{
@@ -116,7 +117,6 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	customerID := s.RequiredVar(reportingutil.ManagedChromeCustomerIDPath)
 	APIKey := s.RequiredVar(reportingutil.EventsAPIKeyPath)
 	ProdAPIKey := s.RequiredVar(reportingutil.ProdEventsAPIKeyPath)
-	sa := []byte(s.RequiredVar(tape.ServiceAccountVar))
 	params := s.Param().(heartbeatTestParams)
 
 	defer func(ctx context.Context) {
@@ -134,7 +134,6 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa)
 
 	screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
 	captureScreenshotOnError := func(ctx context.Context, hasError func() bool) {
@@ -148,7 +147,8 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 
 	policyClient := ps.NewPolicyServiceClient(cl.Conn)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	serviceAccounts := []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -195,6 +195,10 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		// This is a device event. Enroll device and maybe login, depending on `SkipLogin` setting.
+
+		// Defer deprovision before the enrollment in case enrollement fails after provisioning.
+		defer reportingutil.Deprovision(ctx, cl.Conn, serviceAccounts)
+
 		if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 			Username:           acc.Username,
 			Password:           acc.Password,

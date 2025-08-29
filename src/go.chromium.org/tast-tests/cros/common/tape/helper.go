@@ -6,6 +6,7 @@ package tape
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,9 +20,15 @@ import (
 // ServiceAccountVar holds the name of the variable which stores the service account credentials for TAPE.
 const ServiceAccountVar = "tape.service_account_key"
 
+// ServiceAccount1 holds the location of service account credentials.
+const ServiceAccount1 = "tape.service_account1"
+
+// ServiceAccount2 holds the location of service account credentials.
+const ServiceAccount2 = "tape.service_account2"
+
 type clientOption struct {
-	client      *client
-	credsJSON   []byte
+	client    *client
+	credsJSON []byte
 }
 
 // ClientOption provides options for getting a client for an account manager.
@@ -259,4 +266,25 @@ type NetworkKey struct {
 // AppKey is an additionalTargetKey for ArcPolicy related policies.
 type AppKey struct {
 	AppID string `json:"app_id"`
+}
+
+// GetClientFromLocalCredentials looks for service account credentials on the host
+// and creates a client from them and returns it.
+func GetClientFromLocalCredentials(ctx context.Context, paths []string) (*client, error) {
+	var creds []byte = nil
+	var err error = nil
+	for _, path := range paths {
+		if _, err = os.Stat(path); err == nil {
+			creds, err = os.ReadFile(path)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read service account file")
+	}
+
+	return NewClient(ctx, creds)
 }

@@ -34,7 +34,8 @@ func init() {
 		Timeout:      mgsTestTimeout,
 		Fixture:      fixture.CleanOwnership,
 		VarDeps: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 		ServiceDeps: []string{
 			"tast.cros.arc.MGSService",
@@ -66,7 +67,7 @@ func ManagedGuestSessionAppInstall(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 	defer cancel()
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

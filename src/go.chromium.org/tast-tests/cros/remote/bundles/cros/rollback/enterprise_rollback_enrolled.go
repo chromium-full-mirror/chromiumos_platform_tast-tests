@@ -63,7 +63,8 @@ func init() {
 		},
 		Timeout: enterpriseRollbackEnrolledTimeout,
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 }
@@ -86,14 +87,14 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
+	serviceAccounts := []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}
 	defer rpcClient.Close(cleanupCtx)
-
-	if err = deprovision(ctx, s.DUT(), s.RPCHint(), s.RequiredVar(tape.ServiceAccountVar)); err != nil {
+	if err = deprovision(ctx, s.DUT(), s.RPCHint(), serviceAccounts); err != nil {
 		s.Error("Failed to deprovision before test: ", err)
 	}
-	defer deprovision(cleanupCtx, s.DUT(), s.RPCHint(), s.RequiredVar(tape.ServiceAccountVar))
+	defer deprovision(cleanupCtx, s.DUT(), s.RPCHint(), serviceAccounts)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -243,7 +244,7 @@ func waitForNetwork(ctx context.Context, rollbackService rpb.EnterpriseRollbackS
 	return nil
 }
 
-func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, serviceAccount string) (retErr error) {
+func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, serviceAccounts []string) (retErr error) {
 	testing.ContextLog(ctx, "Deprovisioning")
 	rpcClient, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
@@ -256,9 +257,9 @@ func deprovision(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, se
 		return errors.Wrap(err, "failed to get stable device secret")
 	}
 
-	tapeClient, err := tape.NewClient(ctx, []byte(serviceAccount))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, serviceAccounts)
 	if err != nil {
-		return errors.Wrap(err, "failed to start tape client")
+		return errors.Wrap(err, "failed to create tape client")
 	}
 
 	provisioned, err := tapeClient.Provisioned(ctx, tape.WithStableDeviceSecret(stableDeviceSecret))
