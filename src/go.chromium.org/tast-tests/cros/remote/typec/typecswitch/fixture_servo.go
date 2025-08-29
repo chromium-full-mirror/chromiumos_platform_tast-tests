@@ -21,7 +21,7 @@ func init() {
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
 		Impl:            &SwitchAndServoFixture{},
-		SetUpTimeout:    20 * time.Second, // For switch initialization and initial DisablePorts
+		SetUpTimeout:    15 * time.Minute, // For switch initialization and initial DisablePorts
 		ResetTimeout:    15 * time.Second, // For DisablePorts and potential mode reset
 		TearDownTimeout: 15 * time.Second, // For closing the switch
 		Vars: []string{

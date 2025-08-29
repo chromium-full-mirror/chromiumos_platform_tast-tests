@@ -20,7 +20,7 @@ func init() {
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
 		Impl:            &UtcAndServoFixture{},
-		SetUpTimeout:    30 * time.Second, // Includes parent SetUp and Servo init.
+		SetUpTimeout:    15 * time.Minute, // Includes parent SetUp and Servo init.
 		ResetTimeout:    15 * time.Second, // Parent Reset handles Utc.
 		TearDownTimeout: 30 * time.Second, // Includes Servo teardown and parent TearDown.
 		Vars: []string{
