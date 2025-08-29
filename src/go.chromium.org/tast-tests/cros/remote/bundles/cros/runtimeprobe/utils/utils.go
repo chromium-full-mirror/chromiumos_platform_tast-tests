@@ -13,6 +13,18 @@ import (
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+var (
+	// probeFunctionWaivedModels are models that are also waived in the
+	// runtimeprobe.ProbeFunction test.
+	probeFunctionWaivedModels = []string{
+		"blacktip360",
+		"domilly",
+		"wugtrio",
+		"wyrdeer",
+	}
 )
 
 // WaitServiceState waits for a service to be in a specific state.
@@ -33,4 +45,18 @@ func WaitServiceState(ctx context.Context, d *dut.DUT, service, state string) er
 		}
 		return errors.Errorf("%s is not %s state", service, state)
 	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout})
+}
+
+// RuntimeHWIDRefreshDeps returns a hardware dependency for Runtime HWID refresh
+// related tests.
+func RuntimeHWIDRefreshDeps(extraDeps ...hwdep.Condition) hwdep.Deps {
+	deps := []hwdep.Condition{
+		hwdep.RuntimeProbeConfig(),
+		hwdep.RuntimeProbeConfigPrivate(false),
+	}
+	for _, model := range probeFunctionWaivedModels {
+		deps = append(deps, hwdep.SkipOnModel(model))
+	}
+	deps = append(deps, extraDeps...)
+	return hwdep.D(deps...)
 }

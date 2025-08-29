@@ -10,7 +10,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/utils"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -23,7 +22,7 @@ func init() {
 		},
 		BugComponent: "b:606088",
 		SoftwareDeps: []string{"reboot", "racc"},
-		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
+		HardwareDeps: utils.RuntimeHWIDRefreshDeps(),
 		Fixture:      fixture.CleanupRuntimeHWID,
 		Attr:         []string{"group:racc", "racc_config_installed"},
 	})
