@@ -15,7 +15,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
+// defaultTimeout includes 10m base time, cooldown, and TotalBenchmarkTimeout
+// (including retries).
+const defaultTimeout = 10*time.Minute + cujrecorder.CooldownTimeout + benchmarkcuj.TotalBenchmarkTimeout
 
 func init() {
 	testing.AddTest(&testing.Test{

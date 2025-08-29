@@ -19,7 +19,17 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const motionMarkPrefix = "MotionMark."
+const (
+	// TotalBenchmarkTimeout is the total allowed duration for running the
+	// benchmark, including all retries.
+	TotalBenchmarkTimeout = benchmarkTimeout * benchmarkMaxRetries
+
+	// benchmarkTimeout is the maximum duration for a single benchmark run.
+	benchmarkTimeout = 6 * time.Minute
+	// benchmarkMaxRetries is the maximum number of retries for the benchmark.
+	benchmarkMaxRetries = 3
+	motionMarkPrefix    = "MotionMark."
+)
 
 // MotionMarkInfo contains the information for running MotionMark Benchmark.
 var MotionMarkInfo = benchmarkInfo{
@@ -57,21 +67,42 @@ func SetUpMotionMark(ctx context.Context, ac *uiauto.Context) error {
 
 // RunMotionMark runs the MotionMark test.
 func RunMotionMark(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context, params map[string]string) error {
-	if err := uiauto.Retry(3, detectCrashAndReload(ac))(ctx); err != nil {
-		return errors.Wrap(err, "failed to detect crash and reload")
+	startBenchmark := func(ctx context.Context) error {
+		startTime := time.Now()
+		benchmarkCtx, cancel := context.WithTimeout(ctx, benchmarkTimeout)
+		defer cancel()
+		if err := benchmarkConn.Eval(benchmarkCtx, `
+			new Promise(resolve => {
+				benchmarkRunnerClient.didFinishLastIteration = function() {
+					benchmarkController.showResults();
+					resolve();
+				};
+				benchmarkController.startBenchmark();
+			})`, nil); err != nil {
+			return errors.Wrap(err, "failed to run MotionMark")
+		}
+		testing.ContextLog(ctx, "Benchmark completed in ", time.Since(startTime))
+		return nil
 	}
 
-	if err := benchmarkConn.Eval(ctx, `
-	new Promise(resolve => {
-		benchmarkRunnerClient.didFinishLastIteration = function() {
-			benchmarkController.showResults();
-			resolve();
-		};
-		benchmarkController.startBenchmark();
-	})`, nil); err != nil {
-		return errors.Wrap(err, "failed to run MotionMark")
+	isFirstTry := true
+	reloadOnRetry := func(ctx context.Context) error {
+		if isFirstTry {
+			isFirstTry = false // Skip reload on first attempt.
+			return nil
+		}
+		return reloadPageAndWaitBenchmarkButton(ac)(ctx)
 	}
-	return nil
+
+	// If the Benchmark has not finished running within BenchmarkTimeout,
+	// it may have navigated to a blank page and failed. Reload the page
+	// and rerun the Benchmark to resolve the issue.
+	return uiauto.Retry(benchmarkMaxRetries,
+		uiauto.NamedCombine("start the Benchmark",
+			reloadOnRetry,
+			detectCrashAndReload(ac),
+			startBenchmark,
+		))(ctx)
 }
 
 // RetrieveMotionMarkScore retrieves the score after MotionMark finished.
@@ -110,12 +141,23 @@ func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, sc
 	return nil
 }
 
+var runBenchmarkButton = nodewith.NameContaining("Run Benchmark").Role(role.Button)
+
 // detectCrashAndReload checks for a crash and reloads the page if necessary.
 func detectCrashAndReload(ac *uiauto.Context) uiauto.Action {
-	reloadButton := nodewith.Name("Reload").Role(role.Button).First()
-	runBenchmarkButton := nodewith.NameContaining("Run Benchmark").Role(role.Button)
 	crashedWindow := nodewith.NameContaining("Crashed").Role(role.Window).HasClass("Widget")
-	reloadPage := uiauto.NamedCombine("reload page",
+	return uiauto.Retry(3,
+		uiauto.NamedCombine("detect crash and reload if necessary",
+			ac.WaitUntilAnyExists(runBenchmarkButton, crashedWindow),
+			uiauto.IfSuccessThen(ac.Exists(crashedWindow), reloadPageAndWaitBenchmarkButton(ac)),
+		))
+}
+
+// reloadPageAndWaitBenchmarkButton reloads the page by clicking the reload
+// button and waits for the Benchmark button.
+func reloadPageAndWaitBenchmarkButton(ac *uiauto.Context) uiauto.Action {
+	reloadButton := nodewith.Name("Reload").Role(role.Button).First()
+	return uiauto.NamedCombine("reload page",
 		// If there is no reload button, move mouse to the top to show it.
 		uiauto.IfFailThen(ac.Exists(reloadButton),
 			ac.RetryUntil(ac.MouseClickAtLocation(0, coords.Point{X: 0, Y: 0}),
@@ -123,9 +165,5 @@ func detectCrashAndReload(ac *uiauto.Context) uiauto.Action {
 		ac.DoDefault(reloadButton),
 		ac.WaitUntilExists(runBenchmarkButton),
 		ac.MouseMoveTo(runBenchmarkButton, 500*time.Millisecond),
-	)
-	return uiauto.NamedCombine("detect crash and reload if necessary",
-		ac.WaitUntilAnyExists(runBenchmarkButton, crashedWindow),
-		uiauto.IfSuccessThen(ac.Exists(crashedWindow), reloadPage),
 	)
 }
