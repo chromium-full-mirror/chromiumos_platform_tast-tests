@@ -17,13 +17,13 @@ import (
 )
 
 var (
-	// probeFunctionWaivedModels are models that are also waived in the
-	// runtimeprobe.ProbeFunction test.
-	probeFunctionWaivedModels = []string{
-		"blacktip360",
-		"domilly",
-		"wugtrio",
-		"wyrdeer",
+	// ProbeFunctionWaivedFields is a map from model name to a set of component
+	// fields that are also waived in the runtimeprobe.ProbeFunction test.
+	ProbeFunctionWaivedFields = map[string]map[string]struct{}{
+		"blacktip360": {"camera": {}},
+		"domilly":     {"display_panel": {}},
+		"wugtrio":     {"camera": {}},
+		"wyrdeer":     {"battery": {}},
 	}
 )
 
@@ -50,12 +50,14 @@ func WaitServiceState(ctx context.Context, d *dut.DUT, service, state string) er
 // RuntimeHWIDRefreshDeps returns a hardware dependency for Runtime HWID refresh
 // related tests.
 func RuntimeHWIDRefreshDeps(extraDeps ...hwdep.Condition) hwdep.Deps {
+	var models []string
+	for model := range ProbeFunctionWaivedFields {
+		models = append(models, model)
+	}
 	deps := []hwdep.Condition{
 		hwdep.RuntimeProbeConfig(),
 		hwdep.RuntimeProbeConfigPrivate(false),
-	}
-	for _, model := range probeFunctionWaivedModels {
-		deps = append(deps, hwdep.SkipOnModel(model))
+		hwdep.SkipOnModel(models...),
 	}
 	deps = append(deps, extraDeps...)
 	return hwdep.D(deps...)
