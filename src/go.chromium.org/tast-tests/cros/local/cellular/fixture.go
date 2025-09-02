@@ -41,9 +41,9 @@ import (
 const (
 	uiJobName    = "ui"
 	tearDownTime = 5 * time.Minute
-	// RebootOnResetRequestedFlagPath is set when we want the remote cellular
-	// fixture to reboot the DUT on Reset(). All contents of /run get erased on reboot.
-	RebootOnResetRequestedFlagPath = "/run/cellularRebootOnResetRequestedFlagPath"
+	// EcResetOnResetRequestedFlagPath is set when we want the remote cellular
+	// fixture to ec reset the DUT on Reset(). All contents of /run get erased on reboot.
+	EcResetOnResetRequestedFlagPath = "/run/cellularEcResetOnResetRequestedFlagPath"
 	// RebootOnTearDownRequestedFlagPath is set when we want the remote cellular
 	// fixture to reboot the DUT on TearDown(). All contents of /run get erased on reboot.
 	RebootOnTearDownRequestedFlagPath = "/run/cellularRebootOnTearDownRequestedFlagPath"
@@ -980,15 +980,15 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 	modem, waitForModemErr := modemmanager.NewModem(ctx)
 	if waitForModemErr != nil {
 		testing.ContextLog(ctx, "Failed to create modem object: ", waitForModemErr)
-		// b/407604639 :  When the L850 modem doesn't come back after reset, we need to reboot the
+		// b/407604639 :  When the L850 modem doesn't come back after reset, we need to ec reset the
 		// device using the remote fixture. Since a reboot doesn't necessarily put the DUT into its
 		// previous clean state, run the TearDown/SetUp by returning an error on Reset(). We use
 		// dutBrokenUntilReboot to trigger a fixture TearDown/SetUp on Reset().
 		if isL850(ctx, s) {
 			f.dutBrokenUntilReboot = waitForModemErr
-			testing.ContextLog(ctx, "PostTest: L850 Modem not detected. Requesting a DUT reboot from remote fixture")
-			if err := os.WriteFile(RebootOnResetRequestedFlagPath, []byte("1"), 0666); err != nil {
-				testing.ContextLogf(ctx, "Could not write to %s: %s", RebootOnResetRequestedFlagPath, err)
+			testing.ContextLog(ctx, "PostTest: L850 Modem not detected. Requesting a dut ec reset from remote fixture")
+			if err := os.WriteFile(EcResetOnResetRequestedFlagPath, []byte("1"), 0666); err != nil {
+				testing.ContextLogf(ctx, "Could not write to %s: %s", EcResetOnResetRequestedFlagPath, err)
 			}
 		}
 	} else {

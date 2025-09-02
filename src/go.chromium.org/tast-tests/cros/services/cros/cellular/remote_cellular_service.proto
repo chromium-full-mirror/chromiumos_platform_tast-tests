@@ -126,6 +126,6 @@ message VerifyIPConnectivityResponse {
 message QuerySignalBarsResponse { int32 count = 1; }
 
 message QueryLocalFixtureFlagsResponse {
-  bool reboot_on_reset_requested = 1;
+  bool ecReset_on_reset_requested = 1;
   bool reboot_on_tearDown_requested = 2;
 }

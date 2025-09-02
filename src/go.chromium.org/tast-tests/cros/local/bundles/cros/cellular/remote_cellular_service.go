@@ -502,11 +502,11 @@ func (s *RemoteCellularService) QuerySignalBars(ctx context.Context, _ *empty.Em
 
 // QueryLocalFixtureFlags returns a list of flags indicating the current status of the local fixture .
 func (s *RemoteCellularService) QueryLocalFixtureFlags(ctx context.Context, _ *empty.Empty) (*cellular_pb.QueryLocalFixtureFlagsResponse, error) {
-	_, rebootOnResetRequestedStatErr := os.Stat(cellular.RebootOnResetRequestedFlagPath)
+	_, ecResetOnResetRequestedStatErr := os.Stat(cellular.EcResetOnResetRequestedFlagPath)
 	_, rebootOnTearDownRequestedStatErr := os.Stat(cellular.RebootOnTearDownRequestedFlagPath)
 	// os.Stat() returns err == nil when the file exists.
 	return &cellular_pb.QueryLocalFixtureFlagsResponse{
-		RebootOnResetRequested:    (rebootOnResetRequestedStatErr == nil),
+		EcResetOnResetRequested:   (ecResetOnResetRequestedStatErr == nil),
 		RebootOnTearDownRequested: (rebootOnTearDownRequestedStatErr == nil),
 	}, nil
 }

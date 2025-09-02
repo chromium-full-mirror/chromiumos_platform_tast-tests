@@ -190,14 +190,14 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 }
 
 func (tf *fixture) Reset(ctx context.Context) error {
-	rebootNeeded, err := tf.hasRebootOnResetRequested(ctx)
+	ecResetNeeded, err := tf.hasEcResetOnResetRequested(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to query for RebootOnResetRequested result")
+		return errors.Wrap(err, "failed to query for EcResetOnResetRequested result")
 	}
-	if rebootNeeded {
-		testing.ContextLog(ctx, "Local fixture requested reboot. Rebooting DUT")
-		if err := tf.rebootDUT(ctx, tf.dut); err != nil {
-			return errors.Wrap(err, "failed to reboot")
+	if ecResetNeeded {
+		testing.ContextLog(ctx, "Local fixture requested ec reset. Resetting DUT")
+		if err := tf.ecResetDUT(ctx, tf.dut); err != nil {
+			return errors.Wrap(err, "failed to ec reset")
 		}
 	}
 
@@ -247,6 +247,18 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	}
+}
+
+func (tf *fixture) ecResetDUT(ctx context.Context, dut *dut.DUT) error {
+	// DUT may be disconnected. Reconnect so we can reset.
+	if err := reconnectToDut(ctx, tf.dut); err != nil {
+		return errors.Wrap(err, "failed to connect to DUT")
+	}
+
+	if err := dut.Conn().CommandContext(ctx, "ectool", "reboot_ec", "cold", "at-shutdown").Run(); err != nil {
+		return errors.Wrap(err, "failed to run ectool reboot_ec")
+	}
+	return nil
 }
 
 func (tf *fixture) rebootDUT(ctx context.Context, dut *dut.DUT) error {
@@ -301,12 +313,12 @@ func (tf *fixture) hasRebootOnTearDownRequested(ctx context.Context) (bool, erro
 	return resp.RebootOnTearDownRequested, nil
 }
 
-func (tf *fixture) hasRebootOnResetRequested(ctx context.Context) (bool, error) {
+func (tf *fixture) hasEcResetOnResetRequested(ctx context.Context) (bool, error) {
 	resp, err := tf.queryLocalFixtureFlags(ctx)
 	if err != nil {
 		return false, err
 	}
-	return resp.RebootOnResetRequested, nil
+	return resp.EcResetOnResetRequested, nil
 }
 
 // hasStartupRebootUptime returns true if the device has been up long enough to reboot on startup.
