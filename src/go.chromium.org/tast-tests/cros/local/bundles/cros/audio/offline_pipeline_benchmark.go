@@ -17,7 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio/audioprocessor"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -73,6 +75,34 @@ func init() {
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
 			},
 			{
+				Name: "waves_speaker",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.Plugin{
+						// The plugin should exist in WavesOutputModels.
+						Path:        "libmaxxchromeplugin.so",
+						Constructor: "maxxchrome_spk_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 48000,
+					inputWavChannels:  2,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.WavesOutputModels...)),
+			},
+			{
+				Name: "waves_headphone",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.Plugin{
+						// The plugin should exist in WavesOutputModels.
+						Path:        "libmaxxchromeplugin.so",
+						Constructor: "maxxchrome_hp_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 48000,
+					inputWavChannels:  2,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.WavesOutputModels...)),
+			},
+			{
 				Name: "nc_sleep_rt",
 				Val: offlinePipelineBenchmarkParam{
 					plugin: &audioprocessor.DLCPlugin{
@@ -117,6 +147,38 @@ func init() {
 					setThreadPriority: true,
 				},
 				ExtraTestBedDeps: []string{tbdep.AudioBeamforming("intelligo")},
+			},
+			{
+				Name: "waves_speaker_sleep_rt",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.Plugin{
+						// The plugin should exist in WavesOutputModels.
+						Path:        "libmaxxchromeplugin.so",
+						Constructor: "maxxchrome_spk_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 48000,
+					inputWavChannels:  2,
+					sleepTime:         5 * time.Millisecond,
+					setThreadPriority: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.WavesOutputModels...)),
+			},
+			{
+				Name: "waves_headphone_sleep_rt",
+				Val: offlinePipelineBenchmarkParam{
+					plugin: &audioprocessor.Plugin{
+						// The plugin should exist in WavesOutputModels.
+						Path:        "libmaxxchromeplugin.so",
+						Constructor: "maxxchrome_hp_processor_create",
+					},
+					blockSizeFrames:   256,
+					inputWavFrameRate: 48000,
+					inputWavChannels:  2,
+					sleepTime:         5 * time.Millisecond,
+					setThreadPriority: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.WavesOutputModels...)),
 			},
 		},
 	})

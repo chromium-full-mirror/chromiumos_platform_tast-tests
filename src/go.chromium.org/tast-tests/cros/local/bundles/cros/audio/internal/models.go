@@ -12,4 +12,6 @@ var (
 	DSPAECNCModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 	// Models that support DSP NC but not DSP AEC.
 	DSPNCOnlyModels = []string{"dojo"}
+	// Models that support Waves output processing.
+	WavesOutputModels = []string{"obiwan", "quigon"}
 )
