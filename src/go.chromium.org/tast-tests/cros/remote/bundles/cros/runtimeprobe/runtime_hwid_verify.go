@@ -58,7 +58,7 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 
 	cmd := []string{
-		"sudo", "-u", "hardware_verifier", "hardware_verifier", "--runtime_hwid_refresh_policy=force_generate",
+		"sudo", "-u", "hardware_verifier", "hardware_verifier", "--runtime_hwid_refresh_policy=force_generate", "--verbosity=1",
 	}
 	if _, err := d.Conn().CommandContext(ctx, cmd[0], cmd[1:]...).Output(); err != nil {
 		s.Fatal("Failed to invoke hardware_verifier: ", err)
