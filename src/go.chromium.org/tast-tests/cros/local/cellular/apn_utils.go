@@ -86,6 +86,7 @@ var (
 		carrierKeyTuple{"302220", ""}:     CarrierTelus,
 		carrierKeyTuple{"302720", ""}:     CarrierRoger,
 		carrierKeyTuple{"310240", "4276"}: CarrierGoogleFi,
+		carrierKeyTuple{"310260", "4276"}: CarrierGoogleFi,
 		carrierKeyTuple{"310260", ""}:     CarrierTmobile,
 		carrierKeyTuple{"311882", ""}:     CarrierTmobile,
 		carrierKeyTuple{"310280", ""}:     CarrierAtt,
