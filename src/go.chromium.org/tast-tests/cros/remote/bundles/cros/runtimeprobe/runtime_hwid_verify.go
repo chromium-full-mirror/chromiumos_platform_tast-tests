@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
+	"golang.org/x/crypto/ssh"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/utils"
@@ -61,7 +62,12 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 		"sudo", "-u", "hardware_verifier", "hardware_verifier", "--runtime_hwid_refresh_policy=force_generate", "--verbosity=1",
 	}
 	if _, err := d.Conn().CommandContext(ctx, cmd[0], cmd[1:]...).Output(); err != nil {
-		s.Fatal("Failed to invoke hardware_verifier: ", err)
+		exitError, isExitError := err.(*ssh.ExitError)
+		// For unqualified hardware components, hardware_verifier would exit
+		// with status 1 and it is expected.
+		if !isExitError || exitError.ExitStatus() != 1 {
+			s.Fatal("Failed to invoke hardware_verifier: ", err)
+		}
 	}
 
 	runtimeHWIDFilePath := filepath.Join(runtimeHWIDFileDir, runtimeHWIDFileName)
