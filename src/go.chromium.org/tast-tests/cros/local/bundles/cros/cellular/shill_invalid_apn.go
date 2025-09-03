@@ -47,7 +47,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillInvalidApn,
 		Desc:         "Verifies handling of the invalid APNs",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "michamazur@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_amari_callbox", "cellular_unstable"},
 		Fixture:      "cellular",
