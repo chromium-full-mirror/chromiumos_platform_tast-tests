@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Check video streaming functionalities of ScreenRecorderService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",
-		// TODO(b/354048099): Re-enable once screen recording (via Chrome extension) is available for MV3.
+		// TODO(b/442663465): Re-enable once screen recording (via Chrome extension) is available for MV3.
 		//Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 	})

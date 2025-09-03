@@ -19,7 +19,7 @@ func init() {
 		Func:     ResizeOk,
 		Desc:     "Test resizing disk of Crostini from the Settings app",
 		Contacts: []string{"clumptini+oncall@google.com"},
-		// TODO(b/354048099): Re-enable once the ResetAutomation is available for MV3.
+		// TODO(b/442664131): Re-enable once the ResetAutomation is available for MV3.
 		//Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",

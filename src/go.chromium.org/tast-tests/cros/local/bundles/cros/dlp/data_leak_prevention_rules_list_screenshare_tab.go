@@ -56,7 +56,7 @@ func init() {
 			// Warn users from sharing confidential information within company (screenshare_tab): COM_DATPROT_CUJ4_TASK2_WF1.
 			Value: "screenplay-04f5ed0b-518f-4138-8a8a-2e0046205723",
 		}},
-		// TODO(b/354048099): Re-enable once screen recording (via Chrome extension) is available for MV3.
+		// TODO(b/442663465): Re-enable once screen recording (via Chrome extension) is available for MV3.
 		Params: []testing.Param{{
 			Name: "ash_blocked",
 			//ExtraAttr: []string{"group:mainline"},

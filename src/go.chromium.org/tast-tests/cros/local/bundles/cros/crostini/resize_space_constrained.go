@@ -23,7 +23,7 @@ func init() {
 		Func:     ResizeSpaceConstrained,
 		Desc:     "Test resizing disk of Crostini from the Settings with constrained host disk space",
 		Contacts: []string{"clumptini+oncall@google.com", "nverne@google.com"},
-		// TODO(b/354048099): Re-enable once the ResetAutomation is available for MV3.
+		// TODO(b/442664131): Re-enable once the ResetAutomation is available for MV3.
 		//Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
