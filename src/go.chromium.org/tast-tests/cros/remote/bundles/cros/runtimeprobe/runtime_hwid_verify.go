@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 
+	"go.chromium.org/chromiumos/config/go/api"
 	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
 	"golang.org/x/crypto/ssh"
 
@@ -30,7 +31,7 @@ var (
 	// component fields that are allowed to have unidentified components (i.e. `?`)
 	// as their value.
 	allowedUnidentifiedComponentsFields = map[string]map[string]struct{}{
-		"ciri": {"touchpad": {}},
+		"blacktiplte": {"cellular": {}},
 	}
 )
 
@@ -57,6 +58,7 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 	)
 
 	d := s.DUT()
+	formFactor := s.Features("").GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor()
 
 	cmd := []string{
 		"sudo", "-u", "hardware_verifier", "hardware_verifier", "--runtime_hwid_refresh_policy=force_generate", "--verbosity=1",
@@ -82,7 +84,7 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 	}
 	fileContent := string(bytes)
 
-	if err := verifyRuntimeHWIDFileContent(ctx, d, fileContent); err != nil {
+	if err := verifyRuntimeHWIDFileContent(ctx, d, fileContent, formFactor); err != nil {
 		s.Fatal("The verification of Runtime HWID file content failed: ", err)
 	}
 }
@@ -93,7 +95,7 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 // 3. The Runtime HWID components only contain specific characters.
 // 4. The Runtime HWID components do not contain unidentified components.
 // 5. The checksum is the SHA-1 hash of the Runtime HWID.
-func verifyRuntimeHWIDFileContent(ctx context.Context, d *dut.DUT, fileContent string) error {
+func verifyRuntimeHWIDFileContent(ctx context.Context, d *dut.DUT, fileContent string, formFactor api.HardwareFeatures_FormFactor_FormFactorType) error {
 	const (
 		runtimeHWIDComponentRegex = `^[0-9,#X?\-]*$`
 		runtimeHWIDMagicString    = "R:"
@@ -133,7 +135,7 @@ func verifyRuntimeHWIDFileContent(ctx context.Context, d *dut.DUT, fileContent s
 		return errors.Errorf("Runtime HWID components %q contains invalid characters", runtimeHWIDComponents)
 	}
 
-	if err := verifyRuntimeHWIDComponents(ctx, d, runtimeHWIDComponents); err != nil {
+	if err := verifyRuntimeHWIDComponents(ctx, d, runtimeHWIDComponents, formFactor); err != nil {
 		return err
 	}
 	h := sha1.New()
@@ -148,7 +150,7 @@ func verifyRuntimeHWIDFileContent(ctx context.Context, d *dut.DUT, fileContent s
 
 // verifyRuntimeHWIDComponents verifies that the Runtime HWID components do not
 // contain unidentified components, except for allowed ones.
-func verifyRuntimeHWIDComponents(ctx context.Context, d *dut.DUT, runtimeHWIDComponents string) error {
+func verifyRuntimeHWIDComponents(ctx context.Context, d *dut.DUT, runtimeHWIDComponents string, formFactor api.HardwareFeatures_FormFactor_FormFactorType) error {
 	const (
 		runtimeHWIDCompSeparator    = "-"
 		runtimeHWIDUnidentifiedComp = "?"
@@ -175,14 +177,20 @@ func verifyRuntimeHWIDComponents(ctx context.Context, d *dut.DUT, runtimeHWIDCom
 	allowedFields := allowedUnidentifiedComponentsFields[modelName]
 	probeFunctionWaivedFields := utils.ProbeFunctionWaivedFields[modelName]
 	for i, comps := range fieldComps {
-		if strings.Contains(comps, runtimeHWIDUnidentifiedComp) {
-			fieldName := allFields[i]
-			_, allowed := allowedFields[fieldName]
-			_, waived := probeFunctionWaivedFields[fieldName]
-			if !allowed && !waived {
-				return errors.Errorf("the %q components are %q, which contain unidentified components", fieldName, comps)
-			}
+		if !strings.Contains(comps, runtimeHWIDUnidentifiedComp) {
+			continue
 		}
+
+		fieldName := allFields[i]
+		_, allowed := allowedFields[fieldName]
+		_, waived := probeFunctionWaivedFields[fieldName]
+
+		if allowed ||
+			waived ||
+			fieldName == "touchpad" && formFactor == api.HardwareFeatures_FormFactor_DETACHABLE {
+			continue
+		}
+		return errors.Errorf("the %q components are %q, which contain unidentified components", fieldName, comps)
 	}
 	return nil
 }
