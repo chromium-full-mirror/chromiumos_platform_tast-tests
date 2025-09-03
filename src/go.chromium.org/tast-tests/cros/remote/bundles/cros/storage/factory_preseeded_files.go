@@ -20,7 +20,6 @@ func init() {
 			"chromeos-storage@google.com",
 			"asavery@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
 		BugComponent: "b:974567", // ChromeOS > Platform > baseOS > Storage
 	})
 }
