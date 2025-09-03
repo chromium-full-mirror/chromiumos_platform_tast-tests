@@ -36,7 +36,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAudioAplay},
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc", "non_meet_device"},
 		// TODO(b/288063328): Fix frequent "Failed to install DLC" error on these models
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("pujjoteen", "steelix", "rusty", "vorticon", "bobba")),
 		Fixture:      "vmDLC",

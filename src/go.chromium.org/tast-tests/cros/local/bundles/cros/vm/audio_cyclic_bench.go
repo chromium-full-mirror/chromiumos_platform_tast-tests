@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runCyclicTest},
-		SoftwareDeps: []string{"cras", "vm_host", "chrome", "dlc"},
+		SoftwareDeps: []string{"cras", "vm_host", "chrome", "dlc", "non_meet_device"},
 		Timeout:      6 * time.Minute,
 		Fixture:      "vmDLC",
 		Params: []testing.Param{
