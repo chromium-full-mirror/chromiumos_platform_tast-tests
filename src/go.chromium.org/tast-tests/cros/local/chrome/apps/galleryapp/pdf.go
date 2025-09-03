@@ -97,7 +97,10 @@ func (g *Gallery) DrawOnPDF(points []coords.Point) uiauto.Action {
 	return uiauto.NamedCombine("draw",
 		uiauto.IfSuccessThen(ui.Gone(penButton), ui.LeftClick(drawButton)),
 		ui.WaitUntilExists(penButton),
-		g.draw(pdfRootWebArea, points),
+		ui.RetryUntil(
+			g.draw(pdfRootWebArea, points),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(saveButton),
+		),
 	)
 }
 

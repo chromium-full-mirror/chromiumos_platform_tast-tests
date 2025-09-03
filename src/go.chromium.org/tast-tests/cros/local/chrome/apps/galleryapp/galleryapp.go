@@ -40,6 +40,12 @@ var (
 	// infoButton is the finder of 'Info' button in Gallery app.
 	infoButton = nodewith.NameStartingWith("Info").Role(role.ToggleButton).Ancestor(RootFinder)
 
+	// saveButton is the finder of 'Save' button in Gallery app.
+	saveButton = nodewith.Name("Save").Role(role.Button).Ancestor(RootFinder).Focusable()
+
+	// doneButton is the finder of 'Done' button in Gallery app.
+	doneButton = nodewith.Name("Done").Role(role.Button).Ancestor(RootFinder).Focusable()
+
 	// dateModifiedText is the finder of 'Date modified' text in Gallery app.
 	dateModifiedText = nodewith.Name("Date modified").Role(role.StaticText).Ancestor(RootFinder)
 
@@ -322,16 +328,11 @@ func (g *Gallery) MaximizeWindow() uiauto.Action {
 // file saved.
 func (g *Gallery) Save() uiauto.Action {
 	ui := g.ui
-	saveButton := nodewith.Name("Save").Role(role.Button).Ancestor(RootFinder).Focusable()
-	savingText := nodewith.Name("Saving…").Role(role.StaticText).Ancestor(RootFinder).First()
-	savedText := nodewith.Name("Saved").Role(role.StaticText).Ancestor(RootFinder).First()
 	return func(ctx context.Context) error {
 		startTime := time.Now()
 		if err := uiauto.NamedCombine("save file",
 			ui.LeftClick(saveButton),
-			ui.WithTimeout(time.Minute).WaitUntilAnyExists(savingText, savedText),
-			ui.WithTimeout(longUITimeout).WaitUntilGone(savingText),
-			ui.WaitUntilExists(savedText),
+			ui.WithTimeout(longUITimeout).WaitUntilGone(saveButton),
 		)(ctx); err != nil {
 			return err
 		}
@@ -355,7 +356,6 @@ func (g *Gallery) WaitUntilSpinnerGone() uiauto.Action {
 // done button gone.
 func (g *Gallery) Done() uiauto.Action {
 	ui := g.ui
-	doneButton := nodewith.Name("Done").Role(role.Button).Ancestor(RootFinder).Focusable()
 	return uiauto.NamedCombine("click done button",
 		ui.LeftClick(doneButton),
 		ui.WaitUntilGone(doneButton),
@@ -413,6 +413,7 @@ func (g *Gallery) WaitNameChanged(ctx context.Context, currentName string) (file
 // draw returns a function that draws a pattern through points.
 func (g *Gallery) draw(canvas *nodewith.Finder, points []coords.Point) uiauto.Action {
 	return func(ctx context.Context) error {
+		testing.ContextLog(ctx, "Start drawing a pattern through points: ", points)
 		tconn := g.tconn
 		canvasBounds, err := g.ui.ImmediateLocation(ctx, canvas)
 		if err != nil {

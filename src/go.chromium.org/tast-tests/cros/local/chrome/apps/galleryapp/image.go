@@ -122,12 +122,15 @@ func (g *Gallery) DrawOnImage(points []coords.Point) uiauto.Action {
 	ui := g.ui
 	drawButton := nodewith.NameStartingWith("Draw").Role(role.ToggleButton).Ancestor(RootFinder)
 	sizeHeading := nodewith.Name("Size").Role(role.Heading).Ancestor(RootFinder)
-	return ui.Retry(3, uiauto.NamedCombine("draw",
+	return ui.Retry(3, uiauto.NamedCombine("draw on image",
 		uiauto.IfSuccessThen(ui.Gone(sizeHeading),
 			ui.LeftClickUntil(drawButton,
 				ui.WithTimeout(3*time.Second).WaitUntilExists(sizeHeading))),
 		g.WaitUntilSpinnerGone(),
-		g.draw(imageCanvas, points),
+		ui.RetryUntil(
+			g.draw(imageCanvas, points),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(doneButton),
+		),
 		g.Done(),
 		g.WaitUntilSpinnerGone(),
 	))
