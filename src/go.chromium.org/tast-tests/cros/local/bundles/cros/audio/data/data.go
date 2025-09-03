@@ -23,3 +23,12 @@ const (
 	// AudioShortSine440Wav is a 5ms sinewave with 1s of silence in front.
 	AudioShortSine440Wav = "audio_short_sine_440.wav"
 )
+
+const (
+	// WavesMaxxChromeConfig omits the tuning parameter files.
+	WavesMaxxChromeConfig = "maxx_conf.ini"
+	// WavesMaxxChromeGoldenInput is the golden data provided by Waves.
+	WavesMaxxChromeGoldenInput = "waves_maxx_chrome_golden_input.wav"
+	// WavesMaxxChromeGoldenOutput is the golden data provided by Waves.
+	WavesMaxxChromeGoldenOutput = "waves_maxx_chrome_golden_output.wav"
+)

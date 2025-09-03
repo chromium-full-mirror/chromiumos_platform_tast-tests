@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/audio/waves_maxx_chrome_golden_output_20250730.wav",
+  "size": 4128812,
+  "sha256sum": "3f61963da898cd1ec4cdf1c1df8dacffae2ca4cf3dde3e5a352d19794121028c"
+}

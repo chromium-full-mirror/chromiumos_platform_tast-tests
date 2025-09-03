@@ -67,6 +67,17 @@ func ConvertRawToWav(ctx context.Context, rawData TestRawData, wavFileName strin
 	return nil
 }
 
+// CheckWavsSame checks if the 2 wav files are the same with `rock diff`.
+func CheckWavsSame(ctx context.Context, wav1Path, wav2Path string) error {
+	output, err := testexec.CommandContext(
+		ctx, "rock", "diff",
+		wav1Path, wav2Path).CombinedOutput(testexec.DumpLogOnError)
+	if err != nil || len(output) > 0 {
+		return errors.Wrapf(err, "rock diff failed: %s", output)
+	}
+	return nil
+}
+
 // TrimFileFrom removes all samples before startTime from the file.
 func TrimFileFrom(ctx context.Context, oldFileName, newFileName string, startTime time.Duration) error {
 	err := testexec.CommandContext(
