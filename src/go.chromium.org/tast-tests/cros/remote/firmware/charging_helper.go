@@ -209,7 +209,7 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 	var charging string
 
 	// Get battery info from EC, retry in case output is corrupted/interrupted.
-	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 2", []string{`bat.*(?:\> |ec\:\~\$)`})
+	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 2", []string{`bat.*(?:\> |ec\:\~?\$)`})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get 'battery' output from ec console")
 	}
