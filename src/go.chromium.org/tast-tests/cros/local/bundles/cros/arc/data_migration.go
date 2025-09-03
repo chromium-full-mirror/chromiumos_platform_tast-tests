@@ -74,7 +74,6 @@ func init() {
 				dataFileName: homeDataNamePiX86,
 				managed:      false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
 				"android_container_r",
@@ -119,7 +118,6 @@ func init() {
 				dataFileName: homeDataNameManagedPiX86,
 				managed:      true,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNameManagedPiX86},
 			ExtraSearchFlags: []*testing.StringPair{
 				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
