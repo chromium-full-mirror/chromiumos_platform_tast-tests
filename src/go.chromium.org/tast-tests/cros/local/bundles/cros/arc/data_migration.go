@@ -37,7 +37,6 @@ const (
 	// See the following page for how these pre-migration home data snapshots were created:
 	// https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/arc/data/data_migration/README.md
 	homeDataNamePiX86                 = "data_migration/pi_x86_64"
-	homeDataNamePiArm                 = "data_migration/pi_arm64"
 	homeDataNameRvcX86Virtiofs        = "data_migration/rvc_x86_64_virtiofs"
 	homeDataNameRvcArmVirtioBlk       = "data_migration/rvc_arm_virtioblk"
 	homeDataNameManagedPiX86          = "data_migration/managed_pi_x86_64"
@@ -80,23 +79,6 @@ func init() {
 			ExtraSoftwareDeps: []string{
 				"android_container_r",
 				"amd64",
-			},
-		}, {
-			// Launch ARC R with /data created on ARC P (for arm).
-			Name: "p_to_r_arm",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationUnmanagedPool,
-				dataFileName: homeDataNamePiArm,
-				managed:      false,
-				// Use a longer timeout as ARCVM will boot with virtio-fs /data,
-				// which is much slower than virtio-blk /data on ARM.
-				bootTimeout: 4 * time.Minute,
-			},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			ExtraData: []string{homeDataNamePiArm},
-			ExtraSoftwareDeps: []string{
-				"android_container_r",
-				"arm",
 			},
 		}, {
 			// Launch ARC T with virtio-fs /data created on ARC R (for x86).
