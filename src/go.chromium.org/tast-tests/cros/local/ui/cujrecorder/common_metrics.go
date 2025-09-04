@@ -86,7 +86,8 @@ func LacrosCommonMetricConfigs() []MetricConfig {
 				17: "CompositedCandidateNotSharedImage",
 				18: "CompositedCandidateBadMaskFilter",
 				19: "CompositedCandidateHasTransformCantClip",
-				20: "CompositedCandidateIsRenderpassWithTransform"}),
+				20: "CompositedCandidateIsRenderpassWithTransform"},
+			nil),
 	}
 }
 

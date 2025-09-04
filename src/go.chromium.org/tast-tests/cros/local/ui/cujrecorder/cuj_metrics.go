@@ -84,7 +84,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewEnumCustomMetricConfig("Ash.Desks.DesksSwitchScreenshotResult",
 			map[int64]string{
 				0: "Failure",
-				1: "Success"}),
+				1: "Success"},
+			nil),
 
 		// Other metrics to monitor.
 		NewLatencyMetricConfig("Ash.DragWindowFromShelf.PresentationTime"),
@@ -155,7 +156,11 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 			map[int64]string{
 				0: "Success",
 				1: "FailedPlaneAssignment",
-				2: "FailedCommit"}),
+				2: "FailedCommit"},
+			map[int64]perf.Direction{
+				0: perf.BiggerIsBetter,
+			},
+		),
 		NewEnumCustomMetricConfig("Viz.DisplayCompositor.OverlayStrategy",
 			map[int64]string{
 				0: "Unknown",
@@ -165,7 +170,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 				4: "Underlay",
 				5: "UnderlayCast",
 				6: "NoStrategyAllFail",
-				7: "NoStrategyFailMin"}),
+				7: "NoStrategyFailMin"},
+			nil),
 	)
 }
 

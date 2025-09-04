@@ -133,6 +133,10 @@ type MetricConfig struct {
 	// The map between enum values and names.
 	enumValues map[int64]string
 
+	// This map defines the improvement direction associated with each value in
+	// enumValues.
+	enumDirection map[int64]perf.Direction
+
 	// Determines how samples should be recorded.
 	recordMethod metricRecordMethod
 }
@@ -189,8 +193,9 @@ func NewBootAndShutdownCustomMetricConfig(histogramName, unit string, direction 
 
 // NewEnumCustomMetricConfig creates a new MetricConfig for the enum histogram type
 // and the given histogram name and enum values map as defined in tools/metrics/histograms/enums.xml.
-func NewEnumCustomMetricConfig(histogramName string, enumValues map[int64]string) MetricConfig {
-	return MetricConfig{histogramName: histogramName, bootAndShutdown: false, histogramType: enumHistogram, enumValues: enumValues}
+// enumDirection is used in cases where not all enumValues share the default improvement direction |SmallerIsBetter|.
+func NewEnumCustomMetricConfig(histogramName string, enumValues map[int64]string, enumDirection map[int64]perf.Direction) MetricConfig {
+	return MetricConfig{histogramName: histogramName, bootAndShutdown: false, histogramType: enumHistogram, enumValues: enumValues, enumDirection: enumDirection}
 }
 
 // NewMemoryMetricConfig creates a new MetricConfig for the given histogram
@@ -245,9 +250,16 @@ func (rec *record) saveMetric(ctx context.Context, pv *perf.Values, name string)
 			} else {
 				metricName = fmt.Sprintf("%s.%v", name, bucket.Min)
 			}
+
+			// The `SmallerIsBetter` is the default improvement direction.
+			var direction perf.Direction
+			if enumDirection, ok := rec.config.enumDirection[bucket.Min]; ok {
+				direction = enumDirection
+			}
 			pv.Set(perf.Metric{
-				Name: metricName,
-				Unit: "count",
+				Name:      metricName,
+				Unit:      "count",
+				Direction: direction,
 			}, float64(bucket.Count))
 		}
 	case cumulativeHistogram:
