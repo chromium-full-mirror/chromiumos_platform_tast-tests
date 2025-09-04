@@ -102,11 +102,11 @@ func init() {
 				expectedState: ti50.SuzyQConnected,
 			},
 		}, {
-			Name: "suzyq_flipped",
+			Name: "servo_suzyq_flipped",
 			Val: gSCCCDStrapsParam{
 				cc1:           suzyqL,
 				cc2:           suzyqH,
-				expectedState: ti50.UsbDisconnected,
+				expectedState: ti50.Servo1A5FlippedConnected,
 			},
 		}, {
 			Name: "servo",

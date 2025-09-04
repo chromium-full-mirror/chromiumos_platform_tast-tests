@@ -1064,14 +1064,14 @@ type UsbDeviceLinkState string
 
 // USB device link states
 const (
-	UsbDisconnected       UsbDeviceLinkState = "UsbDisconnected"
-	SuzyQConnected        UsbDeviceLinkState = "SuzyQConnected"
-	SuzyQFlippedConnected UsbDeviceLinkState = "SuzyQFlippedConnected"
-	ServoConnected        UsbDeviceLinkState = "ServoConnected"
-	ServoFlippedConnected UsbDeviceLinkState = "ServoFlippedConnected"
-	ServoSink1Connected   UsbDeviceLinkState = "ServoSink1Connected"
-	ServoSink2Connected   UsbDeviceLinkState = "ServoSink2Connected"
-	ServoSink3Connected   UsbDeviceLinkState = "ServoSink3Connected"
+	UsbDisconnected          UsbDeviceLinkState = "UsbDisconnected"
+	SuzyQConnected           UsbDeviceLinkState = "SuzyQConnected"
+	Servo1A5FlippedConnected UsbDeviceLinkState = "Servo1A5FlippedConnected"
+	ServoConnected           UsbDeviceLinkState = "ServoConnected"
+	ServoFlippedConnected    UsbDeviceLinkState = "ServoFlippedConnected"
+	ServoSink1Connected      UsbDeviceLinkState = "ServoSink1Connected"
+	ServoSink2Connected      UsbDeviceLinkState = "ServoSink2Connected"
+	ServoSink3Connected      UsbDeviceLinkState = "ServoSink3Connected"
 )
 
 // USBADCInfo contains information about the connected USB device and raw voltages
@@ -1109,8 +1109,8 @@ func matchUSBADCInfo(s string) (USBADCInfo, error) {
 		switch stateMatches[3] {
 		case "SuzyQ":
 			ret.State = SuzyQConnected
-		case "SuzyQFlipped":
-			ret.State = SuzyQFlippedConnected
+		case "Servo-src(RpUSB/Rp3A0)":
+			ret.State = Servo1A5FlippedConnected
 		case "Servo-src(Rp1A5/Rp3A0)":
 			ret.State = ServoConnected
 		case "Servo-src(Rp3A0/Rp1A5)":

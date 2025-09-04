@@ -719,12 +719,12 @@ ADC: CC2 = 497 mV
 
 func TestUSBADCInfoSuzyQFlipped(t *testing.T) {
 	input := `
-ADC: connected: SuzyQFlipped
+ADC: connected: Servo-src(RpUSB/Rp3A0)
 ADC: CC1 = 500 mV
 ADC: CC2 = 928 mV
 `
 	expected := USBADCInfo{
-		State: SuzyQFlippedConnected,
+		State: Servo1A5FlippedConnected,
 		Cc1Mv: 500,
 		Cc2Mv: 928,
 	}
