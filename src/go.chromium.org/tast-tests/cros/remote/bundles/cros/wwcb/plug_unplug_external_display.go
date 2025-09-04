@@ -133,7 +133,7 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open RGB image on each display: ", err)
 	}
 
-	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s, s.OutDir(), displayIDs.DisplayIds)
 	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}

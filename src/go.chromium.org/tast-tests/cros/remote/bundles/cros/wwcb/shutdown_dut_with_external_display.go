@@ -135,7 +135,7 @@ func ShutdownDUTWithExternalDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
 
-	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds)
+	parings, err := tf.CameraHelper.PairWebcamToDisplay(ctx, s, s.OutDir(), displayIDs.DisplayIds)
 	if err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}

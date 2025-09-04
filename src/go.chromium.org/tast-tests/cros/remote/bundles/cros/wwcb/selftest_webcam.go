@@ -177,7 +177,7 @@ func SelftestWebcam(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open RGB image on each display: ", err)
 	}
 
-	if _, err := cameraHelper.PairWebcamToDisplay(ctx, s.OutDir(), displayIDs.DisplayIds); err != nil {
+	if _, err := cameraHelper.PairWebcamToDisplay(ctx, s, s.OutDir(), displayIDs.DisplayIds); err != nil {
 		s.Fatal("Failed to pair webcam to display: ", err)
 	}
 
