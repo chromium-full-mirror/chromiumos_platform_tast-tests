@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -46,7 +47,8 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -72,7 +74,8 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -98,7 +101,8 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -124,7 +128,8 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 }
@@ -162,7 +167,7 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 	}
 	defer rpcClient.Close(cleanupCtx)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -241,7 +246,7 @@ func (e *tapeEnrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 		e.rpcClient.Close(ctx)
 	}
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}

@@ -49,7 +49,6 @@ func init() {
 			useTape:               true,
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
 			"vdi.citrix_url",
 			"vdi.citrix_username",
 			"vdi.citrix_password",
@@ -62,7 +61,7 @@ func init() {
 		TearDownTimeout: 5 * time.Minute,
 		PostTestTimeout: 25 * time.Second,
 		Data:            citrix.CitrixData,
-		Parent:          fixture.FakeDMSEnrolled,
+		Parent:          fixture.TAPEFakeDMSEnrolled,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -223,7 +222,7 @@ func (v *mgsFixtureState) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if v.useTape {
 		// Create an account manager and lease a vdi test account for the specified timeout as there are several sets in the scope of this fixture.
-		accHelper, acc, err := tape.NewGenericAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), tape.WithTimeout(30*60), tape.WithPoolID(tape.Citrix))
+		accHelper, acc, err := tape.NewGenericAccountManager(ctx, []byte{}, tape.WithTimeout(30*60), tape.WithPoolID(tape.Citrix))
 		if err != nil {
 			s.Fatal("Failed to create an account manager and lease a Citrix account: ", err)
 		}

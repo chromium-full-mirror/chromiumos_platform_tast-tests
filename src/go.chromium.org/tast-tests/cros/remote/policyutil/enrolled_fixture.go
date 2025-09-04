@@ -59,6 +59,30 @@ func init() {
 	})
 }
 
+func init() {
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.TAPERemoteBaseEnrolled,
+		Desc: "Fixture providing enrollment and a TAPE token",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"alexanderhartl@google.com",
+		},
+		BugComponent:    "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
+		Impl:            &enrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.graphics.ScreenshotService",
+			"tast.cros.baserpc.FileSystem",
+		},
+	})
+}
+
 type enrolledFixt struct {
 	fdmsDir   string
 	rpcClient *rpc.Client

@@ -39,6 +39,7 @@ func init() {
 			"iwa-team@google.com",
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		Parent:       fixture.TAPERemoteBase,
 		Impl: &fixtureState{
 			vdiApplicationToStart: apps.Citrix,
 			vdiConnector:          &citrix.Connector{},
@@ -48,7 +49,6 @@ func init() {
 			useTape:               true,
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
 			"vdi.ota_citrix_username",
 			"vdi.ota_citrix_password",
 			"vdi.citrix_url",
@@ -185,7 +185,7 @@ func (v *fixtureState) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	if v.useTape {
 		// TODO(b/242841251): Refactor leasing tape accounts.
 		// Create an account manager and lease a vdi test account for the specified timeout as there are several sets in the scope of this fixture.
-		accHelper, acc, err := tape.NewGenericAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), tape.WithTimeout(30*60), tape.WithPoolID(tape.Citrix))
+		accHelper, acc, err := tape.NewGenericAccountManager(ctx, []byte{}, tape.WithTimeout(30*60), tape.WithPoolID(tape.Citrix))
 		if err != nil {
 			s.Fatal("Failed to create an account manager and lease a Citrix account: ", err)
 		}

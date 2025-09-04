@@ -12,6 +12,8 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -62,36 +64,49 @@ func (f *tapeBaseFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	f.localRefreshToken, _ = s.Var(LocalRefreshTokenVar)
+	if err := writeToken2Device(ctx, *s.DUT(), f.authenticationConfigJSON, f.localRefreshToken); err != nil {
+		s.Fatal("Failed to write token to device: ", err)
+	}
 
 	return nil
 }
 func (f *tapeBaseFixt) TearDown(ctx context.Context, s *testing.FixtState) {}
 func (f *tapeBaseFixt) Reset(ctx context.Context) error                    { return nil }
 func (f *tapeBaseFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := writeToken2Device(ctx, *s.DUT(), f.authenticationConfigJSON, f.localRefreshToken); err != nil {
+		s.Fatal("Failed to write token to device: ", err)
+	}
+}
+func (f *tapeBaseFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	// TODO(b/204845193): workaround as fixture do not recover connection.
 	if err := s.DUT().Connect(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
+	// Remove the Token file.
+	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", dutTokenFilePath).Output(); err != nil {
+		s.Fatal("Failed to remove Token file: ", err)
+	}
+}
+
+func writeToken2Device(ctx context.Context, dut dut.DUT, authConfig, localRefreshToken string) error {
 	// Parse the configuration variable.
-	configJSON := f.authenticationConfigJSON
 	var config AuthenticationConfig
-	if err := json.Unmarshal([]byte(configJSON), &config); err != nil {
-		s.Fatal("Failed to unmarshal config: ", err)
+	if err := json.Unmarshal([]byte(authConfig), &config); err != nil {
+		return errors.Wrap(err, "failed to unmarshal config")
 	}
 
 	// Clear out the path where the Token will live on the DUT.
-	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", "-f", dutTokenFilePath).Output(); err != nil {
-		s.Fatal("Failed to remove existing token file: ", err)
+	if _, err := dut.Conn().CommandContext(ctx, "rm", "-f", dutTokenFilePath).Output(); err != nil {
+		return errors.Wrap(err, "failed to remove existing token file")
 	}
 
 	// Get a token source to use for authentication based on the provided information.
 	var tokenSource oauth2.TokenSource
 
-	localRefreshToken := f.localRefreshToken
 	if localRefreshToken != "" {
 		// If any local credentials were provided, write them directly.
-		s.Log("Using user credentials for TAPE authentication")
+		testing.ContextLog(ctx, "Using user credentials for TAPE authentication")
 		tokenSource = oauth2.ReuseTokenSource(nil, &jwtToken{
 			conf: &oauth2.Config{
 				ClientID:     config.ClientID,
@@ -117,51 +132,41 @@ func (f *tapeBaseFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 
 		if saPath == "" {
-			s.Fatal("Failed to find a service account to use for authentication")
+			return errors.New("failed to find a service account to use for authentication")
 		}
 
-		s.Log("Using service account credentials for TAPE authentication: ", saPath)
+		testing.ContextLogf(ctx, "Using service account credentials for TAPE authentication: %s", saPath)
 
 		// Read the contents of the file.
 		sa, err := os.ReadFile(saPath)
 		if err != nil {
-			s.Fatal("Failed to read content of service account located at: ", saPath)
+			return errors.Wrapf(err, "failed to read content of service account located at: %s", saPath)
 		}
 
 		tokenSource, err = createTokenSource(ctx, sa)
 		if err != nil {
-			s.Fatal("Failed to create Token source from service account located at: ", saPath)
+			return errors.Wrapf(err, "failed to create Token source from service account located at: %s", saPath)
 		}
 	}
 
 	// Make sure the Token source was set.
 	if tokenSource == nil {
-		s.Fatal("Failed to create a token source for TAPE")
+		errors.New("failed to create a token source for TAPE")
 	}
 
 	// Serialize the content.
 	t, err := tokenSource.Token()
 	if err != nil {
-		s.Fatal("Failed to create a Token for the provided Token source: ", err)
+		return errors.Wrap(err, "failed to create a Token for the provided Token source")
 	}
 
 	tokenJSON, err := json.Marshal(t)
 	if err != nil {
-		s.Fatal("Failed to marshal Token: ", err)
+		return errors.Wrap(err, "failed to marshal Token")
 	}
 
-	if err := linuxssh.WriteFile(ctx, s.DUT().Conn(), dutTokenFilePath, tokenJSON, 0644); err != nil {
-		s.Fatal("Failed to write local refresh Token to DUT: ", err)
+	if err := linuxssh.WriteFile(ctx, dut.Conn(), dutTokenFilePath, tokenJSON, 0644); err != nil {
+		return errors.Wrap(err, "failed to write local refresh Token to DUT")
 	}
-}
-func (f *tapeBaseFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// TODO(b/204845193): workaround as fixture do not recover connection.
-	if err := s.DUT().Connect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
-	}
-
-	// Remove the Token file.
-	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", dutTokenFilePath).Output(); err != nil {
-		s.Fatal("Failed to remove Token file: ", err)
-	}
+	return nil
 }

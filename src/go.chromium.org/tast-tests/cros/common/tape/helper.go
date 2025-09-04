@@ -271,6 +271,10 @@ type AppKey struct {
 // GetClientFromLocalCredentials looks for service account credentials on the host
 // and creates a client from them and returns it.
 func GetClientFromLocalCredentials(ctx context.Context, paths []string) (*client, error) {
+	if TapeToken.Value() != "" {
+		return getClientFromToken(ctx, []byte(TapeToken.Value()))
+	}
+
 	var creds []byte = nil
 	var err error = nil
 	for _, path := range paths {

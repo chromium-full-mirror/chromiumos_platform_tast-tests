@@ -284,7 +284,6 @@ func init() {
 		Desc:         "Logged into a user session with a real user and FakeDMS",
 		Contacts:     []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
-		Vars:         []string{"tape.service_account_key"},
 		Impl: &policyChromeFixture{
 			useRealUser: true,
 			// Total timeout for TAPE leased account. This needs to be higher than the total runtime
@@ -295,7 +294,7 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.FakeDMS,
+		Parent:          fixture.TAPEFakeDMS,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -454,7 +453,7 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 		timeout := int32(p.tapeTimeout.Seconds())
 		accountManager, tapeAccount, err := tape.NewOwnedTestAccountManager(
 			ctx,
-			[]byte(s.RequiredVar(tape.ServiceAccountVar)),
+			[]byte{},
 			false, /*lock*/
 			tape.WithTimeout(timeout),
 			tape.WithPoolID(dma.TapePool(tape.DefaultManaged)))

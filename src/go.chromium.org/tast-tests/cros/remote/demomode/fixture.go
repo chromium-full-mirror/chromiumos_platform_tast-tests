@@ -9,12 +9,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh/linuxssh"
-	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -23,6 +17,12 @@ import (
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -56,7 +56,7 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccount1, tape.ServiceAccount2},
 		ServiceDeps:     serviceDeps,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -74,7 +74,7 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccount1, tape.ServiceAccount2},
 		ServiceDeps:     serviceDeps,
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -96,7 +96,7 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccountVar},
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey", tape.ServiceAccount1, tape.ServiceAccount2},
 		ServiceDeps:     serviceDeps,
 	})
 
@@ -122,8 +122,11 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar},
+		Vars: []string{
+			"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
+		},
 		ServiceDeps: serviceDeps,
 	})
 
@@ -147,8 +150,11 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar},
+		Vars: []string{
+			"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
+		},
 		ServiceDeps: serviceDeps,
 	})
 
@@ -170,8 +176,11 @@ func init() {
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
-		Vars: []string{"ui.signinProfileTestExtensionManifestKey",
-			tape.ServiceAccountVar},
+		Vars: []string{
+			"ui.signinProfileTestExtensionManifestKey",
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
+		},
 		ServiceDeps: serviceDeps,
 	})
 }
@@ -222,7 +231,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	chromeExtraArgs = append(chromeExtraArgs, f.extraArgs...)
 
 	defer func(ctx context.Context) {
-		if err := uploadTapeDeprovisioningIDs(ctx, cl, s.DUT(), []byte(s.RequiredVar(tape.ServiceAccountVar))); err != nil {
+		if err := uploadTapeDeprovisioningIDs(ctx, cl, s.DUT(), []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}); err != nil {
 			s.Error("Failed to upload deprovisioning ids: ", err)
 		}
 	}(cleanupCtx)
@@ -273,7 +282,7 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	defer cl.Close(ctx)
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -293,7 +302,7 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut *dut.DUT, tapeServiceAccount []byte) error {
+func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut *dut.DUT, tapeServiceAccounts []string) error {
 	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
 	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
@@ -307,7 +316,7 @@ func uploadTapeDeprovisioningIDs(ctx context.Context, rpcClient *rpc.Client, dut
 		return errors.Wrap(err, "failed to get stable device secret")
 	}
 
-	tapeClient, err := tape.NewClient(ctx, tapeServiceAccount)
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, tapeServiceAccounts)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tape client")
 	}

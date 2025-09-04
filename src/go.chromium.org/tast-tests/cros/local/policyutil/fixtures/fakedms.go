@@ -40,6 +40,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: fixture.TAPEFakeDMS,
+		Desc: "Fixture for a running FakeDMS",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"mohamedaomar@google.com", // Author of fake_dmserver.
+			"vsavu@google.com",        // Original fixture author.
+
+		},
+		BugComponent:    "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		Impl:            &fakeDMSFixture{},
+		SetUpTimeout:    15 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: fixture.FakeDMSEnrolled,
 		Desc: "Fixture for a running FakeDMS",
 		Contacts: []string{
@@ -79,6 +98,27 @@ func init() {
 		PreTestTimeout:  5 * time.Second,
 		PostTestTimeout: 5 * time.Second,
 		Parent:          fixture.UpdateEngineEnrolled,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.TAPEFakeDMSEnrolled,
+		Desc: "Fixture for a running FakeDMS and having a TAPE token",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"mohamedaomar@google.com", // Author of fake_dmserver.
+			"vsavu@google.com",        // Original fixture author.
+
+		},
+		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
+		Impl: &fakeDMSFixture{
+			importState: true,
+		},
+		SetUpTimeout:    15 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		Parent:          fixture.TAPERemoteBaseEnrolled,
 	})
 }
 

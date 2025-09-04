@@ -39,7 +39,6 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic",
 		},
-		VarDeps: []string{tape.ServiceAccountVar},
 		Timeout: 20 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowDinosaurEasterEgg{}, pci.Served),
@@ -78,7 +77,7 @@ func UserPolicyPropagationPerformanceE2E(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to create a TestAPIConn: ", err)
 	}
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.NewClient(ctx, []byte{})
 	if err != nil {
 		s.Fatal("Failed to create a tape client: ", err)
 	}

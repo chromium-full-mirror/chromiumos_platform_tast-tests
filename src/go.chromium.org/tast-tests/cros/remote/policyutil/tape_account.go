@@ -35,6 +35,7 @@ func init() {
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    30 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -42,7 +43,8 @@ func init() {
 			"tast.cros.tape.Service",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -61,6 +63,7 @@ func init() {
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    30 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -68,7 +71,8 @@ func init() {
 			"tast.cros.tape.Service",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -87,6 +91,7 @@ func init() {
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    30 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -94,7 +99,8 @@ func init() {
 			"tast.cros.tape.Service",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -113,6 +119,7 @@ func init() {
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
 		ResetTimeout:    30 * time.Second,
+		Parent:          fixture.TAPERemoteBase,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -120,24 +127,26 @@ func init() {
 			"tast.cros.tape.Service",
 		},
 		Vars: []string{
-			tape.ServiceAccountVar,
+			tape.ServiceAccount1,
+			tape.ServiceAccount2,
 		},
 	})
 }
 
 type tapeAccountFixt struct {
-	accountManager    *tape.OwnedTestAccountManager
-	account           *tape.OwnedTestAccount
-	serviceAccountVar []byte
-	poolID            string
+	accountManager  *tape.OwnedTestAccountManager
+	account         *tape.OwnedTestAccount
+	serviceAccounts []string
+	poolID          string
 	// accountLeasingTimeout is the total timeout for leasing a tape account for all the tests using the fixture.
 	// If the number of tests using the fixture increases, then this duration should increase as well.
 	accountLeasingTimeout time.Duration
 }
 
 func (e *tapeAccountFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	e.serviceAccountVar = []byte(s.RequiredVar(tape.ServiceAccountVar))
-	tapeClient, err := tape.NewClient(ctx, e.serviceAccountVar)
+	e.serviceAccounts = []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)}
+
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, e.serviceAccounts)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -171,7 +180,7 @@ func (e *tapeAccountFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 func (e *tapeAccountFixt) Reset(ctx context.Context) error {
 
 	// Clean up account between tests.
-	tapeClient, err := tape.NewClient(ctx, e.serviceAccountVar)
+	tapeClient, err := tape.GetClientFromLocalCredentials(ctx, e.serviceAccounts)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tape client")
 	}

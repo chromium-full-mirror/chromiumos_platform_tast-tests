@@ -33,6 +33,13 @@ const requestAccountTimeout = 5 * time.Minute
 const setPolicyTimeout = 5 * time.Minute
 const deprovisionTimeout = 1 * time.Minute
 
+// TapeToken is an open id connect token for authentication against TAPE.
+var TapeToken = testing.RegisterVarString(
+	"tape.token",
+	"",
+	"Variable that contains an open id connect token for tape",
+)
+
 // client is created with NewClient and holds a *http.Client struct with an oauth token
 // for authentication against the TAPE GCP.
 type client struct {
@@ -58,6 +65,11 @@ func createTokenSource(ctx context.Context, credsJSON []byte) (oauth2.TokenSourc
 // NewClient creates a http client which provides the necessary oauth token to authenticate with the TAPE
 // GCP from the service account credentials in credsJSON.
 func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
+
+	if TapeToken.Value() != "" {
+		return getClientFromToken(ctx, []byte(TapeToken.Value()))
+	}
+
 	// Log the time and hash of the credsJSON for debugging.
 	hasher := sha1.New()
 	hasher.Write(credsJSON)
@@ -66,18 +78,13 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 
 	// Check if token content was written to the DUT and should be used.
 	if _, err := os.Stat(dutTokenFilePath); err == nil {
+
 		tokenBytes, err := os.ReadFile(dutTokenFilePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read token content")
 		}
 
-		var tokenContent oauth2.Token
-		if err := json.Unmarshal(tokenBytes, &tokenContent); err != nil {
-			return nil, errors.Wrap(err, "failed to unmarshal token content")
-		}
-		return &client{
-			httpClient: oauth2.NewClient(ctx, oauth2.StaticTokenSource(&tokenContent)),
-		}, nil
+		return getClientFromToken(ctx, tokenBytes)
 	}
 
 	// Return the Oauth client using the supplied credentials.
@@ -89,6 +96,16 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 	return &client{
 		httpClient: oauth2.NewClient(ctx, ts),
 		creds:      credsJSON,
+	}, nil
+}
+
+func getClientFromToken(ctx context.Context, tokenBytes []byte) (*client, error) {
+	var tokenContent oauth2.Token
+	if err := json.Unmarshal(tokenBytes, &tokenContent); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal token content")
+	}
+	return &client{
+		httpClient: oauth2.NewClient(ctx, oauth2.StaticTokenSource(&tokenContent)),
 	}, nil
 }
 

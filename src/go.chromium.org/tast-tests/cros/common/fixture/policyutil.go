@@ -8,6 +8,8 @@ package fixture
 const (
 	// Enrolled is a fixture name.
 	Enrolled = "enrolled"
+	// TAPERemoteBaseEnrolled is a fixture name.
+	TAPERemoteBaseEnrolled = "tapeRemoteBaseEnrolled"
 )
 
 // Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/clean_ownership.go.
@@ -23,6 +25,10 @@ const (
 	FakeDMSEnrolled = "fakeDMSEnrolled"
 	// FakeDMSUpdateEngineEnrolled is a fixture name.
 	FakeDMSUpdateEngineEnrolled = "fakeDMSUpdateEngineEnrolled"
+	// TAPEFakeDMS is a fixture name.
+	TAPEFakeDMS = "tapeFakeDMS"
+	// TAPEFakeDMSEnrolled is a fixture name.
+	TAPEFakeDMSEnrolled = "tapeFakeDMSEnrolled"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/chrome.go.
@@ -110,6 +116,12 @@ const (
 	EnterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled"
 	//	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled is a fixture name.
 	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled"
+)
+
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/tape/fixture.go.
+const (
+	// TAPERemoteBase is a fixture name.
+	TAPERemoteBase = "tapeRemoteBase"
 )
 
 // TAPEAccountData contains TAPE account data.

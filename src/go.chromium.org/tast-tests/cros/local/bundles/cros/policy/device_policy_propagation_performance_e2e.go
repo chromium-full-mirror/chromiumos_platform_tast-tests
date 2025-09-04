@@ -38,7 +38,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		VarDeps: []string{tape.ServiceAccountVar, "ui.signinProfileTestExtensionManifestKey"},
+		VarDeps: []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout: 20 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceAutoUpdateDisabled{}, pci.Served),
@@ -87,7 +87,7 @@ func DevicePolicyPropagationPerformanceE2E(ctx context.Context, s *testing.State
 		s.Fatal("Failed to create a TestConn: ", err)
 	}
 
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	tapeClient, err := tape.NewClient(ctx, []byte{})
 	if err != nil {
 		s.Fatal("Failed to create a tape client: ", err)
 	}

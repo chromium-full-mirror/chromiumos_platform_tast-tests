@@ -994,11 +994,14 @@ func (tf *fixture) resolveChromeCredentials(ctx context.Context, s *testing.Fixt
 		// Create a tape account manager and lease a test account for the duration
 		// of the fixture.
 		s.Log("Leasing Fast Pair OTA chrome user with Tape")
-		tapeServiceAccountVar := s.RequiredVar(tape.ServiceAccountVar)
 		var err error
-		tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(
+		tapeClient, err := tape.GetClientFromLocalCredentials(ctx, []string{s.RequiredVar(tape.ServiceAccount1), s.RequiredVar(tape.ServiceAccount2)})
+		if err != nil {
+			s.Fatal("Failed to create tape client: ", err)
+		}
+		tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManagerFromClient(
 			ctx,
-			[]byte(tapeServiceAccountVar),
+			tapeClient,
 			true,
 			tape.WithTimeout(int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())),
 			tape.WithPoolID(tape.CrossDeviceFastPair),
