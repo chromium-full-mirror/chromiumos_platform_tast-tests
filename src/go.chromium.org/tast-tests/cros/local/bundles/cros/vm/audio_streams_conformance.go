@@ -75,7 +75,7 @@ func init() {
 		Desc:         "Test AudioStream implementation correctness",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(skippedModels...)),
-		SoftwareDeps: []string{"vm_host", "non_meet_device"},
+		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "informational"},

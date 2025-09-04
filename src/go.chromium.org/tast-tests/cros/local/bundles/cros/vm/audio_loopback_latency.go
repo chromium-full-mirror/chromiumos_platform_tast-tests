@@ -33,7 +33,7 @@ func init() {
 		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runLoopbackLatency},
 		Timeout:      8 * time.Minute,
-		SoftwareDeps: []string{"vm_host", "chrome", "dlc", "non_meet_device"},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
 		Fixture:      fixture.AloopLoaded{Parent: "vmDLC"}.Instance(),
 		Params: []testing.Param{{
 			Name: "virtio_cras_snd",

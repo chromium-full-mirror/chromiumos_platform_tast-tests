@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAlsaConformanceTest},
 		Timeout:      12 * time.Minute,
-		SoftwareDeps: []string{"vm_host", "chrome", "dlc", "non_meet_device"},
+		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
 		Fixture:      "vmDLC",
 		Params: []testing.Param{{
 			Name: "virtio_null_snd",
