@@ -75,6 +75,15 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	dumpWebRTCFile := func(ctx context.Context) error {
 		dumpStartTime := time.Now()
 		testing.ContextLog(ctx, "Start to dump WebRTC file at ", dumpStartTime)
+
+		compressResultCheckBox := nodewith.Name("Compress result").Role(role.CheckBox)
+		ensureCompressResultUnchecked := uiauto.NamedCombine("ensure 'Compress Result' unchecked",
+			ui.WaitUntilExists(compressResultCheckBox),
+			uiauto.IfSuccessThen(ui.Exists(compressResultCheckBox.Attribute("checked", "true")),
+				ui.DoDefaultUntil(compressResultCheckBox,
+					ui.WithTimeout(3*time.Second).WaitUntilCheckedState(compressResultCheckBox, false),
+				)),
+		)
 		waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
 		if err := uiauto.Combine("invoke the button for the dump download",
 			// Wait for |createDumpSection| node to appear to ensure
@@ -84,6 +93,10 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 				waitForDownloadButton,
 				ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
 			),
+			// The "Compress results" option is checked by default. To
+			// download a WebRTC dump file with a .txt extension, it is
+			// necessary to uncheck this option.
+			ensureCompressResultUnchecked,
 			ui.DoDefault(webRTCDownloadButton),
 		)(ctx); err != nil {
 			return err
