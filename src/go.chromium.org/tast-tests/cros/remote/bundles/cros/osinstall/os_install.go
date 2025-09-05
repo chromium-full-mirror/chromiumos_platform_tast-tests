@@ -11,8 +11,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/flex/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/osinstall"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -96,8 +98,19 @@ func prepareUsbAndRestart(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set dut_sees_usbkey: ", err)
 	}
 
-	// Use SSH to reboot the DUT because we don't know what state it is in.
-	if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil {
+	// GoBigSleepLint: It may take some time for usb mux state to
+	// take effect.
+	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
+		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
+	}
+
+	// DeadlineExceeded is expected because the DUT will power off.
+	// It is not necessary to close the RPC connection in this case
+	// because the client has not been created yet.
+	s.Log("Running the reboot command")
+	rebootCtx, cancel := context.WithTimeout(ctx, 6*time.Second)
+	defer cancel()
+	if err := h.DUT.Conn().CommandContext(rebootCtx, "reboot").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		s.Fatal("Failed to run reboot command: ", err)
 	}
 
