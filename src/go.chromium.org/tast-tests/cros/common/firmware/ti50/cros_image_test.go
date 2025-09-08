@@ -719,7 +719,7 @@ ADC: CC2 = 497 mV
 
 func TestUSBADCInfoSuzyQFlipped(t *testing.T) {
 	input := `
-ADC: connected: Servo-src(RpUSB/Rp3A0)
+ADC: connected: Servo-src(RpUSB/Rp1A5)
 ADC: CC1 = 500 mV
 ADC: CC2 = 928 mV
 `
@@ -734,7 +734,7 @@ ADC: CC2 = 928 mV
 
 func TestUSBADCInfoServo(t *testing.T) {
 	input := `
-ADC: connected: Servo-src(Rp1A5/Rp3A0)
+ADC: connected: Servo-src(Rp3A0/Rp1A5)
 ADC: CC1 = 1706 mV
 ADC: CC2 = 928 mV
 `
@@ -749,7 +749,7 @@ ADC: CC2 = 928 mV
 
 func TestUSBADCInfoServoFlipped(t *testing.T) {
 	input := `
-ADC: connected: Servo-src(Rp3A0/Rp1A5)
+ADC: connected: Servo-src(Rp1A5/Rp3A0)
 ADC: CC1 = 931 mV
 ADC: CC2 = 1706 mV
 	`

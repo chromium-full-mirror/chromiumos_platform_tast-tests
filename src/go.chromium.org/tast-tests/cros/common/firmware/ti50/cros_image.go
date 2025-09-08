@@ -1109,11 +1109,11 @@ func matchUSBADCInfo(s string) (USBADCInfo, error) {
 		switch stateMatches[3] {
 		case "SuzyQ":
 			ret.State = SuzyQConnected
-		case "Servo-src(RpUSB/Rp3A0)":
+		case "Servo-src(RpUSB/Rp1A5)":
 			ret.State = Servo1A5FlippedConnected
-		case "Servo-src(Rp1A5/Rp3A0)":
-			ret.State = ServoConnected
 		case "Servo-src(Rp3A0/Rp1A5)":
+			ret.State = ServoConnected
+		case "Servo-src(Rp1A5/Rp3A0)":
 			ret.State = ServoFlippedConnected
 		case "Servo-snk(dut:RpUSB)":
 			ret.State = ServoSink1Connected
