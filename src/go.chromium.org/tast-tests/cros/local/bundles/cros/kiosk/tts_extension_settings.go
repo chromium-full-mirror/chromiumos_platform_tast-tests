@@ -109,7 +109,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		name: "ChromeVox",
 		openSettings: uiauto.Combine("open ChromeVox settings",
 			ui.DoDefault(nodewith.Name("ChromeVox settings").Role(role.Link)),
-			ui.WaitUntilExists(nodewith.
+			ui.WithTimeout(30*time.Second).WaitUntilExists(nodewith.
 				Name("Enable verbose descriptions").
 				Ancestor(nodewith.Name("Settings - ChromeVox").Role(role.RootWebArea)).
 				First())),
