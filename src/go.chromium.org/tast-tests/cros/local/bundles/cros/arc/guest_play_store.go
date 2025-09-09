@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -45,10 +46,14 @@ func GuestPlayStore(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Verify None of Default ARC Apps are Installed")
-	installedApps, err := ash.ChromeApps(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get installed apps: ", err)
-	}
+	var installedApps []*ash.ChromeApp
+	testing.Poll(ctx, func(ctx context.Context) error {
+		installedApps, err = ash.ChromeApps(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get installed apps"))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second})
 	for _, app := range []apps.App{apps.PlayStore, apps.Duo, apps.PlayBooks, apps.PlayGames, apps.GoogleTV, apps.Clock, apps.Contacts} {
 		for _, installedapp := range installedApps {
 			if app.ID == installedapp.AppID {
