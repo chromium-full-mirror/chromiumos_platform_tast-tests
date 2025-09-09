@@ -147,18 +147,6 @@ func (c *CameraServiceHelper) GAMHotColdValue(ctx context.Context, outDir, camer
 	return int(pixel.R - pixel.B), nil
 }
 
-func removeByValue[T comparable](slice []T, valueToRemove T) []T {
-	// Create a new slice with a capacity that's likely to be what we need.
-	result := make([]T, 0, len(slice))
-
-	for _, v := range slice {
-		if v != valueToRemove {
-			result = append(result, v)
-		}
-	}
-	return result
-}
-
 func setInternalDisplayFullBrightness(ctx context.Context, s *testing.State) {
 	err := s.DUT().Conn().CommandContext(ctx, "backlight_tool", "--set_brightness_percent=100").Run(testexec.DumpLogOnError)
 	if err != nil {
@@ -198,15 +186,7 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, s *testin
 		if exposureTimeIdx == len(exposureTimesToTry) {
 			exposureTimeIdx = 0
 		}
-		newDisplayMappings, errList := c.findCameraMatch(ctx, outDir, cameraIDs, displayIDs)
-		for displayID, cameraID := range newDisplayMappings {
-			// once a match is found, remove the camera and display from the list of
-			// options to try to match the remaining displays.
-			cameraIDs = removeByValue(cameraIDs, cameraID)
-			displayIDs = removeByValue(displayIDs, displayID)
-			// update the mapping for the camera/display in the return value
-			displayMappings[displayID] = cameraID
-		}
+		errList := c.findCameraMatch(ctx, outDir, cameraIDs, displayIDs, displayMappings)
 		if len(errList) > 0 {
 			return errors.Errorf("%v", errList)
 		}
@@ -217,28 +197,42 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, s *testin
 	return displayMappings, nil
 }
 
+func cameraAlreadyMatched(displayMappings map[string]string, cameraID string) bool {
+	for _, v := range displayMappings {
+		if v == cameraID {
+			return true
+		}
+	}
+	return false
+}
+
 // findCameraMatch finds the matching camera for each display.
-func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string, cameraIDs, displayIDs []string) (map[string]string, []error) {
+func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string, cameraIDs, displayIDs []string, displayMappings map[string]string) []error {
 	// Get current image for each camera
 	camPxl := make(map[string]*passport.Pixel)
 	for _, webcam := range cameraIDs {
+		if cameraAlreadyMatched(displayMappings, webcam) {
+			continue
+		}
 		testing.ContextLogf(ctx, "Trying to match camera %s with exposure of %d", webcam, c.exposureTimeUs[webcam])
 		req := &passport.GetAveragePixelRequest{DeviceId: webcam, ExposureMicroseconds: c.exposureTimeUs[webcam]}
 		resp, err := c.service.GetAveragePixel(ctx, req)
 		if err != nil {
-			return nil, []error{errors.Wrap(err, "get average pixel from webcam")}
+			return []error{errors.Wrap(err, "get average pixel from webcam")}
 		}
 
 		if err := saveImageIfRequested(ctx, outDir, webcam, "mapping", resp.GetFrame()); err != nil {
-			return nil, []error{errors.Wrapf(err, "failed to save frame for webcam: %q", webcam)}
+			return []error{errors.Wrapf(err, "failed to save frame for webcam: %q", webcam)}
 		}
 
 		camPxl[webcam] = resp.GetPixel()
 	}
 
-	displayMappings := make(map[string]string)
 	errList := make([]error, 0)
 	for dispIndex, dispID := range displayIDs {
+		if _, ok := displayMappings[dispID]; ok {
+			continue
+		}
 		expectedColor := mappingColors[dispIndex]
 		testing.ContextLogf(ctx, "==== Display %d: %s ====", dispIndex, dispID)
 
@@ -271,7 +265,7 @@ func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string
 		testing.ContextLogf(ctx, "mapping %s to Display %d, %s with score %d and color scores color:%d, grey: %d", cameraDev, dispIndex, dispID, maxScore, int(expectColorScore), int(grayScore))
 		displayMappings[dispID] = cameraDev
 	}
-	return displayMappings, errList
+	return errList
 }
 
 // getMaxScoreAndCamera gets the max score for the expected color and the camera device that has the max score.
