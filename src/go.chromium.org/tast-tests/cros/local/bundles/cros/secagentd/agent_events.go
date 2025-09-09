@@ -146,7 +146,7 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 	switch gsc {
 	case "GSC_DEVICE_NOT_GSC":
 		chip.Kind = xdr.TcbAttributes_SecurityChip_TPM.Enum()
-	case "GSC_DEVICE_H1", "GSC_DEVICE_DT":
+	case "GSC_DEVICE_DT", "GSC_DEVICE_H1", "GSC_DEVICE_NT":
 		chip.Kind = xdr.TcbAttributes_SecurityChip_GOOGLE_SECURITY_CHIP.Enum()
 	// TODO(b/373640432) Remove GSC_VERSION arms after rename CL has been stable
 	// for a few builds.
