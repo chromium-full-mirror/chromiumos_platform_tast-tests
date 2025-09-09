@@ -6,6 +6,7 @@ package a11y
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -56,9 +57,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not determine the correct browser app to use: ", err)
 	}
-
-	topWindowName := "BrowserFrame"
-	topLevelWindow := nodewith.Role(role.Window).HasClass(topWindowName)
+	topLevelWindow := nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 
 	s.Log("Opening a new tab in the browser")
 	conn, err := cr.NewConn(ctx, "chrome://newtab")

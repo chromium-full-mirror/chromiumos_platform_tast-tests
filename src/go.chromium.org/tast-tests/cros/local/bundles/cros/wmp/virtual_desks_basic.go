@@ -7,6 +7,7 @@ package wmp
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -174,7 +175,8 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	}
 
 	// Drags Files App into the new desk.
-	filesAppWindowView := nodewith.HasClass("BrowserFrame").Name("Files - My files")
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	filesAppWindowView := nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Name("Files - My files")
 	filesAppWindowViewLoc, err := ac.Location(ctx, filesAppWindowView)
 	if err != nil {
 		s.Fatal("Failed to get the location of the Files app: ", err)

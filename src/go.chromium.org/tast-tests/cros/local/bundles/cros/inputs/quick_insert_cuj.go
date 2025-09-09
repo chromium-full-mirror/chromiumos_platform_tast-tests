@@ -822,7 +822,8 @@ func QuickInsertCuj(ctx context.Context, s *testing.State) {
 				keyboard.TypeAction("Google Maps"),
 				scrollToThenClick(ui, quickInsertMainResultFinder("Open Google Maps")),
 				ui.WaitUntilGone(quickInsertWindowFinder),
-				ui.WaitUntilExists(nodewith.Name("Chrome - Google Maps").HasClass("BrowserFrame")),
+				// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+				ui.WaitUntilExists(nodewith.Name("Chrome - Google Maps").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))),
 				// Close the newly created tab.
 				keyboard.AccelAction("Ctrl+w"),
 			),
@@ -837,7 +838,7 @@ func QuickInsertCuj(ctx context.Context, s *testing.State) {
 				scrollToThenClick(ui, quickInsertZeroStateResultWithSubmenuFinder("New")),
 				ui.WaitUntilExists(quickInsertSubmenuResultFinder("Google Sheet")),
 				ui.DoDefault(quickInsertSubmenuResultFinder("Google Sheet")),
-				ui.WaitUntilExists(nodewith.NameContaining("Chrome - Untitled spreadsheet").HasClass("BrowserFrame")),
+				ui.WaitUntilExists(nodewith.NameContaining("Chrome - Untitled spreadsheet").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))),
 				// Close the newly created tab.
 				keyboard.AccelAction("Ctrl+w"),
 			),

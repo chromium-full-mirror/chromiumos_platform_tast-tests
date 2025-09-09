@@ -997,7 +997,8 @@ func (cl *ClamshellActionHandler) switchChromeTab(ctx context.Context, tabFinder
 		}
 
 		// ExoShellSurface-0 is an example of lacros-Chrome window.
-		if w.Name != "BrowserFrame" && !strings.Contains(w.Name, "ExoShellSurface") {
+		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+		if w.Name != "BrowserWidget" && w.Name != "BrowserFrame" && !strings.Contains(w.Name, "ExoShellSurface") {
 			return testing.PollBreak(errors.Errorf("active window is not a browser with name %s", w.Name))
 		}
 

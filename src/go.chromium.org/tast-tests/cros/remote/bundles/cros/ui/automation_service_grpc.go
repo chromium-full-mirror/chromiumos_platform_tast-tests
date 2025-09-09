@@ -103,7 +103,8 @@ func AutomationServiceGRPC(ctx context.Context, s *testing.State) {
 	// Wait for search button on the files app to show up.
 	filesAppWindowFinder := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "BrowserFrame"}},
+			// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+			{Value: &pb.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
 			{Value: &pb.NodeWith_Name{Name: "Files - My files"}},
 		},
 	}

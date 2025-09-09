@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -147,7 +148,8 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}
 
-		browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame")
+		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+		browserRoot := nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 
 		appList = []*wmputils.ResizeApp{
 			{

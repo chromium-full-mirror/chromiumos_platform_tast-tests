@@ -42,6 +42,7 @@ type NodeHelper struct {
 	ancestor       *Finder
 	nth            int32
 	expanded       bool
+	classNameRegex string
 
 	mask int
 }
@@ -74,6 +75,7 @@ const (
 	maskAncestor
 	maskNth
 	maskExpanded
+	maskClassNameRegex
 )
 
 // Name sets a specified name to NodeHelper.
@@ -140,6 +142,14 @@ func (n *NodeHelper) Expanded(expanded bool) *NodeHelper {
 	return c
 }
 
+// ClassNameRegex sets a specified regex class name to NodeHelper.
+func (n *NodeHelper) ClassNameRegex(classNameRegex string) *NodeHelper {
+	c := n.copy()
+	c.classNameRegex = classNameRegex
+	c.mask |= maskClassNameRegex
+	return c
+}
+
 // Finder returns the Finder.
 func (n *NodeHelper) Finder() *Finder {
 	var nodeWiths []*NodeWith
@@ -174,6 +184,10 @@ func (n *NodeHelper) Finder() *Finder {
 
 	if n.mask&maskExpanded != 0 {
 		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_Expanded{Expanded: n.expanded}})
+	}
+
+	if n.mask&maskClassNameRegex != 0 {
+		nodeWiths = append(nodeWiths, &NodeWith{Value: &NodeWith_ClassNameRegex{ClassNameRegex: n.classNameRegex}})
 	}
 
 	return &Finder{NodeWiths: nodeWiths}

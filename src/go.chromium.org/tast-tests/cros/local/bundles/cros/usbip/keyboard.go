@@ -6,6 +6,7 @@ package usbip
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/usbdevice"
@@ -77,7 +78,8 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	defer safeDetach(cleanupCtx)
 	testText := "This is a test message."
 	promptText := "crosh>"
-	window := nodewith.Name("crosh").Role(role.Window).ClassName("BrowserFrame")
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	window := nodewith.Name("crosh").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 	prompt := nodewith.Ancestor(window).NameStartingWith(promptText).Role(role.StaticText).First()
 	ui := uiauto.New(tconn)
 	if err := uiauto.Repeat(2, uiauto.Combine("Open launcher and type text",

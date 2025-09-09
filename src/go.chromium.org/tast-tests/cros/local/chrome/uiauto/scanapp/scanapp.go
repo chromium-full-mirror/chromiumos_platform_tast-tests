@@ -30,7 +30,7 @@ import (
 )
 
 // WindowFinder is the finder for the ScanApp window.
-var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).HasClass("BrowserFrame").Role(role.Window)
+var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
 
 // Matches "Scan" or "Scan page 1".
 var scanButtonFinder *nodewith.Finder = nodewith.NameRegex(regexp.MustCompile(`(Scan)(\spage\s1)?`)).Role(role.Button)

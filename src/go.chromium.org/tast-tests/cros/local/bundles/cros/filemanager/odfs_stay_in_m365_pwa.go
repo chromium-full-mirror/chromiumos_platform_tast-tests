@@ -263,7 +263,8 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 
 	// All PWA windows (e.g. PowerPoint, OneDrive) match "Microsoft 365" title,
 	// we just want the one which has "Apps" button, hence "First()" here.
-	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365").ClassName("BrowserFrame").First()
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).First()
 	m365Context := nodewith.Role(role.RootWebArea).NameContaining("Microsoft 365").Ancestor(m365Window)
 	appsButtonRole := role.ToggleButton
 	if !param.isConsumerMicrosoft {
@@ -271,7 +272,7 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 	}
 	appsButton := nodewith.Role(appsButtonRole).NameContaining("Apps").Ancestor(m365Context).First()
 	powerPointLink := nodewith.Role(role.Link).NameContaining("PowerPoint").Ancestor(m365Context).Focusable()
-	powerPointWindow := nodewith.Role(role.Window).NameContaining("PowerPoint").ClassName("BrowserFrame")
+	powerPointWindow := nodewith.Role(role.Window).NameContaining("PowerPoint").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 	powerPointContext := nodewith.Role(role.RootWebArea).NameContaining("PowerPoint").Ancestor(powerPointWindow)
 	newPresentationLink := nodewith.Role(role.Button).NameContaining("blank presentation").Focusable().Ancestor(powerPointContext)
 
@@ -323,7 +324,7 @@ func OdfsStayInM365Pwa(ctx context.Context, s *testing.State) {
 
 	oneDriveUIAncestor := m365Context
 	if param.isConsumerMicrosoft {
-		oneDriveUIAncestor = nodewith.Role(role.Window).NameRegex(regexp.MustCompile("Microsoft 365.*OneDrive")).ClassName("BrowserFrame")
+		oneDriveUIAncestor = nodewith.Role(role.Window).NameRegex(regexp.MustCompile("Microsoft 365.*OneDrive")).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 	}
 	oneDriveButton := nodewith.Role(role.Link).NameContaining("OneDrive").Ancestor(m365Context).Focusable().First()
 	myFilesButton := nodewith.Role(role.Link).NameContaining("My files").Ancestor(oneDriveUIAncestor)

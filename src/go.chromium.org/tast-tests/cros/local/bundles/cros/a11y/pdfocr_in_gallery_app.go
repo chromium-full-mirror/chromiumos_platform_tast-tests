@@ -10,6 +10,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
@@ -123,7 +124,8 @@ func PDFOCRInGalleryApp(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait until the Spinner in Gallery App is gone.
-	galleryRootFinder := nodewith.NameStartingWith(apps.Gallery.Name).HasClass("BrowserFrame").Role(role.Window).First()
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	galleryRootFinder := nodewith.NameStartingWith(apps.Gallery.Name).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window).First()
 	spinner := nodewith.HasClass("mdc-circular-progress__spinner-layer").Ancestor(galleryRootFinder)
 	if err := uiauto.Combine("Wait until the Spinner is gone",
 		ui.WithTimeout(3*time.Second).WaitUntilExists(spinner),

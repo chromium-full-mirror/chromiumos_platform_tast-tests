@@ -88,14 +88,14 @@ func TestToFinder(t *gotesting.T) {
 				{Value: &pb.NodeWith_Ancestor{
 					Ancestor: &pb.Finder{
 						NodeWiths: []*pb.NodeWith{
-							{Value: &pb.NodeWith_HasClass{HasClass: "BrowserFrame"}},
+							{Value: &pb.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
 							{Value: &pb.NodeWith_Role{Role: pb.Role_ROLE_WINDOW}},
 						},
 					},
 				}},
 			},
 		}, nodewith.HasClass("TabStripControlButton").Role(role.Button).Visible().Onscreen().
-			First().Ancestor(nodewith.Role(role.Window).HasClass("BrowserFrame"))},
+			First().Ancestor(nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")))},
 	} {
 		got, err := toFinder(tc.f1)
 		if err != nil {
@@ -128,7 +128,7 @@ func TestToFinderAncestorError(t *gotesting.T) {
 			{Value: &pb.NodeWith_Ancestor{
 				Ancestor: &pb.Finder{
 					NodeWiths: []*pb.NodeWith{
-						{Value: &pb.NodeWith_HasClass{HasClass: "BrowserFrame"}},
+						{Value: &pb.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
 						{Value: &pb.NodeWith_Root{}},
 					},
 				},

@@ -7,6 +7,7 @@ package projector
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -146,7 +147,8 @@ func testProjectorEnabled(ctx context.Context, cr *chrome.Chrome, fdms *fakedms.
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	screencastAppWindow := nodewith.Name("Screencast").Role(role.Window).ClassName("BrowserFrame")
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	screencastAppWindow := nodewith.Name("Screencast").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 	if err := ui.WaitUntilExists(screencastAppWindow)(ctx); err != nil {
 		return errors.Wrap(err, "Screencast app window not found")
 	}

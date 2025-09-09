@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -201,7 +202,8 @@ func (g *gallery) Play(ctx context.Context, media *apputil.Media) (retErr error)
 	defer files.Close(ctx)
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, g.outDir, func() bool { return retErr != nil }, g.cr, "ui_filesapp")
 
-	gallery := nodewith.NameStartingWith(apps.Gallery.Name).HasClass("BrowserFrame")
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	gallery := nodewith.NameStartingWith(apps.Gallery.Name).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
 	return uiauto.Combine("play from files app",
 		files.OpenDownloads(),
 		files.OpenFile(media.Subtitle),

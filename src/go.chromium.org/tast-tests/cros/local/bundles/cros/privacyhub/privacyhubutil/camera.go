@@ -11,6 +11,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -103,7 +104,9 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome, s *te
 	ui := uiauto.New(tconn)
 
 	// Wait till the camera frame will appear.
-	cameraBrowserFrame := nodewith.Role("window").ClassName("BrowserFrame").Name("Camera")
+	// Wait till the camera frame will appear.
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	cameraBrowserFrame := nodewith.Role("window").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Name("Camera")
 	cameraFrame := nodewith.ClassName("RenderWidgetHostViewAura").FinalAncestor(cameraBrowserFrame)
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(cameraBrowserFrame)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to find camera view during a defined timeout")

@@ -772,6 +772,8 @@ func toFinder(input *pb.Finder) (*nodewith.Finder, error) {
 				return nil, errors.New("Root can only be the only nodewith predicate")
 			}
 			f = nodewith.Root()
+		case *pb.NodeWith_ClassNameRegex:
+			f = f.ClassNameRegex(regexp.MustCompile(val.ClassNameRegex))
 		}
 	}
 	return f, nil

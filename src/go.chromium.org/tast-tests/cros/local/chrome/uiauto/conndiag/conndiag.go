@@ -8,6 +8,7 @@ package conndiag
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -27,7 +28,8 @@ type App struct {
 
 const appURL = "chrome://connectivity-diagnostics/"
 
-var windowFinder *nodewith.Finder = nodewith.Name("Connectivity Diagnostics").HasClass("BrowserFrame").Role(role.Window)
+// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+var windowFinder *nodewith.Finder = nodewith.Name("Connectivity Diagnostics").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
 
 var titleFinder *nodewith.Finder = nodewith.Name("Connectivity Diagnostics").Role(role.InlineTextBox)
 

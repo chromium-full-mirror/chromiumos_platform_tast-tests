@@ -2417,6 +2417,7 @@ type NodeWith struct {
 	//	*NodeWith_NameContaining
 	//	*NodeWith_State
 	//	*NodeWith_Ancestor
+	//	*NodeWith_ClassNameRegex
 	Value isNodeWith_Value `protobuf_oneof:"value"`
 }
 
@@ -2690,6 +2691,13 @@ func (x *NodeWith) GetAncestor() *Finder {
 	return nil
 }
 
+func (x *NodeWith) GetClassNameRegex() string {
+	if x, ok := x.GetValue().(*NodeWith_ClassNameRegex); ok {
+		return x.ClassNameRegex
+	}
+	return ""
+}
+
 type isNodeWith_Value interface {
 	isNodeWith_Value()
 }
@@ -2867,6 +2875,10 @@ type NodeWith_Ancestor struct {
 	Ancestor *Finder `protobuf:"bytes,33,opt,name=ancestor,proto3,oneof"`
 }
 
+type NodeWith_ClassNameRegex struct {
+	ClassNameRegex string `protobuf:"bytes,34,opt,name=class_name_regex,json=classNameRegex,proto3,oneof"`
+}
+
 func (*NodeWith_HasClass) isNodeWith_Value() {}
 
 func (*NodeWith_Name) isNodeWith_Value() {}
@@ -2932,6 +2944,8 @@ func (*NodeWith_NameContaining) isNodeWith_Value() {}
 func (*NodeWith_State) isNodeWith_Value() {}
 
 func (*NodeWith_Ancestor) isNodeWith_Value() {}
+
+func (*NodeWith_ClassNameRegex) isNodeWith_Value() {}
 
 // Rect defines a bounding box
 // See
@@ -4364,6 +4378,7 @@ func file_automation_service_proto_init() {
 		(*NodeWith_NameContaining)(nil),
 		(*NodeWith_State)(nil),
 		(*NodeWith_Ancestor)(nil),
+		(*NodeWith_ClassNameRegex)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

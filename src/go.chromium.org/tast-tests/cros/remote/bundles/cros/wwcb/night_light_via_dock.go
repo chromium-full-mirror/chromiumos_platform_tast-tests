@@ -33,7 +33,8 @@ var (
 	settingsWindowFinder = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_HasClass{HasClass: "BrowserFrame"}},
+			// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+			{Value: &ui.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
 			{Value: &ui.NodeWith_NameContaining{NameContaining: "Settings"}},
 		},
 	}

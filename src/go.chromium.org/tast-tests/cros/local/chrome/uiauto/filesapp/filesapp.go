@@ -91,7 +91,8 @@ func Create(tconn *chrome.TestConn, ui *uiauto.Context, appID string) *FilesApp 
 // WindowFinder finds the window based on the Files app type running.
 func WindowFinder(appID string) *nodewith.Finder {
 	if appID == apps.FilesSWA.ID {
-		return nodewith.NameStartingWith("Files").Role(role.Window).HasClass("BrowserFrame").First()
+		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+		return nodewith.NameStartingWith("Files").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).First()
 	}
 	if appID == vars.FilePickerPseudoAppID {
 		return nodewith.Name("Select a file to open").Role(role.Window).HasClass("WebDialogView")

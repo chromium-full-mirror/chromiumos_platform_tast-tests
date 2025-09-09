@@ -71,7 +71,8 @@ func NightLightColorTemperature(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
 		ui.WaitUntilExists(nodewith.HasClass("DisplayDetailedView")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		ui.WaitUntilExists(nodewith.HasClass("BrowserFrame").Name("Settings - Display")),
+		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+		ui.WaitUntilExists(nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Name("Settings - Display")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to enable night light and open display settings by clicking pod button in quick settings: ", err)
 	}

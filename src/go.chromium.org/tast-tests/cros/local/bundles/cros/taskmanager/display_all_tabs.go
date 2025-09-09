@@ -6,6 +6,7 @@ package taskmanager
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/ui"
@@ -162,7 +163,8 @@ func (extension *chromeExtension) Open(ctx context.Context, cr *chrome.Chrome) e
 		return err
 	}
 
-	browserFrame := nodewith.HasClass("BrowserFrame").Role(role.Window)
+	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
+	browserFrame := nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
 	extensionMenu := nodewith.HasClass("ExtensionsMenuView").Role(role.Window)
 
 	return uiauto.Combine("open the extension",
