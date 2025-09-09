@@ -386,6 +386,10 @@ func rollbackExptectedSubstrings() ([]string, error) {
 	if err != nil {
 		return []string{}, errors.Wrap(err, "failed to read activate date")
 	}
+	if activateDate == nil {
+		return []string{}, errors.Errorf("Failed to read activate date")
+	}
+
 	versionEntry := "activate_date=\"" + *activateDate + "\""
 
 	fsiVersion, err := vpd.FsiVersion()
