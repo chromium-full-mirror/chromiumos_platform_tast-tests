@@ -6,11 +6,10 @@ package runtimeprobe
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/utils"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,30 +31,19 @@ func init() {
 type rebootForProbeFunctionFixture struct{}
 
 func (f *rebootForProbeFunctionFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	const (
-		pollInterval = 3 * time.Second
-		pollTimeout  = 2 * time.Minute
-	)
-
 	d := s.DUT()
 
 	s.Log("Rebooting the DUT")
 	if err := d.Reboot(ctx); err != nil {
-		return errors.Wrap(err, "failed to reboot DUT")
+		s.Fatal("Failed to reboot DUT: ", err)
 	}
-	s.Log("DUT rebooted successfully. Waiting for hardware_verifier to finish running")
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		output, err := d.Conn().CommandContext(ctx, "initctl", "status", "hardware_verifier").Output()
-		if err != nil {
-			return err
-		}
-		if !strings.Contains(string(output), "stop/waiting") {
-			return errors.New("hardware_verifier is not stop/waiting state")
-		}
-		return nil
-	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout}); err != nil {
-		s.Fatal("Failed to wait for hardware_verifier to be stop/waiting: ", err)
+	if err := utils.WaitServiceState(ctx, d, "system-services", "start/running"); err != nil {
+		s.Fatal("Service system-services timed out: ", err)
+	}
+
+	if err := utils.WaitServiceState(ctx, d, "hardware_verifier", "stop/waiting"); err != nil {
+		s.Fatal("Service hardware_verifier timed out: ", err)
 	}
 
 	s.Log("hardware_verifier finished running")

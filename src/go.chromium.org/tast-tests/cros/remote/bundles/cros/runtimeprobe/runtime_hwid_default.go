@@ -38,6 +38,10 @@ func RuntimeHWIDDefault(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
+	if err := utils.WaitServiceState(ctx, d, "system-services", "start/running"); err != nil {
+		s.Fatal("Service system-services timed out: ", err)
+	}
+
 	if err := utils.WaitServiceState(ctx, d, "hardware_verifier", "stop/waiting"); err != nil {
 		s.Fatal("Service hardware_verifier timed out: ", err)
 	}
