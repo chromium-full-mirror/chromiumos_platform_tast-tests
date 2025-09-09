@@ -804,6 +804,10 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to get user's Downloads path: ", err)
 	}
 
+	if err := f.launchExitTerminal(ctx); err != nil {
+		s.Fatal("Failed to re-launch terminal and exit: ", err)
+	}
+
 	if err := f.cr.ResetState(ctx); err != nil {
 		s.Fatal("Failed to reset chrome's state: ", err)
 	}
@@ -907,6 +911,17 @@ func (f *baguetteFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	f.tconn = nil
 
 	f.cr = nil
+}
+
+func (f *baguetteFixture) launchExitTerminal(ctx context.Context) error {
+	_, err := terminalapp.Launch(ctx, f.tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch Terminal")
+	}
+	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
+		return errors.Wrap(err, "failed to exit Terminal window")
+	}
+	return nil
 }
 
 // checkKeepState returns whether the fixture should keep state from the

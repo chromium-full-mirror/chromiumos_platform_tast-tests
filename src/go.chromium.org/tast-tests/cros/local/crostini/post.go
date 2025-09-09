@@ -92,6 +92,18 @@ func RunBaguettePostTest(ctx context.Context, p PreData) {
 		return
 	}
 
+	// Container logs require a running VM and container. If one
+	// hasn't been set, we can't fetch them.
+	if p.Container != nil {
+		trySaveContainerLogs(ctx, dir, p.Container)
+
+		if err := p.Container.Cleanup(ctx, "."); err != nil {
+			testing.ContextLog(ctx, "Failed to remove all files in home directory in the container: ", err)
+		}
+	} else {
+		testing.ContextLog(ctx, "No active container, can't get journalctl logs")
+	}
+
 	// VM logs are stored on the host, so we don't need the VM to
 	// be running at all to get them.
 	if err := vm.TrySaveAllVMLogs(ctx, p.Chrome.NormalizedUser(), dir); err != nil {

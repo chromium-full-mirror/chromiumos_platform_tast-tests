@@ -78,10 +78,10 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting for crostini to backup (typically ~ 2 mins)")
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.exportCrostini)", "backup.tar.gz"); err != nil {
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.exportCrostini)", "backup.img.zst"); err != nil {
 		s.Fatal("Running autotestPrivate.exportCrostini failed: ", err)
 	}
-	defer os.Remove(filepath.Join("/home/user", ownerID, "MyFiles/Downloads/backup.tar.gz"))
+	defer os.Remove(filepath.Join("/home/user", ownerID, "MyFiles/Downloads/backup.img.zst"))
 
 	// Delete the test file in the container.
 	if err := crostini.RemoveContainerFile(ctx, cont, testFileName); err != nil {
@@ -93,7 +93,7 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 
 	// Restore the container and verify that the file is back.
 	s.Log("Waiting for crostini to restore (typically ~ 1 min)")
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.importCrostini)", "backup.tar.gz"); err != nil {
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.importCrostini)", "backup.img.zst"); err != nil {
 		s.Fatal("Running autotestPrivate.importCrostini failed: ", err)
 	}
 

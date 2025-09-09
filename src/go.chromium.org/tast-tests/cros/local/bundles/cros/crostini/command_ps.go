@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -51,6 +52,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_lowperf",
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -95,4 +106,7 @@ func CommandPs(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify the output of the command ps: ", err)
 	}
+
+	// Close Terminal app
+	apps.Close(ctx, tconn, apps.Terminal.ID)
 }

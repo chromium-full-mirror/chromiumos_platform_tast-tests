@@ -9,9 +9,11 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/errors"
@@ -84,8 +86,14 @@ func CrashReporter(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get daemon store crash dir: ", err)
 	}
 
+	var cmd *testexec.Cmd
 	// Trigger a crash in the root namespace of the VM
-	cmd := pre.Cont.VM.Command(ctx, "bash", "-c", "kill -s SIGABRT $$")
+	if strings.Contains(s.TestName(), "baguette") {
+		cmd = pre.Cont.Command(ctx, "bash", "-c", "kill -s SIGABRT $$")
+	} else {
+		cmd = pre.Cont.VM.Command(ctx, "bash", "-c", "kill -s SIGABRT $$")
+	}
+
 	// Reverse the usual error checking pattern because this
 	// command is supposed to crash. Instead we check that the right
 	// error was encountered.

@@ -55,6 +55,16 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_lowperf",
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})

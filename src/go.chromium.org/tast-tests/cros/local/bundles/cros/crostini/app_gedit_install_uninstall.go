@@ -60,6 +60,16 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           12 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           12 * time.Minute,
+			}, {
+				Name:              "baguette_lowperf",
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           12 * time.Minute,
 			},
 		},
 	})
@@ -111,7 +121,8 @@ func AppGeditInstallUninstall(ctx context.Context, s *testing.State) {
 		keyboard.TypeAction("Hello, gedit!"),
 		keyboard.AccelAction("ctrl+S"), // Bring up the save window
 		ud.LeftClick(uidetection.Word("Save").WithinA11yNode(geditSaveAsWindow)),
-		// Press ctrl+W twice to exit window.
+		// Press ctrl+W thrice to exit window.
+		keyboard.AccelAction("ctrl+W"),
 		keyboard.AccelAction("ctrl+W"),
 		keyboard.AccelAction("ctrl+W"),
 	)(ctx); err != nil {

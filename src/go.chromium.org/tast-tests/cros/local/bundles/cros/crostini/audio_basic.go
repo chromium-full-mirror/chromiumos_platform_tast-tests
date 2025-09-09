@@ -69,6 +69,20 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to playback with ALSA API: ", err)
 	}
 
+	pipeWireSinksPattern := regexp.MustCompile(
+		"[0-9]+\t(alsa-sink|alsa_output.pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+	pulseAudioSinksPattern := regexp.MustCompile(
+		"1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
+
+	s.Log("List PulseAudio sinks")
+	if out, err := cont.Command(
+		ctx, "pactl", "list", "sinks", "short",
+	).Output(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to list audio sinks using pactl: ", err)
+	} else if res := (pulseAudioSinksPattern.Match(out) || pipeWireSinksPattern.Match(out)); !res {
+		s.Fatal("Failed to load audio sinks to PulseAudio or PipeWire:", string(out))
+	}
+
 	// isSIGINT checks if the err is triggered by SIGINT.
 	isSIGINT := func(err error) bool {
 		return strings.Contains(err.Error(), "exit status 124")
@@ -85,19 +99,6 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	pipeWireSinksPattern := regexp.MustCompile(
-		"[0-9]+\talsa-sink\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
-	pulseAudioSinksPattern := regexp.MustCompile(
-		"1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
-
-	if out, err := cont.Command(
-		ctx, "pactl", "list", "sinks", "short",
-	).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to list audio sinks using pactl: ", err)
-	} else if res := (pulseAudioSinksPattern.Match(out) || pipeWireSinksPattern.Match(out)); !res {
-		s.Fatal("Failed to load audio sinks to PulseAudio or PipeWire:", string(out))
-	}
-
 	s.Log("List ALSA input devices")
 	if err := cont.Command(ctx, "arecord", "-l").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to list ALSA input devices: ", err)
@@ -110,18 +111,9 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture with ALSA API: ", err)
 	}
 
-	s.Log("Capture with PulseAudio API")
-	if err := cont.Command(
-		ctx, "timeout", "-s", "SIGINT", "3s", "paplay", "--raw", "--rate=48000",
-		"--channels=2", "/dev/null",
-	).Run(testexec.DumpLogOnError); err != nil {
-		if !isSIGINT(err) {
-			s.Fatal("Failed to capture with PulseAudio API: ", err)
-		}
-	}
-
+	s.Log("List PulseAudio sources")
 	pipeWireSourcesPattern := regexp.MustCompile(
-		"[0-9]+\talsa-source\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+		"[0-9]+\t(alsa-source|alsa_input.pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 	pulseAudioSourcesPattern := regexp.MustCompile(
 		"[0-9]+\talsa_input.hw_0_0\tmodule-alsa-source.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
 
@@ -131,5 +123,15 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to list audio sources using pactl: ", err)
 	} else if res := (pulseAudioSourcesPattern.Match(out) || pipeWireSourcesPattern.Match(out)); !res {
 		s.Fatal("Failed to load audio sources to PulseAudio or PipeWire:", string(out))
+	}
+
+	s.Log("Capture with PulseAudio API")
+	if err := cont.Command(
+		ctx, "timeout", "-s", "SIGINT", "3s", "paplay", "--raw", "--rate=48000",
+		"--channels=2", "/dev/null",
+	).Run(testexec.DumpLogOnError); err != nil {
+		if !isSIGINT(err) {
+			s.Fatal("Failed to capture with PulseAudio API: ", err)
+		}
 	}
 }
