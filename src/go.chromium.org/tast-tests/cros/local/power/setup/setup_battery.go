@@ -33,9 +33,14 @@ var (
 	ccNormal     = chargeState{"chargecontrol", "normal", "Charge state machine is in normal mode."}
 )
 
-// BatteryPreparationTimeout is the time required to charge and drain battery
-// to specified range.
-const BatteryPreparationTimeout = 2 * time.Hour
+const (
+	// BatteryPreparationTimeout is the time required to charge and drain battery
+	// to specified range.
+	BatteryPreparationTimeout = 2 * time.Hour
+	// minCapacityChargeTimeout is the time to wait for the battery to be charged
+	// to its minimum operating capacity.
+	minCapacityChargeTimeout = 20 * time.Minute
+)
 
 func setChargeState(ctx context.Context, s chargeState) error {
 	stdout, stderr, err := testexec.CommandContext(ctx, "ectool", s.command, s.state).SeparatedOutput(testexec.DumpLogOnError)

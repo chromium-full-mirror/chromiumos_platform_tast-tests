@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -286,7 +287,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
 		}, PowerFixtureOptions{}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -306,7 +307,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -333,7 +334,7 @@ func init() {
 				chrome.EnableFeatures("SeamlessRefreshRateSwitching"),
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -358,7 +359,7 @@ func init() {
 				chrome.DisableFeatures("SeamlessRefreshRateSwitching"),
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -384,7 +385,7 @@ func init() {
 				chrome.EnableFeatures("EnableVariableRefreshRateAlwaysOn"),
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -406,7 +407,7 @@ func init() {
 		}, PowerFixtureOptions{
 			EnableGAIALogin: true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + SetUpTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -429,7 +430,7 @@ func init() {
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + SetUpTimeout,
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -450,7 +451,7 @@ func init() {
 			KeyboardBrightness: SetKbBrightnessToZero,
 			Ramfs:              SetupRamfs,
 		}, PowerFixtureOptions{EnableHDR: true}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -474,7 +475,7 @@ func init() {
 			EnableGAIALogin: true,
 			EnableARC:       true,
 			EnableHDR:       true}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -495,7 +496,7 @@ func init() {
 			DarkTheme:          EnableDarkTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -516,7 +517,7 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -558,7 +559,7 @@ func init() {
 				},
 			},
 		),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -599,7 +600,7 @@ func init() {
 				},
 			},
 		),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -639,7 +640,7 @@ func init() {
 			},
 		),
 		Parent:          "rebootForAudioDSPFixture",
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -662,7 +663,7 @@ func init() {
 				chrome.EnableFeatures("AdaptiveCharging"),
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -706,7 +707,7 @@ func init() {
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("LauncherImageSearchIca"),
 			}}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -730,7 +731,7 @@ func init() {
 				chrome.EnableFeatures("ReadAnythingWebUIToolbar"),
 				chrome.EnableFeatures("ReadAnythingReadAloud"),
 			}}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -757,7 +758,7 @@ func init() {
 				// Feature flags.
 				chrome.EnableFeatures("EnableArmHwdrm"),
 			}}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -788,7 +789,7 @@ func init() {
 				}, nil
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -819,7 +820,7 @@ func init() {
 				}, nil
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -856,7 +857,7 @@ func init() {
 				}, nil
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -894,7 +895,7 @@ func init() {
 				}, nil
 			},
 		}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -918,7 +919,7 @@ func init() {
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CaptionsOnBrailleDisplay"),
 			}}),
-		SetUpTimeout:    SetUpTimeout,
+		SetUpTimeout:    minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
 		PreTestTimeout:  PreTestTimeout,
@@ -1215,6 +1216,21 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		powerTestOptions.Audio = DoNotChangeAudio
 	}
 	withAudio := powerTestOptions.Audio == DoNotChangeAudio
+
+	// Ensure the battery is higher than threshold before calling PowerTestSetup.
+	lowBatteryShutdownPercent, err := metrics.LowBatteryShutdownPercent(ctx)
+	if err != nil {
+		s.Fatal("Invalid battery_shutdown_percent: ", err)
+	}
+	threshold := DefaultDischargeThreshold + lowBatteryShutdownPercent
+
+	chargeParams := power.ChargeParams{
+		MinChargePercentage: threshold,
+		MaxChargePercentage: 100.0,
+	}
+	if err := PrepareBattery(ctx, chargeParams); err != nil {
+		s.Fatal("Failed to prepare battery: ", err)
+	}
 
 	// Set up the testing environment.
 	cleanup, discharge, err := PowerTestSetup(ctx, "powerUIFixture", tconn, powerTestOptions)
