@@ -98,7 +98,7 @@ func PDNoCommCharge(ctx context.Context, s *testing.State) {
 	}
 
 	// If battery is full, discharge it some before starting the test
-	if err := firmware.DischargeBattery(ctx, h, 93.0); err != nil {
+	if err := firmware.DischargeBattery(ctx, h, 96.0); err != nil {
 		s.Fatal("Failed discharge battery: ", err)
 	}
 
@@ -128,25 +128,26 @@ func PDNoCommCharge(ctx context.Context, s *testing.State) {
 		servo.USBC3A0,
 	}
 
-	expectedCurrent := []int{
-		500,
-		1500,
-		3000,
+	// pass if current draw is within 80% of maximum
+	expectedCurrent := [][]int{
+		{400, 500},
+		{1200, 1500},
+		{2400, 3000},
 	}
 
 	for idx := range configs {
 		testing.ContextLogf(ctx, "testing %s connnection", string(configs[idx]))
 		if err := h.Servo.ServoCCNoPD(ctx, dtsBool, configs[idx]); err != nil {
-			s.Fatal("Could not initialized charging without PD: ", err)
+			s.Fatal("Could not initialize charging without PD: ", err)
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if chargeSupport, err := h.Servo.GetChargeSupport(ctx); err == nil {
-				if chargeSupport.PDType != "USBC" {
-					return errors.Wrap(err, "connection is not USBC")
+			if INAInfo, err := h.Servo.ServoGetINA(ctx, 1); err == nil {
+				if 4500 > INAInfo.BusMV || INAInfo.BusMV > 5500 {
+					return errors.Wrapf(err, "expected connection to be 5V, it is instead %dmV", INAInfo.BusMV)
 				}
-				if chargeSupport.CurrentLimit != expectedCurrent[idx] {
-					return errors.Wrapf(err, "current limit %dmA in %s mode", chargeSupport.CurrentLimit, string(configs[idx]))
+				if expectedCurrent[idx][0] > INAInfo.CurrentMA || INAInfo.CurrentMA > expectedCurrent[idx][1] {
+					return errors.Wrapf(err, "expected current draw %dmA, it is instead %dmA", expectedCurrent[idx][1], INAInfo.CurrentMA)
 				}
 			} else {
 				return errors.Wrap(err, "failed to get charging connection")
@@ -154,7 +155,7 @@ func PDNoCommCharge(ctx context.Context, s *testing.State) {
 
 			return nil
 		}, &testing.PollOptions{Timeout: usbcPollTimeout, Interval: usbcPollInterval}); err != nil {
-			s.Fatal("Failed to acquire correct current: ", err)
+			s.Fatal("Failed to acquire correct connection: ", err)
 		}
 	}
 

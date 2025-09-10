@@ -37,6 +37,14 @@ const (
 	USBCusb USBCCurrentAdvertisement = "USB"
 )
 
+// INAInfo contains all the information retrieved from the INA
+type INAInfo struct {
+	ShuntUV   int // shunt voltage in uV
+	BusMV     int // bus voltage in mV
+	PowerMW   int // power in mW
+	CurrentMA int // current in mA
+}
+
 const (
 	servoPDStatePollTimeout  time.Duration = 5 * time.Second
 	servoPDStatePollInterval time.Duration = 500 * time.Millisecond
@@ -701,6 +709,41 @@ func (s *Servo) ServoGetSBU(ctx context.Context) ([]int, error) {
 	ret[1], err = strconv.Atoi(out[0][2])
 	if err != nil {
 		return ret, errors.Wrap(err, "failed to retrieve SBU voltage")
+	}
+
+	return ret, nil
+}
+
+var reServoINA string = `Shunt voltage.*?([\d]*) uV.*[\s]*.*Bus voltage.*?([\d]*) mV.*[\s]*.*Power.*?([\d]*) mW.*[\s]*.*Current.*?([\d]*) mA`
+
+// ServoGetINA retrieves the voltage and current of a port from the INA
+func (s *Servo) ServoGetINA(ctx context.Context, port int) (INAInfo, error) {
+	ret := INAInfo{0, 0, 0, 0}
+	cmd := fmt.Sprintf("ina %d", port)
+
+	out, err := s.RunServoCommandGetOutput(ctx, cmd, []string{reServoINA})
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to send ina command")
+	}
+
+	ret.ShuntUV, err = strconv.Atoi(out[0][1])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve shunt voltage")
+	}
+
+	ret.BusMV, err = strconv.Atoi(out[0][2])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve bus voltage")
+	}
+
+	ret.PowerMW, err = strconv.Atoi(out[0][3])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve power")
+	}
+
+	ret.CurrentMA, err = strconv.Atoi(out[0][4])
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to retrieve current")
 	}
 
 	return ret, nil
