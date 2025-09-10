@@ -297,7 +297,7 @@ func init() {
 			{
 				Name:              "battery",
 				Fixture:           commonfixture.RebootForProbeFunction,
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("wyrdeer")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("santa", "wyrdeer")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
@@ -360,7 +360,7 @@ func init() {
 			}, {
 				Name:              "input_device_private",
 				Fixture:           fixture.RebootAndDecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("meliks")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,
@@ -407,7 +407,7 @@ func init() {
 			}, {
 				Name:              "storage",
 				Fixture:           commonfixture.RebootForProbeFunction,
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("hideo")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
 					allowExtraComponents: false,

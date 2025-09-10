@@ -32,6 +32,8 @@ var (
 	// as their value.
 	allowedUnidentifiedComponentsFields = map[string]map[string]struct{}{
 		"blacktiplte": {"cellular": {}},
+		"foob":        {"stylus": {}},
+		"foob360":     {"stylus": {}},
 	}
 )
 

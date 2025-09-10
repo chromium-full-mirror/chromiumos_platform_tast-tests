@@ -22,6 +22,8 @@ var (
 	ProbeFunctionWaivedFields = map[string]map[string]struct{}{
 		"blacktip360": {"camera": {}},
 		"domilly":     {"display_panel": {}},
+		"hideo":       {"storage": {}},
+		"santa":       {"battery": {}},
 		"wugtrio":     {"camera": {}},
 		"wyrdeer":     {"battery": {}},
 	}
