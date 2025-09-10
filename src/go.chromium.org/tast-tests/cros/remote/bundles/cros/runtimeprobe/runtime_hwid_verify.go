@@ -77,6 +77,14 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 	runtimeHWIDFilePath := filepath.Join(runtimeHWIDFileDir, runtimeHWIDFileName)
 	outPath := filepath.Join(s.OutDir(), runtimeHWIDFileName)
 	if err := linuxssh.GetFile(ctx, d.Conn(), runtimeHWIDFilePath, outPath, linuxssh.DereferenceSymlinks); err != nil {
+		hwid, err := getHWID(ctx, d)
+		if err != nil {
+			s.Fatal("Failed to get HWID: ", err)
+		}
+		if strings.Contains(hwid, "TEST") || strings.HasSuffix(hwid, "DEV") {
+			s.Logf("Got test/dev HWID %q. Skipping the test", hwid)
+			return
+		}
 		s.Fatal("Failed to get the Runtime HWID file from DUT: ", err)
 	}
 
@@ -197,12 +205,20 @@ func verifyRuntimeHWIDComponents(ctx context.Context, d *dut.DUT, runtimeHWIDCom
 	return nil
 }
 
-func getModelRLZ(ctx context.Context, d *dut.DUT) (string, error) {
+func getHWID(ctx context.Context, d *dut.DUT) (string, error) {
 	out, err := d.Conn().CommandContext(ctx, "crossystem", "hwid").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to run \"crossystem hwid\"")
 	}
-	lines := strings.Split(strings.TrimSpace(string(out)), " ")
+	return strings.TrimSpace(string(out)), nil
+}
+
+func getModelRLZ(ctx context.Context, d *dut.DUT) (string, error) {
+	hwid, err := getHWID(ctx, d)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get HWID")
+	}
+	lines := strings.Split(hwid, " ")
 	return lines[0], nil
 }
 
