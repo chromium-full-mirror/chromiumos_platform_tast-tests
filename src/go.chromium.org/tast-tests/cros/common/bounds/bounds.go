@@ -26,9 +26,9 @@ type Bounds func(float64) (bool, string)
 func Min(min float64) Bounds {
 	return func(value float64) (bool, string) {
 		if value >= min {
-			return true, fmt.Sprintf("measured value %v >= lower bound %v", value, min)
+			return true, fmt.Sprintf("measured value %.3f >= lower bound %.3f", value, min)
 		}
-		return false, fmt.Sprintf("measured value %v < lower bound %v", value, min)
+		return false, fmt.Sprintf("measured value %.3f < lower bound %.3f", value, min)
 	}
 }
 
@@ -36,9 +36,9 @@ func Min(min float64) Bounds {
 func Max(max float64) Bounds {
 	return func(value float64) (bool, string) {
 		if value <= max {
-			return true, fmt.Sprintf("measured value %v <= upper bound %v", value, max)
+			return true, fmt.Sprintf("measured value %.3f <= upper bound %.3f", value, max)
 		}
-		return false, fmt.Sprintf("measured value %v > upper bound %v", value, max)
+		return false, fmt.Sprintf("measured value %.3f > upper bound %.3f", value, max)
 	}
 }
 
@@ -48,12 +48,12 @@ func Max(max float64) Bounds {
 func Between(min, max float64) Bounds {
 	return func(value float64) (bool, string) {
 		if value < min {
-			return false, fmt.Sprintf("measured value %v < lower bound %v", value, min)
+			return false, fmt.Sprintf("measured value %.3f < lower bound %.3f", value, min)
 		}
 		if value > max {
-			return false, fmt.Sprintf("measured value %v > upper bound %v", value, max)
+			return false, fmt.Sprintf("measured value %.3f > upper bound %.3f", value, max)
 		}
-		return true, fmt.Sprintf("measured value %v is within range [%v, %v]", value, min, max)
+		return true, fmt.Sprintf("measured value %.3f is within range [%.3f, %.3f]", value, min, max)
 	}
 }
 
@@ -61,9 +61,9 @@ func Between(min, max float64) Bounds {
 func Equals(target float64) Bounds {
 	return func(value float64) (bool, string) {
 		if value == target {
-			return true, fmt.Sprintf("measured value %v = target value %v", value, target)
+			return true, fmt.Sprintf("measured value %.3f = target value %.3f", value, target)
 		}
-		return false, fmt.Sprintf("measured value %v != target value %v", value, target)
+		return false, fmt.Sprintf("measured value %.3f != target value %.3f", value, target)
 	}
 }
 
