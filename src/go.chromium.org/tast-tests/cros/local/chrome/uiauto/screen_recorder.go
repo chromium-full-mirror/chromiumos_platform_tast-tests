@@ -370,6 +370,10 @@ func StartFromKB(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 	}
 
 	if err := StartRecordFromUI(ctx, tconn, kb, downloadsPath); err != nil {
+		testing.ContextLog(ctx, "Failed to start screen recording, attempting to clean up UI")
+		if cleanupErr := cleanupScreenCaptureUI(ctx, tconn, kb); cleanupErr != nil {
+			testing.ContextLog(ctx, "WARNING: Failed to clean up screen capture ui: ", cleanupErr)
+		}
 		return "", errors.Wrap(err, "failed to start screen recording on CrOS")
 	}
 
@@ -420,6 +424,34 @@ func StartRecordFromKB(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 		ui.LeftClick(desktop), // It needs to click any button to start, so clicking on the middle of the desktop.
 		checkRecordFile,       // Check a new record file is created in Downloads.
 	)(ctx)
+}
+
+// cleanupScreenCaptureUI attempts to close the screen capture UI by repeatedly pressing Escape.
+// This is used to clean up the UI if it gets stuck during a test.
+func cleanupScreenCaptureUI(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+	ui := New(tconn)
+	screenRecordBtn := nodewith.NameRegex(regexp.MustCompile("Screen record.*")).Role(role.ToggleButton)
+	myfilesBtn := nodewith.NameRegex(regexp.MustCompile("My files.*")).Role(role.Button)
+
+	testing.ContextLog(ctx, "Checking for leftover screen capture UI to clean up")
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		// Check for the existence of both windows elements.
+		if ui.Exists(screenRecordBtn)(ctx) != nil && ui.Exists(myfilesBtn)(ctx) != nil {
+			testing.ContextLog(ctx, "Screen record windows is gone. Cleanup successful")
+			return nil
+		}
+
+		testing.ContextLog(ctx, "Leftover screen capture UI found, pressing ESC")
+		if err := kb.Accel(ctx, "esc"); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to press escape key during cleanup"))
+		}
+
+		return errors.New("screen capture UI text is still visible")
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: 500 * time.Millisecond,
+	})
 }
 
 // StartRecordFromUI starts screen record from UI and keyboard.
