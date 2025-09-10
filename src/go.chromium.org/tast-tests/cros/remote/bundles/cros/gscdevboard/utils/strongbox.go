@@ -5,10 +5,12 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // StrongboxCmd type is 2 bytes
@@ -16,40 +18,595 @@ type StrongboxCmd uint16
 
 // Strongbox command codes
 const (
-	StrongboxDeviceGetHardwareInfo StrongboxCmd = 0x11
-	StrongboxDeviceAddRngEntropy   StrongboxCmd = 0x12
-	StrongboxDeviceGenerateKey     StrongboxCmd = 0x13
-	StrongboxDeviceImportKey       StrongboxCmd = 0x14
+	DeviceGetHardwareInfo                 StrongboxCmd = 0x11
+	DeviceAddRngEntropy                   StrongboxCmd = 0x12
+	DeviceGenerateKey                     StrongboxCmd = 0x13
+	DeviceImportKey                       StrongboxCmd = 0x14
+	DeviceImportWrappedKey                StrongboxCmd = 0x15
+	DeviceUpgradeKey                      StrongboxCmd = 0x16
+	DeviceDeleteKey                       StrongboxCmd = 0x17
+	DeviceDeleteAllKeys                   StrongboxCmd = 0x18
+	DeviceDestroyAttestationIds           StrongboxCmd = 0x19
+	DeviceBegin                           StrongboxCmd = 0x1A
+	DeviceEarlyBootEnded                  StrongboxCmd = 0x1C
+	DeviceConvertStorageKeyToEphemeral    StrongboxCmd = 0x1D
+	DeviceGetKeyCharacteristics           StrongboxCmd = 0x1E
+	OperationUpdateAad                    StrongboxCmd = 0x31
+	OperationUpdate                       StrongboxCmd = 0x32
+	OperationFinish                       StrongboxCmd = 0x33
+	OperationAbort                        StrongboxCmd = 0x34
+	RPCGetHardwareInfo                    StrongboxCmd = 0x41
+	RPCGenerateEcdsaP256KeyPair           StrongboxCmd = 0x42
+	RPCGenerateCertificateRequest         StrongboxCmd = 0x43
+	RPCGenerateCertificateV2Request       StrongboxCmd = 0x44
+	SharedSecretGetSharedSecretParameters StrongboxCmd = 0x51
+	SharedSecretComputeSharedSecret       StrongboxCmd = 0x52
+	SecureClockGenerateTimeStamp          StrongboxCmd = 0x61
+	GetRootOfTrustChallenge               StrongboxCmd = 0x71
+	GetRootOfTrust                        StrongboxCmd = 0x72
+	SendRootOfTrust                       StrongboxCmd = 0x73
+	SetHalInfo                            StrongboxCmd = 0x81
+	SetBootInfo                           StrongboxCmd = 0x82
+	SetAttestationIds                     StrongboxCmd = 0x83
+	SetHalVersion                         StrongboxCmd = 0x84
+	SetAdditionalAttestationInfo          StrongboxCmd = 0x91
+	GetDiceChain                          StrongboxCmd = 0xA0
+	SetHalBootInfo                        StrongboxCmd = 0xA1
 )
 
-// StrongboxStatus type is 4 bytes
-type StrongboxStatus uint32
+// StrongboxError is 0 for success or -1 to -255 for errors.
+type StrongboxError int
 
-// Strongbox response status codes
+// Strongbox response codes
 const (
-	StrongboxSuccess       StrongboxStatus = 0
-	InvalidArgument        StrongboxStatus = 0x400 + 38
-	UnsupportedTag         StrongboxStatus = 0x400 + 39
-	InvalidTag             StrongboxStatus = 0x400 + 40
-	StrongboxUnimplemented StrongboxStatus = 0x400 + 100
+	StrongboxSuccess        StrongboxError = 0
+	InvalidArgument         StrongboxError = -38
+	UnsupportedTag          StrongboxError = -39
+	InvalidTag              StrongboxError = -40
+	HardwareNotYetAvailable StrongboxError = -85
+	Unimplemented           StrongboxError = -100
 )
 
 const strongboxTpmVendorCommand uint32 = 0x20000001
+const strongboxTpmVendorResponseCode uint32 = 0x500
+
+const (
+	kmTagTypeInvalid  uint32 = 0
+	kmTagTypeEnum     uint32 = 1
+	kmTagTypeEnumRep  uint32 = 2
+	kmTagTypeUint     uint32 = 3
+	kmTagTypeUintRep  uint32 = 4
+	kmTagTypeUlong    uint32 = 5
+	kmTagTypeDate     uint32 = 6
+	kmTagTypeBool     uint32 = 7
+	kmTagTypeBignum   uint32 = 8
+	kmTagTypeBytes    uint32 = 9
+	kmTagTypeUlongRep uint32 = 10
+)
+
+const kmTagTypeShift uint32 = 28
+
+const (
+	kmTypeInvalid  uint32 = (kmTagTypeInvalid << kmTagTypeShift)
+	kmTypeEnum     uint32 = (kmTagTypeEnum << kmTagTypeShift)
+	kmTypeEnumRep  uint32 = (kmTagTypeEnumRep << kmTagTypeShift)
+	kmTypeUint     uint32 = (kmTagTypeUint << kmTagTypeShift)
+	kmTypeUintRep  uint32 = (kmTagTypeUintRep << kmTagTypeShift)
+	kmTypeUlong    uint32 = (kmTagTypeUlong << kmTagTypeShift)
+	kmTypeDate     uint32 = (kmTagTypeDate << kmTagTypeShift)
+	kmTypeBool     uint32 = (kmTagTypeBool << kmTagTypeShift)
+	kmTypeBignum   uint32 = (kmTagTypeBignum << kmTagTypeShift)
+	kmTypeBytes    uint32 = (kmTagTypeBytes << kmTagTypeShift)
+	kmTypeUlongRep uint32 = (kmTagTypeUlongRep << kmTagTypeShift)
+)
+
+const (
+	kmTagInvalid uint32 = 0
+
+	kmTagPurpose                     uint32 = (kmTypeEnumRep | 1)
+	kmTagAlgorithm                   uint32 = (kmTypeEnum | 2)
+	kmTagKeySize                     uint32 = (kmTypeUint | 3)
+	kmTagBlockMode                   uint32 = (kmTypeEnumRep | 4)
+	kmTagDigest                      uint32 = (kmTypeEnumRep | 5)
+	kmTagPadding                     uint32 = (kmTypeEnumRep | 6)
+	kmTagCallerNonce                 uint32 = (kmTypeBool | 7)
+	kmTagMinMacLength                uint32 = (kmTypeUint | 8)
+	kmTagEcCurve                     uint32 = (kmTypeEnum | 10)
+	kmTagRsaPublicExponent           uint32 = (kmTypeUlong | 200)
+	kmTagIncludeUniqueID             uint32 = (kmTypeBool | 202)
+	kmTagRsaOaepMgfDigest            uint32 = (kmTypeEnumRep | 203)
+	kmTagBootloaderOnly              uint32 = (kmTypeBool | 302)
+	kmTagRollbackResistance          uint32 = (kmTypeBool | 303)
+	kmTagHardwareType                uint32 = (kmTypeEnum | 304)
+	kmTagEarlyBootOnly               uint32 = (kmTypeBool | 305)
+	kmTagMaxUsesPerBoot              uint32 = (kmTypeUint | 404)
+	kmTagUsageCountLimit             uint32 = (kmTypeUint | 405)
+	kmTagUserSecureID                uint32 = (kmTypeUlongRep | 502)
+	kmTagNoAuthRequired              uint32 = (kmTypeBool | 503)
+	kmTagUserAuthType                uint32 = (kmTypeEnum | 504)
+	kmTagAuthTimeout                 uint32 = (kmTypeUint | 505)
+	kmTagTrustedUserPresenceRequired uint32 = (kmTypeBool | 507)
+	kmTagTrustedConfirmationRequired uint32 = (kmTypeBool | 508)
+	kmTagUnlockedDeviceRequired      uint32 = (kmTypeBool | 509)
+	kmTagOrigin                      uint32 = (kmTypeEnum | 702)
+	kmTagOsVersion                   uint32 = (kmTypeUint | 705)
+	kmTagOsPatchlevel                uint32 = (kmTypeUint | 706)
+	kmTagUniqueID                    uint32 = (kmTypeBytes | 707)
+	kmTagVendorPatchlevel            uint32 = (kmTypeUint | 718)
+	kmTagBootPatchlevel              uint32 = (kmTypeUint | 719)
+	kmTagDeviceUniqueAttestation     uint32 = (kmTypeBool | 720)
+	kmTagIDentityCredentialKey       uint32 = (kmTypeBool | 721)
+	kmTagStorageKey                  uint32 = (kmTypeBool | 722)
+	kmTagMacLength                   uint32 = (kmTypeUint | 1003)
+	kmTagMaxBootLevel                uint32 = (kmTypeUint | 1010)
+
+	kmTagActiveDatetime            uint32 = (kmTypeDate | 400)
+	kmTagOriginationExpireDatetime uint32 = (kmTypeDate | 401)
+	kmTagUsageExpireDatetime       uint32 = (kmTypeDate | 402)
+	kmTagUserID                    uint32 = (kmTypeUint | 501)
+	kmTagAllowWhileOnBody          uint32 = (kmTypeBool | 506)
+	kmTagCreationDatetime          uint32 = (kmTypeDate | 701)
+	kmTagAttestationApplicationID  uint32 = (kmTypeBytes | 709)
+
+	kmTagMinSecondsBetweenOps      uint32 = (kmTypeUint | 403)
+	kmTagApplicationID             uint32 = (kmTypeBytes | 601)
+	kmTagApplicationData           uint32 = (kmTypeBytes | 700)
+	kmTagRootOfTrust               uint32 = (kmTypeBytes | 704)
+	kmTagAttestationChallenge      uint32 = (kmTypeBytes | 708)
+	kmTagAttestationIDBrand        uint32 = (kmTypeBytes | 710)
+	kmTagAttestationIDDevice       uint32 = (kmTypeBytes | 711)
+	kmTagAttestationIDProduct      uint32 = (kmTypeBytes | 712)
+	kmTagAttestationIDSerial       uint32 = (kmTypeBytes | 713)
+	kmTagAttestationIDImei         uint32 = (kmTypeBytes | 714)
+	kmTagAttestationIDMeid         uint32 = (kmTypeBytes | 715)
+	kmTagAttestationIDManufacturer uint32 = (kmTypeBytes | 716)
+	kmTagAttestationIDModel        uint32 = (kmTypeBytes | 717)
+	kmTagAttestationIDSecondImei   uint32 = (kmTypeBytes | 723)
+	kmTagModuleHash                uint32 = (kmTypeBytes | 724)
+	kmTagAssociatedData            uint32 = (kmTypeBytes | 1000)
+	kmTagNonce                     uint32 = (kmTypeBytes | 1001)
+	kmTagResetSinceIDRotation      uint32 = (kmTypeBool | 1004)
+	kmTagConfirmationToken         uint32 = (kmTypeBytes | 1005)
+	kmTagCertificateSerial         uint32 = (kmTypeBignum | 1006)
+	kmTagCertificateSubject        uint32 = (kmTypeBytes | 1007)
+	kmTagCertificateNotBefore      uint32 = (kmTypeDate | 1008)
+	kmTagCertificateNotAfter       uint32 = (kmTypeDate | 1009)
+)
+
+const (
+	kmAlgNone uint32 = 0
+	kmAlgRsa  uint32 = 1
+	kmAlgEc   uint32 = 3
+	kmAlgAes  uint32 = 32
+	kmAlgTdes uint32 = 33
+	kmAlgHmac uint32 = 128
+)
+
+const (
+	kmPurposeEncrypt   uint32 = 0
+	kmPurposeDecrypt   uint32 = 1
+	kmPurposeSign      uint32 = 2
+	kmPurposeVerify    uint32 = 3
+	kmPurposeWrapKey   uint32 = 5
+	kmPurposeAgreeKey  uint32 = 6
+	kmPurposeAttestKey uint32 = 7
+)
+
+const (
+	kmEcCurveP224 uint32 = 0
+	kmEcCurveP256 uint32 = 1
+	kmEcCurveP384 uint32 = 2
+	kmEcCurveP521 uint32 = 3
+)
+
+const (
+	kmSecuritySoftware           uint32 = 0
+	kmSecurityTrustedEnvironment uint32 = 1
+	kmSecurityStrongbox          uint32 = 2
+	kmSecurityKeystore           uint32 = 100
+)
+
+const (
+	kmOriginGenerated        uint32 = 0
+	kmOriginImported         uint32 = 1
+	kmOriginUnknown          uint32 = 2
+	kmOriginSecurelyImported uint32 = 3
+)
+
+const (
+	kmDigestNone    uint32 = 0
+	kmDigestMd5     uint32 = 1
+	kmDigestSha1    uint32 = 2
+	kmDigestSha2224 uint32 = 3
+	kmDigestSha2256 uint32 = 4
+	kmDigestSha2384 uint32 = 5
+	kmDigestSha2512 uint32 = 6
+)
 
 // StrongboxCommand sends a command and returns the response.
-func StrongboxCommand(ctx context.Context, tpm *TpmHelper, command StrongboxCmd) (status StrongboxStatus, response []byte, err error) {
+func StrongboxCommand(ctx context.Context, tpm *TpmHelper, command StrongboxCmd, params []byte) (sbErr StrongboxError, response []byte, err error) {
 	var buf []byte
-	buf = binary.BigEndian.AppendUint16(buf, 0x8001) // TPM_ST_NO_SESSIONS
-	buf = binary.BigEndian.AppendUint32(buf, 10)     // size
+	buf = binary.BigEndian.AppendUint16(buf, 0x8001)                 // TPM_ST_NO_SESSIONS
+	buf = binary.BigEndian.AppendUint32(buf, uint32(12+len(params))) // size
 	buf = binary.BigEndian.AppendUint32(buf, strongboxTpmVendorCommand)
-	buf = binary.LittleEndian.AppendUint16(buf, uint16(command))
+	buf = binary.BigEndian.AppendUint16(buf, uint16(command))
+	buf = append(buf, params...)
 	response, err = tpm.Send(buf)
 	if err != nil {
-		return status, response, errors.Wrap(err, "failed to send")
+		return sbErr, response, errors.Wrap(err, "failed to send")
 	}
-	if len(response) < 10 {
-		return status, response, errors.Errorf("Response too small: %v", response)
+	if len(response) < 12 {
+		return sbErr, response, errors.Errorf("Response too small: %v", response)
 	}
-	status = StrongboxStatus(binary.BigEndian.Uint32(response[6:10]))
-	return status, response[10:], nil
+	rc := binary.BigEndian.Uint32(response[6:10])
+	if rc == 0 {
+		sbErr = StrongboxError(0)
+	} else {
+		if rc < strongboxTpmVendorResponseCode {
+			return sbErr, response, errors.Errorf("Wrong response code: 0x%x", rc)
+		}
+		sbErr = -StrongboxError(rc - strongboxTpmVendorResponseCode)
+	}
+	testing.ContextLogf(ctx, "command 0x%x -> %d", command, sbErr)
+	testing.ContextLogf(ctx, "  command %x", buf)
+	testing.ContextLogf(ctx, "  response %x", response)
+	return sbErr, response[12:], nil
+}
+
+func align(len uint32) uint32 {
+	if len%4 == 0 {
+		return 0
+	}
+	return 4 - (len % 4)
+}
+
+// StrongboxHardwareInfo sends DeviceGetHardwareInfo.
+func StrongboxHardwareInfo(ctx context.Context, tpm *TpmHelper) (err error) {
+	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceGetHardwareInfo, nil)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	version := binary.BigEndian.Uint32(response[0:4])
+	securityLevel := binary.BigEndian.Uint32(response[4:8])
+	len1 := binary.BigEndian.Uint32(response[8:12])
+	name := response[12 : 12+len1]
+	data2 := response[12+len1+align(len1):]
+	len2 := binary.BigEndian.Uint32(data2[0:4])
+	author := data2[4 : 4+len2]
+	data3 := data2[4+len2+align(len2):]
+	timestampToken := binary.BigEndian.Uint32(data3[0:4])
+	leftover := len(data3) - 4
+	if leftover != 0 {
+		err = errors.Errorf("Leftover data: %d", leftover)
+		return
+	}
+
+	testing.ContextLogf(ctx, "version %d", version)
+	testing.ContextLogf(ctx, "securityLevel %d", securityLevel)
+	testing.ContextLogf(ctx, "name %s", name)
+	testing.ContextLogf(ctx, "author %s", author)
+	testing.ContextLogf(ctx, "timestampToken %d", timestampToken)
+	return
+}
+
+// StrongboxSetHalBootInfo sends SetHalBootInfo.
+func StrongboxSetHalBootInfo(ctx context.Context, tpm *TpmHelper, osVersion, osPatchlevel, vendorPatchlevel, bootPatchlevel uint32) (err error) {
+	var buf []byte
+	buf = binary.LittleEndian.AppendUint32(buf, osVersion)
+	buf = binary.LittleEndian.AppendUint32(buf, osPatchlevel)
+	buf = binary.LittleEndian.AppendUint32(buf, vendorPatchlevel)
+	buf = binary.LittleEndian.AppendUint32(buf, bootPatchlevel)
+	sbErr, response, err := StrongboxCommand(ctx, tpm, SetHalBootInfo, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	leftover := len(response)
+	if leftover != 0 {
+		err = errors.Errorf("Leftover data: %d", leftover)
+		return
+	}
+	return
+}
+
+// StrongboxGetDiceChain sends GetDiceChain.
+func StrongboxGetDiceChain(ctx context.Context, tpm *TpmHelper) (diceChain []byte, err error) {
+	sbErr, response, err := StrongboxCommand(ctx, tpm, GetDiceChain, nil)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	diceChain = response
+	return
+}
+
+// StrongboxRPCGenerateKey sends RPCGenerateEcdsaP256KeyPair.
+func StrongboxRPCGenerateKey(ctx context.Context, tpm *TpmHelper) (blob, macedKey []byte, err error) {
+	sbErr, response, err := StrongboxCommand(ctx, tpm, RPCGenerateEcdsaP256KeyPair, nil)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	len1 := binary.LittleEndian.Uint32(response[0:4]) * 4
+	blob = response[:4+len1]
+	data2 := response[4+len1:]
+	len2 := binary.LittleEndian.Uint32(data2[0:4])
+	macedKey = data2[4 : 4+len2]
+	leftover := len(data2) - int(4+len2)
+	if leftover != int(align(len2)) {
+		err = errors.Errorf("Leftover data: %d", leftover)
+		return
+	}
+
+	testing.ContextLogf(ctx, "blob len=%d %x", len1, blob)
+	testing.ContextLogf(ctx, "macedKey len=%d %x", len2, macedKey)
+	return
+}
+
+func appendAlignedBytes(buf, bytes []byte) []byte {
+	len := uint32(len(bytes))
+	buf = binary.LittleEndian.AppendUint32(buf, len)
+	buf = append(buf, bytes...)
+	return append(buf, make([]byte, align(len))...)
+}
+
+// StrongboxRPCGenerateCertificate sends RPCGenerateCertificateV2Request.
+func StrongboxRPCGenerateCertificate(ctx context.Context, tpm *TpmHelper, macedKey, challenge, deviceInfo []byte) (csr []byte, err error) {
+	var buf []byte
+	buf = binary.LittleEndian.AppendUint32(buf, 1)
+	buf = appendAlignedBytes(buf, macedKey)
+	buf = appendAlignedBytes(buf, challenge)
+	buf = appendAlignedBytes(buf, deviceInfo)
+	sbErr, response, err := StrongboxCommand(ctx, tpm, RPCGenerateCertificateV2Request, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	csr = response
+	return
+}
+
+func appendBytesTag(tags []byte, tag uint32, bytes []byte) []byte {
+	// Encode length into tag and pad value to 32-bit
+	len := uint32(len(bytes))
+	tags = binary.LittleEndian.AppendUint32(tags, tag|len<<16)
+	tags = append(tags, bytes...)
+	return append(tags, make([]byte, align(len))...)
+}
+
+// StrongboxGenerateKey sends DeviceGenerateKey.
+func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte) (blob, cert []byte, err error) {
+	var tags []byte
+	attestKey2 := attestKey
+	if attestKey == nil {
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagAlgorithm)
+		tags = binary.LittleEndian.AppendUint32(tags, kmAlgEc)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagKeySize)
+		tags = binary.LittleEndian.AppendUint32(tags, 256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagPurpose)
+		tags = binary.LittleEndian.AppendUint32(tags, kmPurposeSign)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
+		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagAllowWhileOnBody)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagUserID)
+		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
+		tags = appendBytesTag(tags, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
+		tags = appendBytesTag(tags, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
+		attestKey2 = make([]byte, 12)
+	} else {
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagAlgorithm)
+		tags = binary.LittleEndian.AppendUint32(tags, kmAlgEc)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagKeySize)
+		tags = binary.LittleEndian.AppendUint32(tags, 256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagPurpose)
+		tags = binary.LittleEndian.AppendUint32(tags, kmPurposeSign)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
+		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagAllowWhileOnBody)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagUserID)
+		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
+		tags = appendBytesTag(tags, kmTagCertificateSubject, []byte("gECC"))
+		tags = appendBytesTag(tags, kmTagCertificateSerial, []byte("\x01\x23\x45\x67\x89\xab\xcd\xef01234567"))
+		tags = appendBytesTag(tags, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
+		tags = appendBytesTag(tags, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagNoAuthRequired)
+		tags = appendBytesTag(tags, kmTagAttestationChallenge, []byte("2025-11-05T19:57:14.294Z"))
+		tags = appendBytesTag(tags, kmTagAttestationApplicationID, []byte("com.google.android.gms"))
+		tags = appendBytesTag(tags, kmTagAttestationIDBrand, []byte("google"))
+		tags = appendBytesTag(tags, kmTagAttestationIDDevice, []byte("brya"))
+		tags = appendBytesTag(tags, kmTagAttestationIDProduct, []byte("brya"))
+		tags = appendBytesTag(tags, kmTagAttestationIDSerial, []byte("5CD5231RQK"))
+		tags = appendBytesTag(tags, kmTagAttestationIDManufacturer, []byte("Google"))
+		tags = appendBytesTag(tags, kmTagAttestationIDModel, []byte("Brya"))
+	}
+	var buf []byte
+	buf = binary.LittleEndian.AppendUint32(buf, uint32(len(tags)/4))
+	buf = append(buf, tags...)
+	buf = append(buf, attestKey2...)
+	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceGenerateKey, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	len1 := binary.LittleEndian.Uint32(response[0:4])*4 + 4
+	blob = response[:len1]
+	data2 := response[len1:]
+	len2 := binary.LittleEndian.Uint32(data2[0:4])
+	cert = data2[4 : 4+len2]
+	leftover := len(data2) - int(4+len2)
+	if leftover != int(align(len2)) {
+		err = errors.Errorf("Leftover data: %d", leftover)
+		return
+	}
+	testing.ContextLogf(ctx, "blob len=%d %x", len1, blob)
+	testing.ContextLogf(ctx, "cert len=%d %x", len2, cert)
+
+	// blob contents should be:
+	// word 0: total length of key blob in words
+	// word 1: KM_SECURITY_STRONGBOX
+	// word 2: length of hw tags in words
+	// .. hw tags
+	// word 3+n: KM_SECURITY_KEYSTORE
+	// word 4+n: length of sw tags in words
+	// .. sw tags
+
+	hwStart := binary.LittleEndian.Uint32(blob[4:8])
+	hwLen := binary.LittleEndian.Uint32(blob[8:12])
+	swTags := blob[12+hwLen*4:]
+	swStart := binary.LittleEndian.Uint32(swTags[0:4])
+	swLen := binary.LittleEndian.Uint32(swTags[4:8])
+	wantLen := 12 + hwLen*4 + 8 + swLen*4
+	if uint32(len(blob)) < wantLen {
+		err = errors.Errorf("expected blob len: %d", wantLen)
+		return
+	}
+	if hwStart != kmSecurityStrongbox {
+		err = errors.Errorf("Wrong tag: got 0x%04x want 0x%04x", hwStart, kmSecurityStrongbox)
+		return
+	}
+	if swStart != kmSecurityKeystore {
+		err = errors.Errorf("Wrong tag: got 0x%04x want 0x%04x", swStart, kmSecurityKeystore)
+		return
+	}
+	hwTags := blob[12 : 12+hwLen*4]
+	testing.ContextLogf(ctx, "HW tags: len=%d %x", hwLen, hwTags)
+	swTags2 := swTags[8 : 8+swLen*4]
+	testing.ContextLogf(ctx, "SW tags: len=%d %x", swLen, swTags2)
+	blob2 := swTags[8+swLen*4:]
+	len3 := binary.LittleEndian.Uint32(blob2[0:4]) + 4
+	testing.ContextLogf(ctx, "blob: len=%d %x", len3, blob2)
+	if uint32(len(blob2)) != len3 {
+		err = errors.Errorf("Wrong inner blob len: got %d want %d", len(blob2), len3)
+		return
+	}
+
+	if attestKey != nil {
+		if hwLen != 19 {
+			err = errors.Errorf("Wrong HW len: %d", hwLen)
+			return
+		}
+		var want []byte
+		want = binary.LittleEndian.AppendUint32(want, kmTagOrigin)
+		want = binary.LittleEndian.AppendUint32(want, kmOriginGenerated)
+		want = binary.LittleEndian.AppendUint32(want, kmTagOsVersion)
+		want = binary.LittleEndian.AppendUint32(want, 0x027100)
+		want = binary.LittleEndian.AppendUint32(want, kmTagOsPatchlevel)
+		want = binary.LittleEndian.AppendUint32(want, 0x031710)
+		want = binary.LittleEndian.AppendUint32(want, kmTagVendorPatchlevel)
+		want = binary.LittleEndian.AppendUint32(want, 0x013502450)
+		want = binary.LittleEndian.AppendUint32(want, kmTagBootPatchlevel)
+		want = binary.LittleEndian.AppendUint32(want, 0x01350245)
+		want = binary.LittleEndian.AppendUint32(want, kmTagAlgorithm)
+		want = binary.LittleEndian.AppendUint32(want, kmAlgEc)
+		want = binary.LittleEndian.AppendUint32(want, kmTagKeySize)
+		want = binary.LittleEndian.AppendUint32(want, 256)
+		want = binary.LittleEndian.AppendUint32(want, kmTagPurpose)
+		want = binary.LittleEndian.AppendUint32(want, kmPurposeSign)
+		want = binary.LittleEndian.AppendUint32(want, kmTagDigest)
+		want = binary.LittleEndian.AppendUint32(want, kmDigestSha2256)
+		want = binary.LittleEndian.AppendUint32(want, kmTagNoAuthRequired)
+		if !bytes.Equal(hwTags, want) {
+			err = errors.Errorf("Wrong HW tags: want %x", want)
+			return
+		}
+		if swLen != 3 {
+			err = errors.Errorf("Wrong SW len: %d", swLen)
+			return
+		}
+		want = binary.LittleEndian.AppendUint32(nil, kmTagAllowWhileOnBody)
+		want = binary.LittleEndian.AppendUint32(want, kmTagUserID)
+		want = binary.LittleEndian.AppendUint32(want, 0xf00)
+		if !bytes.Equal(swTags2, want) {
+			err = errors.Errorf("Wrong SW tags: want %x", want)
+			return
+		}
+	}
+	return
+}
+
+// StrongboxBegin sends DeviceBegin.
+func StrongboxBegin(ctx context.Context, tpm *TpmHelper, blob []byte) (operationID []byte, err error) {
+	var buf []byte
+	buf = binary.LittleEndian.AppendUint32(buf, kmPurposeSign)
+	buf = append(buf, blob...)
+	buf = binary.LittleEndian.AppendUint32(buf, 4)
+	buf = appendBytesTag(buf, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
+	buf = appendBytesTag(buf, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
+	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceBegin, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	if len(response) != 16 {
+		err = errors.Errorf("Wrong response length: %v", response)
+		return
+	}
+	operationID = response[12:16]
+	return
+}
+
+// StrongboxUpdate sends OperationUpdate.
+func StrongboxUpdate(ctx context.Context, tpm *TpmHelper, operationID, input []byte) (err error) {
+	var buf []byte
+	buf = append(buf, operationID...)
+	buf = binary.LittleEndian.AppendUint32(buf, uint32(len(input)))
+	buf = append(buf, input...)
+	sbErr, response, err := StrongboxCommand(ctx, tpm, OperationUpdate, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	if len(response) != 0 {
+		err = errors.Errorf("Wrong response length: %v", response)
+		return
+	}
+	return
+}
+
+// StrongboxFinish sends OperationFinish.
+func StrongboxFinish(ctx context.Context, tpm *TpmHelper, operationID, input []byte) (signature []byte, err error) {
+	var buf []byte
+	buf = append(buf, operationID...)
+	buf = binary.LittleEndian.AppendUint32(buf, uint32(len(input)))
+	buf = append(buf, input...)
+	sbErr, response, err := StrongboxCommand(ctx, tpm, OperationFinish, buf)
+	if err != nil {
+		return
+	}
+	if sbErr != StrongboxSuccess {
+		err = errors.Errorf("Command failed: %v", sbErr)
+		return
+	}
+	if len(response) != 64 {
+		err = errors.Errorf("Wrong response length: %v", response)
+		return
+	}
+	signature = response
+	testing.ContextLogf(ctx, "signature %x", signature)
+	return
 }
