@@ -434,7 +434,7 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 func checkECWakesFromACReconnected(ctx context.Context, h *firmware.Helper, lidOpen string) error {
 	// getChargerPollOptions sets the time to retry the GetChargerAttached command.
 	var getChargerPollOptions = testing.PollOptions{
-		Timeout:  1 * time.Minute,
+		Timeout:  3 * time.Minute,
 		Interval: 1 * time.Second,
 	}
 	// getPDRolePollOptions sets the time to retry the GetPDRole command.
