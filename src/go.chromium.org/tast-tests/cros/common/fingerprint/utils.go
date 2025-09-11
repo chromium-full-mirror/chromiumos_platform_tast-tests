@@ -13,7 +13,7 @@ import (
 // FpInfo is a struct that contains the information returned by running fpinfo.
 type FpInfo struct {
 	FingerprintSensor map[string]string
-	Image             map[string]string
+	Images            map[string]map[string]string
 }
 
 // ParseColonDelimitedOutput parses colon delimited information to a map.
@@ -55,17 +55,23 @@ func ParseFpInfo(input string) (*FpInfo, error) {
 		return nil, errors.New("input does not have Fingerprint sensor field")
 	}
 	ret := &FpInfo{}
+	ret.Images = make(map[string]map[string]string)
+
 	val, err := ParseSpaceDelimitedOutput(outparse["Fingerprint sensor"])
 	if err != nil {
 		return nil, err
 	}
 	ret.FingerprintSensor = val
 
-	val, err = ParseSpaceDelimitedOutput(outparse["Image"])
-	if err != nil {
-		return nil, err
+	for key, value := range outparse {
+		if strings.HasPrefix(key, "Image") {
+			val, err = ParseSpaceDelimitedOutput(value)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse image data for %q", key)
+			}
+			ret.Images[key] = val
+		}
 	}
-	ret.Image = val
 
 	return ret, nil
 }

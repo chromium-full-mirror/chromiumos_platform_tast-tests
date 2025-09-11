@@ -117,9 +117,38 @@ func TestParseFpInfo(t *testing.T) {
 				"model":   "1401",
 				"version": "1",
 			},
-			Image: map[string]string{
-				"size": "56x192",
-				"bpp":  "8",
+			Images: map[string]map[string]string{
+				"Image": {
+					"size": "56x192",
+					"bpp":  "8",
+				},
+			},
+		}
+		result, err := ParseFpInfo(input)
+		assert.NoError(t, err)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("Multiple image entries", func(t *testing.T) {
+		input := `Fingerprint sensor: vendor 20435046 product 9 model 1401 version 1
+		Image [0]: size 56x192 bpp 8
+		Image [1]: size 100x200 bpp 16`
+		expected := &FpInfo{
+			FingerprintSensor: map[string]string{
+				"vendor":  "20435046",
+				"product": "9",
+				"model":   "1401",
+				"version": "1",
+			},
+			Images: map[string]map[string]string{
+				"Image [0]": {
+					"size": "56x192",
+					"bpp":  "8",
+				},
+				"Image [1]": {
+					"size": "100x200",
+					"bpp":  "16",
+				},
 			},
 		}
 		result, err := ParseFpInfo(input)
@@ -146,5 +175,34 @@ Image: width:1080 height:1920`
 Image: width:1080:invalid`
 		_, err := ParseFpInfo(input)
 		assert.Error(t, err) // Assuming ParseSpaceDelimitedOutput returns an error for invalid format
+	})
+
+	t.Run("Incomplete Image field data (key only without value)", func(t *testing.T) {
+		input := `Fingerprint sensor: vendor 20435046 product 9 model 1401 version 1
+		Image: size`
+		_, err := ParseFpInfo(input)
+		assert.Error(t, err)
+
+		expectedErrPrefix := `failed to parse image data for "Image": input has odd number of fields`
+		assert.Contains(t, err.Error(), expectedErrPrefix)
+	})
+
+	t.Run("Input with 'Img' prefix is skipped", func(t *testing.T) {
+		input := `Fingerprint sensor: vendor 20435046 product 9 model 1401 version 1
+		Img [0]: size 56x192 bpp 8
+		Img [1]: size 100x200 bpp 16`
+		expected := &FpInfo{
+			FingerprintSensor: map[string]string{
+				"vendor":  "20435046",
+				"product": "9",
+				"model":   "1401",
+				"version": "1",
+			},
+			// The Images map should be empty because 'Img' does not match 'Image'.
+			Images: make(map[string]map[string]string),
+		}
+		result, err := ParseFpInfo(input)
+		assert.NoError(t, err)
+		assert.Equal(t, expected, result)
 	})
 }
