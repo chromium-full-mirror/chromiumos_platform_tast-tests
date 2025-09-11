@@ -31,11 +31,10 @@ func init() {
 		Desc: "Verifies that consumer auto update feature work as intended",
 		Contacts: []string{
 			"chromeos-core-services@google.com",
-			"yuanpengni@chromium.org",
 			"kimjae@chromium.org",
 		},
 		BugComponent: "b:908319",
-		Attr:         []string{
+		Attr: []string{
 			"group:autoupdate",
 			"group:release-health",
 			"release-health_autoupdate",

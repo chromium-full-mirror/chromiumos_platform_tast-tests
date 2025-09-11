@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DLCServiceUserTied,
 		Desc:         "Tests that user-tied DLC can be installs/uninstalls when user logged-in, and unloads after user logged out",
-		Contacts:     []string{"chromeos-core-services@google.com", "yuanpengni@chromium.org"},
+		Contacts:     []string{"chromeos-core-services@google.com"},
 		BugComponent: "b:908242",
 		SoftwareDeps: []string{"dlc", "chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
