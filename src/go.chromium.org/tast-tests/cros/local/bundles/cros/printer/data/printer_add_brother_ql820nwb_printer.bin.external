@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_brother_ql820nwb_printer_20250828.bin",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_brother_ql820nwb_printer_20250911.bin",
   "size": 92614,
-  "sha256sum": "2fbd4871c683c9d54191e14c84eefaa468c9fb7d46c5072bb33271fc781248ba"
+  "sha256sum": "5418ad3785eb5a7c6ae569e6602259a8aec0d5f89bccb65ed37eac90914a60e9"
 }
