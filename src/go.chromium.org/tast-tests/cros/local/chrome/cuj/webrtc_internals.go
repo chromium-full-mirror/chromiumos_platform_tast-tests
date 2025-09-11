@@ -80,8 +80,8 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		ensureCompressResultUnchecked := uiauto.NamedCombine("ensure 'Compress Result' unchecked",
 			ui.WaitUntilExists(compressResultCheckBox),
 			uiauto.IfSuccessThen(ui.Exists(compressResultCheckBox.Attribute("checked", "true")),
-				ui.DoDefaultUntil(compressResultCheckBox,
-					ui.WithTimeout(3*time.Second).WaitUntilCheckedState(compressResultCheckBox, false),
+				ui.WithTimeout(time.Minute).DoDefaultUntil(compressResultCheckBox,
+					ui.WaitUntilCheckedState(compressResultCheckBox, false),
 				)),
 		)
 		waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
