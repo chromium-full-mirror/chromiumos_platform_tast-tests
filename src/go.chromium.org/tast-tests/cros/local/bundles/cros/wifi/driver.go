@@ -146,6 +146,9 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Realtek8852BVTPCIE: {
 		defaultRevision: "wireless/realtek/rtw89/rtw89_8852bte.ko",
 	},
+	wlan.MediaTekMT7920PCIE: {
+		defaultRevision: "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+	},
 	wlan.MediaTekMT7921PCIE: {
 		defaultRevision: "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
