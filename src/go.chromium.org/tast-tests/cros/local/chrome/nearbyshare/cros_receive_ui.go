@@ -29,7 +29,7 @@ func StartHighVisibilityMode(ctx context.Context, tconn *chrome.TestConn, device
 	}
 	defer quicksettings.Hide(ctx, tconn)
 
-	if err := quicksettings.SetNearbyShare(ctx, tconn, true); err != nil {
+	if err := quicksettings.SetQuickShareHighVisibility(ctx, tconn, true); err != nil {
 		return errors.Wrap(err, "failed to enter Nearby Share high-visibility mode")
 	}
 

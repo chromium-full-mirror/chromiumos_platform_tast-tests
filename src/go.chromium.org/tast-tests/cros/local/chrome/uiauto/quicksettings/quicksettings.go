@@ -291,6 +291,36 @@ func SetNearbyShare(ctx context.Context, tconn *chrome.TestConn, enable bool) er
 	return nil
 }
 
+// SetQuickShareHighVisibility enables or disables the Quick Share high visibility
+// feature using the high visibility toggle in the feature tile detailed view.
+func SetQuickShareHighVisibility(ctx context.Context, tconn *chrome.TestConn, isHighVisibility bool) error {
+	// Open quick settings.
+	// This avoids opening and closing quick settings twice.
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure visible")
+	}
+	defer cleanup(ctx)
+
+	// Click Quick Share feature pod tile.
+	ui := uiauto.New(tconn)
+	if err := ui.DoDefault(FeatureTileNearbyShare)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Quick Share tile")
+	}
+
+	// Get high visibility row text.
+	highVizRow := nodewith.Name("Visible to everyone").ClassName("HoverHighlightView")
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(highVizRow)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find Visible to everyone row")
+	}
+
+	// Get the high visibility toggle.
+	visibilityToggle := nodewith.Role(role.Switch).ClassName("Switch").Ancestor(highVizRow)
+
+	// Toggle high visibility state if not already in the desired state.
+	return ToggleOption(ctx, tconn, visibilityToggle, isHighVisibility)
+}
+
 // IsToggleOptionEnabled checks if the specified toggle option is on or off.
 func IsToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn, toggleButton *nodewith.Finder) (bool, error) {
 	cleanup, err := ensureVisible(ctx, tconn)
