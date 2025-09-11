@@ -45,7 +45,7 @@ require (
 	go.chromium.org/chromiumos/vm_tools v0.0.9999-20220309165113-000000000000
 	go.chromium.org/chromiumos/xdr/secagentd v0.0.9999-20220309165113-000000000000
 	go.chromium.org/tast v0.0.9999-20220309165113-000000000000
-	golang.org/x/crypto v0.9.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/exp v0.0.0-20220713165113-732eee02a75a
 	golang.org/x/mod v0.5.1
 	golang.org/x/net v0.0.0-20220309165113-4f30a5c0130f
