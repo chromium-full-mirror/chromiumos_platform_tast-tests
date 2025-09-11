@@ -87,8 +87,8 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
 
-	// Ensure camera service is running to avoid bad state from previous tests.
-	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+	// Restart camera service to recover from potential bad state left by previous tests.
+	if err := upstart.RestartJob(ctx, "cros-camera"); err != nil {
 		s.Fatal("Failed to start cros-camera: ", err)
 	}
 
