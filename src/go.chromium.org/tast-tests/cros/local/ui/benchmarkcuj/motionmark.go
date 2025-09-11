@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -25,7 +25,7 @@ const (
 	TotalBenchmarkTimeout = benchmarkTimeout * benchmarkMaxRetries
 
 	// benchmarkTimeout is the maximum duration for a single benchmark run.
-	benchmarkTimeout = 6 * time.Minute
+	benchmarkTimeout = 8 * time.Minute
 	// benchmarkMaxRetries is the maximum number of retries for the benchmark.
 	benchmarkMaxRetries = 3
 	motionMarkPrefix    = "MotionMark."
@@ -156,14 +156,19 @@ func detectCrashAndReload(ac *uiauto.Context) uiauto.Action {
 // reloadPageAndWaitBenchmarkButton reloads the page by clicking the reload
 // button and waits for the Benchmark button.
 func reloadPageAndWaitBenchmarkButton(ac *uiauto.Context) uiauto.Action {
-	reloadButton := nodewith.Name("Reload").Role(role.Button).First()
-	return uiauto.NamedCombine("reload page",
-		// If there is no reload button, move mouse to the top to show it.
-		uiauto.IfFailThen(ac.Exists(reloadButton),
-			ac.RetryUntil(ac.MouseClickAtLocation(0, coords.Point{X: 0, Y: 0}),
-				ac.WithTimeout(3*time.Second).WaitUntilExists(reloadButton))),
-		ac.DoDefault(reloadButton),
-		ac.WaitUntilExists(runBenchmarkButton),
-		ac.MouseMoveTo(runBenchmarkButton, 500*time.Millisecond),
-	)
+	return func(ctx context.Context) error {
+		// Open a keyboard device.
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to open keyboard device")
+		}
+		defer kb.Close(ctx)
+
+		return uiauto.Combine("reload page and wait for benchmark button",
+			ac.WithTimeout(time.Minute).RetryUntil(
+				uiauto.NamedAction("reload page", kb.TypeKeyAction(input.KEY_REFRESH)),
+				ac.WaitUntilExists(runBenchmarkButton),
+			),
+		)(ctx)
+	}
 }
