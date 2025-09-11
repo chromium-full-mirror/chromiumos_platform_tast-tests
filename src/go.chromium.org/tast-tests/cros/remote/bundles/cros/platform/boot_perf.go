@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -473,10 +474,36 @@ func collectExtraDebugInfo(ctx context.Context, s *testing.State) (bool, error) 
 	return true, nil
 }
 
+// isAlEligible returns a boolean describing if the board is AL eligible
+func isAlEligible(board string) bool {
+	alEligibleBoards := []string{
+		"aviko",
+		"brask",
+		"brox",
+		"brya",
+		"corsola",
+		"geralt",
+		"nirul",
+		"nissa",
+		"rauru",
+		"rex",
+		"skolas",
+		"skywalker",
+		"staryu",
+		"trulo",
+	}
+	return slices.Contains(alEligibleBoards, board)
+}
+
 func bootPerfMetricBounds(ctx context.Context, features *protocol.DUTFeatures, board string, dut *dut.DUT) ([]bounds.MetricBounds, error) {
 	maxSecondsPowerOnToKernel := 1.0
 	maxSecondsPowerOnToLogin := 8.0
 	ecRebootTime := 0.5
+
+	if !isAlEligible(board) {
+		// AL ineligible devices get +.2s
+		maxSecondsPowerOnToKernel += 0.2
+	}
 
 	if ok, _, _ := hwdep.IsIntelUarchEqualOrNewerThan(hwdep.IntelUarchs{IntelBigCoreOrderList: []hwdep.IntelBigCoreOrder{hwdep.MeteorLake}}).Satisfied(features.GetHardware()); ok {
 		// Intel MeteorLake and newer always have FW splash screen, and get +0.35s
