@@ -220,17 +220,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 			testing.ContextLog(ctx, "Failed to wait for the tab to quiesce")
 		}
 
+		ws, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "Google Docs")
+		if err != nil {
+			return errors.Wrap(err, "failed to find Docs window")
+		}
+
 		if err := conn.Eval(ctx, "window.location.href", &docsHref); err != nil {
 			return errors.Wrap(err, "failed to get Docs URL")
 		}
 		cleanUpDoc = true
-
-		ws, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool {
-			return strings.Contains(w.Title, "Google Docs")
-		})
-		if err != nil {
-			return errors.Wrap(err, "failed to find Docs window")
-		}
 
 		recorder.Annotate(ctx, "Maximize_window")
 		if err := ash.SetWindowStateAndWait(ctx, tconn, ws.ID, ash.WindowStateMaximized); err != nil {
