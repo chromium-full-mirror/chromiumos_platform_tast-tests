@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310", "gsc_h1_shield",
+			"gsc_dt_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.SystemDevboard,
@@ -33,8 +33,9 @@ func init() {
 			Name: "i2c",
 			Val:  ti50.TpmBusI2c,
 		}, {
-			Name: "spi",
-			Val:  ti50.TpmBusSpi,
+			Name:      "spi",
+			Val:       ti50.TpmBusSpi,
+			ExtraAttr: []string{"gsc_h1_shield"},
 		}},
 	})
 }
