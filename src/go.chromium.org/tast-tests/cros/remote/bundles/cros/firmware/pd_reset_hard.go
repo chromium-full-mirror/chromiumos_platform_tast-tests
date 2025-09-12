@@ -127,6 +127,15 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 		return
 	}
 
+	// Servo and DUT haven't implemented the oriented debug accessory mode.
+	// When servo is a sink in DTS mode, the DUT has no way to detect the CC
+	// polarity and all CC communication will fail. So skip the hard reset
+	// test with the DUT as source if we're in DTS mode.
+	if testParams.DTS == firmware.DTSModeOn {
+		s.Log("Skip testing with DUT as source in DTS mode")
+		return
+	}
+
 	// Attempt to do a power role swap by forcing the EC/DUT to be a source.
 	// The DUT may not support this, in which case the swap will fail and we
 	// will stop the test early.
