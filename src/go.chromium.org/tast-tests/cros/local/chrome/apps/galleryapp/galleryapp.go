@@ -8,7 +8,6 @@ package galleryapp
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -29,7 +28,7 @@ import (
 
 var (
 	// RootFinder is the main window of Gallery app.
-	RootFinder = nodewith.NameStartingWith(apps.Gallery.Name).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window).First()
+	RootFinder = nodewith.BrowserWindowFinder().NameStartingWith(apps.Gallery.Name).First()
 
 	// DialogFinder is the finder of popup dialog in Gallery app.
 	DialogFinder = nodewith.Role(role.AlertDialog).Ancestor(RootFinder)

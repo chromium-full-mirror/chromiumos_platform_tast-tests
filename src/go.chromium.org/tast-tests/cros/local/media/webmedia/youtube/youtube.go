@@ -6,7 +6,6 @@ package youtube
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -27,8 +26,7 @@ type YouTube struct {
 
 // New returns a new YouTube instance.
 func New(tconn *chrome.TestConn, url string) *YouTube {
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	windowRoot := nodewith.Ancestor(nodewith.Role(role.Window).NameContaining("YouTube").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")))
+	windowRoot := nodewith.Ancestor(nodewith.BrowserWindowFinder().NameContaining("YouTube"))
 	playerFinder := windowRoot.Name("YouTube Video Player").Role(role.GenericContainer)
 	return &YouTube{
 		Video: webmedia.New(

@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -28,7 +27,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -148,8 +146,7 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to find Chrome or Chromium app: ", err)
 		}
 
-		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-		browserRoot := nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+		browserRoot := nodewith.BrowserWindowFinder()
 
 		appList = []*wmputils.ResizeApp{
 			{

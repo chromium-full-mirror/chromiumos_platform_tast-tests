@@ -11,7 +11,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -51,8 +50,7 @@ var (
 	// chromeAppWindow is the Kiosk app window in Chrome app deployments.
 	chromeAppWindow = nodewith.ClassName("NativeAppWindowViews").Role("window")
 	// webAppWindow is the Kiosk app window in web deployments.
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	webAppWindow = nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role("window")
+	webAppWindow = nodewith.BrowserWindowFinder()
 )
 
 const (

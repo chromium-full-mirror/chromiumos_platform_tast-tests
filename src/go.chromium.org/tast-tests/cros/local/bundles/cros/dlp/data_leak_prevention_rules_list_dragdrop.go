@@ -162,8 +162,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 
 	s.Log("Draging and dropping content")
 	// Root node of the frame with the title "Editable Text Box".
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	browserRoot := nodewith.ClassNameRegex(regexp.MustCompile("BrowserWidget|BrowserFrame|(ExoShellSurface-.*)")).NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
+	browserRoot := nodewith.TopLevelWindowFinder().NameRegex(regexp.MustCompile(".*Editable Text Box.*"))
 	dstNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).Ancestor(browserRoot)
 	if err := dragdrop.DragDrop(ctx, tconn, content, dstNode); err != nil {
 		s.Error("Failed to drag drop content: ", err)

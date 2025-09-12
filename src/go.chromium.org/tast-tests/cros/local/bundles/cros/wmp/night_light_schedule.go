@@ -77,8 +77,7 @@ func NightLightSchedule(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
 		ui.WaitUntilExists(nodewith.HasClass("Label").Name("Display")),
 		ui.LeftClick(nodewith.HasClass("IconButton").Name("Show display settings")),
-		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-		ui.WaitUntilExists(nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).NameContaining("Settings - Display")),
+		ui.WaitUntilExists(nodewith.BrowserWindowFinder().NameContaining("Settings - Display")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to enable night light and open display settings by clicking pod button in quick settings: ", err)
 	}

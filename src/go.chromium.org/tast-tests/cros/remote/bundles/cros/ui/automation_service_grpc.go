@@ -105,6 +105,9 @@ func AutomationServiceGRPC(ctx context.Context, s *testing.State) {
 		NodeWiths: []*pb.NodeWith{
 			// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
 			{Value: &pb.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
+			// Role is added to match the logic of
+			// nodewith.BrowserWindowFinder().
+			{Value: &pb.NodeWith_Role{Role: pb.Role_ROLE_WINDOW}},
 			{Value: &pb.NodeWith_Name{Name: "Files - My files"}},
 		},
 	}

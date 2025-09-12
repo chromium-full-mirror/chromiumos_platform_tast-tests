@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -82,8 +81,7 @@ func MediaSessionAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until the page is stable: ", err)
 	}
 
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	browserFinder := nodewith.Ancestor(nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).NameContaining("MediaSessionAPI"))
+	browserFinder := nodewith.Ancestor(nodewith.BrowserWindowFinder().NameContaining("MediaSessionAPI"))
 
 	playButton := browserFinder.Name("play").Role(role.Button)
 	if err := uiauto.Combine("play the audio",

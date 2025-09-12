@@ -88,7 +88,7 @@ func Crosh(ctx context.Context, s *testing.State) {
 	// Run shell, verify prompt, exit.
 	ui := uiauto.New(tconn)
 	err = uiauto.Combine("run crosh shell",
-		ui.LeftClick(nodewith.Name("crosh").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))),
+		ui.LeftClick(nodewith.BrowserWindowFinder().Name("crosh")),
 		ui.WaitUntilExists(croshPrompt),
 		kb.TypeAction("shell"),
 		kb.AccelAction("Enter"),

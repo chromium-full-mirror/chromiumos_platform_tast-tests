@@ -115,7 +115,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	// shortcuts widget to end the manual setup at any time.
 	ui := uiauto.New(tconn)
 	ksReg := regexp.MustCompile("[sS]hortcuts")
-	keyboardShortcutsWindow := nodewith.NameRegex(ksReg).Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+	keyboardShortcutsWindow := nodewith.BrowserWindowFinder().NameRegex(ksReg)
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(keyboardShortcutsWindow)
 	if err := ui.WithTimeout(manualSetupDuration).WaitUntilExists(keyboardShortcutsWindow)(ctx); err == nil {
 		if err := ui.LeftClick(closeButton)(ctx); err != nil {

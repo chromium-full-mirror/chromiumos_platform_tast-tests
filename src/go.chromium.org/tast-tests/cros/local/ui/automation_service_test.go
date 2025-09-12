@@ -95,7 +95,7 @@ func TestToFinder(t *gotesting.T) {
 				}},
 			},
 		}, nodewith.HasClass("TabStripControlButton").Role(role.Button).Visible().Onscreen().
-			First().Ancestor(nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")))},
+			First().Ancestor(nodewith.BrowserWindowFinder())},
 	} {
 		got, err := toFinder(tc.f1)
 		if err != nil {

@@ -6,7 +6,6 @@ package vimeo
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -31,8 +30,7 @@ func New(tconn *chrome.TestConn, url string) *Vimeo {
 			tconn,
 			url,
 			"document.querySelector('video')",
-			// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-			nodewith.Role(role.Video).Ancestor(nodewith.Role(role.Window).NameContaining("Vimeo").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))),
+			nodewith.Role(role.Video).Ancestor(nodewith.BrowserWindowFinder().NameContaining("Vimeo")),
 		),
 		tconn: tconn,
 	}

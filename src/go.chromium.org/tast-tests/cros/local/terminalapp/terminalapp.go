@@ -44,9 +44,9 @@ const LaunchTerminalTimeout = 10 * time.Minute
 var (
 	linuxLink           = nodewith.Name("penguin").Role(role.Link)
 	bruschettaLink      = nodewith.Name(bruconstants.BruschettaVMName).Role(role.Link)
-	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
-	bruschettaTab       = nodewith.NameContaining("chronos@refvm: ").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
-	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+	linuxTab            = nodewith.BrowserWindowFinder().NameContaining("@penguin: ")
+	bruschettaTab       = nodewith.BrowserWindowFinder().NameContaining("chronos@refvm: ")
+	sshTab              = nodewith.BrowserWindowFinder().NameContaining("chronos@localhost:")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
 	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
 	passwordDialog      = nodewith.NameRegex(regexp.MustCompile(`^\(chronos@(localhost|::1)\) Password:$`)).Role(role.TextField)
@@ -63,7 +63,7 @@ var (
 	TmuxModeMsg = AsRow(nodewith.NameStartingWith("Tmux integration mode activated"))
 
 	// RootWindow is the root window of Terminal.
-	RootWindow = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+	RootWindow = nodewith.BrowserWindowFinder().NameStartingWith("Terminal")
 )
 
 // TerminalApp represents an instance of the Terminal App.

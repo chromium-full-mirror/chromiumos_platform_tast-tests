@@ -6,7 +6,6 @@ package wmp
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -175,8 +174,7 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Close the FilesApp window by pressing the Close caption button on it.
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	window := nodewith.NameContaining("Files").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+	window := nodewith.BrowserWindowFinder().NameContaining("Files")
 	closeButton := nodewith.Name("Close").Ancestor(window)
 	if err := ui.LeftClick(closeButton)(ctx); err != nil {
 		s.Fatal("Failed to click on the close caption button: ", err)

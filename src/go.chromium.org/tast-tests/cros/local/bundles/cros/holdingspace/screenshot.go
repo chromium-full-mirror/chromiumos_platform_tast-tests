@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -178,9 +177,8 @@ func testScreenshotLaunch(
 		},
 
 		// Ensure that the screenshot file is opened in the Gallery app.
-		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
 		ui.WaitUntilExists(nodewith.
-			Ancestor(nodewith.NameStartingWith(apps.Gallery.Name).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))).
+			Ancestor(nodewith.BrowserWindowFinder().NameStartingWith(apps.Gallery.Name)).
 			Role(role.Image).Name(screenshotName)),
 	)
 }

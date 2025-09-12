@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -123,8 +122,7 @@ func CameraEffectsReplace(cleanupCtx context.Context, s *testing.State) {
 	}
 
 	// The minimize button in VcBackgroundApp
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	vcBackgroundAppMinimizeButton := nodewith.Name("Minimize").Role(role.Button).Ancestor(nodewith.ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Name(vcBackgroundAppWindow).Role(role.Window))
+	vcBackgroundAppMinimizeButton := nodewith.Name("Minimize").Role(role.Button).Ancestor(nodewith.BrowserWindowFinder().Name(vcBackgroundAppWindow))
 
 	// Minimize the VcBackgroundApp to prepare for a second screenshot.
 	if err :=

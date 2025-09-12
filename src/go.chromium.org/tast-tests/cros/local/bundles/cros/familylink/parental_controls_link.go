@@ -6,7 +6,6 @@ package familylink
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
@@ -72,8 +71,7 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open parental controls",
 		ui.DoDefault(nodewith.NameContaining("Parental controls Open").FinalAncestor(ossettings.WindowFinder)),
-		// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-		ui.WaitUntilExists(nodewith.NameContaining("family").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))),
+		ui.WaitUntilExists(nodewith.BrowserWindowFinder().NameContaining("family")),
 	)(ctx); err != nil {
 		s.Fatal(`Failed to verify the functionality of "Parental controls" settings: `, err)
 	}

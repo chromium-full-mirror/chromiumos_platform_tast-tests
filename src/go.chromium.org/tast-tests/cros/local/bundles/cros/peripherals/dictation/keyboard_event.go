@@ -6,7 +6,6 @@ package dictation
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	dictationcommon "go.chromium.org/tast-tests/cros/common/dictation"
@@ -18,9 +17,8 @@ import (
 )
 
 var (
-	incognitoTab = nodewith.Name("New Incognito Tab").Role(role.Tab)
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	settingsWindow      = nodewith.Name("Settings").Role(role.Window).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)"))
+	incognitoTab        = nodewith.Name("New Incognito Tab").Role(role.Tab)
+	settingsWindow      = nodewith.BrowserWindowFinder().Name("Settings")
 	closeSettingsButton = nodewith.Name("Close").Role(role.Button).Ancestor(settingsWindow)
 )
 

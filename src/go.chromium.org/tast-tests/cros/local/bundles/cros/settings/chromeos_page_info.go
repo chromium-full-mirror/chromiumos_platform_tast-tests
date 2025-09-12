@@ -168,8 +168,7 @@ func checkSendFeedback(resource *chromeOSPageInfo) uiauto.Action {
 }
 
 func checkDetail(resource *chromeOSPageInfo) uiauto.Action {
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	detailRoot := nodewith.Name("Chrome - About Version").ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
+	detailRoot := nodewith.BrowserWindowFinder().Name("Chrome - About Version")
 
 	// The "Additional Details" can be off-screen when the screen size is small.
 	// Focus before clicking to ensure it is on-screen.
@@ -238,7 +237,7 @@ func checkTermsOfServiceLinks(resource *chromeOSPageInfo) uiauto.Action {
 	// "Google Chrome" below. Instead of matching the exact character, match any
 	// whitespace character in the regex.
 	title := `Google\sChrome and ChromeOS Additional Terms of Service`
-	termsWindowFinder := nodewith.NameRegex(regexp.MustCompile("^Chrome - " + title + "$")).ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
+	termsWindowFinder := nodewith.BrowserWindowFinder().NameRegex(regexp.MustCompile("^Chrome - " + title + "$"))
 	termsTitleFinder := nodewith.NameRegex(regexp.MustCompile("^" + title + "$")).Role(role.Heading).Ancestor(termsWindowFinder)
 
 	return uiauto.Combine("click term of service",
