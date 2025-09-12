@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -32,6 +33,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -60,5 +66,9 @@ func IconAndUsername(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find Terminal icon on shelf: ", err)
 	}
 
-	// TODO(jinrongwu): verify the icon of Crostini Terminal app.
+	if strings.Contains(s.TestName(), "baguette") {
+		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
+	}
 }
