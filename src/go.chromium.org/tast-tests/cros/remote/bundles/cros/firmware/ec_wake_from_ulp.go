@@ -77,6 +77,8 @@ func init() {
 				"bookem",
 				"boten",
 				"bugzzy",
+				"cret",
+				"cret360",
 				"drawcia",
 				"drawlat",
 				"drawman",
