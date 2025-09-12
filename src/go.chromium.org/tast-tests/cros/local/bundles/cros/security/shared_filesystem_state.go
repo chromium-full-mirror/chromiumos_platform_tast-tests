@@ -111,6 +111,8 @@ func testBody(s *testing.State, testType string, ignoredAncestorNames, exclusion
 		// implemented using the FileSystemProvider JavaScript API, and volumes
 		// served by the MediaTransferProtocol.
 		"^/media/fuse/fusebox$": true,
+		// This allows minijail to observe the bind mount changes to the ARC root path.
+		"^/opt/google/vms/android$": true,
 		// This is used to mount downloaded disk images.
 		// Multiple components/DLCs are allowed to be mounted under this path.
 		"^/run/imageloader(/|$)": true,
