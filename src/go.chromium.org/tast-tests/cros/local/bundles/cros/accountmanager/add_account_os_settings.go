@@ -49,7 +49,6 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		VarDeps: []string{tape.ServiceAccountVar},
 		Timeout: addAccountOSSettingsTimeout,
 	})
 }
@@ -88,7 +87,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	defer arcDevice.Close(ctx)
 
 	timeout := int32(addAccountOSSettingsTimeout.Seconds())
-	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.AccountManager))
+	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte{}, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.AccountManager))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}

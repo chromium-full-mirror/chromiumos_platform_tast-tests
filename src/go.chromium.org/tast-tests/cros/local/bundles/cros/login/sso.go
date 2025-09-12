@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/identitycuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -51,6 +51,7 @@ func init() {
 			// "informational",
 			// "group:hw_agnostic",
 		},
+		Fixture:      fixture.TAPERemoteBase,
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
@@ -68,9 +69,6 @@ func init() {
 			// CUJ: I want to authenticate as rarely as possible.
 			Value: "screenplay-a7b53e2f-1883-48b6-a08b-0f91063da34a",
 		}},
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
 		Timeout: 3 * time.Minute,
 	})
 }
@@ -82,7 +80,7 @@ func SSO(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create a managed device account.
-	acc, err := identitycuj.CreateManagedDeviceAccount(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	acc, err := identitycuj.CreateManagedDeviceAccount(ctx, []byte{})
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}

@@ -10,8 +10,6 @@ package tape
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -62,29 +60,34 @@ func createTokenSource(ctx context.Context, credsJSON []byte) (oauth2.TokenSourc
 	return config.TokenSource(ctx), nil
 }
 
-// NewClient creates a http client which provides the necessary oauth token to authenticate with the TAPE
-// GCP from the service account credentials in credsJSON.
-func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
-
+func getToken() ([]byte, error) {
 	if TapeToken.Value() != "" {
-		return getClientFromToken(ctx, []byte(TapeToken.Value()))
+		return []byte(TapeToken.Value()), nil
 	}
 
-	// Log the time and hash of the credsJSON for debugging.
-	hasher := sha1.New()
-	hasher.Write(credsJSON)
-	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-	testing.ContextLogf(ctx, "CredsJSON hash: %s", hash)
-
 	// Check if token content was written to the DUT and should be used.
-	if _, err := os.Stat(dutTokenFilePath); err == nil {
-
+	_, err := os.Stat(dutTokenFilePath)
+	if err == nil {
 		tokenBytes, err := os.ReadFile(dutTokenFilePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read token content")
 		}
+		return tokenBytes, nil
+	} else if os.IsNotExist(err) {
+		return nil, nil
+	}
+	return nil, err
+}
 
-		return getClientFromToken(ctx, tokenBytes)
+// NewClient creates a http client which provides the necessary oauth token to authenticate with the TAPE
+// GCP from the service account credentials in credsJSON.
+func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
+	token, err := getToken()
+	if err != nil {
+		return nil, err
+	}
+	if token != nil {
+		return getClientFromToken(ctx, token)
 	}
 
 	// Return the Oauth client using the supplied credentials.
@@ -99,18 +102,39 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 	}, nil
 }
 
-func getClientFromToken(ctx context.Context, tokenBytes []byte) (*client, error) {
+func getHTTPClientFromToken(ctx context.Context, tokenBytes []byte) (*http.Client, error) {
 	var tokenContent oauth2.Token
 	if err := json.Unmarshal(tokenBytes, &tokenContent); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal token content")
 	}
+	return oauth2.NewClient(ctx, oauth2.StaticTokenSource(&tokenContent)), nil
+}
+
+func getClientFromToken(ctx context.Context, tokenBytes []byte) (*client, error) {
+	httpClient, err := getHTTPClientFromToken(ctx, tokenBytes)
+	if err != nil {
+		return nil, err
+	}
 	return &client{
-		httpClient: oauth2.NewClient(ctx, oauth2.StaticTokenSource(&tokenContent)),
+		httpClient: httpClient,
 	}, nil
 }
 
 // refreshClient creates a new http client for the tape client.
 func (c *client) refreshClient(ctx context.Context) error {
+	token, err := getToken()
+	if err != nil {
+		return nil
+	}
+	if token != nil {
+		httpClient, err := getHTTPClientFromToken(ctx, token)
+		if err != nil {
+			return errors.Wrap(err, "failed to refresh client")
+		}
+		c.httpClient = httpClient
+		return nil
+	}
+
 	// Create new Oauth client using the stored credentials.
 	ts, err := createTokenSource(ctx, c.creds)
 	if err != nil {

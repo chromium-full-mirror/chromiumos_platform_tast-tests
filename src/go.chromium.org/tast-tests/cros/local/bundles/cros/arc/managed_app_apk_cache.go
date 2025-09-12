@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -57,7 +56,7 @@ func init() {
 			// "gaia"
 		},
 		Timeout: arcApkCacheTestTimeout,
-		VarDeps: []string{tape.ServiceAccountVar, arcCommon.ManagedAccountPoolVarName},
+		VarDeps: []string{arcCommon.ManagedAccountPoolVarName},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 		},

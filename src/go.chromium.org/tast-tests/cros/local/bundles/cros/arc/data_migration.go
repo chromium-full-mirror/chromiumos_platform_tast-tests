@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -65,7 +66,7 @@ func init() {
 		// TODO(b/179636279): Remove "no_qemu" after making the test pass on betty.
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Timeout:      dataMigrationTestTimeout,
-		VarDeps:      []string{tape.ServiceAccountVar},
+		Fixture:      fixture.TAPERemoteBase,
 		Params: []testing.Param{{
 			// Launch ARC R with /data created on ARC P (for x86).
 			Name: "p_to_r_x86",
@@ -165,7 +166,7 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create an account manager and lease a test account for the duration of the test.
-	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
+	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte{}, false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}

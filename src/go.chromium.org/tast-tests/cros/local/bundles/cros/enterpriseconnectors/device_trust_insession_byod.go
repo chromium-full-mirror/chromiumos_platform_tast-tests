@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/devicetrust"
@@ -36,11 +37,11 @@ func init() {
 			"lmasopust@google.com",
 		},
 		BugComponent: "b:1163683",
+		Fixture:      fixture.TAPERemoteBase,
 		SoftwareDeps: []string{
 			"chrome",
 			"chrome_internal",
 		},
-		Vars: []string{"tape.service_account_key"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:hardware",
@@ -75,7 +76,7 @@ func DeviceTrustInsessionByod(ctx context.Context, s *testing.State) {
 	timeout := int32(deviceTrustByodTimeout.Seconds())
 	accountManager, tapeAccount, err := tape.NewOwnedTestAccountManager(
 		ctx,
-		[]byte(s.RequiredVar(tape.ServiceAccountVar)),
+		[]byte{},
 		false, /*lock*/
 		tape.WithTimeout(timeout),
 		tape.WithPoolID(poolID))

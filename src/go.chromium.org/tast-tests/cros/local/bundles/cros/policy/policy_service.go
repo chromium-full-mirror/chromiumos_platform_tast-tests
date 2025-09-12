@@ -55,9 +55,6 @@ func init() {
 		},
 		// GuaranteeCompatibility allows tests outside ChromeOS to call this service.
 		GuaranteeCompatibility: true,
-		Vars: []string{
-			tape.ServiceAccountVar,
-		},
 	})
 }
 
@@ -160,12 +157,7 @@ func (c *PolicyService) StoreIDsForDeprovisioning(ctx context.Context) error {
 		return errors.Wrap(err, "failed to retrieve stable device secret")
 	}
 
-	tapeServiceAccount, ok := c.s.Var(tape.ServiceAccountVar)
-	if !ok {
-		return errors.New("missing tape.ServiceAccount variable")
-	}
-
-	tapeClient, err := tape.NewClient(ctx, []byte(tapeServiceAccount))
+	tapeClient, err := tape.NewClient(ctx, []byte{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create TAPE client")
 	}

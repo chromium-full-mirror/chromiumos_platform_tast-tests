@@ -30,7 +30,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.TAPEEnrolled,
-		VarDeps:      []string{tape.ServiceAccountVar},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowDinosaurEasterEgg{}, pci.Served),
 		},
