@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -66,7 +66,6 @@ func init() {
 				secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModeMixed)),
 				mixed:      true,
 			},
-			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_NOT_U6PLUS_ROUTER"},
 		}, {
 			Name: "eap",
 			Val: roamFTparam{
@@ -115,7 +114,6 @@ func init() {
 				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAE,
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAE,
 			},
-			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_NOT_U6PLUS_ROUTER"},
 		}, {
 			Name:              "mixed_sae_ext",
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
@@ -131,7 +129,7 @@ func init() {
 				expectedFtKeyMgmt:    wpa.KeyMgmtFTSAEEXT,
 				expectedNonFtKeyMgmt: wpa.KeyMgmtSAEEXT,
 			},
-			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY", "wifi_router_features:WIFI_ROUTER_FEATURE_NOT_U6PLUS_ROUTER"},
+			ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_SAE_EXT_KEY"},
 			VariantCategory:  `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		}, {
 			Name:              "sae_ext",
