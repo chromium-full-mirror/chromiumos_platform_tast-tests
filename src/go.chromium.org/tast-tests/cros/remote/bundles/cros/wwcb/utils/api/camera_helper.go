@@ -22,9 +22,9 @@ import (
 type pixel = passport.Pixel
 
 var (
-	redColor   = &pixel{R: 240, G: 80, B: 80, A: 255}
-	greenColor = &pixel{R: 80, G: 240, B: 80, A: 255}
-	blueColor  = &pixel{R: 80, G: 80, B: 240, A: 255}
+	redColor   = &pixel{R: 240, G: 0, B: 0, A: 255}
+	greenColor = &pixel{R: 0, G: 240, B: 0, A: 255}
+	blueColor  = &pixel{R: 0, G: 0, B: 240, A: 255}
 	grayColor  = &pixel{R: 120, G: 120, B: 120, A: 255}
 
 	// webcamMappingLimitScore is the max allowable "difference" between two pixels
@@ -90,7 +90,7 @@ func (c *CameraServiceHelper) VerifyVideo(ctx context.Context, outDir, cameraID 
 			return errors.New("webcam with '" + cameraID + "' webcam write file error")
 		}
 
-		frameColor := detectColor(resp.GetPixel())
+		frameColor := detectColor(ctx, resp.GetPixel())
 		testing.ContextLog(ctx, "Detect color: "+frameColor)
 		testing.ContextLogf(ctx, "Expected color %s", detectVideoColor[detectColorCount])
 		if frameColor == detectVideoColor[detectColorCount] {
@@ -312,17 +312,18 @@ func saveImageIfRequested(ctx context.Context, outDir, camera, annotation string
 }
 
 // detectColor is for detect color from pixel.
-func detectColor(p *pixel) string {
+func detectColor(ctx context.Context, p *pixel) string {
 	redScore := int(scalarScore(p, redColor))
 	greenScore := int(scalarScore(p, greenColor))
 	blueScore := int(scalarScore(p, blueColor))
 
-	if blueScore > redScore && blueScore > greenScore {
+	maxScore := max(redScore, greenScore, blueScore)
+	testing.ContextLog(ctx, "detectColor scores (r,g,b,max):", redScore, greenScore, blueScore, maxScore)
+	if blueScore == maxScore {
 		return "blue"
-	} else if greenScore > redScore {
+	} else if greenScore == maxScore {
 		return "green"
 	}
-
 	return "red"
 }
 
