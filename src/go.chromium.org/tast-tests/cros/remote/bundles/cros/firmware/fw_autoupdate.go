@@ -861,9 +861,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}, speedMetric)
 	}
 	if speedMetric < baselineSpeedMetric*0.95 {
-		s.Errorf("Speedometer metric has degraded by >5%%: (%f < %f)", speedMetric, baselineSpeedMetric*0.95)
+		s.Errorf("Speedometer metric has degraded by >5%% - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
 	} else {
-		s.Logf("Speedometer metric is acceptable (%f >= %f)", speedMetric, baselineSpeedMetric*0.95)
+		s.Logf("Speedometer metric is acceptable - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
 	}
 
 	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
