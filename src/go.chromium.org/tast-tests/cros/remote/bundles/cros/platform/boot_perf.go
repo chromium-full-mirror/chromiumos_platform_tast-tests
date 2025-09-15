@@ -137,7 +137,7 @@ func init() {
 				Name:      "fw_qual_warm",
 				Fixture:   fixture.NormalMode,
 				Val:       bootPerfWarmReboot,
-				ExtraAttr: []string{"group:firmware", "firmware_unstable"},
+				ExtraAttr: []string{"group:firmware", "firmware_bios", "firmware_stressed"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
@@ -146,7 +146,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
-				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
@@ -155,7 +155,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
-				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
@@ -165,7 +165,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"s5_inactivity_timeout"},
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
-				ExtraAttr:         []string{"group:firmware", "firmware_unstable"},
+				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
 				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 				ExtraTestBedDeps: []string{tbdep.ServoPresent},
 			},
