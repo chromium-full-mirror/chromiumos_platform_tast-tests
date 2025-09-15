@@ -36,6 +36,7 @@ var (
 			// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
 			{Value: &ui.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
 			{Value: &ui.NodeWith_NameContaining{NameContaining: "Settings"}},
+			{Value: &ui.NodeWith_First{First: true}},
 		},
 	}
 
