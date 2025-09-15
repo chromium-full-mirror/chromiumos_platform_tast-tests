@@ -5,6 +5,7 @@
 package power
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -31,7 +34,6 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -85,6 +87,12 @@ const (
 
 	perfettoResumeConfigFile     = "perfetto/perfetto_resume_trace_cfg.pbtxt"
 	perfettoDisplayResumeSQLFile = "perfetto/perfetto_display_after_resume.sql"
+)
+
+var waiverMaxSystemSuspendMs = testing.RegisterVarString(
+	"power.waiverMaxSystemSuspendMs",
+	"",
+	"Override the maxSystemSuspendMs time",
 )
 
 var waiverMaxSystemResumeMs = testing.RegisterVarString(
@@ -381,6 +389,9 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			_ = <-powerStateCh
 
 			if res != nil {
+				if err := evalSystemSuspend(ctx, s.DUT(), pv); err != nil {
+					s.Errorf("Iteration %d: %v", i+1, err)
+				}
 				if err := evalSystemResume(ctx, h, res.Output, pv); err != nil {
 					s.Errorf("Iteration %d: %v", i+1, err)
 				}
@@ -468,6 +479,76 @@ func verifyPowerState(ctx context.Context, h *firmware.Helper, powerStateCh chan
 		currPowerState = state
 		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 500 * time.Millisecond})
+}
+
+func evalSystemSuspend(ctx context.Context, dut *dut.DUT, pv *perf.Values) error {
+	const timingsFile = "/run/power_manager/root/last_resume_timings"
+	out, err := dut.Conn().CommandContext(ctx, "cat", timingsFile).Output()
+	if err != nil {
+		// It's possible the file doesn't exist if suspend failed early.
+		return errors.Wrapf(err, "failed to read %s", timingsFile)
+	}
+
+	timings := make(map[string]float64)
+	scanner := bufio.NewScanner(strings.NewReader(string(out)))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			return errors.Errorf("invalid line in timings file: %q", line)
+		}
+		key := parts[0]
+		val, err := strconv.ParseFloat(parts[1], 64)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse value for %q", key)
+		}
+		timings[key] = val
+	}
+	if err := scanner.Err(); err != nil {
+		return errors.Wrap(err, "error scanning timings file")
+	}
+
+	var systemSuspendTimeMs int64
+	if time, ok := timings["suspend_time"]; ok {
+		systemSuspendTimeMs = int64(time * 1000)
+	} else if start, ok := timings["start_suspend_time"]; ok {
+		if end, ok := timings["end_suspend_time"]; ok {
+			systemSuspendTimeMs = int64((end - start) * 1000)
+		} else {
+			return errors.New("found start_suspend_time but not end_suspend_time")
+		}
+	} else {
+		return errors.New("failed to find suspend_time or start/end_suspend_time")
+	}
+
+	pv.Append(perf.Metric{
+		Name:      "system_suspend",
+		Unit:      "ms",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, float64(systemSuspendTimeMs))
+	var maxSystemSuspendMs int64
+	maxSystemSuspendMs = 500
+
+	waiver := waiverMaxSystemSuspendMs.Value()
+	if waiver != "" {
+		val, err := strconv.Atoi(waiver)
+		if err != nil {
+			return errors.Wrapf(err, "bad flag %s=%q", waiverMaxSystemSuspendMs.Name(), waiver)
+		}
+		testing.ContextLogf(ctx, "Using user provided value %d for maxSystemSuspendMs", val)
+		maxSystemSuspendMs = int64(val)
+	}
+
+	if systemSuspendTimeMs > maxSystemSuspendMs {
+		return errors.Errorf("failed to suspend device in %d milliseconds, got %d. Use --var=%s=??? to override if you have an approved waiver", maxSystemSuspendMs, systemSuspendTimeMs, waiverMaxSystemSuspendMs.Name())
+	}
+	testing.ContextLogf(ctx, "Suspend time %d ms within limit of %d ms", systemSuspendTimeMs, maxSystemSuspendMs)
+
+	return nil
 }
 
 func convertTimeStamp(timeStr string) (int64, error) {
