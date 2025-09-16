@@ -118,7 +118,8 @@ func runDPTest(ctx context.Context, svo *servo.Servo, d *dut.DUT, s *testing.Sta
 	}
 
 	// Check that the partner DP alternate mode is found.
-	if err := typecutils.CheckForDPAltMode(ctx, d, pinAssign); err != nil {
+	// Servo is always on port 0 because we are running the test off ccd.
+	if err := typecutils.CheckForDPAltMode(ctx, d, pinAssign, 0); err != nil {
 		return errors.Wrap(err, "failed to find the expected partner")
 	}
 

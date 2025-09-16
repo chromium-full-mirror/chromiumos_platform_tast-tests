@@ -41,11 +41,6 @@ const (
 	pinDBitMask = 0x800
 )
 
-const (
-	// Filepath on the DUT for the servo Type C partner device.
-	partnerPath = "/sys/class/typec/port0-partner"
-)
-
 // USB Class Codes.
 const (
 	ClassHid         = 0x3
@@ -81,14 +76,16 @@ func CcOffAndWait(ctx context.Context, svo *servo.Servo) error {
 
 // CheckForDPAltMode verifies that a partner was enumerated with the expected DP altmode with the
 // selected pin assignment setting(if provided).
-func CheckForDPAltMode(ctx context.Context, d *dut.DUT, pinAssign string) error {
-	// Servo is always on port 0.
+func CheckForDPAltMode(ctx context.Context, d *dut.DUT, pinAssign string, port int) error {
+	// Filepath on the DUT for the servo Type C partner device.
+	partnerPath := fmt.Sprintf("/sys/class/typec/port%d-partner", port)
+
 	out, err := d.Conn().CommandContext(ctx, "ls", partnerPath).Output()
 	if err != nil {
 		return errors.Wrap(err, "could not run ls command on DUT")
 	}
 
-	altModeDevice := regexp.MustCompile(`port0-partner\.\d`)
+	altModeDevice := regexp.MustCompile(`port[\d]-partner\.\d`)
 	for _, device := range bytes.Split(out, []byte("\n")) {
 		// We're only interested in the alternate mode devices.
 		if !altModeDevice.Match(device) {
