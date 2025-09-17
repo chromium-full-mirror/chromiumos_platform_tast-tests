@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -84,9 +85,12 @@ func verifyECWPStatus(ctx context.Context, h *firmware.Helper, wp bool) error {
 			testing.ContextLog(ctx, "Failed to get G3 state")
 		}
 		testing.ContextLog(ctx, "Restarting AP")
-		if err := h.Servo.RunECCommand(ctx, "powerbtn"); err != nil {
+		powerbtnVal := strconv.FormatInt(h.Config.HoldPwrButtonPowerOn.Milliseconds(), 10)
+		testing.ContextLogf(ctx, "Pressing power button for %s ms", powerbtnVal)
+		if err := h.Servo.RunECCommand(ctx, "powerbtn "+powerbtnVal); err != nil {
 			testing.ContextLog(ctx, "Failed to restart: ", err)
 		}
+
 		if err := h.WaitConnect(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to boot to connect to DUT")
 		}
