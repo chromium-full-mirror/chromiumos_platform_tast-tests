@@ -47,7 +47,7 @@ func init() {
 			},
 			{
 				Name:      "speedometer3",
-				ExtraAttr: []string{"group:cuj", "group:crosbolt", "cuj_experimental"},
+				ExtraAttr: []string{"group:cuj", "group:crosbolt"},
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
