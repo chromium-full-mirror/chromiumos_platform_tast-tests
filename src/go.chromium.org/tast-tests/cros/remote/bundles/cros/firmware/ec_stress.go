@@ -863,10 +863,16 @@ func releaseKey(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func tapPowerBtn(ctx context.Context, h *firmware.Helper) error {
-	testing.ContextLog(ctx, "Pressing pwr button")
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-		return errors.Wrap(err, "failed to press power key on DUT")
+func wakeWithUsbKeywboard(ctx context.Context, h *firmware.Helper) error {
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.On); err != nil {
+		return errors.Wrapf(err, "failed to set %q to %q with servo", servo.USBKeyboard, servo.On)
+	}
+	testing.ContextLog(ctx, "Pressing enter key with USB keyboard to wake DUT")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.USBEnter, servo.DurPress); err != nil {
+		return errors.Wrap(err, "unable to send USB enter key press from servo")
+	}
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+		return errors.Wrapf(err, "failed to set %q to %q with servo", servo.USBKeyboard, servo.Off)
 	}
 	return nil
 }
@@ -1065,7 +1071,7 @@ func connectDut(ctx context.Context, h *firmware.Helper) error {
 	}
 	if state != "S0" {
 		testing.ContextLogf(ctx, "DUT is power sate %v, attempting to wake", state)
-		tapPowerBtn(ctx, h)
+		wakeWithUsbKeywboard(ctx, h)
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 			return errors.Wrap(err, "failed to wake DUT")
 		}
