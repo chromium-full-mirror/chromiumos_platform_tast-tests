@@ -83,10 +83,6 @@ type keyAttestationRecord struct {
 	AttestedKey        string            `json:"attestedKey"`
 }
 
-type attestationCertificateTestParam struct {
-	enableAttestationFlag bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     AttestationCertificate,
@@ -100,15 +96,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // UI Automator is flaky on low storage devices.
 		VarDeps:      []string{uiCommon.GaiaPoolDefaultVarName},
 		Data:         []string{certTestAppApkName},
-		Params: []testing.Param{{
-			Name:              "launched",
-			Val:               attestationCertificateTestParam{enableAttestationFlag: false},
-			ExtraSoftwareDeps: []string{"arc_attestation_launched"},
-		}, {
-			Name:              "not_launched",
-			Val:               attestationCertificateTestParam{enableAttestationFlag: true},
-			ExtraSoftwareDeps: []string{"arc_attestation_not_launched"},
-		}},
 	})
 }
 
@@ -122,10 +109,6 @@ func AttestationCertificate(ctx context.Context, s *testing.State) {
 		chrome.ARCEnabled(),
 		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
-	}
-	enableAttestationFlag := s.Param().(attestationCertificateTestParam).enableAttestationFlag
-	if enableAttestationFlag {
-		opts = append(opts, chrome.EnableFeatures("ArcAttestation"))
 	}
 
 	cr, err := chrome.New(ctx, opts...)
