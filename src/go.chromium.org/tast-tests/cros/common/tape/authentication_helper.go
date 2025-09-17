@@ -70,14 +70,7 @@ func (f *tapeBaseFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	return nil
 }
-func (f *tapeBaseFixt) TearDown(ctx context.Context, s *testing.FixtState) {}
-func (f *tapeBaseFixt) Reset(ctx context.Context) error                    { return nil }
-func (f *tapeBaseFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := writeToken2Device(ctx, *s.DUT(), f.authenticationConfigJSON, f.localRefreshToken); err != nil {
-		s.Fatal("Failed to write token to device: ", err)
-	}
-}
-func (f *tapeBaseFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *tapeBaseFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	// TODO(b/204845193): workaround as fixture do not recover connection.
 	if err := s.DUT().Connect(ctx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
@@ -88,6 +81,13 @@ func (f *tapeBaseFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to remove Token file: ", err)
 	}
 }
+func (f *tapeBaseFixt) Reset(ctx context.Context) error { return nil }
+func (f *tapeBaseFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := writeToken2Device(ctx, *s.DUT(), f.authenticationConfigJSON, f.localRefreshToken); err != nil {
+		s.Fatal("Failed to write token to device: ", err)
+	}
+}
+func (f *tapeBaseFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func writeToken2Device(ctx context.Context, dut dut.DUT, authConfig, localRefreshToken string) error {
 	// Parse the configuration variable.
