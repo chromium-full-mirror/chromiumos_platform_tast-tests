@@ -67,40 +67,6 @@ func V4L2StatelessDecodeArgs(ctx context.Context, filename string) (command []st
 	return
 }
 
-// getCrosCodecsDecodeArgs provides the base arguments for running ccdec.
-func getCrosCodecsDecodeArgs(ctx context.Context, filename string) []string {
-	return []string{
-		filename,
-		"--golden",
-		filename + ".json",
-	}
-}
-
-// AV1DecodeCrosCodecsargs provides the arguments for running ccdec on an AV1 file.
-func AV1DecodeCrosCodecsargs(ctx context.Context, filename string) []string {
-	return append(getCrosCodecsDecodeArgs(ctx, filename), "--input-format", "av1")
-}
-
-// VP8DecodeCrosCodecsargs provides the arguments for running ccdec on an VP8 file.
-func VP8DecodeCrosCodecsargs(ctx context.Context, filename string) []string {
-	return append(getCrosCodecsDecodeArgs(ctx, filename), "--input-format", "vp8")
-}
-
-// VP9DecodeCrosCodecsargs provides the arguments for running ccdec on an VP9 file.
-func VP9DecodeCrosCodecsargs(ctx context.Context, filename string) []string {
-	return append(getCrosCodecsDecodeArgs(ctx, filename), "--input-format", "vp9")
-}
-
-// H264DecodeCrosCodecsargs provides the arguments for running ccdec on an H264 file.
-func H264DecodeCrosCodecsargs(ctx context.Context, filename string) []string {
-	return append(getCrosCodecsDecodeArgs(ctx, filename), "--input-format", "h264")
-}
-
-// HEVCDecodeCrosCodecsargs provides the arguments for running ccdec on an HEVC file.
-func HEVCDecodeCrosCodecsargs(ctx context.Context, filename string) []string {
-	return append(getCrosCodecsDecodeArgs(ctx, filename), "--input-format", "h265")
-}
-
 // getVAAPIArgs provides the arguments to use with different decoding binary exes for vaapi.
 func getVAAPIArgs(ctx context.Context, filename string) []string {
 	return []string{
