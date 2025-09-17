@@ -62,6 +62,7 @@ func (n *NodeHelper) copy() *NodeHelper {
 		ancestor:       n.ancestor,
 		nth:            n.nth,
 		expanded:       n.expanded,
+		classNameRegex: n.classNameRegex,
 		mask:           n.mask,
 	}
 }
@@ -191,4 +192,12 @@ func (n *NodeHelper) Finder() *Finder {
 	}
 
 	return &Finder{NodeWiths: nodeWiths}
+}
+
+// BrowserWindowFinder returns a NodeHelper for the main browser window.
+// This handles the transition from "BrowserFrame" to "BrowserWidget".
+// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome
+// uprev contains the new naming.
+func BrowserWindowFinder() *NodeHelper {
+	return Node().ClassNameRegex("Browser(Widget|Frame)").Role(Role_ROLE_WINDOW)
 }

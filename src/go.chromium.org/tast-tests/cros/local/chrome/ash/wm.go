@@ -7,6 +7,7 @@ package ash
 import (
 	"context"
 	"math"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -17,12 +18,22 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+var topLevelWindowRegex = regexp.MustCompile(nodewith.TopLevelWindowClassRegexPattern)
+
+// IsBrowserOrArcWindow checks if the window is a browser window (Ash or Lacros)
+// or an ARC++ app window. ExoShellSurface-0 is an example of lacros-Chrome
+// window.
+func (w *Window) IsBrowserOrArcWindow() bool {
+	return topLevelWindowRegex.MatchString(w.Name)
+}
 
 // WindowStateType represents the different window state type in Ash.
 type WindowStateType string

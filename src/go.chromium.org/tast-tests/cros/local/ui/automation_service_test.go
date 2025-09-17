@@ -86,12 +86,7 @@ func TestToFinder(t *gotesting.T) {
 				{Value: &pb.NodeWith_Onscreen{}},
 				{Value: &pb.NodeWith_First{}},
 				{Value: &pb.NodeWith_Ancestor{
-					Ancestor: &pb.Finder{
-						NodeWiths: []*pb.NodeWith{
-							{Value: &pb.NodeWith_ClassNameRegex{ClassNameRegex: "Browser(Widget|Frame)"}},
-							{Value: &pb.NodeWith_Role{Role: pb.Role_ROLE_WINDOW}},
-						},
-					},
+					Ancestor: pb.BrowserWindowFinder().Finder(),
 				}},
 			},
 		}, nodewith.HasClass("TabStripControlButton").Role(role.Button).Visible().Onscreen().

@@ -655,12 +655,15 @@ func BrowserWindowFinder() *Finder {
 	return ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
 }
 
-// TopLevelWindowFinder returns a finder for a top-level window, which can be
-// either a browser window or an ARC app window (ExoShellSurface).
+// TopLevelWindowClassRegexPattern is the regex pattern for a top-level window,
+// which can be either a browser window or an ARC app window.
 // TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome
 // uprev contains the new naming.
+const TopLevelWindowClassRegexPattern = "BrowserWidget|BrowserFrame|(ExoShellSurface-.*)"
+
+// TopLevelWindowFinder returns a finder for a top-level window.
 func TopLevelWindowFinder() *Finder {
-	return ClassNameRegex(regexp.MustCompile("BrowserWidget|BrowserFrame|(ExoShellSurface-.*)"))
+	return ClassNameRegex(regexp.MustCompile(TopLevelWindowClassRegexPattern))
 }
 
 // AutofillAvailable creates a Finder with AutofillAvailable set to true.

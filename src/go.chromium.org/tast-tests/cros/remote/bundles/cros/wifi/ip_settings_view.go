@@ -93,8 +93,7 @@ func IPSettingsView(ctx context.Context, s *testing.State) {
 	defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, "ui_dump")
 
 	// The root node helper of the settings window.
-	// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome uprev contains the new naming.
-	var settingsNodeHelper = ui.Node().Ancestor(ui.Node().NameRegex(`^Settings`).Role(ui.Role_ROLE_WINDOW).ClassNameRegex("Browser(Widget|Frame)").Finder())
+	var settingsNodeHelper = ui.Node().Ancestor(ui.BrowserWindowFinder().NameRegex(`^Settings`).Finder())
 
 	// Open the IP settings view.
 	uiSvc := ui.NewAutomationServiceClient(rpcClient.Conn)
