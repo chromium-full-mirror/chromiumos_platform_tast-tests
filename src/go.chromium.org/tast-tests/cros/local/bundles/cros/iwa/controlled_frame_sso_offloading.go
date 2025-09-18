@@ -32,7 +32,7 @@ const (
 	ssoOffloadingIWAExampleURL               = "isolated-app://v5uvfpi6dtpf7xhj3swcaoxfmgui645rc47uib23a5jtt477yhyaaaic"
 	extensionID                              = "jmdcfpeebneidlbnldlhcifibpkidhkn"
 	extensionName                            = "SSO Offloading Handler"
-	extensionUpdateXMLFileURL                = "https://github.com/google/sso-offloading/releases/latest/download/update_manifest.xml"
+	extensionUpdateXMLFileURL                = "https://github.com/google/sso-offloading/releases/latest/download/extension-update-manifest.xml"
 	gaiaURLPrefix                            = "https://accounts.google.com/"
 	expectedSsoCfSrcPrefix                   = "https://developers.google.com/oauthplayground/?code="
 )
