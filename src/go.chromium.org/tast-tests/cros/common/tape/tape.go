@@ -93,7 +93,7 @@ func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
 	// Return the Oauth client using the supplied credentials.
 	ts, err := createTokenSource(ctx, credsJSON)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create token from json")
+		return nil, errors.Wrap(err, "failed to create token from json. If you are executing the test locally you have to pass an authentication token to tast, see go/tape-tast-doc#local-execution")
 	}
 
 	return &client{

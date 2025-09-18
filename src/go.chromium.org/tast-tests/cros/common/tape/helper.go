@@ -287,7 +287,7 @@ func GetClientFromLocalCredentials(ctx context.Context, paths []string) (*client
 	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read service account file")
+		return nil, errors.Wrap(err, "failed to read service account file. If you are executing the test locally you have to pass an authentication token to tast, see go/tape-tast-doc#local-execution")
 	}
 
 	return NewClient(ctx, creds)
