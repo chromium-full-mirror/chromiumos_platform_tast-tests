@@ -28,6 +28,7 @@ func init() {
 			"cros-arc-te@google.com",
 			"arc-core@google.com",
 			"djacobo@google.com",
+			"mattlui@google.com",
 		},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",

@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     UnicornPlaystoreOn,
 		Desc:     "Checks if PlayStore is Enabled for Unicorn Acccount",
-		Contacts: []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
+		Contacts: []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com", "mattlui@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
 		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:release-health", "release-health_arc"},
