@@ -221,46 +221,91 @@ func (s *Servo) ServoSetDualRole(ctx context.Context, val USBPdDualRoleValue) er
 
 // ServoSetDPConfigs sets the DP configs for the DUT connection
 func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref MultiFunctionPref) error {
-	if config.DPMode == DPEnable {
-		if err := s.RunServoCommand(ctx, "usbc_action dp enable"); err != nil {
-			return errors.Wrap(err, "failed to enable DP alt-mode")
-		}
-	} else {
-		if err := s.RunServoCommand(ctx, "usbc_action dp disable"); err != nil {
-			return errors.Wrap(err, "failed to disable DP alt-mode")
-		}
+	// we'll lose the existing connection status while trying to set DP mode.
+	// Get current state to restore it later.
+	savedpdState, err := s.GetServoPDState(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to store current pd state before turning on DP alt")
 	}
 
-	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp pins %s", config.PinsCDEF)); err != nil {
-		return errors.Wrap(err, "failed to set pin assignments")
-	}
+	testing.ContextLog(ctx, "Resetting usb-c connection to DP alt-mode")
 
-	if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp mf %d", mfPref)); err != nil {
-		return errors.Wrap(err, "failed to set mf pref")
-	}
-
-	// we only use commands off and on to preserve the usbc state between resets
 	if err := s.ServoCcOff(ctx); err != nil {
 		return errors.Wrap(err, "failed to turn off cc")
 	}
 
-	if err := s.ServoCcOn(ctx); err != nil {
-		return errors.Wrap(err, "failed to turn on cc")
+	if err := s.RunServoCommand(ctx, "usbc_action dp disable"); err != nil {
+		return errors.Wrap(err, "failed to disable DP alt-mode")
 	}
 
+	if config.DPMode == DPEnable {
+		if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp pins %s", config.PinsCDEF)); err != nil {
+			return errors.Wrap(err, "failed to set pin assignments")
+		}
+
+		if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp mf %d", mfPref)); err != nil {
+			return errors.Wrap(err, "failed to set mf pref")
+		}
+
+		if err := s.RunServoCommand(ctx, "usbc_action dp enable"); err != nil {
+			return errors.Wrap(err, "failed to enable DP alt-mode")
+		}
+	}
+
+	if err := s.SetPDRole(ctx, PDRoleSrc); err != nil {
+		return errors.Wrap(err, "failed to set pd role")
+	}
+	if err := s.SetPDCommunication(ctx, On); err != nil {
+		return errors.Wrap(err, "failed to enable pd comms")
+	}
+
+	// Poll on the Servo C1 (DUT-facing) port until it is source-ready
+	prevIsSourceReady := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		ok, err := s.GetChargerAttached(ctx)
+		pdState, err := s.GetServoPDState(ctx)
 		if err != nil {
-			testing.ContextLog(ctx, "GetChargerAttached failed: ", err)
-			return errors.Wrap(err, "error checking whether charger is attached")
-		} else if !ok {
-			testing.ContextLogf(ctx, "GetChargerAttached got %v, want %v", ok, true)
-			return errors.Errorf("expected charger attached state: %v", true)
+			return testing.PollBreak(err)
+		}
+		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
+
+		isSourceReady := pdState.IsSourceReady()
+		if !(isSourceReady && prevIsSourceReady) {
+			// Require two consecutive reads to be src-ready to make sure the
+			// connection has stabilized.
+			prevIsSourceReady = isSourceReady
+
+			return errors.New("Servo DUT port (C1) is not src-ready")
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 300 * time.Second, Interval: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to check if charger is attached")
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 20 * time.Second}); err != nil {
+		return errors.Wrap(err, "timed out waiting for Servo DUT port to be ready")
+	}
+
+	// If required role is sink, have servo initiate a power swap
+	if savedpdState.IsSinkReady() {
+		if _, err := s.ServoSendPowerSwapRequest(ctx); err != nil {
+			return errors.Wrap(err, "swap power failed")
+		}
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			pdState, err := s.GetServoPDState(ctx)
+			if err != nil {
+				return testing.PollBreak(
+					errors.Wrap(err, "cannot access servo DUT port (C1) PD status"),
+				)
+			}
+
+			testing.ContextLogf(ctx, "Servo DUT port (C1) PE State is %s", pdState.PEStateName)
+
+			if !pdState.IsSinkReady() {
+				return errors.New("Servo DUT port (C1) is not sink-ready")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+			return errors.Wrap(err, "timed out waiting for servo DUT port to sink power")
+		}
 	}
 
 	return nil

@@ -33,7 +33,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.ServoPresent},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.TypecStatus()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Timeout:      60 * time.Minute,
 		Attr:         []string{"group:firmware", "firmware_pd", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Params: []testing.Param{{
@@ -115,7 +115,7 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 		}
 
 		if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
-			s.Fatal("Failed to establish connection after enabling dp alt mode: ", err)
+			s.Fatal("Failed to establish connection after enabling DP alt-mode: ", err)
 		}
 
 		testing.ContextLog(ctx, "retrieving type-c information")
@@ -129,6 +129,8 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 			if err := verifyPins(&input, typecInfo, pins.pinExpect); err != nil {
 				s.Fatal("Could not retrieve assigned DP setting: ", err)
 			}
+
+			testing.ContextLog(ctx, "successfully validated dp connection using ectools")
 		}
 	}
 
@@ -137,6 +139,11 @@ func PDPinNegotiation(ctx context.Context, s *testing.State) {
 	if err := h.Servo.ServoSetDPConfigs(ctx, &input, servo.MFPrefDisable); err != nil {
 		s.Fatal("Failed to set DP alt-mode: ", err)
 	}
+
+	if err := h.WaitConnect(ctx, firmware.SkipPDRoleSnk); err != nil {
+		s.Fatal("Failed to establish connection: ", err)
+	}
+
 	testing.ContextLog(ctx, "retrieving type-c information")
 	typecInfo, err := h.Servo.GetTypeCInfo(ctx, h.DUT)
 	if err != nil {
