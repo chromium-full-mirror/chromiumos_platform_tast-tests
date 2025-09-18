@@ -162,11 +162,11 @@ func (extension *chromeExtension) Open(ctx context.Context, cr *chrome.Chrome) e
 		return err
 	}
 
-	browserFrame := nodewith.BrowserWindowFinder()
+	browserWindow := nodewith.BrowserWindowFinder()
 	extensionMenu := nodewith.HasClass("ExtensionsMenuView").Role(role.Window)
 
 	return uiauto.Combine("open the extension",
-		extension.ui.LeftClick(nodewith.Name("Extensions").Role(role.PopUpButton).Ancestor(browserFrame)),
+		extension.ui.LeftClick(nodewith.Name("Extensions").Role(role.PopUpButton).Ancestor(browserWindow)),
 		extension.ui.LeftClick(nodewith.NameStartingWith(extension.name).HasClass("ExtensionsMenuButton").Ancestor(extensionMenu)),
 		extension.ui.WaitUntilExists(nodewith.NameStartingWith(extension.name).Role(role.RootWebArea)),
 	)(ctx)

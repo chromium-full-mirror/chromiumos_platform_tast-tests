@@ -79,12 +79,7 @@ func KeyboardServiceGRPC(ctx context.Context, s *testing.State) {
 	}
 
 	// Close apps with shortcuts.
-	browserWindow := &uipb.Finder{
-		NodeWiths: []*uipb.NodeWith{
-			{Value: &uipb.NodeWith_HasClass{HasClass: "BrowserFrame"}},
-			{Value: &uipb.NodeWith_Name{Name: "Chrome - New Tab"}},
-		},
-	}
+	browserWindow := uipb.BrowserWindowFinder().Name("Chrome - New Tab").Finder()
 	filesAppWindow := &uipb.Finder{
 		NodeWiths: []*uipb.NodeWith{
 			{Value: &uipb.NodeWith_HasClass{HasClass: "Widget"}},

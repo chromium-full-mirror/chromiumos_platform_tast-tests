@@ -195,9 +195,6 @@ func (n *NodeHelper) Finder() *Finder {
 }
 
 // BrowserWindowFinder returns a NodeHelper for the main browser window.
-// This handles the transition from "BrowserFrame" to "BrowserWidget".
-// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome
-// uprev contains the new naming.
 func BrowserWindowFinder() *NodeHelper {
-	return Node().ClassNameRegex("Browser(Widget|Frame)").Role(Role_ROLE_WINDOW)
+	return Node().HasClass("BrowserWidget").Role(Role_ROLE_WINDOW)
 }

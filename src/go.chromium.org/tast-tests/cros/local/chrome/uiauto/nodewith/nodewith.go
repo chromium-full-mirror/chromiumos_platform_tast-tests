@@ -648,18 +648,13 @@ func (f *Finder) ClassNameRegex(r *regexp.Regexp) *Finder {
 }
 
 // BrowserWindowFinder returns a finder for the main browser window.
-// This handles the transition from "BrowserFrame" to "BrowserWidget".
-// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome
-// uprev contains the new naming.
 func BrowserWindowFinder() *Finder {
-	return ClassNameRegex(regexp.MustCompile("Browser(Widget|Frame)")).Role(role.Window)
+	return HasClass("BrowserWidget").Role(role.Window)
 }
 
 // TopLevelWindowClassRegexPattern is the regex pattern for a top-level window,
 // which can be either a browser window or an ARC app window.
-// TODO(b/444070886): Clean up the "BrowserFrame" naming after the Chrome
-// uprev contains the new naming.
-const TopLevelWindowClassRegexPattern = "BrowserWidget|BrowserFrame|(ExoShellSurface-.*)"
+const TopLevelWindowClassRegexPattern = "BrowserWidget|(ExoShellSurface-.*)"
 
 // TopLevelWindowFinder returns a finder for a top-level window.
 func TopLevelWindowFinder() *Finder {
