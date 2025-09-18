@@ -133,6 +133,18 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set crossystem dev_boot_usb to 0: ", err)
 		}
+
+		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			state.IsServoChargerConnected = true
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
 	}(cleanupCtx)
 
 	s.Log("Removing USB")
@@ -172,11 +184,28 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreen, fwCommon.DeveloperMode); err != nil {
 			s.Error("Failed to detect firmware screen: ", err)
 		}
-	} else {
-		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+	}
+	s.Logf("Resetting firmware screen timeout for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	endTime := time.Now().Add(h.Config.FirmwareScreen)
+	for time.Now().Before(endTime) {
+		if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+			s.Fatal("Failed to press space key: ", err)
+		}
+		// On KeyboardDevSwitcher machines, pressing space triggers the
+		// to_norm screen. Revert to the developer screen with the
+		// esc key.
+		if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+			// GoBigSleepLint: Sleep for model specific time.
+			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+				s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+			}
+			if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+				s.Fatal("Failed to press esc: ", err)
+			}
+		}
+		// GoBigSleepLint: Avoid hitting space too fast.
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
 		}
 	}
 
@@ -187,11 +216,13 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
 			s.Fatal("Failed to press Ctrl-U: ", err)
 		}
-	}
-
-	s.Log("Resetting firmware screen timeout")
-	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
-		s.Fatal("Failed to press space key: ", err)
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+		}
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			s.Fatal("Failed to press esc: ", err)
+		}
 	}
 
 	if state.RemoveServoChargerRequired && state.IsServoChargerConnected {
@@ -206,20 +237,6 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	defer func(ctx context.Context) {
-		if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
-			if err := h.SetDUTPower(ctx, true); err != nil {
-				s.Fatal("Failed to connect charger: ", err)
-			}
-			state.IsServoChargerConnected = true
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-				s.Fatal("Failed to reconnect to the DUT: ", err)
-			}
-		}
-	}(cleanupCtx)
-
 	s.Log("Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 		s.Fatal("Failed to insert USB to DUT: ", err)
@@ -228,19 +245,6 @@ func DevBootUSB(ctx context.Context, s *testing.State) {
 	// take effect.
 	if err := testing.Sleep(ctx, firmware.UsbVisibleTime); err != nil {
 		s.Fatalf("Failed to sleep for %v s: %v", firmware.UsbDisableTime, err)
-	}
-
-	// On KeyboardDevSwitcher machines, pressing space triggers the
-	// to_norm screen. Revert to the developer screen with the
-	// esc key.
-	if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
-		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
-			s.Fatal("Failed to press esc: ", err)
-		}
-		// GoBigSleepLint: Sleep for model specific time.
-		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
-		}
 	}
 
 	switch testOpt.trigger {
