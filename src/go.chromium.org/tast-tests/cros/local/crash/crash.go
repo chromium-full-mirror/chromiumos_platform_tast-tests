@@ -97,6 +97,8 @@ const (
 	ECCrashExt = ".eccrash"
 	// ECCoredumpExt is an extension for ec memory coredumps
 	ECCoredumpExt = ".coredump.gz"
+	// ECLogExt is an extension for ec crash logs
+	ECLogExt = ".ec_log"
 	// JavaScriptStackExt is the extension for JavaScript stacks.
 	JavaScriptStackExt = ".js_stack"
 
@@ -151,6 +153,7 @@ func isCrashFile(filename string) bool {
 		DevCoredumpExt,
 		ECCrashExt,
 		ECCoredumpExt,
+		ECLogExt,
 		JavaScriptStackExt,
 	}
 	for _, ext := range knownExts {
