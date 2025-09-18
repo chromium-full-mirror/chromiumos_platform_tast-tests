@@ -124,7 +124,7 @@ func nvmeHealthSupported(ctx context.Context, dut *dut.DUT, probeFIO string) (bo
 		return false, errors.New("suspiciously low TBW")
 	}
 
-	if tbwDelta < tbwDeltaMin && tbwDelta > tbwDeltaMax {
+	if tbwDelta < tbwDeltaMin || tbwDelta > tbwDeltaMax {
 		return false, errors.Errorf("unexpected delta TBW: %f, want within (%f, %f)", tbwDelta, tbwDeltaMin, tbwDeltaMax)
 	}
 
