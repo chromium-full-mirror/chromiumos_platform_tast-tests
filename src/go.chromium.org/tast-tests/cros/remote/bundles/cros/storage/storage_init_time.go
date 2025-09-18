@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/storage/util"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -23,10 +24,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         StorageInitTime,
 		Desc:         "Measures storage time against threshold",
-		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
+		Contacts:     []string{"chromeos-storage@google.com", "digehlot@google.com"},
 		Attr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
+		Requirements: []string{tdreq.StorageStable},
 	})
 }
 
