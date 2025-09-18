@@ -30,7 +30,7 @@ import (
 
 var (
 	// settingsWindowFinder is the finder of settings window.
-	settingsWindowFinder = ui.BrowserWindowFinder().NameContaining("Settings").Finder()
+	settingsWindowFinder = ui.BrowserWindowFinder().NameContaining("Settings").Nth(0).Finder()
 
 	// settingsDeviceLinkFinder is the finder of the device link.
 	settingsDeviceLinkFinder = &ui.Finder{
