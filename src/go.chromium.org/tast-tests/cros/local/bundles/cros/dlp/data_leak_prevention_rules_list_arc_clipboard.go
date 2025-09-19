@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:release-health",
 			"release-health_enterprise",
 		},

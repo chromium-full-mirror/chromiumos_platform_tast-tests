@@ -68,7 +68,7 @@ func init() {
 		}},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "blocked",
@@ -86,7 +86,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_cancelled",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: clipboardTestParams{
 				name:        "warn_cancelled",

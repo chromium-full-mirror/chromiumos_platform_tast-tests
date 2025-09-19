@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
@@ -37,8 +37,8 @@ func init() {
 			"group:release-health",
 			"release-health_ui",
 		},
-		Timeout:      3 * time.Minute,
-		Fixture:      "chromeLoggedIn",
+		Timeout: 3 * time.Minute,
+		Fixture: "chromeLoggedIn",
 	})
 }
 

@@ -33,7 +33,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:complementary",
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:hardware",
 			"group:medium_low_tier",
 			"group:hw_agnostic",

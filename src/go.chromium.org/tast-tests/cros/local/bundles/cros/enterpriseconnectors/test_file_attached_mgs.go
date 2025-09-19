@@ -33,7 +33,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:hw_agnostic",
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 		},

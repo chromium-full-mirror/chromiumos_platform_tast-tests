@@ -34,7 +34,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

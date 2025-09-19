@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Params: []testing.Param{{
 			Name:      "golden",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 		}, {
 			Name:      "medium",
 			ExtraAttr: []string{"group:medium_low_tier"},

@@ -63,7 +63,7 @@ func init() {
 		BugComponent: "b:1000044",
 		Attr: []string{
 			"group:tape-daily",
-			"group:golden_tier", // TODO: Keep golden_tier suite until b/321909589 is resolved.
+			"group:golden_tier_secondary", // TODO: Keep golden_tier suite until b/321909589 is resolved.
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{

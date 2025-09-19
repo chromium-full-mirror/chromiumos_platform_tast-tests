@@ -32,7 +32,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
+		Attr:         []string{"group:golden_tier_secondary", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      3*chrome.LoginTimeout + 3*time.Minute,

@@ -28,7 +28,7 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:complementary",
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:hardware",
 			"group:medium_low_tier",
 			"group:hw_agnostic",

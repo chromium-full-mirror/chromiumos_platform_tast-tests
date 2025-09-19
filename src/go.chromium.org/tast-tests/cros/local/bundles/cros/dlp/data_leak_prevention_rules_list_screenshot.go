@@ -81,7 +81,7 @@ func init() {
 			}},
 		Params: []testing.Param{{
 			Name:      "ash_blocked",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:                  "blocked",
@@ -92,7 +92,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:                  "warn_proceded",

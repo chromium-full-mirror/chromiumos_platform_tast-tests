@@ -10,9 +10,6 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -21,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -35,7 +34,7 @@ func init() {
 		// ChromeOS > Software > System UI Surfaces > Notifications
 		BugComponent: "b:1246021",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

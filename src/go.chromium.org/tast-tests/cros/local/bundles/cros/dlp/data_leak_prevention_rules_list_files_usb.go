@@ -124,7 +124,7 @@ func init() {
 			{
 				Name: "ash_allowed",
 				ExtraAttr: []string{
-					"group:golden_tier",
+					"group:golden_tier_secondary",
 					"group:medium_low_tier",
 					"group:hardware",
 					"group:complementary",
@@ -150,7 +150,7 @@ func init() {
 			}, {
 				Name: "ash_warn_cancelled",
 				ExtraAttr: []string{
-					"group:golden_tier",
+					"group:golden_tier_secondary",
 					"group:medium_low_tier",
 					"group:hardware",
 					"group:complementary",

@@ -67,7 +67,7 @@ func init() {
 			}, {
 				Name: "arc_vm",
 				ExtraAttr: []string{
-					"group:golden_tier",
+					"group:golden_tier_secondary",
 					"group:medium_low_tier",
 					"group:hardware",
 					"group:complementary",

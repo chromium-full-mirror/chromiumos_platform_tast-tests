@@ -27,9 +27,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Certificate and key pair (both in PEM format) for the test website.
@@ -96,7 +95,7 @@ func init() {
 		},
 		BugComponent: "b:1000044",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

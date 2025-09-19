@@ -65,7 +65,7 @@ func init() {
 		// integration of the policy with powerd, and powerd is well covered by other tests.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:release-health",
 			"release-health_enterprise",
 		},

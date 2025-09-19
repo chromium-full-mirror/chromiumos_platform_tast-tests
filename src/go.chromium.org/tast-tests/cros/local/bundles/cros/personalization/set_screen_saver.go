@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/personalization"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,7 +27,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

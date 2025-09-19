@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1246021", // Chrome OS > Software > System UI Surfaces > Notifications
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

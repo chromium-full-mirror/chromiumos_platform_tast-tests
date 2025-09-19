@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/inputs/pre"
 	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast-tests/cros/local/inputs/util"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -32,7 +31,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

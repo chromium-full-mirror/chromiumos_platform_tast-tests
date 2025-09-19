@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:1168200", // Chrome > Isolated Web Apps
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
+		Attr:         []string{"group:golden_tier_secondary", "group:hw_agnostic"},
 		Timeout:      2*chrome.LoginTimeout + 2*time.Minute,
 		Fixture:      fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{

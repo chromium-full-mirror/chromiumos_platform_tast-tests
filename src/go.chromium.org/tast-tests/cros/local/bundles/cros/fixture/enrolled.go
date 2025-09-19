@@ -22,7 +22,7 @@ func init() {
 		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Params: []testing.Param{{
 			Name:      "golden",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 		}, {
 			Name:      "medium",
 			ExtraAttr: []string{"group:medium_low_tier"},

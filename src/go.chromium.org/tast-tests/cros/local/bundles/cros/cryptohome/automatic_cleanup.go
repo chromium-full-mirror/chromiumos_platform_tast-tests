@@ -28,7 +28,7 @@ func init() {
 			"gwendal@chromium.org", // Lead for ChromeOS Storage
 		},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

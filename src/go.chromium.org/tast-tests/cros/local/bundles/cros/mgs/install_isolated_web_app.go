@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1168200", // Chrome > Isolated Web Apps
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1000044",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

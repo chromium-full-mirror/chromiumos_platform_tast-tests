@@ -43,7 +43,7 @@ func init() {
 			"chrome_internal",
 		},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:hardware",
 		},
 		Params: []testing.Param{{

@@ -49,7 +49,7 @@ func init() {
 		// ChromeOS > Software > System UI Surfaces > Glanceables
 		BugComponent: "b:1362950",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

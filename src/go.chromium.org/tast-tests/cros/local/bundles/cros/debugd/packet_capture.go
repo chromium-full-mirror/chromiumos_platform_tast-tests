@@ -34,12 +34,12 @@ func init() {
 		Desc: "Verifies network packet capture works and can be controlled by policy",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com", // Team
-			"iremuguz@google.com",                           // Test author
-			"cros-debugd@google.com",                        // Debugd team
+			"iremuguz@google.com",                              // Test author
+			"cros-debugd@google.com",                           // Debugd team
 		},
 		BugComponent: "b:1111615",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

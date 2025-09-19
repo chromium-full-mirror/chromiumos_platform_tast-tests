@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1000044",
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
@@ -159,7 +159,7 @@ func waitForSignal(ctx context.Context) error {
 	}
 	signal, err := dbusutil.NewSignalWatcherForSystemBus(ctx, match)
 	if err != nil {
-		return errors.Errorf("Failed to create DBus signal watcher: %s", err)
+		return errors.Errorf("failed to create DBus signal watcher: %s", err)
 	}
 	defer signal.Close(ctx)
 

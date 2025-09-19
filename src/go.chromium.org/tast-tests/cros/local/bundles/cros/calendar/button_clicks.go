@@ -27,7 +27,7 @@ func init() {
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

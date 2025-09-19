@@ -89,7 +89,7 @@ func init() {
 			},
 		}, {
 			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"group:golden_tier"},
+			ExtraAttr: []string{"group:golden_tier_secondary"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_proceded",

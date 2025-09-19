@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Software > Family > Edusumer
 		BugComponent: "b:1631240",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

@@ -33,7 +33,7 @@ func init() {
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",

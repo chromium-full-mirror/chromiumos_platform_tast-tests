@@ -37,7 +37,7 @@ func init() {
 			Name: "5_users",
 			Val:  5,
 			ExtraAttr: []string{
-				"group:golden_tier",
+				"group:golden_tier_secondary",
 				"group:medium_low_tier",
 				"group:hardware",
 				"group:complementary",

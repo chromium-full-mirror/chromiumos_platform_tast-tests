@@ -40,7 +40,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:hw_agnostic",
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 		},
 		VarDeps: []string{
 			"onedrive.googlemanagedusername",

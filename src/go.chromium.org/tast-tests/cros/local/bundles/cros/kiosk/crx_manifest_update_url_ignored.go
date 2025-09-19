@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:1253865",
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Attr: []string{
-			"group:golden_tier",
+			"group:golden_tier_secondary",
 			"group:medium_low_tier",
 			"group:complementary",
 			"group:hw_agnostic",
