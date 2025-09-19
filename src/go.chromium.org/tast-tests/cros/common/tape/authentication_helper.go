@@ -102,69 +102,72 @@ func writeToken2Device(ctx context.Context, dut dut.DUT, authConfig, localRefres
 	}
 
 	// Get a token source to use for authentication based on the provided information.
-	var tokenSource oauth2.TokenSource
-
-	if localRefreshToken != "" {
-		// If any local credentials were provided, write them directly.
-		testing.ContextLog(ctx, "Using user credentials for TAPE authentication")
-		tokenSource = oauth2.ReuseTokenSource(nil, &jwtToken{
-			conf: &oauth2.Config{
-				ClientID:     config.ClientID,
-				ClientSecret: config.ClientSecret,
-				Endpoint:     google.Endpoint,
-				RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
-				Scopes:       []string{"openid email"},
-			},
-			audience: tapeAudience,
-			refresh: &oauth2.Token{
-				TokenType:    "Bearer",
-				RefreshToken: localRefreshToken,
-			},
-		})
+	var tokenJSON []byte
+	if TapeToken.Value() != "" {
+		tokenJSON = []byte(TapeToken.Value())
 	} else {
-		// Find the first available service account on the host.
-		var saPath string
-		for _, path := range config.DroneServiceAccountLocations {
-			if _, err := os.Stat(path); err == nil {
-				saPath = path
-				break
+		var tokenSource oauth2.TokenSource
+		if localRefreshToken != "" {
+			// If any local credentials were provided, write them directly.
+			testing.ContextLog(ctx, "Using user credentials for TAPE authentication")
+			tokenSource = oauth2.ReuseTokenSource(nil, &jwtToken{
+				conf: &oauth2.Config{
+					ClientID:     config.ClientID,
+					ClientSecret: config.ClientSecret,
+					Endpoint:     google.Endpoint,
+					RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
+					Scopes:       []string{"openid email"},
+				},
+				audience: tapeAudience,
+				refresh: &oauth2.Token{
+					TokenType:    "Bearer",
+					RefreshToken: localRefreshToken,
+				},
+			})
+		} else {
+			// Find the first available service account on the host.
+			var saPath string
+			for _, path := range config.DroneServiceAccountLocations {
+				if _, err := os.Stat(path); err == nil {
+					saPath = path
+					break
+				}
+			}
+
+			if saPath == "" {
+				return errors.New("failed to find a service account to use for authentication")
+			}
+
+			testing.ContextLogf(ctx, "Using service account credentials for TAPE authentication: %s", saPath)
+
+			// Read the contents of the file.
+			sa, err := os.ReadFile(saPath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to read content of service account located at: %s", saPath)
+			}
+
+			tokenSource, err = createTokenSource(ctx, sa)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create Token source from service account located at: %s", saPath)
 			}
 		}
 
-		if saPath == "" {
-			return errors.New("failed to find a service account to use for authentication")
+		// Make sure the Token source was set.
+		if tokenSource == nil {
+			errors.New("failed to create a token source for TAPE")
 		}
 
-		testing.ContextLogf(ctx, "Using service account credentials for TAPE authentication: %s", saPath)
-
-		// Read the contents of the file.
-		sa, err := os.ReadFile(saPath)
+		// Serialize the content.
+		t, err := tokenSource.Token()
 		if err != nil {
-			return errors.Wrapf(err, "failed to read content of service account located at: %s", saPath)
+			return errors.Wrap(err, "failed to create a Token for the provided Token source")
 		}
 
-		tokenSource, err = createTokenSource(ctx, sa)
+		tokenJSON, err = json.Marshal(t)
 		if err != nil {
-			return errors.Wrapf(err, "failed to create Token source from service account located at: %s", saPath)
+			return errors.Wrap(err, "failed to marshal Token")
 		}
 	}
-
-	// Make sure the Token source was set.
-	if tokenSource == nil {
-		errors.New("failed to create a token source for TAPE")
-	}
-
-	// Serialize the content.
-	t, err := tokenSource.Token()
-	if err != nil {
-		return errors.Wrap(err, "failed to create a Token for the provided Token source")
-	}
-
-	tokenJSON, err := json.Marshal(t)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal Token")
-	}
-
 	if err := linuxssh.WriteFile(ctx, dut.Conn(), dutTokenFilePath, tokenJSON, 0644); err != nil {
 		return errors.Wrap(err, "failed to write local refresh Token to DUT")
 	}
