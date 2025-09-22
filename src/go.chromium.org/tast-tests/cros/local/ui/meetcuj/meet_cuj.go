@@ -520,44 +520,13 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to turn on camera")
 	}
 
-	// Temporary enable trace collection when opening visual effect panel.
-	// TODO(b/404077247): Remove the trace for visual effect after debugging the loading issue.
-	traceConfigFile := dataPath(cujrecorder.SystemTraceConfigFile)
-	setEffect := func(ctx context.Context, effect *nodewith.Finder) (setEffectErr error) {
-		closeCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := recorder.StartTracingWithName(ctx, outDir, "visual_effect", traceConfigFile); err != nil {
-			// Only log the error as the trace file is for debugging purposes.
-			testing.ContextLog(ctx, "Failed to start tracing: ", err)
-		} else {
-			defer func(ctx context.Context) {
-				// If the trace is not stopped, it might affect the following actions.
-				// Append the error if failing to stop tracing.
-				if err := recorder.StopTracing(ctx); err != nil {
-					setEffectErr = errors.Join(setEffectErr, errors.Wrap(err, "failed to stop tracing"))
-					return
-				}
-				// Save the trace files when error happens.
-				// If no error happens, the file will be saved with other trace files later.
-				if setEffectErr == nil {
-					return
-				}
-				if err := recorder.SaveTraceFiles(ctx); err != nil {
-					testing.ContextLog(ctx, "Failed to save trace files: ", err)
-				}
-			}(closeCtx)
-		}
-		return SetVisualEffects(ui, effect)(ctx)
-	}
 	if meet.Effects {
 		testing.ContextLog(ctx, "Turn on visual effects")
-		if err := setEffect(ctx, BlurBackgroundFinder); err != nil {
+		if err := SetVisualEffects(ui, BlurBackgroundFinder)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to turn on visual effects")
 		}
 	} else {
-		if err := setEffect(ctx, TurnOffEffectsFinder); err != nil {
+		if err := SetVisualEffects(ui, TurnOffEffectsFinder)(ctx); err != nil {
 			return pv, errors.Wrap(err, "failed to turn off visual effects")
 		}
 	}
@@ -919,7 +888,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 		startTracingRoutine := func(ctx context.Context) {
 			async.Run(ctx, func(ctx context.Context) {
-				if err := recorder.StartTracing(ctx, outDir, traceConfigFile); err != nil {
+				if err := recorder.StartTracing(ctx, outDir, dataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 					tracingErr = errors.Wrap(err, "failed to start tracing")
 					return
 				}
@@ -1374,7 +1343,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	if meet.Effects {
-		if err := setEffect(ctx, TurnOffEffectsFinder); err != nil {
+		if err := SetVisualEffects(ui, TurnOffEffectsFinder)(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to turn off visual effects: ", err)
 		}
 	}
