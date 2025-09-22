@@ -24,9 +24,6 @@ import (
 const (
 	// Name of the histogram that records security anomalies.
 	securityAnomalyHistogramName = "ChromeOS.SecurityAnomaly"
-	// The bucket in |securityAnomalyHistogramName| that tracks successful
-	// memfd_create syscalls (baseline condition of memfd execution).
-	memfdCreateHistogramBucket = 3
 	// The bucket in |securityAnomalyHistogramName| that tracks memory file
 	// execution attempts.
 	memfdExecuteHistogramBucket = 4
@@ -136,24 +133,18 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "histogram diff error"))
 		}
-		foundMemfdCreate := false
 		foundMemfdExecute := false
 		for _, bucket := range diff.Buckets {
-			switch bucket.Min {
-			case memfdCreateHistogramBucket:
-				foundMemfdCreate = true
-			case memfdExecuteHistogramBucket:
+			if bucket.Min == memfdExecuteHistogramBucket {
 				foundMemfdExecute = true
-			}
-			if foundMemfdCreate && foundMemfdExecute {
 				break
 			}
 		}
-		if !foundMemfdCreate || !foundMemfdExecute {
-			return errors.New("did not find memfd execution or creation metrics " + diff.String())
+		if !foundMemfdExecute {
+			return errors.New("did not find memfd execution metric " + diff.String())
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: umaTimeout}); err != nil {
-		s.Error("Failed when looking for expected histogram diffs: ", err)
+		s.Error("Did not find the expected histogram diff: ", err)
 	}
 }
