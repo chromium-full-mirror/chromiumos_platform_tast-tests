@@ -351,7 +351,7 @@ func init() {
 			}, {
 				Name:              "input_device",
 				Fixture:           commonfixture.RebootForProbeFunction,
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("obiwan", "quigon")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,

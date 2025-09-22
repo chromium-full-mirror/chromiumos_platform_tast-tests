@@ -23,8 +23,6 @@ var (
 		"blacktip360": {"camera": {}},
 		"domilly":     {"display_panel": {}},
 		"hideo":       {"storage": {}},
-		"obiwan":      {"touchscreen": {}},
-		"quigon":      {"touchscreen": {}},
 		"santa":       {"battery": {}},
 		"wugtrio":     {"camera": {}},
 		"wyrdeer":     {"battery": {}},
