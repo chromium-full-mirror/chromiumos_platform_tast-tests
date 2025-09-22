@@ -36,10 +36,10 @@ var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fingerprint.BoardNameBuccaneer: {
-		"buccaneer_v2.0.26328-821504380b-RO_v2.0.28107-258bcf04b5-RW.bin": {
-			sha256sum: "cd7af69fbfb7b1a14ac592abbba02f4985a49117a1260f4c498b25903a603109",
+		"buccaneer_v2.0.26328-821504380b-RO_v2.0.29322-b77e8e8a26-RW.bin": {
+			sha256sum: "6c21d735fc979974266f2f7d480764d9f408a031e34752cc98a44edc76f93fd9",
 			roVersion: "buccaneer_v2.0.26328-821504380b",
-			rwVersion: "buccaneer_v2.0.28107-258bcf04b5",
+			rwVersion: "buccaneer_v2.0.29322-b77e8e8a26",
 			keyID:     "95fb0d0a5f1c1f658a0526430a3a184301421e32",
 		},
 	},
@@ -60,16 +60,16 @@ var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fingerprint.BoardNameHelipilot: {
-		"helipilot_v2.0.24337-2726e9f149-RO_v2.0.28107-258bcf04b5-RW.bin": {
-			sha256sum: "546a30d1ec4b4ec373185ac8402ae215c866f977a87a35bcda78dbae9a2126a2",
+		"helipilot_v2.0.24337-2726e9f149-RO_v2.0.29322-b77e8e8a26-RW.bin": {
+			sha256sum: "9179981010f196f70b50632a196fbdfadb441b9ee7c6b476538193185363c73f",
 			roVersion: "helipilot_v2.0.24337-2726e9f149",
-			rwVersion: "helipilot_v2.0.28107-258bcf04b5",
+			rwVersion: "helipilot_v2.0.29322-b77e8e8a26",
 			keyID:     "3c0b147809e06f279ba0cf221c18995d7b4e3f1a",
 		},
-		"helipilot_v2.0.27609-ac26a0796b-RO_v2.0.28107-258bcf04b5-RW.bin": {
-			sha256sum: "9584dd432d27329029f6a0153b74cc65f5b39a2cc65eb5322ea3a979b15593ae",
+		"helipilot_v2.0.27609-ac26a0796b-RO_v2.0.29322-b77e8e8a26-RW.bin": {
+			sha256sum: "1577ac24244265c2bdaaabcfe201746662529d8bd6b22c894c836d2da928b685",
 			roVersion: "helipilot_v2.0.27609-ac26a0796b",
-			rwVersion: "helipilot_v2.0.28107-258bcf04b5",
+			rwVersion: "helipilot_v2.0.29322-b77e8e8a26",
 			keyID:     "3c0b147809e06f279ba0cf221c18995d7b4e3f1a",
 		},
 	},
