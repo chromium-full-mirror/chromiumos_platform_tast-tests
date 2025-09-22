@@ -1217,19 +1217,25 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 	withAudio := powerTestOptions.Audio == DoNotChangeAudio
 
-	// Ensure the battery is higher than threshold before calling PowerTestSetup.
-	lowBatteryShutdownPercent, err := metrics.LowBatteryShutdownPercent(ctx)
+	status, err := power.GetStatus(ctx)
 	if err != nil {
-		s.Fatal("Invalid battery_shutdown_percent: ", err)
+		s.Fatal("Failed to obtain DUT power status: ", err)
 	}
-	threshold := DefaultDischargeThreshold + lowBatteryShutdownPercent
+	if status.BatteryPresent {
+		// Ensure the battery is higher than threshold before calling PowerTestSetup.
+		lowBatteryShutdownPercent, err := metrics.LowBatteryShutdownPercent(ctx)
+		if err != nil {
+			s.Fatal("Invalid battery_shutdown_percent: ", err)
+		}
+		threshold := DefaultDischargeThreshold + lowBatteryShutdownPercent
 
-	chargeParams := power.ChargeParams{
-		MinChargePercentage: threshold,
-		MaxChargePercentage: 100.0,
-	}
-	if err := PrepareBattery(ctx, chargeParams); err != nil {
-		s.Fatal("Failed to prepare battery: ", err)
+		chargeParams := power.ChargeParams{
+			MinChargePercentage: threshold,
+			MaxChargePercentage: 100.0,
+		}
+		if err := PrepareBattery(ctx, chargeParams); err != nil {
+			s.Fatal("Failed to prepare battery: ", err)
+		}
 	}
 
 	// Set up the testing environment.
