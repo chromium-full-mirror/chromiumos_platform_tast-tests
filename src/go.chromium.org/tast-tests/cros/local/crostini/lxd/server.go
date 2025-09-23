@@ -124,7 +124,7 @@ func makeIndexJSON() ([]byte, error) {
 				Images: indexJSONImages{
 					Path:     "streams/v1/images.json",
 					Datatype: "image-downloads",
-					Products: []string{product("bullseye", arch), product("bookworm", arch)},
+					Products: []string{product("bookworm", arch)},
 				},
 			},
 			Format: "index:1.0",
@@ -151,7 +151,7 @@ func makeImagesJSON(metadataPath, rootfsPath string) ([]byte, error) {
 				Release:      "fakeversion",
 				Os:           "Debian",
 				ReleaseTitle: "fakeversion",
-				Aliases:      "debian/bullseye,debian/bookworm",
+				Aliases:      "debian/bookworm",
 			},
 		},
 		Format: "products:1.0",

@@ -84,7 +84,7 @@ func init() {
 			ExtraAttr:         []string{"group:stress"},
 			ExtraSoftwareDeps: []string{"arm", "vm_host", "dlc"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Platform("trogdor", "herobrine")),
-			Fixture:           "crostiniBullseye",
+			Fixture:           "crostiniBookworm",
 		}},
 	})
 }

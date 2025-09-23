@@ -133,38 +133,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseye",
-		Desc:            "Install Crostini with Bullseye",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostini",
-		// TODO(jinrongwu): switch to Global RunTime Variable when deprecating pre.go.
-		// The same for the rest keepState var.
-		Vars: []string{"keepState"},
-		Data: []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeWithoutArc",
-		Desc:            "Install Crostini with Bullseye without ARC enabled",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookworm",
 		Desc:            "Install Crostini with Bookworm",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -180,6 +148,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "crostiniBookwormPolicy",
+		Desc:     "Install Crostini with Bookworm, with Chrome logged in with policy",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: &crostiniFixture{preData: preTestDataBookworm,
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
+			},
+		},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          fixture.ChromePolicyLoggedIn,
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookwormWithoutArc",
 		Desc:            "Install Crostini with Bookworm without ARC enabled",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -192,36 +179,6 @@ func init() {
 		Parent:          "chromeLoggedInForCrostiniWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeGaia",
-		Desc:            "Install Crostini with Bullseye in Chrome logged in with Gaia",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInWithGaiaForCrostini",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeGaiaWithoutArc",
-		Desc:            "Install Crostini with Bullseye in Chrome logged in with Gaia without ARC enabled",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInWithGaiaForCrostiniWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -255,21 +212,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeLargeContainer",
-		Desc:            "Install Crostini with Bullseye in large container with apps installed",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		BugComponent:    "b:1122570", // ChromeOS > Software > GuestOS > Crostini
-		Impl:            &crostiniFixture{preData: preTestDataBullseyeLC},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithoutArc",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBookwormLargeContainer",
 		Desc:            "Install Crostini with Bookworm in large container with apps installed",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -285,34 +227,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "crostiniBullseyePolicy",
-		Desc:     "Install Crostini with Bullseye, with Chrome logged in with policy",
-		Contacts: []string{"clumptini+oncall@google.com"},
-		Impl: &crostiniFixture{preData: preTestDataBullseye,
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
-			},
-		},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          fixture.ChromePolicyLoggedIn,
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "crostiniBullseyeWithRootNsDnsProxy",
-		Desc: "Install Crostini with Bullseye, with Chrome logged in with DNS proxy running on the root network namespace",
+		Name: "crostiniBookwormWithRootNsDnsProxy",
+		Desc: "Install Crostini with Bookworm, with Chrome logged in with DNS proxy running on the root network namespace",
 		Contacts: []string{
 			"jasongustaman@google.com",
 			"cros-networking@google.com",
 		},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Impl: &crostiniFixture{preData: preTestDataBullseye,
+		Impl: &crostiniFixture{preData: preTestDataBookworm,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{chrome.EnableFeatures("EnableRootNsDnsProxy")}, nil
 			},
@@ -323,7 +246,7 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          fixture.ChromePolicyLoggedIn,
 		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -374,19 +297,9 @@ type FixtureData struct {
 	FakeDMS       *fakedms.FakeDMS
 }
 
-var preTestDataBullseye = &preTestData{
-	container:     normal,
-	debianVersion: vm.DebianBullseye,
-}
-
 var preTestDataBookworm = &preTestData{
 	container:     normal,
 	debianVersion: vm.DebianBookworm,
-}
-
-var preTestDataBullseyeLC = &preTestData{
-	container:     largeContainer,
-	debianVersion: vm.DebianBullseye,
 }
 
 var preTestDataBookwormLC = &preTestData{

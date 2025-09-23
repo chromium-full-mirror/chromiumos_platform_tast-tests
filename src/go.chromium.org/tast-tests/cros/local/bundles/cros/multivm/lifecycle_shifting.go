@@ -61,8 +61,8 @@ func init() {
 			Val:               &lifecycleShiftingParam{inCrostini: true, inHost: true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraData: []string{
-				crostini.GetContainerMetadataArtifact("bullseye", false),
-				crostini.GetContainerRootfsArtifact("bullseye", false),
+				crostini.GetContainerMetadataArtifact("bookworm", false),
+				crostini.GetContainerRootfsArtifact("bookworm", false),
 			},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 		}},

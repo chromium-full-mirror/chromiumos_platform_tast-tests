@@ -486,16 +486,12 @@ type PreData struct {
 // Tip: Run tests with -var=keepState=true to speed up local development
 func StartedByDlcBuster() testing.Precondition { return startedByDlcBusterPre }
 
-// StartedByDlcBullseye ensures that a VM running bullseye has
+// StartedByDlcBookworm ensures that a VM running bookworm has
 // started before the test runs. This precondition has complex
 // requirements to use that are best met using the test parameter
 // generator in params.go.
 // Tip: Run tests with -var=keepState=true to speed up local development
-func StartedByDlcBullseye() testing.Precondition { return startedByDlcBullseyePre }
-
-// StartedByDlcBullseyeGaia is similar to StartedByDlcBullseye, except for
-// logging in to Chrome using gaia user.
-func StartedByDlcBullseyeGaia() testing.Precondition { return startedByDlcBullseyeGaiaPre }
+func StartedByDlcBookworm() testing.Precondition { return startedByDlcBookwormPre }
 
 type containerType int
 
@@ -518,19 +514,11 @@ var startedByDlcBusterPre = &preImpl{
 	debianVersion: vm.DebianBuster,
 }
 
-var startedByDlcBullseyePre = &preImpl{
-	name:          "crostini_started_by_dlc_bullseye",
+var startedByDlcBookwormPre = &preImpl{
+	name:          "crostini_started_by_dlc_bookworm",
 	timeout:       chrome.LoginTimeout + 7*time.Minute,
 	container:     normal,
-	debianVersion: vm.DebianBullseye,
-}
-
-var startedByDlcBullseyeGaiaPre = &preImpl{
-	name:          "crostini_started_by_dlc_bullseye_gaia",
-	timeout:       chrome.GAIALoginTimeout + 7*time.Minute,
-	container:     normal,
-	debianVersion: vm.DebianBullseye,
-	loginType:     loginGaia,
+	debianVersion: vm.DebianBookworm,
 }
 
 // PostTestData contains data for post test tasks in post.go that should be persistent across tests.

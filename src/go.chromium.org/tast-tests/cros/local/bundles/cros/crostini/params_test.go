@@ -116,9 +116,6 @@ func TestFixTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		minimumContainerVersion := vm.DebianBookworm
-		if options.foundation {
-			minimumContainerVersion = vm.DebianBullseye
-		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:                 customTimeout,
 			ExtraAttr:               options.extraAttr,
@@ -150,7 +147,7 @@ func TestExpensiveParams(t *testing.T) {
 			Timeout:                 duration,
 			IsNotMainline:           true,
 			UseFixture:              true,
-			MinimumContainerVersion: vm.DebianBullseye,
+			MinimumContainerVersion: vm.DebianBookworm,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -189,9 +186,6 @@ func TestAppTestParams(t *testing.T) {
 			timeout = DefaultAppTimeout
 		}
 		minimumContainerVersion := vm.DebianBookworm
-		if options.foundation {
-			minimumContainerVersion = vm.DebianBullseye
-		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:                 timeout,

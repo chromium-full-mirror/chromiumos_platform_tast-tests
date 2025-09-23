@@ -38,7 +38,7 @@ func init() {
 			Pre:               multivm.ArcStarted(),
 		}, {
 			Name:              "with_bg_crostini",
-			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
+			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bookworm", false), crostini.GetContainerRootfsArtifact("bookworm", false)},
 			ExtraSoftwareDeps: []string{"vm_host"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			Pre:               multivm.CrostiniStarted(),
@@ -91,8 +91,8 @@ func MemoryChromeOSPerf(ctx context.Context, s *testing.State) {
 	// How many seconds to spend in each allocation phase.
 	const phaseSeconds = 60
 
-	// No memory pressure. Wait for things to settle.
 	s.Log("Waiting with no memory pressure")
+	// GoBigSleepLint: No memory pressure. Wait for things to settle.
 	if err := testing.Sleep(ctx, phaseSeconds*time.Second); err != nil {
 		s.Fatal("Failed to sleep with no memory pressure: ", err)
 	}

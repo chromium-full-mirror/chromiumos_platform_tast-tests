@@ -110,7 +110,7 @@ func init() {
 				source:   tcSourceTypeCrostini,
 				ipFamily: tcIPv4,
 			},
-			Fixture:           "crostiniBullseye",
+			Fixture:           "crostiniBookworm",
 			ExtraSoftwareDeps: []string{"vm_host"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 		}, {
@@ -119,7 +119,7 @@ func init() {
 				source:   tcSourceTypeCrostini,
 				ipFamily: tcIPv6,
 			},
-			Fixture:           "crostiniBullseye",
+			Fixture:           "crostiniBookworm",
 			ExtraSoftwareDeps: []string{"vm_host"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 		}, {

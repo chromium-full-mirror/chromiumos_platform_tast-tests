@@ -69,8 +69,7 @@ import (
 // Param specifies how each set of crostini tests should be generated.
 type Param struct {
 	// Name of the test case. Generated tests will look like
-	// "name_amd64_buster_stable", "name_arm_bullseye_unstable"
-	// etc.
+	// "name_amd64_buster_stable", etc
 	Name string
 
 	// ExtraAttr contains additional attributes to add to the
@@ -152,7 +151,7 @@ type Param struct {
 
 	// IMEName is used to specify the name of the input method being tested.
 	// This name will be used in naming the test and as a test Val.
-	// A non-empty value implies MinimumContainerVersion=vm.DebianBullseye
+	// A non-empty value implies MinimumContainerVersion=vm.DebianBookworm
 	// and devicemode.ClamshellMode. If no additional input_method is used,
 	// set as empty string.
 	IMEName string
@@ -238,7 +237,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	}
 	var itChrome = []iterator{}
 
-	for _, debianVersion := range []vm.ContainerDebianVersion{vm.DebianBullseye, vm.DebianBookworm} {
+	for _, debianVersion := range []vm.ContainerDebianVersion{vm.DebianBookworm} {
 		for _, stable := range []bool{true, false} {
 			itChrome = append(itChrome, iterator{
 				debianVersion: debianVersion,
@@ -277,8 +276,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				return
 			}
 
-			if testCase.MinimalSet && i.debianVersion != vm.DebianBullseye {
-				// The minimal set is currently Bullseye.
+			if testCase.MinimalSet && i.debianVersion != vm.DebianBookworm {
+				// The minimal set is currently Bookworm.
 				return
 			}
 
@@ -295,7 +294,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			name := testCase.Name
 			if i.baguette {
 				name = combineName(name, "baguette")
-			} else if !testCase.MinimalSet && (i.debianVersion == vm.DebianBullseye || i.debianVersion == vm.DebianBookworm) {
+			} else if !testCase.MinimalSet && (i.debianVersion == vm.DebianBookworm) {
 				// If we're generating a minimal set
 				// then the debian version is always
 				// the same and we don't need to

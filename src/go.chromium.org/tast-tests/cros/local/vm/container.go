@@ -61,11 +61,6 @@ var (
 		Codename: "buster",
 		Version:  10,
 	}
-	// DebianBullseye refers to the "bullseye" distribution of debian (a.k.a. debian 11).
-	DebianBullseye = ContainerDebianVersion{
-		Codename: "bullseye",
-		Version:  11,
-	}
 	// DebianBookworm refers to the "bookworm" distribution of debian (a.k.a. debian 12).
 	DebianBookworm = ContainerDebianVersion{
 		Codename: "bookworm",

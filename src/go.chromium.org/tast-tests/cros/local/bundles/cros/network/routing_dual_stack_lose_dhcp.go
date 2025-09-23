@@ -54,7 +54,7 @@ func init() {
 		}, {
 			Name:              "crostini",
 			Val:               loseDHCPTestCaseCrostini,
-			Fixture:           "crostiniBullseye",
+			Fixture:           "crostiniBookworm",
 			ExtraSoftwareDeps: []string{"vm_host"},
 		}},
 	})

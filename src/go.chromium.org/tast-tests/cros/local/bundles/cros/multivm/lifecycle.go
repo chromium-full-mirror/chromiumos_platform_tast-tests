@@ -63,8 +63,8 @@ func init() {
 			Pre:  multivm.CrostiniStarted(),
 			Val:  &lifecycleParam{inCrostini: true},
 			ExtraData: []string{
-				crostini.GetContainerMetadataArtifact("bullseye", false),
-				crostini.GetContainerRootfsArtifact("bullseye", false),
+				crostini.GetContainerMetadataArtifact("bookworm", false),
+				crostini.GetContainerRootfsArtifact("bookworm", false),
 			},
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host"},
