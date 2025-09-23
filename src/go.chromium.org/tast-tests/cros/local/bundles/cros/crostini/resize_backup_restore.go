@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	croslog "go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
@@ -47,6 +48,8 @@ func init() {
 	})
 }
 
+var logMatch = regexp.MustCompile(`.*Disk Image Operation: UUID=.* progress: 100 status: 1`)
+
 func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
 	cr := pre.Chrome
@@ -67,26 +70,24 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to shrink container for backup: ", err)
 	}
 
-	userName := strings.Split(cr.NormalizedUser(), "@")[0]
-
 	runInTerminal := func(cmd, outputFile string) error {
-		// Try to find Terminal app first.
-		terminalApp, err := terminalapp.Find(ctx, tconn)
+		terminalApp, err := terminalapp.Launch(ctx, tconn)
 		if err != nil {
-			// Failed to find the Terminal app. Try to open the Terminal app.
-			terminalApp, err = terminalapp.Launch(ctx, tconn)
-			if err != nil {
-				s.Fatal("Failed to open Terminal app: ", err)
-			}
-		} else {
-			if _, err := ash.BringWindowToForeground(ctx, tconn, fmt.Sprintf("Terminal - %s@penguin: ~", userName)); err != nil {
-				s.Fatal("Failed to bring the Terminal app to the front: ", err)
-			}
+			s.Fatal("Failed to open Terminal app: ", err)
 		}
 
-		return uiauto.Combine("running '"+cmd+"'",
+		err = uiauto.Combine("running '"+cmd+"'",
 			terminalApp.RunCommand(keyboard, fmt.Sprintf("%s > %s 2>&1", cmd, outputFile)),
 			terminalApp.WaitForPrompt())(ctx)
+		if err != nil {
+			s.Fatal("Failed to run command: ", err)
+		}
+
+		s.Log("closing terminal")
+		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
+		return err
 	}
 
 	checksumFiles := func(outputFile string) error {
@@ -95,12 +96,10 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	const (
-		backupFileBaseName = "test-backup"
-		backupFileName     = backupFileBaseName + ".tini"
-		existingFile       = "./existing.txt"
-		existingFileStr    = "This file should be captured in the checksum, deleted after backup, then restored."
-		checksumPreFile    = "/tmp/checksum_pre.txt"
-		checksumPostFile   = "/tmp/checksum_post.txt"
+		existingFile     = "./existing.txt"
+		existingFileStr  = "This file should be captured in the checksum, deleted after backup, then restored."
+		checksumPreFile  = "/tmp/checksum_pre.txt"
+		checksumPostFile = "/tmp/checksum_post.txt"
 	)
 
 	if err := cont.WriteFile(ctx, existingFile, existingFileStr); err != nil {
@@ -124,16 +123,32 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if err := uiauto.NamedCombine("click backup button, set filename and wait for backup to complete",
+	logReader, err := croslog.NewReader(ctx)
+	if err != nil {
+		s.Fatal("Failed to start log reader: ", err)
+	}
+	defer logReader.Close()
+
+	if err := uiauto.NamedCombine("click backup button and begin backup",
 		st.LeftClickUI(settings.BackupButton),
 		st.WaitForUI(settings.BackupFileWindow),
-		uiauto.Sleep(time.Second), // Pause needed so keyboard events are received.
+		uiauto.Sleep(time.Second), // Pause needed so events are received.
 		ui.WithTimeout(5*time.Second).WaitUntilExists(nodewith.Role(role.TextField).Ancestor(settings.BackupFileWindow).Focused().Editable()),
-		keyboard.TypeAction(backupFileBaseName),
+		uiauto.Sleep(time.Second), // Pause needed so events are received.
 		st.LeftClickUI(settings.BackupSave),
-		ui.WithTimeout(10*time.Minute).WaitUntilExists(settings.BackupNotification),
 	)(ctx); err != nil {
 		s.Fatal("Failed to backup: ", err)
+	}
+
+	// Create function to detect completed disk image operation. Valid for import and export.
+	containsMessage := func(e *croslog.Entry) bool {
+		m := logMatch.FindStringSubmatch(e.Content) != nil
+		return m
+	}
+
+	// Wait for operation done message.
+	if _, err := logReader.Wait(ctx, 10*time.Minute, containsMessage); err != nil {
+		s.Fatal("Failed to find backup message in system logs: ", err)
 	}
 
 	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
@@ -141,7 +156,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get users MyFiles path: ", err)
 	}
 
-	// Remove any files with the .tini extension. This is used because the backup file created may be named differently if there was a delay in using the keyboard.
+	// Remove any files with the .zst extension.
 	defer func() {
 		listFiles, err := os.ReadDir(myFilesPath)
 		if err != nil {
@@ -149,7 +164,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 			return
 		}
 		for _, file := range listFiles {
-			if !file.IsDir() && filepath.Ext(file.Name()) == ".tini" {
+			if !file.IsDir() && (filepath.Ext(file.Name()) == ".zst") {
 				if err := os.Remove(filepath.Join(myFilesPath, file.Name())); err != nil {
 					testing.ContextLogf(ctx, "Failed to remove file %s: %q ", file.Name(), err)
 				}
@@ -201,11 +216,21 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		st.WaitForUI(settings.RestoreConfirmButton),
 		st.LeftClickUI(settings.RestoreConfirmButton),
 		st.WaitForUI(settings.RestoreFileWindow),
-		ui.LeftClick(settings.RestoreTiniFile),
+		ui.LeftClick(settings.RestoreFile),
 		ui.LeftClick(settings.RestoreOpen),
-		ui.WithTimeout(5*time.Minute).WaitUntilExists(settings.RestoreNotification),
 	)(ctx); err != nil {
 		s.Fatal("Failed to restore: ", err)
+	}
+
+	// Reset log reader (final close is still deferred)
+	logReader.Close()
+	logReader, err = croslog.NewReader(ctx)
+	// Wait for operation done message.
+	if err != nil {
+		s.Fatal("Failed to start log reader: ", err)
+	}
+	if _, err := logReader.Wait(ctx, 5*time.Minute, containsMessage); err != nil {
+		s.Fatal("Failed to find restore message in system logs: ", err)
 	}
 
 	// Write post checksum. This will incidentally restart Linux, which is needed
