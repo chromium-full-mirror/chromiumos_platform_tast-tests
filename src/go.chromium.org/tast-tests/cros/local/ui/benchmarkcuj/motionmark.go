@@ -35,7 +35,7 @@ const (
 var MotionMarkInfo = benchmarkInfo{
 	name:           "MotionMark",
 	windowState:    ash.WindowStateFullscreen,
-	benchmarkURL:   "https://browserbench.org/MotionMark1.2/",
+	benchmarkURL:   "https://chromium-workloads.web.app/motionmark/v1.2/MotionMark/",
 	benchmarkRun:   RunMotionMark,
 	benchmarkScore: RetrieveMotionMarkScore,
 }
@@ -44,7 +44,7 @@ var MotionMarkInfo = benchmarkInfo{
 var MotionMark1_3Info = benchmarkInfo{
 	name:           "MotionMark1.3",
 	windowState:    ash.WindowStateFullscreen,
-	benchmarkURL:   "https://browserbench.org/MotionMark1.3/",
+	benchmarkURL:   "https://chromium-workloads.web.app/motionmark/v1.3/MotionMark/",
 	benchmarkSetUp: SetUpMotionMark,
 	benchmarkRun:   RunMotionMark,
 	benchmarkScore: RetrieveMotionMarkScore,

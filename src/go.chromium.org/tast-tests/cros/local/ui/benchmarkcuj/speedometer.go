@@ -27,7 +27,7 @@ const (
 var SpeedometerInfo = benchmarkInfo{
 	name:           "Speedometer",
 	windowState:    ash.WindowStateMaximized,
-	benchmarkURL:   "https://browserbench.org/Speedometer2.1/",
+	benchmarkURL:   "https://chromium-workloads.web.app/speedometer/v2.1/",
 	benchmarkRun:   RunSpeedometer,
 	benchmarkScore: RetrieveSpeedometerScore,
 	params:         []string{iterationsVar},
@@ -37,7 +37,17 @@ var SpeedometerInfo = benchmarkInfo{
 var Speedometer3Info = benchmarkInfo{
 	name:           "Speedometer3",
 	windowState:    ash.WindowStateMaximized,
-	benchmarkURL:   "https://browserbench.org/Speedometer3.0/?developerMode=true",
+	benchmarkURL:   "https://chromium-workloads.web.app/speedometer/v3.0/?developerMode=true",
+	benchmarkRun:   RunSpeedometer,
+	benchmarkScore: RetrieveSpeedometerScore,
+	params:         []string{iterationsVar},
+}
+
+// Speedometer3_1Info contains the information for running Speedometer 3.1 Benchmark.
+var Speedometer3_1Info = benchmarkInfo{
+	name:           "Speedometer3.1",
+	windowState:    ash.WindowStateMaximized,
+	benchmarkURL:   "https://chromium-workloads.web.app/speedometer/v3.1/?developerMode=true",
 	benchmarkRun:   RunSpeedometer,
 	benchmarkScore: RetrieveSpeedometerScore,
 	params:         []string{iterationsVar},

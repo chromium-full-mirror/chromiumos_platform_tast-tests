@@ -56,6 +56,16 @@ func init() {
 				},
 			},
 			{
+				Name:      "speedometer3_1",
+				ExtraAttr: []string{"group:cuj", "group:crosbolt"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
+				Val: benchmarkcuj.BenchmarkTest{
+					BenchmarkInfo: benchmarkcuj.Speedometer3_1Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
 				Name:      "motionmark",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,

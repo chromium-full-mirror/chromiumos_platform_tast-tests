@@ -23,7 +23,7 @@ const jetStreamPrefix = "JetStream."
 var JetStreamInfo = benchmarkInfo{
 	name:           "JetStream",
 	windowState:    ash.WindowStateMaximized,
-	benchmarkURL:   "https://browserbench.org/JetStream/",
+	benchmarkURL:   "https://chromium-workloads.web.app/jetstream/v2.2/",
 	benchmarkSetUp: SetUpJetStream,
 	benchmarkRun:   RunJetStream,
 	benchmarkScore: RetrieveJetStreamScore,
