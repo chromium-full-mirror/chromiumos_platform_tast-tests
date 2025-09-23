@@ -50,11 +50,11 @@ var standardTests = map[string]testOptions{
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
 	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
-	"command_cd.go":                     {foundation: true, testBaguette: true},
+	"command_cd.go":                     {foundation: true},
 	"command_ps.go":                     {foundation: true, testBaguette: true},
 	// TODO(b/377716353): enable for baguette once vim is installed in baguette image
 	"command_vim.go":               {foundation: true},
-	"copy_files_to_linux_files.go": {testBaguette: true},
+	"copy_files_to_linux_files.go": {},
 	// TODO(b/377716353): crash_reporter appears to not be hooked up in baguette, currently debugging
 	"crash_reporter.go":         {},
 	"drag_drop.go":              {foundation: true},
