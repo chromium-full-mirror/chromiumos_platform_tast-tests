@@ -8,11 +8,13 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,15 +39,36 @@ func init() {
 // BSSIDRequestedUpdate will update the BSSIDRequested service property of an existing network connection.
 //
 // Concretely, this test:
-//  1. Sets up the first AP
-//  2. Connects to the first AP without BSSIDRequested
-//  3. Sets up the second AP
-//  4. Connects to the second AP by specifying the second AP's BSSID as the BSSIDRequested
-//  5. Sets the BSSIDRequested back to the first AP's BSSID
-//  6. Cleans up
+//  1. Sets the request scan type to active
+//  2. Sets up the first AP
+//  3. Connects to the first AP without BSSIDRequested
+//  4. Sets up the second AP
+//  5. Connects to the second AP by specifying the second AP's BSSID as the BSSIDRequested
+//  6. Sets the BSSIDRequested back to the first AP's BSSID
+//  7. Cleans up
 func BSSIDRequestedUpdate(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	ssid := hostapd.RandomSSID("BSSIDRequestedUpdate_")
+
+	// Set WiFi request scan type to active on the DUT
+	originalRequestScanType, err := tf.WifiClient().GetRequestScanTypeProperty(ctx)
+	if err != nil {
+		s.Error("Failed to get WiFi RequestScan type: ", err)
+	}
+	if originalRequestScanType != shillconst.WiFiRequestScanTypeActive {
+		defer func(ctx context.Context) {
+			if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, originalRequestScanType); err != nil {
+				s.Errorf("Failed to reset WiFi RequestScan type to %s: %v", originalRequestScanType, err)
+			}
+			s.Log("Reset WiFi RequestScan type to ", originalRequestScanType)
+		}(ctx)
+		ctx, cancel := ctxutil.Shorten(ctx, 500*time.Millisecond)
+		defer cancel()
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, shillconst.WiFiRequestScanTypeActive); err != nil {
+			s.Fatal("Failed to set WiFi RequestScan type to active: ", err)
+		}
+		s.Log("Set WiFi RequestScan type to active")
+	}
 
 	// Generate BSSID for ap1.
 	ap1HwAddr, err := hostapd.RandomMAC()
