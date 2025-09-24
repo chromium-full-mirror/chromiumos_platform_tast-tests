@@ -101,14 +101,28 @@ func (d *DeskSwitcher) DeskSwitch(ctx context.Context) error {
 
 			i = (i + 1) % len(switcher.Itinerary)
 			nextDesk := switcher.Itinerary[i]
-
-			if err := switcher.Run(ctx, d.ActiveDesk, nextDesk); err != nil {
-				return errors.Wrapf(err, "failed to switch to the next desk using %s", switcher.Name)
+			switchToNextDesk := func(ctx context.Context) error {
+				info, err := ash.GetDesksInfo(ctx, d.tconn)
+				if err != nil {
+					return errors.Wrap(err, "failed to get the desk info")
+				}
+				if info.ActiveDeskIndex == nextDesk {
+					testing.ContextLog(ctx, "The active desk index is already the next desk")
+					return nil
+				}
+				if err := switcher.Run(ctx, info.ActiveDeskIndex, nextDesk); err != nil {
+					return errors.Wrapf(err, "failed to switch to the next desk using %s", switcher.Name)
+				}
+				if err := ash.WaitForDesk(d.tconn, nextDesk)(ctx); err != nil {
+					return errors.Wrapf(err, "failed to wait for the %d desk to be active", nextDesk)
+				}
+				return nil
 			}
 
-			if err := ash.WaitForDesk(d.tconn, nextDesk)(ctx); err != nil {
-				return errors.Wrapf(err, "failed to wait for the %d desk to be active", nextDesk)
+			if err := uiauto.Retry(3, switchToNextDesk)(ctx); err != nil {
+				return err
 			}
+
 			d.ActiveDesk = nextDesk
 
 			// Give a few seconds for the current desk to stabilize
