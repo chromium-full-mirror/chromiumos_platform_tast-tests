@@ -407,7 +407,7 @@ func init() {
 			}, {
 				Name:              "storage",
 				Fixture:           commonfixture.RebootForProbeFunction,
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("hideo")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
 					allowExtraComponents: false,
