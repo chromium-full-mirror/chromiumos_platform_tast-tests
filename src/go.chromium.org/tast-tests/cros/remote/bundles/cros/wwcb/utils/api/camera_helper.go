@@ -22,9 +22,9 @@ import (
 type pixel = passport.Pixel
 
 var (
-	redColor   = &pixel{R: 240, G: 0, B: 0, A: 255}
-	greenColor = &pixel{R: 0, G: 240, B: 0, A: 255}
-	blueColor  = &pixel{R: 0, G: 0, B: 240, A: 255}
+	redColor   = &pixel{R: 240, G: 80, B: 80, A: 255}
+	greenColor = &pixel{R: 80, G: 240, B: 80, A: 255}
+	blueColor  = &pixel{R: 80, G: 80, B: 240, A: 255}
 	grayColor  = &pixel{R: 120, G: 120, B: 120, A: 255}
 
 	// webcamMappingLimitScore is the max allowable "difference" between two pixels
@@ -32,6 +32,8 @@ var (
 	webcamMappingLimitScore int32 = 160
 
 	expectedColorThreshold = 100
+
+	brightnessThrehold = 40.0
 
 	mappingColors    = [3]*pixel{redColor, greenColor, blueColor}
 	detectVideoColor = [3]string{"red", "green", "blue"}
@@ -243,8 +245,14 @@ func (c *CameraServiceHelper) findCameraMatch(ctx context.Context, outDir string
 			errList = append(errList, err)
 			continue
 		}
-
 		p := camPxl[cameraDev]
+		brightnessVal := brightness(p)
+		if brightnessVal < brightnessThrehold {
+			testing.ContextLogf(ctx, "camera %s with brightness %f is too dark, not attempting to match it to a display", cameraDev, brightnessVal)
+			err := errors.Errorf("camera: %s with brightness %f is too dark, not attempting to match it to a display", cameraDev, brightnessVal)
+			errList = append(errList, err)
+			continue
+		}
 		grayScore := scalarScore(p, grayColor)
 		expectColorScore := scalarScore(p, expectedColor)
 		// if gray score is higher than expected color score, then the display is
@@ -313,9 +321,12 @@ func saveImageIfRequested(ctx context.Context, outDir, camera, annotation string
 
 // detectColor is for detect color from pixel.
 func detectColor(ctx context.Context, p *pixel) string {
-	redScore := int(scalarScore(p, redColor))
-	greenScore := int(scalarScore(p, greenColor))
-	blueScore := int(scalarScore(p, blueColor))
+	redColorDetect := &pixel{R: 240, G: 0, B: 0, A: 255}
+	greenColorDetect := &pixel{R: 0, G: 240, B: 0, A: 255}
+	blueColorDetect := &pixel{R: 0, G: 0, B: 240, A: 255}
+	redScore := int(scalarScore(p, redColorDetect))
+	greenScore := int(scalarScore(p, greenColorDetect))
+	blueScore := int(scalarScore(p, blueColorDetect))
 
 	maxScore := max(redScore, greenScore, blueScore)
 	testing.ContextLog(ctx, "detectColor scores (r,g,b,max):", redScore, greenScore, blueScore, maxScore)
@@ -337,4 +348,10 @@ func distScore(s1, s2 *pixel) float64 {
 // score more high means two pixels more similar.
 func scalarScore(s1, s2 *pixel) float64 {
 	return 255 - distScore(s1, s2)/3
+}
+
+// brightness gets the average pixel value across r/g/b
+// to determine an estimated brightness of the pixel.
+func brightness(p *pixel) float64 {
+	return float64(p.R+p.G+p.B) / 3.0
 }
