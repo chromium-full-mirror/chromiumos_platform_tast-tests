@@ -194,7 +194,7 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		batteryPreparationTimeout = cp.MaxBatteryPreparationTime
 	}
 
-	if currentPercentage > minChargePercentage && currentPercentage < cp.MaxChargePercentage {
+	if currentPercentage >= minChargePercentage && currentPercentage <= cp.MaxChargePercentage {
 		testing.ContextLog(ctx, "Current battery charge is within the acceptable range")
 		err = nil
 	} else if currentPercentage < minChargePercentage {
