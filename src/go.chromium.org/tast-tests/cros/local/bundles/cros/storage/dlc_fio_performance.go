@@ -27,7 +27,7 @@ func init() {
 			"asavery@google.com",
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > baseOS > Storage
-		Attr:         []string{"group:crosbolt"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         util.Configs,
 		Timeout:      20 * time.Minute,
 	},
