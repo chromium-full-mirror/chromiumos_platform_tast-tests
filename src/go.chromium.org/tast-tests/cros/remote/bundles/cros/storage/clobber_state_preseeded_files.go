@@ -56,8 +56,12 @@ func checkFileCount(ctx context.Context, dut *dut.DUT) (int, error) {
 }
 
 func ClobberStatePreseededFiles(ctx context.Context, s *testing.State) {
-
 	dut := s.DUT()
+	hasDefaultKey := util.HasDefaultKeyStatefulDiskLayout(ctx, dut)
+	if !hasDefaultKey {
+		s.Log("Skipping test: DUT does not have default-key-stateful disk layout")
+		return
+	}
 
 	// Checking for powerwash count from the file powerwash_count.
 	initialPowerWashCount, err := checkFileCount(ctx, dut)

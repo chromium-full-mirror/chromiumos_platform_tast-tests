@@ -163,8 +163,13 @@ func removeEntries(ctx context.Context, dut *dut.DUT) {
 }
 
 func DMDefaultKey(ctx context.Context, s *testing.State) {
-
 	dut := s.DUT()
+	hasDefaultKey := util.HasDefaultKeyStatefulDiskLayout(ctx, dut)
+	if !hasDefaultKey {
+		s.Log("Skipping test: DUT does not have default-key-stateful disk layout")
+		return
+	}
+
 	// This is to remove all created file and images after the testing.
 	defer removeEntries(ctx, dut)
 

@@ -30,6 +30,11 @@ var testPaths = []string{"/mnt/stateful_partition/unencrypted/dev_image.block"}
 
 func PassthroughDLCDev(ctx context.Context, s *testing.State) {
 	d := s.DUT()
+	hasDefaultKey := util.HasDefaultKeyStatefulDiskLayout(ctx, d)
+	if !hasDefaultKey {
+		s.Log("Skipping test: DUT does not have default-key-stateful disk layout")
+		return
+	}
 
 	// Get stateful partition.
 	statefulDev, err := util.GetStatefulPartition(ctx, d)

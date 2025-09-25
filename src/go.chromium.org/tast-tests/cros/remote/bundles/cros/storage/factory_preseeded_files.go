@@ -25,8 +25,12 @@ func init() {
 }
 
 func FactoryPreseededFiles(ctx context.Context, s *testing.State) {
-
 	dut := s.DUT()
+	hasDefaultKey := util.HasDefaultKeyStatefulDiskLayout(ctx, dut)
+	if !hasDefaultKey {
+		s.Log("Skipping test: DUT does not have default-key-stateful disk layout")
+		return
+	}
 
 	// Creating rma-data directory inside unencrypted.
 	rmaDir := "/mnt/stateful_partition/unencrypted/rma-data"

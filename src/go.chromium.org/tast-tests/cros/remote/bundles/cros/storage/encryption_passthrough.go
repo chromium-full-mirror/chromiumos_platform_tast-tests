@@ -33,8 +33,12 @@ func init() {
 }
 
 func EncryptionPassthrough(ctx context.Context, s *testing.State) {
-
 	dut := s.DUT()
+	hasDefaultKey := util.HasDefaultKeyStatefulDiskLayout(ctx, dut)
+	if !hasDefaultKey {
+		s.Log("Skipping test: DUT does not have default-key-stateful disk layout")
+		return
+	}
 
 	// This is to create test_file file.
 	_, err := util.DDCommand(ctx, dut, "/dev/random", filePath+fileName, "1M", 32, 0)
