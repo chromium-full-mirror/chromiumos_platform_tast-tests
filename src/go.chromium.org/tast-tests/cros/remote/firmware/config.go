@@ -74,6 +74,7 @@ type Config struct {
 	GSCCanWakeECWithReset            bool                 `json:"gsc_can_wake_ec_with_reset"`
 	HasKeyboard                      bool                 `json:"has_keyboard"`
 	Hibernate                        bool                 `json:"hibernate"`
+	HasISHMotionsense                bool                 `json:"has_ISHMotionsense"`
 	IsDetachable                     bool                 `json:"is_detachable"`
 	LidWakeFromPowerOff              bool                 `json:"lid_wake_from_power_off"`
 	MiniDiagCapability               []MiniDiagCapability `json:"minidiag_capability"`
