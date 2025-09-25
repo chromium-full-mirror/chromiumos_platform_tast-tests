@@ -1,0 +1,4 @@
+include /src/go.chromium.org/tast-tests/cros/common/flex/OWNERS
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
