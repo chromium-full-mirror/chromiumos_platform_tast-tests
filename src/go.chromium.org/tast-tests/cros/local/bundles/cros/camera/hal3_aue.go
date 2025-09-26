@@ -20,6 +20,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org", "yerlandinata@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional"},
+		VariantCategory:   `{"name": "Camera:SoC_CameraTypes"}`,
 		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      4*time.Minute + hal3.AdditionalTimeout,

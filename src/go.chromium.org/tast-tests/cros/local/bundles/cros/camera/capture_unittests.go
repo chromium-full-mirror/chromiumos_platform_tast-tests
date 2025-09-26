@@ -39,6 +39,7 @@ func init() {
 			"group:release-health",
 			"release-health_gfx",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"bear.mjpeg"},
 	})

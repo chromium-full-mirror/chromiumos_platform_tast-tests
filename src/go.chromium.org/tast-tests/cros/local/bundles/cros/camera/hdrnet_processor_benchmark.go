@@ -22,6 +22,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "jcliang@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		VariantCategory:   `{"name": "Camera:Model_CpuType"}`,
 		SoftwareDeps: []string{"camera_feature_hdrnet"},
 		Timeout:      5 * time.Minute,
 	})
