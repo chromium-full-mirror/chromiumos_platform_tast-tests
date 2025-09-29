@@ -32,6 +32,27 @@ func init() {
 	})
 }
 
+func hasUFS(ctx context.Context, s *testing.State, testPath string) bool {
+	if !strings.Contains(testPath, "/dev/sd") || len(strings.Split(testPath, "/")[2]) < 3 {
+		return false
+	}
+
+	// Extract "sdX" part out of the testPath.
+	dev := strings.Split(testPath, "/")[2][0:3]
+
+	dut := s.DUT()
+	filePath := "/sys/block/" + dev + "/device/unit_descriptor"
+
+	// The 'test -e' command exits with 0 if the path exists, non-zero otherwise.
+	cmd := dut.Conn().CommandContext(ctx, "test", "-e", filePath)
+
+	if err := cmd.Run(); err != nil {
+		s.Logf("Path does not exist on DUT: %s (%v)", filePath, err)
+		return false
+	}
+	return true
+}
+
 func getStorageDeviceInitTime(ctx context.Context, s *testing.State) time.Duration {
 	h := s.FixtValue().(*fixture.Value).Helper
 	cbmemTs, err := h.Reporter.GetCBMEMTimestamps(ctx)
@@ -72,7 +93,7 @@ func getStorageThreshold(ctx context.Context, s *testing.State) (time.Duration, 
 		s.Logf("NVMe storage initialization threshold: %s ", h.Config.StorageInitNvme)
 		thresholdTime = h.Config.StorageInitNvme
 		storageType = "NVMe"
-	} else if util.IsUFS(rootPart) {
+	} else if hasUFS(ctx, s, rootPart) {
 		s.Logf("UFS storage initialization threshold: %s ", h.Config.StorageInitUfs)
 		thresholdTime = h.Config.StorageInitUfs
 		storageType = "UFS"
