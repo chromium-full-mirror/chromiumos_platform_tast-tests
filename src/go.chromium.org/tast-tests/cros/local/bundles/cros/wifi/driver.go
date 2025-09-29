@@ -59,6 +59,9 @@ var expectedFlexWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.IntelAX210: {
 		defaultRevision: "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
+	wlan.IntelAX211: {
+		defaultRevision: "wireless/intel/iwlwifi/iwlwifi.ko",
+	},
 }
 
 var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
