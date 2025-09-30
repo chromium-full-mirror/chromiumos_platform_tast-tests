@@ -46,13 +46,13 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:             "us",
-				Fixture:          fixture.ClamshellNonVKRestartWithJapaneseSystemTyping,
+				Fixture:          fixture.ClamshellNonVKRestart,
 				Val:              ime.JapaneseWithUSKeyboard,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.JapaneseWithUSKeyboard}),
 			},
 			{
 				Name:             "jp",
-				Fixture:          fixture.ClamshellNonVKRestartWithJapaneseSystemTyping,
+				Fixture:          fixture.ClamshellNonVKRestart,
 				Val:              ime.Japanese,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.Japanese}),
 			},

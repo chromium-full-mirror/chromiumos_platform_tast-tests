@@ -47,8 +47,6 @@ const (
 	picker
 	withoutAssistMultiword
 	scannerDogfood
-	japaneseSystemTyping
-	withoutJapaneseSystemTyping
 )
 
 // List of fixture names for inputs.
@@ -73,10 +71,7 @@ const (
 	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
 	ClamshellNonVKWithScannerDogfood                  = "clamshellNonVKWithScannerDogfood"
 	ClamshellNonVKWithoutMultiwordSuggest             = "clamshellNonVKWithoutMultiwordSuggest"
-	ClamshellNonVKRestartWithJapaneseSystemTyping     = "clamshellNonVKRestartWithJapaneseSystemTyping"
-	ClamshellNonVKRestartWithoutJapaneseSystemTyping  = "clamshellNonVKRestartWithoutJapaneseSystemTyping"
 	TabletVK                                          = "tabletVK"
-	TabletVKWithoutJapaneseSystemTyping               = "tabletVKWithoutJapaneseSystemTyping"
 	TabletVKStereoAloopLoaded                         = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                                   = "tabletVKRestart"
 	TabletVKInGuest                                   = "tabletVKInGuest"
@@ -387,36 +382,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: ClamshellNonVKRestartWithJapaneseSystemTyping,
-		Desc: "Clamshell mode with VK disabled and new Japanese system typing enabled",
-		Contacts: []string{
-			"shend@google.com",
-			"essential-inputs-team@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            inputsFixture(clamshellMode, false, true, japaneseSystemTyping),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: ClamshellNonVKRestartWithoutJapaneseSystemTyping,
-		Desc: "Clamshell mode with VK disabled and new Japanese system typing disabled",
-		Contacts: []string{
-			"shend@google.com",
-			"essential-inputs-team@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            inputsFixture(clamshellMode, false, true, withoutJapaneseSystemTyping),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: TabletVK,
 		Desc: "Tablet mode with VK enabled",
 		Contacts: []string{
@@ -425,21 +390,6 @@ func init() {
 		},
 		BugComponent:    "b:95887",
 		Impl:            inputsFixture(tabletMode, true, false),
-		SetUpTimeout:    chrome.LoginTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: TabletVKWithoutJapaneseSystemTyping,
-		Desc: "Tablet mode with VK enabled (without Japanese system typing)",
-		Contacts: []string{
-			"xiuwen@google.com",
-			"essential-inputs-team@google.com",
-		},
-		BugComponent:    "b:95887",
-		Impl:            inputsFixture(tabletMode, true, false, withoutJapaneseSystemTyping),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -561,10 +511,6 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--disable-sync"))
 		case withoutAssistMultiword:
 			opts = append(opts, chrome.ExtraArgs("--disable-features=AssistMultiWord"))
-		case japaneseSystemTyping:
-			opts = append(opts, chrome.ExtraArgs("--enable-features=SystemJapanesePhysicalTyping"))
-		case withoutJapaneseSystemTyping:
-			opts = append(opts, chrome.ExtraArgs("--disable-features=SystemJapanesePhysicalTyping"))
 		}
 	}
 

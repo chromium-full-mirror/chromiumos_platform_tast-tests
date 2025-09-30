@@ -29,11 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:    "enabled",
-			Fixture: fixture.ClamshellNonVKRestartWithJapaneseSystemTyping,
-			Val:     power.TimeParams{Total: 10 * time.Minute, Interval: 5 * time.Second},
-		}, {
-			Name:    "disabled",
-			Fixture: fixture.ClamshellNonVKRestartWithoutJapaneseSystemTyping,
+			Fixture: fixture.ClamshellNonVKRestart,
 			Val:     power.TimeParams{Total: 10 * time.Minute, Interval: 5 * time.Second},
 		},
 		},

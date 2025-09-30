@@ -38,13 +38,13 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "us",
-				Fixture:           fixture.ClamshellNonVKRestartWithJapaneseSystemTyping,
+				Fixture:           fixture.ClamshellNonVKRestart,
 				Val:               ime.JapaneseWithUSKeyboard,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{
 				Name:              "jp",
-				Fixture:           fixture.ClamshellNonVKRestartWithJapaneseSystemTyping,
+				Fixture:           fixture.ClamshellNonVKRestart,
 				Val:               ime.Japanese,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
