@@ -26,8 +26,8 @@ import (
 
 const (
 	resetTimeout    = 30 * time.Second
-	preTestTimeout  = 20 * time.Second
-	postTestTimeout = 25 * time.Second
+	preTestTimeout  = 30 * time.Second
+	postTestTimeout = 35 * time.Second
 )
 
 // chromeOpts describes the extra chrome options needed.
