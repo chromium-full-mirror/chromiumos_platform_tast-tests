@@ -155,7 +155,14 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	// Restore tablet mode settings so that DUT won't
 	// be left in tablet mode at the end of test.
 	args := s.Param().(dutTestParams)
-	ecTool := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
+	var ecTool *firmware.ECTool
+
+	if h.Config.HasISHMotionsense {
+		ecTool = firmware.NewECTool(s.DUT(), firmware.ECToolNameISH)
+	} else {
+		ecTool = firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
+	}
+
 	var restoreLaptopMode bool
 	defer func(ctx context.Context) {
 		if restoreLaptopMode {
