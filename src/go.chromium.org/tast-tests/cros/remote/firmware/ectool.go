@@ -47,17 +47,18 @@ func NewECTool(d *dut.DUT, name ECToolName) *ECTool {
 
 // Regexps to capture values outputted by ectool version.
 var (
-	reFirmwareCopy  = regexp.MustCompile(`Firmware copy:\s*(RO|RW)`)
-	reROVersion     = regexp.MustCompile(`RO version:\s*(\S+)\s`)
-	reRWVersion     = regexp.MustCompile(`RW version:\s*(\S+)\s`)
-	reECHash        = regexp.MustCompile(`status:\s*(\S+)\s*type:\s*(\S+)\s*offset:\s*(\S+)\s*size:\s*(\S+)\s*hash:\s*(\S+)\s*`)
-	reTabletModeAng = regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	reFlashSize     = regexp.MustCompile(`FlashSize\s*(\d+)`)
-	reChipInfo      = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S*)`)
-	reI2CLookup     = regexp.MustCompile(`Bus: I2C; Port: (\S+); Address: (\S+)`)
-	reTempInfo      = regexp.MustCompile(`(\d+):\s+\d+\s+(\S+)`)
-	reSensorTemp    = regexp.MustCompile(`\S+\s+([0-9]+) K`)
-	reBatteryInfo   = regexp.MustCompile(`\s*(\S[^\r\n]+)(:|\s)\s+(\S[^\r\n]+)`)
+	reFirmwareCopy        = regexp.MustCompile(`Firmware copy:\s*(RO|RW)`)
+	reROVersion           = regexp.MustCompile(`RO version:\s*(\S+)\s`)
+	reRWVersion           = regexp.MustCompile(`RW version:\s*(\S+)\s`)
+	reECHash              = regexp.MustCompile(`status:\s*(\S+)\s*type:\s*(\S+)\s*offset:\s*(\S+)\s*size:\s*(\S+)\s*hash:\s*(\S+)\s*`)
+	reTabletModeAng       = regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
+	reFlashSize           = regexp.MustCompile(`FlashSize\s*(\d+)`)
+	reChipInfo            = regexp.MustCompile(`vendor:\s*(\S+)\s*name:\s*(\S+)\s*revision:\s*(\S*)`)
+	reI2CLookup           = regexp.MustCompile(`Bus: I2C; Port: (\S+); Address: (\S+)`)
+	reTempInfo            = regexp.MustCompile(`(\d+):\s+\d+\s+(\S+)`)
+	reSensorTemp          = regexp.MustCompile(`\S+\s+([0-9]+) K`)
+	reBatteryInfo         = regexp.MustCompile(`\s*(\S[^\r\n]+)(:|\s)\s+(\S[^\r\n]+)`)
+	reIsAdapterSufficient = regexp.MustCompile(`(\d+)\s+\((0x[0-9a-fA-F]+)\)\s+#\s+(.*)`)
 )
 
 // Command return the prebuilt ssh Command with options and args applied.
@@ -624,4 +625,30 @@ func (ec *ECTool) GetAPResetCount(ctx context.Context) (int, error) {
 	}
 
 	return apResetCount, nil
+}
+
+// ChargeStateParam type holds parameters for 'ectool chargestate param'.
+type ChargeStateParam string
+
+const (
+	paramIsAdapterSufficient ChargeStateParam = "16"
+)
+
+// IsAdapterSufficient queries EC if connected adapter is sufficient.
+func (ec *ECTool) IsAdapterSufficient(ctx context.Context) (int, error) {
+	out, err := ec.Command(ctx, "chargestate", "param", string(paramIsAdapterSufficient)).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return -1, errors.Wrapf(err, "running 'ectool chargestate' on DUT, got: %v", string(out))
+	}
+
+	outstr := string(out)
+	if match := reIsAdapterSufficient.FindStringSubmatch(outstr); match != nil {
+		val, err := strconv.Atoi(match[1])
+		if err != nil {
+			return -1, errors.Wrapf(err, "failed to parse ec adapter sufficient to int, got %s", match[1])
+		}
+		return val, nil
+	}
+
+	return -1, errors.Wrap(err, "failed to run ectool chargestate param")
 }
