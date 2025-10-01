@@ -54,7 +54,7 @@ func init() {
 			Name:    "25m_ash",
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout: 25*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			Timeout: 25*time.Minute + timeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			ExtraAttr: []string{
 				"group:power",
 				"power_regression",
@@ -65,13 +65,13 @@ func init() {
 			Name:              "25m_ash_arc",
 			Fixture:           "powerAshARC",
 			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
-			Timeout: 2*time.Hour + timeoutBuffer + power.RecorderTimeout,
+			Timeout: 2*time.Hour + timeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 		}},
 	})
 }

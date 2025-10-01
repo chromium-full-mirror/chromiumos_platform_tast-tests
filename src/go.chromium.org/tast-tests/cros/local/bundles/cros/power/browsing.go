@@ -51,18 +51,18 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
 			Name:              "ash_arc",
 			Fixture:           "powerAshARC",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:    "20min_ash",
 			Fixture: "powerAsh",
-			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 		}, {
 			Name:    "fast_ash",
@@ -79,7 +79,7 @@ func init() {
 		}, {
 			Name:    "heavy_ash",
 			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
 			Name:              "heavy_ash_arc",
@@ -90,7 +90,7 @@ func init() {
 		}, {
 			Name:    "heavy_20min_ash",
 			Fixture: "powerAsh",
-			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 			ExtraAttr: []string{
 				"group:power",
@@ -101,22 +101,22 @@ func init() {
 		}, {
 			Name:    "custom_ash",
 			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
 			Name:    "live_ash",
 			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
 			Name:    "multitab_ash",
 			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, MultiTab: true},
 		}, {
 			Name:      "tracing_ash",
 			Fixture:   "powerAsh",
-			Timeout:   time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Timeout:   time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:       browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}, CollectTrace: true},
 			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
 		}},
