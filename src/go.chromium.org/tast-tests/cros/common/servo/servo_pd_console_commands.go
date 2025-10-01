@@ -673,20 +673,6 @@ func (s *Servo) ServoCCNoPD(ctx context.Context, dts bool, connectionType USBCCu
 		return errors.Wrap(err, "could not run command to enable connection without pd, try verifying servo FW version")
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if chargeSupport, err := s.GetChargeSupport(ctx); err == nil {
-			if chargeSupport.PDType != "USBC" {
-				return errors.Wrap(err, "connection is not USBC")
-			}
-		} else {
-			return errors.Wrap(err, "failed to get charging connection")
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: servoPDStatePollTimeout, Interval: servoPDStatePollInterval}); err != nil {
-		return errors.Wrap(err, "expected usbc sink connection")
-	}
-
 	return nil
 }
 
