@@ -77,6 +77,19 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 	b.ResetAndTpmStartupForBus(ctx, i, testConfig.Bus, ti50.CCDModeOff, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
+	// Ti50 pulses WP_L on deep sleep resume. Only monitor EC_RST_L during
+	// ti50 deep sleep tests.
+	monitorSignals := []ti50.GpioName{ti50.GpioTi50EcRstL}
+	s.Log("Monitor EC_RST")
+	if !testConfig.DeepSleep || b.TestbedType == ti50.GscH1Shield {
+		s.Log("Monitor WP")
+		monitorSignals = append(monitorSignals, ti50.GpioTi50WriteProtectL)
+	}
+	gpioMonitor := b.GpioMonitorStart(ctx, monitorSignals...)
+	// Read from the gpio monitor to clear existing events.
+	events := b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Cleared Events: ", events)
+
 	err := b.WaitForPowerRise(ctx, 10.0, 5*time.Second)
 	if err != nil {
 		s.Fatalf("Did not hit the AP on power threshold at the start of the test: %s", err)
@@ -98,9 +111,15 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 		i.Command(ctx, "gpioget")
 		s.Fatalf("Did not enter sleep with %s asserted: %s", testConfig.WakeSignal, err)
 	}
+
 	// Verify GSC entered sleep.
 	c = b.ReadGscTotalMilliAmps(ctx)
 	s.Logf("mA in sleep: %f", c)
+
+	events = b.GpioMonitorWait(ctx, gpioMonitor, 2*time.Second, 100*time.Millisecond)
+	if len(events.Sorted) > 0 {
+		s.Errorf("GPIO event entering sleep: %s", events)
+	}
 
 	b.GpioSet(ctx, testConfig.WakeSignal, testConfig.WakeSignalVal)
 	b.GpioSet(ctx, testConfig.WakeSignal, !testConfig.WakeSignalVal)
@@ -111,4 +130,9 @@ func GSCBasicSleep(ctx context.Context, s *testing.State) {
 	}
 	c = b.ReadGscTotalMilliAmps(ctx)
 	s.Logf("mA after AP_ON: %f", c)
+
+	events = b.GpioMonitorWait(ctx, gpioMonitor, 2*time.Second, 100*time.Millisecond)
+	if len(events.Sorted) > 0 {
+		s.Errorf("GPIO event on resume sleep: %s", events)
+	}
 }
