@@ -218,9 +218,7 @@ func SetVKAutoCapitalization(uc *useractions.UserContext, im ime.InputMethod, is
 		return uiauto.Combine(actionName,
 			setting.OpenInputMethodSetting(uc.TestAPIConn(), im),
 			setting.ToggleAutoCap(uc.Chrome(), isEnabled),
-			// TODO(b/157686038) A better solution to identify decoder status.
-			// Decoder works async in returning status to frontend IME and self loading.
-			uiauto.Sleep(5*time.Second),
+			setting.WaitUntilMatchesToggleValue(ctx, uc.Chrome(), "Auto-capitalization", isEnabled),
 			setting.Close,
 		)(ctx)
 	}

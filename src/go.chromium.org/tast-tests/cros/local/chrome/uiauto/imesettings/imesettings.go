@@ -112,6 +112,22 @@ func (i *IMESettings) RemoveInputMethod(inputMethodName string) uiauto.Action {
 	return i.LeftClick(nodewith.Name("Remove " + inputMethodName).Role(role.Button))
 }
 
+// WaitUntilMatchesToggleValue continuously checks if the toggle with the name toggleName has the value that matches the expected value
+func (i *IMESettings) WaitUntilMatchesToggleValue(ctx context.Context, cr *chrome.Chrome, toggleName string, expected bool) uiauto.Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			isEnabled, err := i.IsToggleOptionEnabled(ctx, cr, toggleName)
+			if err != nil {
+				if isEnabled == expected {
+					return nil
+				}
+				return errors.Errorf("Toggle value has not matched expected value: %t vs. %t", isEnabled, expected)
+			}
+			return err
+		}, &testing.PollOptions{Timeout: 20 * time.Second})
+	}
+}
+
 // OpenInputMethodSetting opens the input method setting page in OS settings.
 // The setting button is named as "Open settings page for " + im.Name.
 // Japanese is the only exemption in "IME settings in the OS setting".
