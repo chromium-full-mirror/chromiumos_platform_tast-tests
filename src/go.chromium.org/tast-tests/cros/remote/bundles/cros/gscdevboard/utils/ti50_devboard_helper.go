@@ -657,6 +657,62 @@ func (h DevboardHelper) ResetAndTpmStartupForBus(ctx context.Context, i *ti50.Cr
 	return tpmHandle
 }
 
+// ResetAndTpmRemoveFWMP resets GSC with the TPM straps and deletes the FWMP.
+func (h DevboardHelper) ResetAndTpmRemoveFWMP(ctx context.Context, i *ti50.CrOSImage,
+	straps ...ti50.GpioStrap) (*TpmHelper, error) {
+	tpm := h.ResetAndTpmStartup(ctx, i, straps...)
+	if err := tpm.TpmvCommitNvmem(); err != nil {
+		return tpm, errors.Wrap(err, "failed to enable commits")
+	}
+	attr := ti50.FwmpAttr()
+	tpm.NvUndefineSpace(attr)
+	return tpm, nil
+}
+
+// ResetAndTpmSetFWMP resets GSC with the TPM straps and initializes the fwmp.
+// If remove is true, remove the FWMP.
+func (h DevboardHelper) ResetAndTpmSetFWMP(ctx context.Context, i *ti50.CrOSImage,
+	flags uint32, straps ...ti50.GpioStrap) (*TpmHelper, error) {
+	tpm := h.ResetAndTpmStartup(ctx, i, straps...)
+	if err := tpm.TpmvCommitNvmem(); err != nil {
+		return tpm, errors.Wrap(err, "failed to enable commits")
+	}
+	attr := ti50.FwmpAttr()
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		return tpm, errors.Wrap(err, "failed to get name")
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: attr.NVIndex,
+		Name:   *nvName,
+	}
+
+	fwmpFile := MakeFWMPFile(flags)
+	// Define space in NV storage and clean up afterwards
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
+	}
+	if _, err := def.Execute(tpm); err != nil {
+		return tpm, errors.Wrap(err, "failed to define fwmp")
+	}
+
+	// Write the fwmp file data to new space.
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: fwmpFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
+		return tpm, errors.Wrap(err, "failed to write fwmp")
+	}
+	return tpm, nil
+}
+
 // WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
 // This function asserts the CCD_MODE_L signal and leaves it in that state, so `gsctool` should work immediately.
 func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage, holdReset ti50.HoldReset, f func(ti50.ApFlash)) {
