@@ -11,12 +11,10 @@ package crostini
 // https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/crostini/params.go
 
 import (
-	"sort"
 	"testing"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/imetestutil"
 	"go.chromium.org/tast-tests/cros/local/chrome/devicemode"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -70,8 +68,6 @@ var standardTests = map[string]testOptions{
 	// OomEvent test was for crostini data-collection, no need in baguette.
 	"oom_event.go":                 {timeout: 10 * time.Minute},
 	"open_with_terminal.go":        {},
-	"package_info.go":              {},
-	"package_install_uninstall.go": {},
 	"pulse_audio_basic.go":         {},
 	"remove_cancel.go":             {foundation: true},
 	"remove_ok.go":                 {foundation: true},
@@ -168,7 +164,6 @@ var appTests = map[string]testOptions{
 	"app_gedit_filesharing.go":             {},
 	"app_gedit.go":                         {foundation: true},
 	"app_gedit_nonalphanumeric_input.go":   {},
-	"app_gedit_switch_ime.go":              {},
 	"app_gedit_unshare_folder.go":          {},
 	"app_libre_office.go":                  {},
 	"app_vlc.go":                           {needsAloop: true},
@@ -263,40 +258,6 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 	}
 }
 
-var appIMELanguageTests = []string{
-	"app_gedit_ime.go",
-	"app_firefox_ime.go",
-	"app_vscode_ime.go",
-}
-
-func TestAppIMELanguageTestParams(t *testing.T) {
-	var imeParams []crostini.Param
-
-	imeTestCases := make([]string, 0)
-	for imeTestCase := range imetestutil.IMETestCases {
-		imeTestCases = append(imeTestCases, imeTestCase)
-	}
-	sort.Strings(imeTestCases)
-
-	for _, imeName := range imeTestCases {
-		imeParams = append(imeParams, crostini.Param{
-			Timeout:                 15 * time.Minute,
-			ExtraSoftwareDeps:       []string{"crostini_app"},
-			UseLargeContainer:       true,
-			UseFixture:              true,
-			OnlyStableBoards:        true,
-			MinimumContainerVersion: vm.DebianBookworm,
-			DeviceMode:              devicemode.ClamshellMode,
-			IMEName:                 imeName,
-			Val:                     "\"" + imeName + "\"",
-		})
-	}
-	for _, filename := range appIMELanguageTests {
-		params := crostini.MakeTestParamsFromList(t, imeParams)
-		genparams.Ensure(t, filename, params)
-	}
-}
-
 var gaiaTests = map[string]testOptions{
 	"no_access_to_drive.go": {},
 	"share_drive.go":        {},
@@ -316,27 +277,6 @@ func TestGaiaTestParams(t *testing.T) {
 			UseFixture:       true,
 			OnlyStableBoards: true,
 			RequiresARC:      options.requiresARC,
-		}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var containerTests = []string{
-	"docker.go",
-	"podman_root.go",
-	"podman_user.go",
-}
-
-// The container managers are quite heavy in terms of install size, so they are
-// installed in the "large" or "app test" container, even though they have low
-// runtime performance requirements.
-func TestContainerTestParams(t *testing.T) {
-	for _, filename := range containerTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:                 15 * time.Minute,
-			UseLargeContainer:       true,
-			UseFixture:              true,
-			MinimumContainerVersion: vm.DebianBookworm,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
