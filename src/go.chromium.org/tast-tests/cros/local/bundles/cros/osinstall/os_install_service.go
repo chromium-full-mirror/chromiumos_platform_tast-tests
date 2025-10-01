@@ -86,37 +86,37 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 	getStarted := nodewith.Name("Get started").Role(role.Button)
 	if err := ui.LeftClickUntil(getStarted, ui.Gone(getStarted))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed to click \"Get started\"")
+		return nil, err
 	}
 
 	// Ensure the install option is selected.
 	if err := ui.LeftClick(nodewith.NameContaining("Install ChromeOS Flex").Role(role.RadioButton))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed to click \"Install ChromeOS Flex\"")
+		return nil, err
 	}
 
 	// Advance to the install confirmation screen.
 	if err := ui.LeftClick(nodewith.Name("Next").Role(role.Button))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed to click the \"Next\" button")
+		return nil, err
 	}
 
 	// Confirm readiness, which will bring up one final warning dialog.
 	if err := ui.LeftClick(nodewith.Name("Install ChromeOS Flex").Role(role.Button))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed to click \"Install ChromeOS Flex\" again")
+		return nil, err
 	}
 
 	// Confirm readiness and start the install process.
 	if err := ui.LeftClick(nodewith.Name("Install").Role(role.Button))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed to click the \"Install\" button")
+		return nil, err
 	}
 
 	// Wait for the screen shown during the install process.
 	if err := ui.WaitUntilExists(nodewith.Name("Installing ChromeOS Flex").Role(role.Dialog))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed waiting for \"Installing ChromeOS Flex\" dialog")
+		return nil, err
 	}
 
 	// The UI text says it can take up to 20 minutes to install. In
@@ -127,7 +127,7 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 	// Wait for the install-complete screen.
 	if err := ui.WithTimeout(maxInstallDuration).WaitUntilExists(nodewith.Name("Installation complete").Role(role.Dialog))(ctx); err != nil {
 		svc.DumpUITree(ctx)
-		return nil, errors.Wrap(err, "failed waiting for \"Installation complete\" dialog")
+		return nil, err
 	}
 
 	return &empty.Empty{}, nil
