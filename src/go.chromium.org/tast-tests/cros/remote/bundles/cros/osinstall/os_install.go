@@ -33,9 +33,8 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.osinstall.OsInstallService"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FlexWithServo,
-		// Allow up to 20 minutes for install, plus some extra time for the DUT
-		// to be started back up.
-		Timeout: 25 * time.Minute,
+		// Allow time to for two USB image rewrites, installation and reboot.
+		Timeout: 45 * time.Minute,
 	})
 }
 
