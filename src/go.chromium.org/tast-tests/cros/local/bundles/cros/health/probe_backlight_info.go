@@ -39,13 +39,11 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
-			// TODO(b/393352804): Remove `NUC13OXKv5` when fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXKv5", "NUC13OXv5")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXv5")),
 		}, {
 			// TODO(b/369455834): Fix the failure.
 			Name: "unstable",
-			// TODO(b/393352804): Remove `NUC13OXKv5` when fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXKv5", "NUC13OXv5")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXv5")),
 			ExtraAttr:         []string{"informational"},
 		}},
 	})
