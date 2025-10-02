@@ -28,7 +28,7 @@ flashrom -p ec -w "$1"
 echo "FLASHROM EXIT: $?"
 set +x
 ectool echash start rw
-until ectool echash | grep 'done' ; do : ; done
+until ectool echash | grep 'done' ; do sleep 1 ; done
 echo -n "AFTER "
 ectool echash | grep "hash:"
 sync
