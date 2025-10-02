@@ -117,8 +117,8 @@ func (e *Element) Login(ctx context.Context, username string) error {
 	if err := uiauto.NamedCombine("login to Element app",
 		apputil.FindAndClick(haveAccountButton, defaultUITimeout),
 		// It might take long time to show the login screen.
-		// Use longUITimeout to click the continueButton.
-		apputil.FindAndClick(continueButton, longUITimeout),
+		// Use loadTimeout to click the continueButton.
+		apputil.FindAndClick(continueButton, loadTimeout),
 	)(ctx); err != nil {
 		return err
 	}
