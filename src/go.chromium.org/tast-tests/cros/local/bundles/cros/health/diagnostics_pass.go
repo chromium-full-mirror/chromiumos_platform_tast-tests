@@ -29,8 +29,7 @@ func init() {
 			Name:    "ac_power",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
 			Fixture: "crosHealthdRunning",
-			// TODO(b/393352804): Remove `NUC13OXKv5` when fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXKv5", "NUC13OXv5")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXv5")),
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "urandom",
