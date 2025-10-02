@@ -45,6 +45,7 @@ func init() {
 					"group:release-health",
 					"release-health_camera",
 				},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 				Val: fakeHALTest,
 			},
 			{
@@ -57,6 +58,7 @@ func init() {
 					"group:release-health",
 					"release-health_camera",
 				},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 				Val:               realCamerasTest,

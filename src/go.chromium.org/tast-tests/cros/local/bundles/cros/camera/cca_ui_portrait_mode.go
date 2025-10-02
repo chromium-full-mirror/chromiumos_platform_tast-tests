@@ -25,6 +25,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "camera_feature_portrait_mode", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"pink-nature-1920x1080.jpg", "portrait_4096x3072.jpg"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

@@ -30,6 +30,7 @@ func init() {
 			"group:release-health",
 			"release-health_gfx",
 		},
+		VariantCategory:   `{"name": "Camera:SoC_KernelVersion"}`,
 		SoftwareDeps: []string{"chrome", caps.HWDecodeJPEG},
 		Data:         []string{decodeAccelJpegTestFile},
 	})

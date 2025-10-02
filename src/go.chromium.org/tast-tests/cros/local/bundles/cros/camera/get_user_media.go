@@ -31,6 +31,7 @@ func init() {
 				Name:              "real",
 				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational", "group:camera-libcamera"},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 				ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			},
 			{
@@ -38,11 +39,13 @@ func init() {
 				Fixture:           "chromeVideo",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{caps.VividCamera},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 			},
 			{
 				Name:      "fake_vcd",
 				Fixture:   "chromeVideoWithFakeWebcam",
 				ExtraAttr: []string{"informational"},
+				VariantCategory:   `{"name": "Camera:Model"}`,
 			},
 		},
 	})

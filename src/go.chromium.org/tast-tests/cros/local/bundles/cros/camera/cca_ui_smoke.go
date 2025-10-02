@@ -35,11 +35,13 @@ func init() {
 				"group:release-health",
 				"release-health_camera",
 			},
+			VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 		}, {
 			Name:              "vivid",
 			ExtraSoftwareDeps: []string{caps.VividCamera},
 			Fixture:           "ccaLaunched",
 			ExtraAttr:         []string{"group:camera-postsubmit"},
+			VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		}, {
 			Name:    "fake_vcd",
 			Fixture: "ccaLaunchedWithFakeVCDCamera",
@@ -47,6 +49,7 @@ func init() {
 			Name:      "fake_hal",
 			Fixture:   "ccaLaunchedWithFakeHALCamera",
 			ExtraAttr: []string{"group:cq-medium"},
+			VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		}},
 	})
 }

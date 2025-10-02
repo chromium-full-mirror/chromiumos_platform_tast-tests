@@ -73,6 +73,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		VariantCategory:   `{"name": "Camera:Model"}`,
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
 		Fixture:      pnp.StablePowerAsh,
 		Timeout:      5 * time.Minute,

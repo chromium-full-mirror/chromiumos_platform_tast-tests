@@ -44,6 +44,7 @@ func init() {
 					{"testTakeSinglePhotoWithTimer", testTakeSinglePhotoWithTimer},
 					{"testCancelTimer", testCancelTimer},
 				},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 			},
 			{
 				Name:              "real",
@@ -54,6 +55,7 @@ func init() {
 					{"testTakeSinglePhoto", testTakeSinglePhoto},
 					{"testTakeZoomedPhoto", testTakeZoomedPhoto},
 				},
+				VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 			},
 		},
 	})

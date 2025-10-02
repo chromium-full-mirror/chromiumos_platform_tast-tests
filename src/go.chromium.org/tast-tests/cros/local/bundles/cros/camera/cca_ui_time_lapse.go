@@ -27,6 +27,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      6 * time.Minute,
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

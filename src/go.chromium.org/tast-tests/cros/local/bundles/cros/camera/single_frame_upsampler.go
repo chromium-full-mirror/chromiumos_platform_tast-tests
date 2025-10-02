@@ -29,6 +29,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_feature_super_res"},
 		Data: []string{
 			upsamplerTestInputImage,

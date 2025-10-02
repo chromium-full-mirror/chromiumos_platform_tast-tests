@@ -55,11 +55,13 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
 			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-nda"},
+			VariantCategory:   `{"name": "Camera:BoardWithKernelnext_CameraTypes"}`,
 			Fixture:           "ccaTestBridgeReady",
 			Timeout:           5 * time.Minute,
 		}, {
 			Name:      "fake_hal",
 			ExtraAttr: []string{"group:mainline", "informational"},
+			VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
 			Timeout:   5 * time.Minute,
 		}, {

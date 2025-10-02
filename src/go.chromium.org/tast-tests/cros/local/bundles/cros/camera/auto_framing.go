@@ -28,6 +28,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_feature_auto_framing"},
 		Data:         []string{autoFramingTestImageFile, autoFramingTestImageFile + ".json"},
 		Timeout:      4 * time.Minute,

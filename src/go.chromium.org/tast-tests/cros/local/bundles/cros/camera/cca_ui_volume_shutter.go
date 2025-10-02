@@ -32,6 +32,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnFormFactor(hwdep.Chromebase), hwdep.Speaker()),
 		Fixture:      "ccaLaunchedWithFakeHALCamera",

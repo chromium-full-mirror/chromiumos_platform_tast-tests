@@ -27,6 +27,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"ocr_no_text_3264x2448.jpg", "ocr_one_line_3264x2448.jpg", "ocr_full_of_text_3264x2448.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",

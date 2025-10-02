@@ -22,6 +22,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "chuhsuan@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		Data:         []string{"web_camera_app.html", "web_camera_app.js", "web_camera_app_test.js"},
 		Fixture:      "chromeVideo",

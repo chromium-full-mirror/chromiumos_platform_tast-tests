@@ -34,6 +34,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "shik@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		VariantCategory:   `{"name": "Camera:Model"}`,
 		SoftwareDeps: []string{caps.BuiltinOrVividCamera, "chrome"},
 		Fixture:      "chromeCameraPerf",
 		Data: append(

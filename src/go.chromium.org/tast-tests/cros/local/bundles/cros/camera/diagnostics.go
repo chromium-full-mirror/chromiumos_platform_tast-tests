@@ -20,6 +20,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "imranziad@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational"},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		Timeout:      10 * time.Minute,
 	})
 }

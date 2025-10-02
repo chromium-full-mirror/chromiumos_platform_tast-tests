@@ -43,6 +43,7 @@ func init() {
 				Name:              "flaky_model",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyUSBModel...)),
 				ExtraAttr:         []string{"informational"},
+				VariantCategory:   `{"name": "Camera:Model"}`,
 			},
 		},
 	})

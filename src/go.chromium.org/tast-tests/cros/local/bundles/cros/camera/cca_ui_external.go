@@ -21,6 +21,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-app-eng@google.com", "pihsun@chromium.org", "seannli@google.com"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
 		Attr:         []string{"group:mainline", "informational"},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})

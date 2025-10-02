@@ -30,6 +30,7 @@ func init() {
 			"release-health_camera",
 			"group:release-health",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunchedWithFakeHALCamera",
 	})

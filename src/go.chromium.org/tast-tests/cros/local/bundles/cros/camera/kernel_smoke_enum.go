@@ -34,6 +34,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "group:camera-stability", "group:camera-kernelnext", "group:camera", "camera_kernel", "camera_functional"},
+		VariantCategory:   `{"name": "Camera:Model"}`,
 		SoftwareDeps: []string{caps.BuiltinCamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 		Params: []testing.Param{

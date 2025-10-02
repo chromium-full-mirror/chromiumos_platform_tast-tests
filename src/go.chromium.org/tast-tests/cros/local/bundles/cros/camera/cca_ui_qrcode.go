@@ -53,6 +53,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome", "chrome_internal"},
 		Data:         []string{"qrcode_1280x960.mjpeg", "qrcode_text_1280x960.mjpeg", "qrcode_wifi_1280x960_20231225.jpg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",

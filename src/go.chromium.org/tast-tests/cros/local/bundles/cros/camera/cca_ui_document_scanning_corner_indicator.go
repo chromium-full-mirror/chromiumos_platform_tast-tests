@@ -26,6 +26,7 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
+		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", "camera_doc_corner_indicator"},
 		Data:         []string{"document_3264x2448.mjpeg"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
