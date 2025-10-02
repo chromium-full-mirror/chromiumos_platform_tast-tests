@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/imesettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
@@ -72,12 +73,12 @@ func VirtualKeyboardJapaneseInputMode(ctx context.Context, s *testing.State) {
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, im.Name)
 
-	s.Log("Opening Japanese IME options page")
-	optionPage, err := cr.NewConn(ctx, "chrome-extension://jkghodnilhceideoidjikpgommlajknk/mozc_option.html")
+	s.Log("Opening browser")
+	emptyPage, err := cr.NewConn(ctx, "chrome://blank")
 	if err != nil {
-		s.Error("Failed to open Japanese IME options page: ", err)
+		s.Error("Failed to open empty page: ", err)
 	}
-	defer optionPage.Close()
+	defer emptyPage.Close()
 
 	type inputMode struct {
 		name    string
@@ -86,20 +87,19 @@ func VirtualKeyboardJapaneseInputMode(ctx context.Context, s *testing.State) {
 	}
 
 	romajiInput := inputMode{
-		name:    "ROMAN",
+		name:    "Romaji",
 		typeKey: "a",
 		output:  "あ",
 	}
 
 	kanaInput := inputMode{
-		name:    "KANA",
+		name:    "Kana",
 		typeKey: "ち",
 		output:  "ち",
 	}
 
 	omniboxFinder := nodewith.Role(role.TextField).ClassName("OmniboxViewViews")
 	omniboxFirstResultFinder := nodewith.ClassName("OmniboxResultView").First()
-	settingPageHeaderFinder := nodewith.Role(role.Heading).Name("Japanese input settings")
 
 	const loadNewSettingDuration = 2 * time.Second
 
@@ -139,22 +139,15 @@ func VirtualKeyboardJapaneseInputMode(ctx context.Context, s *testing.State) {
 	}
 
 	switchInputMode := func(ctx context.Context, mode inputMode) {
-		action := uiauto.Combine(fmt.Sprintf("switch input mode to %q", mode.name),
-			// Click page header to deactivate virtualkeyboard.
-			// Note: vkb.HideVirtualKeyboard() will not trigger reloading of setting changes.
-			ui.LeftClickUntil(settingPageHeaderFinder, vkbCtx.WaitUntilHidden()),
-			func(ctx context.Context) error {
-				return optionPage.Eval(ctx,
-					fmt.Sprintf(`document.getElementById('preedit_method').value = '%s';
-					document.getElementById('preedit_method').dispatchEvent(new Event('change'));`, mode.name), nil)
-			},
+		settingAction := uiauto.Combine("set dropdown and wait",
+			imesettings.SetJapaneseDropdown(ui, imesettings.JapaneseInputMode, mode.name),
 			// No available method to check that settings being loaded. On a low-end device, it might take a second.
 			// So added sleep to wait for loading.
 			uiauto.Sleep(loadNewSettingDuration),
 		)
 
 		if err := uiauto.UserAction("Switch Japanese input mode",
-			action,
+			imesettings.SetJapaneseKeyboardSettings(uc, ui, im, settingAction),
 			uc,
 			&useractions.UserActionCfg{
 				Tags: []useractions.ActionTag{useractions.ActionTagIMESettings},
