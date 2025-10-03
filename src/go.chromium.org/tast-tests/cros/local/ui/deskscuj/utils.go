@@ -74,7 +74,11 @@ func (d *DeskSwitcher) DeskSwitch(ctx context.Context) error {
 	}
 
 	for _, switcher := range d.deskSwitchWorkflows {
-		if startDesk := switcher.Itinerary[0]; d.ActiveDesk != startDesk {
+		info, err := ash.GetDesksInfo(ctx, d.tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the desk info")
+		}
+		if startDesk := switcher.Itinerary[0]; info.ActiveDeskIndex != startDesk {
 			if err := ash.ActivateDeskAtIndex(ctx, d.tconn, startDesk); err != nil {
 				return errors.Wrapf(err, "failed to activate desk %d with the autotest API", startDesk)
 			}
@@ -106,6 +110,8 @@ func (d *DeskSwitcher) DeskSwitch(ctx context.Context) error {
 				if err != nil {
 					return errors.Wrap(err, "failed to get the desk info")
 				}
+				testing.ContextLogf(ctx, "Active desk index: %d, target desk index: %d", info.ActiveDeskIndex, nextDesk)
+
 				if info.ActiveDeskIndex == nextDesk {
 					testing.ContextLog(ctx, "The active desk index is already the next desk")
 					return nil

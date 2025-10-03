@@ -7,6 +7,7 @@ package deskscuj
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -30,22 +31,23 @@ type DeskSwitchWorkflow struct {
 }
 
 // GetKeyboardSearchBracketWorkflow returns the workflow for switching
-// between desks using Search+[ and Search+].
+// between desks using Search+[ and Search+], supporting multi-desk
+// switching.
 func GetKeyboardSearchBracketWorkflow(tconn *chrome.TestConn, kw *input.KeyboardEventWriter) DeskSwitchWorkflow {
 	return DeskSwitchWorkflow{
 		Name:      "Search-Bracket",
 		Itinerary: []int{0, 1, 2, 3, 2, 1},
 		Run: func(ctx context.Context, fromDesk, toDesk int) error {
 			var direction string
-			switch toDesk {
-			case fromDesk - 1:
+			if fromDesk > toDesk {
 				direction = "Search+["
-			case fromDesk + 1:
+			} else if fromDesk < toDesk {
 				direction = "Search+]"
-			default:
-				return errors.Errorf("invalid Search+Bracket desk switch: from %d to %d", fromDesk, toDesk)
+			} else {
+				return nil
 			}
-			return kw.Accel(ctx, direction)
+			count := int(math.Abs(float64(fromDesk - toDesk)))
+			return uiauto.Repeat(count, kw.AccelAction(direction))(ctx)
 		},
 		RecordTrace: true,
 	}
