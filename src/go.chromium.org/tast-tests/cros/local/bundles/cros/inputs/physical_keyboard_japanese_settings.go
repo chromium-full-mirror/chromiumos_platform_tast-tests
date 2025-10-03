@@ -34,7 +34,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.JapaneseWithUSKeyboard}),
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:              "us",
