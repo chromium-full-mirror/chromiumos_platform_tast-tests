@@ -133,15 +133,7 @@ func (i *IMESettings) WaitUntilMatchesToggleValue(ctx context.Context, cr *chrom
 // Japanese is the only exemption in "IME settings in the OS setting".
 func (i *IMESettings) OpenInputMethodSetting(tconn *chrome.TestConn, im ime.InputMethod) uiauto.Action {
 	return func(ctx context.Context) error {
-		var imeSettingHeading *nodewith.Finder
-		// Japanese input settings page has not been migrated to OS Settings yet.
-		// Remove this special case once it is migrated.
-		if im.Equal(ime.JapaneseWithUSKeyboard) || im.Equal(ime.Japanese) {
-			imeSettingHeading = nodewith.NameStartingWith("Japanese").Role(role.Heading)
-		} else {
-			imeSettingHeading = nodewith.Name(im.Name).Role(role.Heading).Ancestor(ossettings.WindowFinder)
-		}
-
+		imeSettingHeading := nodewith.Name(im.Name).Role(role.Heading).Ancestor(ossettings.WindowFinder)
 		imSettingButton := nodewith.Name("Open settings page for " + im.Name)
 		successCondition := uiauto.New(tconn).WithTimeout(5 * time.Second).WaitUntilExists(imeSettingHeading)
 		return i.LeftClickUntil(imSettingButton, successCondition)(ctx)
@@ -243,7 +235,7 @@ func (i *IMESettings) setPKAutoCorrection(cr *chrome.Chrome, expected bool) uiau
 
 // SetJapaneseDropdown sets a dropdown in the Japanese settings page to the specified value.
 func SetJapaneseDropdown(ui *uiauto.Context, setting settingOption, value string) uiauto.Action {
-	dropdownFinder := nodewith.NameStartingWith(string(setting)).Role(role.ComboBoxSelect)
+	dropdownFinder := nodewith.Name(string(setting)).Role(role.ComboBoxSelect)
 	dropdownItemFinder := nodewith.Name(value).Ancestor(dropdownFinder)
 	return uiauto.Combine("set drop down option",
 		ui.MakeVisible(dropdownFinder),
@@ -254,15 +246,15 @@ func SetJapaneseDropdown(ui *uiauto.Context, setting settingOption, value string
 	)
 }
 
-// SetJapaneseCheckbox sets a checkbox in the Japanese settings page to the specified value.
-func SetJapaneseCheckbox(ui *uiauto.Context, setting settingOption, value checked.Checked) uiauto.Action {
-	finder := nodewith.Name(string(setting))
-	return uiauto.Combine("set checkbox or toggle button",
+// SetJapaneseToggle sets a toggle in the Japanese settings page to the specified value.
+func SetJapaneseToggle(ui *uiauto.Context, setting settingOption, value checked.Checked) uiauto.Action {
+	finder := nodewith.Name(string(setting)).Role(role.ToggleButton)
+	return uiauto.Combine("set toggle button",
 		ui.MakeVisible(finder),
 		func(ctx context.Context) error {
 			info, err := ui.Info(ctx, finder)
 			if err != nil {
-				return errors.Wrap(err, "failed to get checkbox or toggle button value")
+				return errors.Wrap(err, "failed to get toggle button value")
 			}
 			if info.Checked == value {
 				testing.ContextLogf(ctx, "Skip to change %q: the current value is already %q", setting, value)

@@ -248,13 +248,13 @@ func PhysicalKeyboardJapaneseSettings(ctx context.Context, s *testing.State) {
 		{
 			name:             "AutomaticallySwitchToHalfwidthEnabled",
 			feature:          useractions.FeatureJapaneseAutomaticallySwitchToHalfwidth,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseAutomaticallySwitchToHalfwidth, checked.False),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseAutomaticallySwitchToHalfwidth, checked.False),
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction("http"), "ｈっｔｐ"),
 		},
 		{
 			name:             "AutomaticallySwitchToHalfwidthDisabled",
 			feature:          useractions.FeatureJapaneseAutomaticallySwitchToHalfwidth,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseAutomaticallySwitchToHalfwidth, checked.True),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseAutomaticallySwitchToHalfwidth, checked.True),
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction("http"), "http"),
 		},
 		{
@@ -278,25 +278,25 @@ func PhysicalKeyboardJapaneseSettings(ctx context.Context, s *testing.State) {
 		{
 			name:             "UseInputHistoryDisabled",
 			feature:          useractions.FeatureJapaneseUseInputHistory,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseUseInputHistory, checked.False),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseUseInputHistory, checked.False),
 			validationAction: uiauto.Combine("type and check suggestions do not include previous history", its.ClearThenClickFieldAndWaitForActive(inputField), kb.TypeAction("TAST123\nTAST"), ui.EnsureGoneFor(util.PKCandidatesFinder.Name("TAST123"), time.Second)),
 		},
 		{
 			name:             "UseInputHistoryEnabled",
 			feature:          useractions.FeatureJapaneseUseInputHistory,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseUseInputHistory, checked.True),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseUseInputHistory, checked.True),
 			validationAction: uiauto.Combine("type and check suggestions include previous history", its.ClearThenClickFieldAndWaitForActive(inputField), kb.TypeAction("TAST123\nTAST"), ui.WaitUntilExists(util.PKCandidatesFinder.Name("TAST123"))),
 		},
 		{
 			name:             "UseSystemDictionaryDisabled",
 			feature:          useractions.FeatureJapaneseUseSystemDictionary,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseUseSystemDictionary, checked.False),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseUseSystemDictionary, checked.False),
 			validationAction: uiauto.Combine("type check suggestions do not include system dictionary", its.ClearThenClickFieldAndWaitForActive(inputField), kb.TypeAction("genki"), ui.EnsureGoneFor(util.PKCandidatesFinder, time.Second)),
 		},
 		{
 			name:             "UseSystemDictionaryEnabled",
 			feature:          useractions.FeatureJapaneseUseSystemDictionary,
-			settingAction:    imesettings.SetJapaneseCheckbox(ui, imesettings.JapaneseUseSystemDictionary, checked.True),
+			settingAction:    imesettings.SetJapaneseToggle(ui, imesettings.JapaneseUseSystemDictionary, checked.True),
 			validationAction: uiauto.Combine("type and check suggestions include system dictionary", its.ClearThenClickFieldAndWaitForActive(inputField), kb.TypeAction("genki"), ui.WaitUntilExists(util.PKCandidatesFinder.First())),
 		},
 		{

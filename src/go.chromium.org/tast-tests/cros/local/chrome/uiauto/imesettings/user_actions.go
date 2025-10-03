@@ -336,23 +336,6 @@ func SetKoreanInputASyllableAtATime(uc *useractions.UserContext, value bool) uia
 	)
 }
 
-func closeJapaneseSettings(uc *useractions.UserContext) uiauto.Action {
-	const url = "chrome-extension://jkghodnilhceideoidjikpgommlajknk/mozc_option.html"
-	return func(ctx context.Context) error {
-		if err := uc.TestAPIConn().Call(ctx, nil, `async (url) => {
-                  const query = tast.promisify(chrome.tabs.query);
-                  const remove = tast.promisify(chrome.tabs.remove);
-                  const tabs = await query({ url });
-                  console.error(tabs)
-                  // Works for any number of tabs, even if it will usually be 1.
-                  await Promise.all(tabs.map(t => remove(t.id)));
-          }`, url); err != nil {
-			return errors.Wrapf(err, "failed to close tab %q", url)
-		}
-		return nil
-	}
-}
-
 // SetJapaneseKeyboardSettings returns a user action to open the Japanese input settings and run the specified action to change the settings.
 // The input method should either be Japanese or Japanese with US keyboard
 func SetJapaneseKeyboardSettings(uc *useractions.UserContext, ui *uiauto.Context, im ime.InputMethod, settingAction uiauto.Action) uiauto.Action {
@@ -366,7 +349,6 @@ func SetJapaneseKeyboardSettings(uc *useractions.UserContext, ui *uiauto.Context
 			setting.OpenInputMethodSetting(uc.TestAPIConn(), im),
 			settingAction,
 			setting.Close,
-			closeJapaneseSettings(uc),
 		)(ctx)
 	}
 
