@@ -108,6 +108,7 @@ func init() {
 				// Guybrush
 				"nipperkin",
 				//Nirva,
+				"craaskyu2",
 				"ruken",
 				"telithn50",
 				"telticn50",
