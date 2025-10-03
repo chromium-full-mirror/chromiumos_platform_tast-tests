@@ -362,13 +362,14 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	if total == time.Duration(0) {
 		total = defaultTimeParams.Total
 	}
+
 	// For tests that take more than 1 hour, make sure the device has at least
 	// 50% of battery.
-	if total >= time.Hour {
-		s.Logf("Prepare the device to have at least %.2f%% battery", power.RegressionTestChargeParam.MinChargePercentage)
-		setup.PrepareBattery(ctx, power.RegressionTestChargeParam)
-		discharge = power.RegressionTestChargeParam.DischargeOnCompletion
+	batteryCleanup, err := setup.Battery(ctx, total, discharge)
+	if err != nil {
+		s.Fatal("Setup battery failed: ", err)
 	}
+	defer batteryCleanup(cleanupCtx)
 
 	// VP8 and VP9 use webm, h264, av1 use mp4.
 	fileName := videoName

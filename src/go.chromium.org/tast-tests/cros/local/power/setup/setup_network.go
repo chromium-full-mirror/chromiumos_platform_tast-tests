@@ -9,14 +9,22 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// ifconfigRE parses one adapter from the output of ifconfig.
-var ifconfigRE = regexp.MustCompile("([^:]+): .*\n(?: +.*\n)*\n")
-var multicastRE = regexp.MustCompile("flags=.*<.*(ALLMULTI|MULTICAST).*>")
+var (
+	// ifconfigRE parses one adapter from the output of ifconfig.
+	ifconfigRE    = regexp.MustCompile("([^:]+): .*\n(?: +.*\n)*\n")
+	multicastRE   = regexp.MustCompile("flags=.*<.*(ALLMULTI|MULTICAST).*>")
+	ethProperties = map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeEthernet,
+		shillconst.ServicePropertyIsConnected: true,
+	}
+)
 
 func listUpNetworkInterfaces(ctx context.Context) ([]string, error) {
 	output, err := testexec.CommandContext(ctx, "ifconfig").Output(testexec.DumpLogOnError)
@@ -142,7 +150,7 @@ func DisableNetworkMulticast(ctx context.Context, iface string) (CleanupCallback
 
 // DisableAllMulticast disables multicast on all ethernet and wlan interfaces.
 func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
-	return Nested(ctx, "disable ntwork multicast", func(s *Setup) error {
+	return Nested(ctx, "disable network multicast", func(s *Setup) error {
 		pattern := regexp.MustCompile("(eth|wlan).*")
 		onInterfaces, err := listMulticastOnInterfaces(ctx)
 		if err != nil {
@@ -157,4 +165,36 @@ func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
 		}
 		return nil
 	})
+}
+
+// IsEthernetConnected returns true if the ethernet service is connected.
+func IsEthernetConnected(ctx context.Context) bool {
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create a shill manager: ", err)
+		return false
+	}
+
+	if _, err := manager.FindMatchingService(ctx, ethProperties); err != nil {
+		testing.ContextLog(ctx, "Failed to find ethernet service: ", err)
+		return false
+	}
+	return true
+}
+
+// waitForEthernet waits for the ethernet service.
+func waitForEthernet(ctx context.Context) error {
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a shill manager")
+	}
+
+	testing.ContextLog(ctx, "Waiting for an Ethernet Service")
+	start := time.Now()
+	_, err = manager.WaitForServiceProperties(ctx, ethProperties, 30*time.Second)
+	if err != nil {
+		return errors.Wrap(err, "failed to wait for an ethernet service")
+	}
+	testing.ContextLog(ctx, "Wait for ethernet took: ", time.Since(start))
+	return nil
 }

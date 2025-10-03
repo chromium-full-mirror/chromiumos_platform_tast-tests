@@ -279,9 +279,11 @@ func Browsing(ctx context.Context, s *testing.State) {
 		tabDataList = []tabData{tab1, tab2, tab3, tab4, tab5}
 	}
 
-	if err := setup.Battery(ctx, totalTime, discharge); err != nil {
+	batteryCleanup, err := setup.Battery(ctx, totalTime, discharge)
+	if err != nil {
 		s.Fatal("Setup battery failed: ", err)
 	}
+	defer batteryCleanup(cleanupCtx)
 
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)

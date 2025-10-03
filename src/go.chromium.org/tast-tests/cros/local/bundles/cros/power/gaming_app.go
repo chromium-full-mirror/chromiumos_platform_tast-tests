@@ -156,9 +156,11 @@ func GamingApp(ctx context.Context, s *testing.State) {
 	defer kb.Close(cleanupCtx)
 
 	totalTime := s.Param().(gamingAppParams).timeParams.Total
-	if err := setup.Battery(ctx, totalTime, discharge); err != nil {
+	batteryCleanup, err := setup.Battery(ctx, totalTime, discharge)
+	if err != nil {
 		s.Fatal("Setup battery failed: ", err)
 	}
+	defer batteryCleanup(cleanupCtx)
 
 	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d, s.DataPath)
 	if superTuxKart, isSuperTuxKart := game.(*gameapp.SuperTuxKart); isSuperTuxKart {

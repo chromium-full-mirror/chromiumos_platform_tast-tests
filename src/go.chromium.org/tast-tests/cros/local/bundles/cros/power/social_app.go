@@ -113,9 +113,11 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	}
 	app := socialapp.NewElement(tconn, kb, a, d, username, apkURL)
 
-	if err := setup.Battery(ctx, socialAppOperatingTimeout, discharge); err != nil {
+	batteryCleanup, err := setup.Battery(ctx, socialAppOperatingTimeout, discharge)
+	if err != nil {
 		s.Fatal("Setup battery failed: ", err)
 	}
+	defer batteryCleanup(cleanupCtx)
 
 	if err := app.Install(ctx); err != nil {
 		s.Fatal("Failed to install app: ", err)

@@ -137,9 +137,11 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	videoPlayTime := s.Param().(multiTaskingParam).videoPlayTime
 	browserTime := s.Param().(multiTaskingParam).browserTime
 	total := socialAppTime + videoPlayTime + browserTime
-	if err := setup.Battery(ctx, total, discharge); err != nil {
+	batteryCleanup, err := setup.Battery(ctx, total, discharge)
+	if err != nil {
 		s.Fatal("Setup battery failed: ", err)
 	}
+	defer batteryCleanup(cleanupCtx)
 
 	testResources := &multitaskingapp.TestResources{
 		Cr:        cr,

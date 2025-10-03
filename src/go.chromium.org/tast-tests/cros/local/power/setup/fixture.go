@@ -1303,6 +1303,21 @@ func (f *powerUIFixture) Reset(ctx context.Context) error {
 	} else if len(all) != 0 {
 		return errors.Wrapf(err, "toplevel window (%q) stayed open, total %d left", all[0].Name, len(all))
 	}
+
+	if f.powerTestOptions.Multicast == DisableMulticast && IsEthernetConnected(ctx) {
+		multcastCleanup, err := DisableAllMulticast(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to disable multicast")
+		}
+		cleanup := f.cleanup
+		f.cleanup = func(ctx context.Context) error {
+			lastErr := multcastCleanup(ctx)
+			if err := cleanup(ctx); err != nil {
+				lastErr = err
+			}
+			return lastErr
+		}
+	}
 	return nil
 }
 
