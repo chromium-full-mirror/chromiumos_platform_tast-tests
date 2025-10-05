@@ -183,6 +183,18 @@ func init() {
 				},
 			},
 		}, {
+			// Verify GSC rejects all set commands after factory disable.
+			Name: "factory_disable_blocks_set_cmds",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "factoryDisable", ok: false},
+					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: false},
+					{cmdType: "commit", ok: false},
+					{cmdType: "delete", ok: false},
+				},
+			},
+		}, {
 			// Verify GSC rejects strings greater than 31 chars.
 			Name: "long_str_i2c",
 			Val: configTestDeviceIDs{
