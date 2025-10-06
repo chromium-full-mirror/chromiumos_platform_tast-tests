@@ -120,15 +120,6 @@ func (du *dataUploader) upload(src, bucket string) error {
 	}
 
 	testing.ContextLogf(du.ctx, "Set read permission for  %q", gsURL)
-
-	// AllUsers read access is considered safe for two reasons.
-	// First, this data is included into the image unmodified.
-	// Second, we already practice setting this permission for other Android build
-	// artifacts. For example from APPS bucket.
-	if out, err := exec.Command(gsUtil, "acl", "ch", "-u", "AllUsers:READ", gsURL).CombinedOutput(); err != nil {
-		return errors.Wrapf(err, "failed to set read permission for %q to the server %q", gsURL, out)
-	}
-
 	if out, err := exec.Command(gsUtil, "copy", du.buildDescriptorPath, gsDescURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to upload %q device information to the server %q", du.buildDescriptorPath, out)
 	}
