@@ -73,7 +73,7 @@ func init() {
 		}, {
 			Name:              "dts_stress",
 			ExtraAttr:         []string{"firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360", "bugzzy")),
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 20,
@@ -89,7 +89,7 @@ func init() {
 		}, {
 			Name:              "flipcc_dts_stress",
 			ExtraAttr:         []string{"firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "storo360", "xivu360", "bugzzy")),
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
@@ -100,7 +100,7 @@ func init() {
 			// TODO(b/427788587): modify tests such that they are stable on low-end devices and put them back on faft_pd
 			Name:              "dts_stress_unstable",
 			ExtraAttr:         []string{"firmware_pd_unstable"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360", "bugzzy")),
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
 				NumIterations: 20,
@@ -110,7 +110,7 @@ func init() {
 			// TODO(b/427788587): modify tests such that they are stable on low-end devices and put them back on faft_pd
 			Name:              "flipcc_dts_stress_unstable",
 			ExtraAttr:         []string{"firmware_pd_unstable"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "storo360", "xivu360", "bugzzy")),
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
