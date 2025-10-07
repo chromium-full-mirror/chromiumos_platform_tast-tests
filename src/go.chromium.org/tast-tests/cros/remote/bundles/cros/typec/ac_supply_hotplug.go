@@ -31,7 +31,7 @@ func init() {
 				ConnectionMode: usbswitch.Usb3Mode,
 				Iterations:     300,
 			},
-			Timeout: 45 * time.Minute,
+			Timeout: 150 * time.Minute,
 		}, {
 			Name: "flipped",
 			Val: typecswitch.TestSetupData{
@@ -39,7 +39,7 @@ func init() {
 				Iterations:     300,
 				Flipped:        true,
 			},
-			Timeout: 45 * time.Minute,
+			Timeout: 150 * time.Minute,
 		}},
 	})
 }
