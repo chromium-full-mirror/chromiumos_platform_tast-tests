@@ -110,12 +110,12 @@ func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 		return errors.New("no ip network found")
 	}
 	if ipv4 {
-		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-4", testIPv6DotCom); err != nil {
+		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-4", googleDotComIPv4); err != nil {
 			return err
 		}
 	}
 	if ipv6 {
-		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-6", testIPv6DotCom); err != nil {
+		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-6", googleDotComIPv6); err != nil {
 			return err
 		}
 	}
