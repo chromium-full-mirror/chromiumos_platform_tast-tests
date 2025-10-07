@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
+	powerUtil "go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -1221,7 +1222,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if err != nil {
 		s.Fatal("Failed to obtain DUT power status: ", err)
 	}
-	if status.BatteryPresent {
+	if status.BatteryPresent && powerUtil.SupportChromeEC() {
 		// Ensure the battery is higher than threshold before calling PowerTestSetup.
 		lowBatteryShutdownPercent, err := metrics.LowBatteryShutdownPercent(ctx)
 		if err != nil {
