@@ -123,6 +123,18 @@ func init() {
 			"gsc_nightly"},
 		Fixture: fixture.GSCInitialFactory,
 		Params: []testing.Param{{
+			// Verify scratch survives clearing the TPM
+			Name: "ccd_open",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
+					{cmdType: "ccd open"},
+					{cmdType: "commit", ok: true},
+					{cmdType: "factoryDisable", ok: true},
+				},
+			},
+		}, {
 			// Verify GSC doesn't save anything in the info space
 			// when there's been no commit
 			Name: "no_commit",
@@ -275,6 +287,13 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 				expectedScratchHeader = scratchHeaderSet
 				expectedScratchFields = setFields
 			}
+		case "ccd open":
+			if err := i.WipeTpmWithCCDOpen(ctx); err != nil {
+				s.Fatalf("%s: failed ccd open %s", desc, err)
+			}
+			th.MustSucceed(i.WaitUntilBooted(ctx), "failed to wait for gsc")
+			tpm = b.ResetAndTpmStartupForBus(ctx, i, bus, ti50.FfClamshell)
+			th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 		case "commit":
 			_, err := setDeviceIDs(ctx, b, config.bus, "commit")
 			if setCmd.ok != (err == nil) {
