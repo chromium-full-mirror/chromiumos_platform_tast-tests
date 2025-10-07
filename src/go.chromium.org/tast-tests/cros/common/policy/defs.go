@@ -30675,7 +30675,6 @@ func (p *AutoSignOutEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1390. ExtensionInstallCloudPolicyChecksEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ExtensionInstallCloudPolicyChecksEnabled struct {
 	Stat Status
@@ -30961,6 +30960,39 @@ func (p *DeveloperToolsAvailabilityBlocklist) SetProto(m *protoreflect.Message) 
 }
 func (p *DeveloperToolsAvailabilityBlocklist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1401. LocalNetworkAccessRestrictionsTemporaryOptOut
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type LocalNetworkAccessRestrictionsTemporaryOptOut struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Name() string {
+	return "LocalNetworkAccessRestrictionsTemporaryOptOut"
+}
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Scope() Scope          { return ScopeUser }
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Status() Status        { return p.Stat }
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) UntypedV() interface{} { return p.Val }
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -32874,6 +32906,8 @@ func newByName(name string) (Policy, error) {
 		return &DeveloperToolsAvailabilityAllowlist{}, nil
 	case "DeveloperToolsAvailabilityBlocklist":
 		return &DeveloperToolsAvailabilityBlocklist{}, nil
+	case "LocalNetworkAccessRestrictionsTemporaryOptOut":
+		return &LocalNetworkAccessRestrictionsTemporaryOptOut{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
