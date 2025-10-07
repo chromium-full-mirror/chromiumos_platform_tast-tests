@@ -237,6 +237,18 @@ func init() {
 				},
 			},
 		}, {
+			Name: "gsc_reset",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "noCmd"},
+					{cmdType: "setAll", fieldVal: "mid", ok: true},
+					{cmdType: "reset"},
+					{cmdType: "commit", ok: true},
+					{cmdType: "factoryDisable", ok: true},
+				},
+			},
+		}, {
 			// Verify commit fails when no IDs have been set.
 			Name: "unset_i2c",
 			Val: configTestDeviceIDs{
@@ -374,6 +386,10 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 			}
 			expectedScratchFields = expectedInfoFields
 			writeLocked = true
+		case "reset":
+			// Reset the GSC. Verify scratch IDs don't change
+			tpm = b.ResetAndTpmStartupForBus(ctx, i, bus, ti50.FfClamshell)
+			th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 		default:
 			s.Fatalf("Unsupported cmd: %+v", setCmd.cmdType)
 		}
