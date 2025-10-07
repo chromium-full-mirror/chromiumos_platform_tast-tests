@@ -87,17 +87,17 @@ func waitForCryptohome(ctx context.Context, cfg *config.Config) error {
 			origErr := err
 
 			// Check the error message from the server side.
-			logReader, err := syslog.NewLineReader(ctx, syslog.ChromeLogFile, true, nil)
-			if err != nil {
-				return errors.Wrapf(origErr, "could not get Chrome log reader: %v", err)
+			logReader, chromeErr := syslog.NewLineReader(ctx, syslog.ChromeLogFile, true, nil)
+			if chromeErr != nil {
+				return errors.Wrapf(origErr, "could not get Chrome log reader: %v", chromeErr)
 			}
 			defer logReader.Close()
 
 			for {
-				line, err := logReader.ReadLine()
-				if err != nil {
-					if err != io.EOF {
-						return errors.Wrapf(origErr, "failed to read file %v: %v", syslog.ChromeLogFile, err)
+				line, chromeErr := logReader.ReadLine()
+				if chromeErr != nil {
+					if chromeErr != io.EOF {
+						return errors.Wrapf(origErr, "failed to read file %v: %v", syslog.ChromeLogFile, chromeErr)
 					}
 
 					// Could not find server side authentication error.
@@ -116,15 +116,15 @@ func waitForCryptohome(ctx context.Context, cfg *config.Config) error {
 			//    "error": "rate_limit_exceeded"
 			//   }
 			for i := 0; i < 2; i++ {
-				if _, err := logReader.ReadLine(); err != nil {
-					return errors.Wrapf(origErr, "failed to skip the lines after authentication error: %v", err)
+				if _, chromeErr := logReader.ReadLine(); chromeErr != nil {
+					return errors.Wrapf(origErr, "failed to skip the lines after authentication error: %v", chromeErr)
 				}
 			}
 
 			// Read the third line after the authentication error.
-			line, err := logReader.ReadLine()
-			if err != nil {
-				return errors.Wrapf(origErr, "failed to read the authentication error: %v", err)
+			line, chromeErr := logReader.ReadLine()
+			if chromeErr != nil {
+				return errors.Wrapf(origErr, "failed to read the authentication error: %v", chromeErr)
 			}
 			authErr := strings.TrimSpace(line)
 			return errors.Errorf("authentication error: %v", authErr)
@@ -139,9 +139,15 @@ func waitForCryptohome(ctx context.Context, cfg *config.Config) error {
 // shown at the beginning of tests.
 func removeNotifications(ctx context.Context, sess *driver.Session) error {
 	// TODO(crbug/1079235): move this outside of the switch once the test API is available in guest mode.
+	if sess == nil {
+		return errors.New("Session pointer is nil before calling TestAPIConn")
+	}
 	tconn, err := sess.TestAPIConn(ctx, true)
 	if err != nil {
 		return err
+	}
+	if tconn == nil {
+		return errors.New("Test connection is nil after calling TestAPIConn")
 	}
 	if err := tconn.Eval(ctx, "tast.promisify(chrome.autotestPrivate.removeAllNotifications)()", nil); err != nil {
 		return errors.Wrap(err, "failed to clear notifications")

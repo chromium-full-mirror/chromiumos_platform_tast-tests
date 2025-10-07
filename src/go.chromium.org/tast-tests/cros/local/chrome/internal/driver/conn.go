@@ -221,6 +221,13 @@ func (c *Conn) WaitForExprFailOnErrWithTimeout(ctx context.Context, expr string,
 // waitForExprImpl repeatedly evaluates the JavaScript expression expr until it evaluates to true.
 // The behavior on evaluation errors depends on the value of exitOnError.
 func (c *Conn) waitForExprImpl(ctx context.Context, expr string, ea cdputil.ErrorAction, timeout time.Duration) error {
+	// TODO: Remove after b/446497377 is fixed.
+	if c == nil {
+		testing.ContextLog(ctx, "In waitForExprImpl,conn is nil with expr=", expr)
+	}
+	if c.co == nil {
+		testing.ContextLog(ctx, "In waitForExprImpl, c.co is nil with expr=", expr)
+	}
 	if err := c.co.WaitForExpr(ctx, expr, ea, timeout); err != nil {
 		return c.chromeErr(err)
 	}

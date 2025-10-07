@@ -108,6 +108,11 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 
 // FinishUserLogin handles the necessary steps after a successful login.
 func FinishUserLogin(ctx context.Context, cfg *config.Config, sess *driver.Session, signals *cryptohome.LoginSignals) error {
+	if sess == nil {
+		testing.ContextLog(ctx, "FinishUserLogin: Incoming session is nil")
+	}
+	// TODO: Remove after b/446497377 is fixed.
+	testing.ContextLogf(ctx, "FinishUserLogin started, sess address: %p", sess)
 	if cfg.WaitForCryptohome() {
 		if err := waitForCryptohome(ctx, cfg); err != nil {
 			return errors.Wrapf(err, "waiting for cryptohome failed, %s", signals.ErrorMessage(ctx))

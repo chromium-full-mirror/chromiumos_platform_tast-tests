@@ -422,6 +422,8 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		}
 	}()
 
+	// TODO: Remove after b/446497377 is fixed.
+	testing.ContextLogf(ctx, "New chrome session: Session initialized at address: %p", sess)
 	if cfg.LoginMode() != config.NoLogin && !cfg.KeepState() {
 		if err := cryptohome.RemoveUserDir(ctx, cfg.NormalizedUser()); err != nil {
 			return nil, errors.Wrapf(err, "failed to remove cryptohome user directory for %s", cfg.NormalizedUser())
@@ -452,10 +454,14 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	} else {
 		if err := login.LogIn(ctx, cfg, sess); err == login.ErrNeedNewSession {
 			// Restart session.
+			testing.ContextLog(ctx, "Resstart chrome session: LogIn requested new session. Attempting to reconnect")
 			newSess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, agg)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to reconnect to restarted session")
 			}
+
+			// TODO: Remove after b/446497377 is fixed.
+			testing.ContextLogf(ctx, "Old session closed (%p). New session created at %p", sess, newSess)
 			sess.Close(ctx)
 			sess = newSess
 		} else if err != nil {
