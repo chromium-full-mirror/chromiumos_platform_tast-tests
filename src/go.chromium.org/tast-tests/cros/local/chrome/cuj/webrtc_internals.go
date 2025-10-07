@@ -447,6 +447,10 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 
 			var report []float64
 			for _, value := range timeline {
+				// Skip if the timeline value is nil.
+				if value == nil {
+					continue
+				}
 				metric, err := config.reporter(value)
 				if err != nil {
 					return 0, 0, errors.Wrapf(err, "failed to represent %s attribute for %q as performance metric", config.attribute, id)
