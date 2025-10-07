@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -38,6 +39,8 @@ func init() {
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline"},
+		// TODO: b/445227383 - Fix the regression for amd64-generic.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("amd64-generic")),
 		Timeout:      10 * time.Minute,
 	})
 }
