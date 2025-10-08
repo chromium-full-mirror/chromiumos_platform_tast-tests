@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ var (
 	parseDeviceIDLineRE     = regexp.MustCompile(`(.*)=(.*)`)
 	deviceIDFields          = [8]string{"brand", "device", "product", "manufacturer", "model", "sn", "imei", "meid"}
 	deviceIDStorageCommands = [2]string{"delete", "commit"}
+	optionalDeviceIDFields  = []string{"imei", "meid"}
 	noDeviceIDFields        = map[string]string{}
 	// unsetVal is the string gsctool prints to signal the value is unset and not just an empty string
 	unsetVal = "__unset__"
@@ -36,9 +38,10 @@ const (
 )
 
 type testSetDeviceIDCmd struct {
-	cmdType  string
-	fieldVal string
-	ok       bool
+	cmdType      string
+	fieldVal     string
+	skipOptional bool
+	ok           bool
 }
 
 type configTestDeviceIDs struct {
@@ -249,6 +252,17 @@ func init() {
 				},
 			},
 		}, {
+			// Verify GSC can commit IDs without the imei and meids
+			Name: "skip_optional",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "setAll", skipOptional: true, fieldVal: "mid", ok: true},
+					{cmdType: "commit", ok: true},
+					{cmdType: "factoryDisable", ok: true},
+				},
+			},
+		}, {
 			// Verify commit fails when no IDs have been set.
 			Name: "unset_i2c",
 			Val: configTestDeviceIDs{
@@ -322,6 +336,10 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 			s.Log("No set cmd")
 		case "setAll":
 			for _, name := range deviceIDFields {
+				if setCmd.skipOptional && slices.Contains(optionalDeviceIDFields, name) {
+					s.Log("Skip optional field ", name)
+					continue
+				}
 				arg := fmt.Sprintf("%s:%s", name, setCmd.fieldVal)
 				setOut, err := setDeviceIDs(ctx, b, config.bus, arg)
 				s.Logf("Result: %s", setOut)
