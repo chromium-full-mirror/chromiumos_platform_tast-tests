@@ -135,6 +135,21 @@ func init() {
 				},
 			},
 		}, {
+			// Verify GSC clears the scratch values after the delete command
+			Name: "delete_scratch",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "noCmd"},
+					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
+					{cmdType: "delete", ok: true},
+					{cmdType: "commit", ok: false},
+					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
+					{cmdType: "commit", ok: true},
+					{cmdType: "factoryDisable", ok: true},
+				},
+			},
+		}, {
 			// Verify GSC doesn't save anything in the info space
 			// when there's been no commit
 			Name: "no_commit",
@@ -305,6 +320,19 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 				expectedInfoFields = setFields
 			} else if !writeLocked {
 				expectedScratchHeader = scratchHeaderCommitFailed
+			}
+		case "delete":
+			_, err := setDeviceIDs(ctx, b, config.bus, "delete_scratch")
+			if setCmd.ok != (err == nil) {
+				s.Fatalf("%s: unexpected result got %s", desc, err)
+			}
+			if setCmd.ok {
+				expectedScratchHeader = scratchHeaderUnset
+				expectedScratchFields = emptyFields
+				for _, name := range deviceIDFields {
+					setFields[name] = unsetVal
+					setFields[name+"_size"] = unsetSize
+				}
 			}
 		case "factoryDisable":
 			// Factory disable is not blocked by setting the Device IDs
