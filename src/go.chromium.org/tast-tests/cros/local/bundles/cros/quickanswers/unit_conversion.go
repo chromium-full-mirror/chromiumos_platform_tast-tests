@@ -6,7 +6,9 @@ package quickanswers
 
 import (
 	"context"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -58,15 +60,29 @@ func UnitConversion(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to select a query: ", err)
 	}
 
-	// Right click the selected units and ensure the Quick Answers UI shows up with the conversion result in pounds.
+	// Right click the selected units and ensure the Quick Answers UI shows up with the unit
+	// conversion intent.
 	ui := uiauto.New(tconn)
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	unitConversionResult := quickanswers.ResultTextContains("110.231")
+	unitConversionIntent := quickanswers.IntentTypeIs(quickanswers.UnitConversion)
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),
-		ui.WaitUntilExists(unitConversionResult))(ctx); err != nil {
+		ui.WaitUntilExists(unitConversionIntent))(ctx); err != nil {
 		s.Fatal("Quick Answers result not showing up: ", err)
+	}
+
+	// Check for the server response. This is for informational purposes only.
+	if err := action.IfFailThen(
+		ui.WithTimeout(5*time.Second).WaitUntilExists(
+			quickanswers.ResultTextContains("110.231")),
+		func(ctx context.Context) error {
+			s.Log("Server request failed. This is informational only and NOT marking " +
+				"a test as failure.")
+			return nil
+		},
+	)(ctx); err != nil {
+		s.Fatal("The informational check failure logging failed, which should not happen: ", err)
 	}
 
 	// Dismiss the context menu and ensure the Quick Answers UI also dismiss.

@@ -8,6 +8,7 @@ package quickanswers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"unicode/utf8"
 
@@ -32,6 +33,36 @@ const (
 func ResultTextContains(text string) *nodewith.Finder {
 	return nodewith.NameContaining(text).Role(role.StaticText).
 		Ancestor(nodewith.ClassName("ResultView"))
+}
+
+// IntentType defines the type of Quick Answer intent.
+type IntentType int
+
+const (
+	// Dictionary intent.
+	Dictionary IntentType = iota
+	// Translation intent.
+	Translation
+	// UnitConversion intent.
+	UnitConversion
+)
+
+func (it IntentType) String() string {
+	switch it {
+	case Dictionary:
+		return "Define"
+	case Translation:
+		return "Translate"
+	case UnitConversion:
+		return "Convert"
+	}
+	panic(fmt.Sprintf("Unhandled intent type: %d", it))
+}
+
+// IntentTypeIs returns a nodewith.Finder to find a node indicating the intent type.
+func IntentTypeIs(intentType IntentType) *nodewith.Finder {
+	return nodewith.Name(intentType.String()).Role(role.StaticText).
+		Ancestor(nodewith.ClassName("QuickAnswersView"))
 }
 
 // ResetPref resets quick answers pref values to default values.
