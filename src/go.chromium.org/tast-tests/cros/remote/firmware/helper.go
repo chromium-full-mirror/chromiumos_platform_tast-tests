@@ -18,8 +18,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	gossh "golang.org/x/crypto/ssh"
 
-	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/chromiumos/config/go/api"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
@@ -1833,7 +1833,7 @@ type TabletLaptopModeCmds struct {
 }
 
 // GetECTabletLaptopModeCommand returns TabletLaptopModeCmds, containing the
-// ec commands for swtiching to tablet and laptop mode, if they are supported.
+// ec commands for switching to tablet and laptop mode, if they are supported.
 func (h *Helper) GetECTabletLaptopModeCommand(ctx context.Context) (TabletLaptopModeCmds, error) {
 	var cmds TabletLaptopModeCmds
 	if err := h.RequireRPCUtils(ctx); err != nil {
@@ -2557,6 +2557,82 @@ func (h *Helper) GetNewECCrashes(ctx context.Context) (map[string][]string, erro
 	return crashFiles, err
 }
 
+// ErrorHandler is normally testing.FixtTestState or testing.TestState
+type ErrorHandler interface {
+	Error(...interface{})
+	Fatal(...interface{})
+	TestName() string
+	OutDir() string
+}
+
+// SaveECCrash saves one crash to the test out dir and Errors the test
+func (h *Helper) SaveECCrash(ctx context.Context, crashName string, listOfCrashFiles []string, s ErrorHandler) {
+	logFilePath := ECCrashBaseDir + crashName + ".eccrash"
+	out, err := h.Reporter.CatFile(ctx, logFilePath)
+	if err != nil {
+		msg := fmt.Sprintf("failed to read .eccrash file %s to print in log", logFilePath)
+		testing.ContextLog(ctx, logECCrash(msg, s, err))
+	}
+	crashLog := string(out)
+	if ok, err := checkECCrashType(crashLog, "watchdogWarning"); err != nil {
+		s.Error(logECCrash("failed to parse ec crash log", s, err))
+	} else if ok {
+		testing.ContextLog(ctx, logECCrash("found watchdog warning (dead6668), not logging crash", s))
+		return
+	} // Otherwise, crash is important, save logs and raise error.
+
+	crashSaveDir := filepath.Join(s.OutDir(), crashName)
+	if err := os.MkdirAll(crashSaveDir, os.ModePerm); err != nil {
+		s.Fatal(logECCrash("found crashes but failed to create dir to save crash logs", s, err))
+	}
+	for _, f := range listOfCrashFiles {
+		saveFilePath := filepath.Join(crashSaveDir, strings.TrimPrefix(f, ECCrashBaseDir))
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), f, saveFilePath, linuxssh.DereferenceSymlinks); err != nil {
+			msg := fmt.Sprintf("failed to save log for file %s", f)
+			s.Error(logECCrash(msg, s))
+		}
+	}
+	// The .eccrash file is of predictable length (and not too long), just print it out.
+	msg := fmt.Sprintf("found unexpected EC Crash, saved ec crash log to %s: %s)", crashSaveDir, crashLog)
+	s.Error(logECCrash(msg, s))
+
+}
+
+// logECCrash returns a log string with a searchable prefix to find EC crash check issues in testhaus.
+// Allows optional error(s) to be passed in.
+func logECCrash(msg string, s ErrorHandler, errs ...error) string {
+	res := fmt.Sprintf("EC crash error in %s: %s", s.TestName(), msg)
+	for _, err := range errs {
+		res = fmt.Sprintf("%s, with error: %v", res, err)
+	}
+	return res
+}
+
+func checkECCrashType(crashLog string, crashIDs ...string) (bool, error) {
+	var ecCrashID = map[string]string{
+		"divBy0":          "dead6660",
+		"stackOverflow":   "dead6661",
+		"pdCrash":         "dead6662",
+		"assert":          "dead6663",
+		"watchdog":        "dead6664",
+		"badRng":          "dead6665",
+		"pmicFault":       "dead6666",
+		"exit":            "dead6667",
+		"watchdogWarning": "dead6668",
+	}
+
+	for _, crashID := range crashIDs {
+		crashStr, ok := ecCrashID[crashID]
+		if !ok {
+			return false, errors.Errorf("crashID %s not recognized as crash ID in ecCrashID map", crashID)
+		}
+		if strings.Contains(crashLog, crashStr) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE. Sets h.HasAPFwState to true if supported.
 func (h *Helper) SupportAPFwState(ctx context.Context, dutFeatures *protocol.DUTFeatures) error {
 	if h.HasAPFwState {
@@ -2608,7 +2684,7 @@ func (h *Helper) GSCResetAfterWPEnable(ctx context.Context, dutFeatures *protoco
 	switch dutFeatures.GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
 	case api.HardwareFeatures_FormFactor_CHROMEBOX:
 		testing.ContextLog(ctx, "The DUT is probably off for AP_IDLE")
-		// wait 5s for EC_RST released and EC finished init
+		// GoBigSleepLint: wait 5s for EC_RST released and EC finished init
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}

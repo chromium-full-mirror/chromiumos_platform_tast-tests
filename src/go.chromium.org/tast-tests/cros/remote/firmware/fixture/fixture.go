@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +21,6 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -479,16 +477,6 @@ func (i *bootModeImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-// logECCrash returns a log string with a searchable prefix to find EC crash check issues in testhaus.
-// Allows optional error(s) to be passed in.
-func logECCrash(msg string, s *testing.FixtTestState, errs ...error) string {
-	res := fmt.Sprintf("EC crash error in %s: %s", s.TestName(), msg)
-	for _, err := range errs {
-		res = fmt.Sprintf("%s, with error: %v", res, err)
-	}
-	return res
-}
-
 // PreTest is called by the framework before each test to do a light-weight set up for the test.
 func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.RequireServo(ctx); err != nil {
@@ -571,12 +559,12 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		connectTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
-			s.Log(logECCrash("failed to connect to dut before test to clear ec crashes", s, err))
+			s.Log("Failed to connect to dut before test to clear ec crashes: ", err)
 			i.value.Helper.CheckECCrash = false
 		} else {
 			s.Logf("Updating EC crash cache before test %s", s.TestName())
 			if err := i.value.Helper.UpdateECCrashCache(ctx); err != nil {
-				s.Log(logECCrash("failed to update EC crash cache", s, err))
+				s.Log("Failed to update EC crash cache: ", err)
 				// Couldn't update EC cache, don't check for crash files in post test.
 				i.value.Helper.CheckECCrash = false
 			}
@@ -741,43 +729,18 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
-func checkECCrashType(crashLog string, crashIDs ...string) (bool, error) {
-	var ecCrashID = map[string]string{
-		"divBy0":          "dead6660",
-		"stackOverflow":   "dead6661",
-		"pdCrash":         "dead6662",
-		"assert":          "dead6663",
-		"watchdog":        "dead6664",
-		"badRng":          "dead6665",
-		"pmicFault":       "dead6666",
-		"exit":            "dead6667",
-		"watchdogWarning": "dead6668",
-	}
-
-	for _, crashID := range crashIDs {
-		crashStr, ok := ecCrashID[crashID]
-		if !ok {
-			return false, errors.Errorf("crashID %s not recognized as crash ID in ecCrashID map", crashID)
-		}
-		if strings.Contains(crashLog, crashStr) {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
 	connectTimeout, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
-		s.Log(logECCrash("failed to reconnect to dut to check ec crashes after test", s, err))
+		s.Log("Failed to reconnect to dut to check ec crashes after test: ", err)
 		// If no ssh connection available to DUT, skip check.
 		return
 	}
 
 	crashLogs, err := i.value.Helper.GetNewECCrashes(ctx)
 	if err != nil {
-		s.Error(logECCrash("failed to get latest ec crash logs", s, err))
+		s.Error("Failed to get latest ec crash logs: ", err)
 		return
 	}
 	if len(crashLogs) == 0 {
@@ -786,34 +749,7 @@ func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl
 	}
 
 	for crashName, listOfCrashFiles := range crashLogs {
-		logFilePath := firmware.ECCrashBaseDir + crashName + ".eccrash"
-		out, err := i.value.Helper.Reporter.CatFile(ctx, logFilePath)
-		if err != nil {
-			msg := fmt.Sprintf("failed to read .eccrash file %s to print in log", logFilePath)
-			s.Log(logECCrash(msg, s, err))
-		}
-		crashLog := string(out)
-		if ok, err := checkECCrashType(crashLog, "watchdogWarning"); err != nil {
-			s.Error(logECCrash("failed to parse ec crash log", s, err))
-		} else if ok {
-			s.Log(logECCrash("found watchdog warning (dead6668), not logging crash", s))
-			continue
-		} // Otherwise, crash is important, save logs and raise error.
-
-		crashSaveDir := filepath.Join(s.OutDir(), crashName)
-		if err := os.MkdirAll(crashSaveDir, os.ModePerm); err != nil {
-			s.Fatal(logECCrash("found crashes but failed to create dir to save crash logs", s, err))
-		}
-		for _, f := range listOfCrashFiles {
-			saveFilePath := filepath.Join(crashSaveDir, strings.TrimPrefix(f, firmware.ECCrashBaseDir))
-			if err := linuxssh.GetFile(ctx, i.value.Helper.DUT.Conn(), f, saveFilePath, linuxssh.DereferenceSymlinks); err != nil {
-				msg := fmt.Sprintf("failed to save log for file %s", f)
-				s.Error(logECCrash(msg, s))
-			}
-		}
-		// The .eccrash file is of predictable length (and not too long), just print it out.
-		msg := fmt.Sprintf("found unexpected EC Crash, saved ec crash log to %s: %s)", crashSaveDir, crashLog)
-		s.Error(logECCrash(msg, s))
+		i.value.Helper.SaveECCrash(ctx, crashName, listOfCrashFiles, s)
 	}
 }
 
