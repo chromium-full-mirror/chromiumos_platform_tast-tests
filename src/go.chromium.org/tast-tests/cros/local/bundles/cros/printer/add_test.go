@@ -57,9 +57,10 @@ func iTestCustomInput(name, ppdFile, testFile, expectedFile string, options ...s
 }
 
 // iTestCustomInputInternal adds informational parameterized tests
-// that use "testFile" for printing and require cros_internal.
-func iTestCustomInputInternal(name, ppdFile, testFile, expectedFile string, options ...string) base {
-	return base{ExtraAttr: []string{"informational"}, ExtraSoftwareDeps: []string{"cros_internal"}, PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
+// that use "testFile" for printing, require cros_internal, and use
+// any extra software deps provided.
+func iTestCustomInputInternal(name, ppdFile, testFile, expectedFile string, swDeps []string, options ...string) base {
+	return base{ExtraAttr: []string{"informational"}, ExtraSoftwareDeps: append(swDeps, "cros_internal"), PrintFile: testFile, Name: name, PPDFile: ppdFile, ExpectedFile: expectedFile, Options: options}
 }
 
 // iTestCustomInputNoArm32 adds informational parameterized tests
@@ -110,7 +111,7 @@ func TestAddParams(t *testing.T) {
 
 		// Add
 		intTest("brother_mlaser", "printer_add_brother_printer.ppd", "printer_add_brother_printer_golden.bin"),
-		iTestCustomInputInternal("brother_ql820nwb", "printer_add_brother_ql820nwb_printer.ppd.gz", "label_29x90mm.pdf", "printer_add_brother_ql820nwb_printer.bin"),
+		iTestCustomInputInternal("brother_ql820nwb", "printer_add_brother_ql820nwb_printer.ppd.gz", "label_29x90mm.pdf", "printer_add_brother_ql820nwb_printer.bin", []string{"print_brother_ql800_subset"}),
 		test2("canon", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin", "print-color-mode=rgb"),
 		test("dymo_lw", "printer_add_dymo_printer_lw450.ppd", "printer_add_dymo_lw_printer_golden.bin"),
 		test("dymo_lm", "printer_add_dymo_printer_lm450.ppd", "printer_add_dymo_lm_printer_golden.bin"),

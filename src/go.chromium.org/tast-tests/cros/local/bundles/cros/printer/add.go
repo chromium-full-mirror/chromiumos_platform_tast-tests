@@ -168,7 +168,7 @@ func init() {
 				},
 				ExtraData:         []string{"label_29x90mm.pdf", "printer_add_brother_ql820nwb_printer.ppd.gz", "printer_add_brother_ql820nwb_printer.bin"},
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"cros_internal"},
+				ExtraSoftwareDeps: []string{"print_brother_ql800_subset", "cros_internal"},
 			}, {
 				Name: "canon",
 				Val: &ippprint.Params{
