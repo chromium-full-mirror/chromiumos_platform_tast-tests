@@ -29,7 +29,7 @@ func init() {
 			Name:    "ac_power",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineACPower),
 			Fixture: "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXv5")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5", "NUC13OXv5", "NUC14RVH-B")),
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "urandom",
