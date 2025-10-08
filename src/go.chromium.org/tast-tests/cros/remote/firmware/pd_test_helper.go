@@ -123,8 +123,8 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outD
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-		return errors.Wrap(err, "timed out waiting for servo DUT port to source power")
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return errors.New("timed out waiting for servo DUT port to source power")
 	}
 
 	// Sometimes RequireDUTPDInfo catches a port in a transitional state before it becomes sink- or source-ready. Allow

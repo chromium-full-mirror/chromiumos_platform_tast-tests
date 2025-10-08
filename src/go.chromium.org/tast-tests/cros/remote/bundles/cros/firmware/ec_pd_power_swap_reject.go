@@ -104,6 +104,10 @@ func ECPDPowerSwapReject(ctx context.Context, s *testing.State) {
 	if err := h.Servo.RunServoCommand(ctx, "usbc_action prswap 0"); err != nil {
 		s.Fatal("Failed to disable Servo power swap: ", err)
 	}
+	// GoBigSleepLint: Sleep for one second to make sure servo has disabled power swaps.
+	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
 
 	if err := h.Servo.SetDualroleState(ctx, servo.DROn); err != nil {
 		s.Fatal("Set DualRole to on failed: ", err)
