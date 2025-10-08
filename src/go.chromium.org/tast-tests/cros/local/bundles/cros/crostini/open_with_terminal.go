@@ -7,8 +7,10 @@ package crostini
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -33,6 +35,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -68,5 +75,11 @@ func OpenWithTerminal(ctx context.Context, s *testing.State) {
 	_, err = terminalapp.Find(ctx, pre.Tconn)
 	if err != nil {
 		s.Fatal("Failed to find terminal window: ", err)
+	}
+
+	if strings.Contains(s.TestName(), "baguette") {
+		if err = apps.Close(ctx, pre.Tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
 	}
 }

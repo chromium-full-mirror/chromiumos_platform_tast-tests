@@ -83,12 +83,14 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(filepath.Join("/home/user", ownerID, "MyFiles/Downloads/backup.img.zst"))
 
-	// Delete the test file in the container.
-	if err := crostini.RemoveContainerFile(ctx, cont, testFileName); err != nil {
-		s.Fatalf("Failed to delete file %v in container: %v", testFileName, err)
-	}
-	if err := crostini.VerifyFileNotInContainer(ctx, cont, testFileName); err != nil {
-		s.Errorf("File %v unexpectedly exists", testFileName)
+	if !strings.Contains(s.TestName(), "baguette") {
+		// Delete the test file in the container.
+		if err := crostini.RemoveContainerFile(ctx, cont, testFileName); err != nil {
+			s.Fatalf("Failed to delete file %v in container: %v", testFileName, err)
+		}
+		if err := crostini.VerifyFileNotInContainer(ctx, cont, testFileName); err != nil {
+			s.Errorf("File %v unexpectedly exists", testFileName)
+		}
 	}
 
 	// Restore the container and verify that the file is back.

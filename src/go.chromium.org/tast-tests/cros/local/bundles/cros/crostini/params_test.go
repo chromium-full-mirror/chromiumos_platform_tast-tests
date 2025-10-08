@@ -44,7 +44,7 @@ var standardTests = map[string]testOptions{
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	// TODO(b/377716353): audio streams never settle on baguette, low priority to debug
 	"audio_playback_configurations.go": {timeout: 10 * time.Minute, testBaguette: false},
-	// TODO(b/377716353): requires changes to private autotest API
+	// TODO(b/377716353): unable to find terminal after restore
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
 	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
@@ -69,19 +69,22 @@ var standardTests = map[string]testOptions{
 	"no_shared_folder.go": {},
 	"notify.go":           {testBaguette: false},
 	// OomEvent test was for crostini data-collection, no need in baguette.
-	"oom_event.go":                 {timeout: 10 * time.Minute, testBaguette: false},
-	"open_with_terminal.go":        {},
-	"pulse_audio_basic.go":         {},
-	"remove_cancel.go":             {foundation: true},
-	"remove_ok.go":                 {foundation: true},
-	"resize_backup_restore.go":     {timeout: 15 * time.Minute},
-	"resize_cancel.go":             {},
-	"resize_ok.go":                 {},
-	"resize_restart.go":            {},
-	"resize_space_constrained.go":  {},
-	"restart.go":                   {},
-	"restart_icon.go":              {},
-	"run_with_arc.go":              {requiresARC: true},
+	"oom_event.go":             {timeout: 10 * time.Minute, testBaguette: false},
+	"open_with_terminal.go":    {testBaguette: true},
+	"pulse_audio_basic.go":     {testBaguette: true},
+	"remove_cancel.go":         {foundation: true, testBaguette: true},
+	"remove_ok.go":             {foundation: true, testBaguette: true},
+	"resize_backup_restore.go": {timeout: 15 * time.Minute, testBaguette: true},
+	"resize_cancel.go":         {testBaguette: true},
+	// TODO(b/377716353): baguette resizing may not be working, or reporting incorrectly, more to debug.
+	"resize_ok.go":                {},
+	"resize_restart.go":           {},
+	"resize_space_constrained.go": {},
+	"restart.go":                  {testBaguette: true},
+	"restart_icon.go":             {testBaguette: true},
+	// TODO(b/377716353): ARC fails to boot
+	"run_with_arc.go": {requiresARC: true},
+	// TODO(b/377716353): needs shared fonts
 	"shared_font_files.go":         {foundation: true},
 	"share_downloads_add_files.go": {},
 	"share_downloads.go":           {},

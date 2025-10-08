@@ -30,6 +30,11 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -37,6 +42,7 @@ func init() {
 
 var alsaSinksPattern = regexp.MustCompile("1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 var pipewireAlsaSinksPattern = regexp.MustCompile("31\talsa-sink\tPipeWire\ts16le 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+var baguettePipewireSinksPattern = regexp.MustCompile("[0-9]+\tauto_null\tPipeWire\tfloat32le 2ch 48000Hz\t(IDLE|SUSPENDED)")
 
 func PulseAudioBasic(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -63,7 +69,7 @@ func PulseAudioBasic(ctx context.Context, s *testing.State) {
 
 			if out, err := cont.Command(ctx, "pactl", "list", "sinks", "short").Output(testexec.DumpLogOnError); err != nil {
 				s.Fatal("Failed to list pulseaudio sinks: ", err)
-			} else if !alsaSinksPattern.Match(out) && !pipewireAlsaSinksPattern.Match(out) {
+			} else if !alsaSinksPattern.Match(out) && !pipewireAlsaSinksPattern.Match(out) && !baguettePipewireSinksPattern.Match(out) {
 				s.Fatalf("Failed to load ALSA device to pulseaudio: %q", string(out))
 			}
 		})
