@@ -243,6 +243,20 @@ func init() {
 					{cmdType: "factoryDisable", ok: false},
 				},
 			},
+		}, {
+			// Verify GSC can update strings before commit and they
+			// become read only after commit.
+			Name: "update_scratch",
+			Val: configTestDeviceIDs{
+				bus: ti50.TpmBusI2c,
+				setCmds: []testSetDeviceIDCmd{
+					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
+					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
+					{cmdType: "commit", ok: true},
+					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: false},
+					{cmdType: "factoryDisable", ok: true},
+				},
+			},
 		}},
 	})
 }
