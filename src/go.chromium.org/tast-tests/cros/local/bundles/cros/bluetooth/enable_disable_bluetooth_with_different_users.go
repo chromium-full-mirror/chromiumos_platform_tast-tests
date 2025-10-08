@@ -54,7 +54,7 @@ func init() {
 					enableFeatures:  []string{"Floss"},
 					disableFeatures: []string{"FlossIsAvailabilityCheckNeeded"},
 				},
-				ExtraAttr: []string{"bluetooth_floss_flaky"},
+				ExtraAttr: []string{"bluetooth_floss"},
 			},
 		},
 		Timeout: 5 * time.Minute,
