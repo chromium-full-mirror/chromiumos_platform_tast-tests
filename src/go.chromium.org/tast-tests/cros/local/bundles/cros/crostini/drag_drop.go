@@ -9,7 +9,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -61,25 +60,25 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
-				Timeout:           14 * time.Minute,
+				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bullseye_lowperf",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           14 * time.Minute,
+				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bookworm_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           14 * time.Minute,
+				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bookworm_lowperf",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
-				Timeout:           14 * time.Minute,
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -121,16 +120,6 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	}
 	if err := cont.PushFile(ctx, s.DataPath(dropApplet), dropApplet); err != nil {
 		s.Fatal("Failed to push drop applet to container: ", err)
-	}
-
-	if strings.Contains(s.TestName(), "baguette") {
-		s.Log("Installing python and Gtk packages for baguette")
-		if err := cont.Command(ctx, "sudo", "apt-get", "update").Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to run apt-update: ", err)
-		}
-		if err := cont.Command(ctx, "sudo", "apt-get", "-y", "install", "python3-gi", "gobject-introspection", "gir1.2-gtk-3.0").Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to install packages: ", err)
-		}
 	}
 
 	// Setup the test file and folder.
@@ -193,10 +182,8 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	if err = dragFromCrostini(ctx, pre, files, filesWindow, dirDragFromCrostini, false); err != nil {
 		s.Fatalf("Failed to drag %s from crostini to FilesApp: %v", dirDragFromCrostini, err)
 	}
-	if !strings.Contains(s.TestName(), "baguette") {
-		if err = dragFromCrostini(ctx, pre, files, filesWindow, fileDragFromCrostini, true); err != nil {
-			s.Fatalf("Failed to drag %s from crostini to FilesApp: %v", fileDragFromCrostini, err)
-		}
+	if err = dragFromCrostini(ctx, pre, files, filesWindow, fileDragFromCrostini, true); err != nil {
+		s.Fatalf("Failed to drag %s from crostini to FilesApp: %v", fileDragFromCrostini, err)
 	}
 }
 
@@ -223,14 +210,13 @@ func dragFromFilesApp(ctx context.Context, pre crostini.FixtureData, files *file
 
 	// Open drop_applet.py right-snapped.
 	testing.ContextLogf(ctx, "Starting %s for %s", dropAppletTitle, path)
-	cmdArgs := []string{"python3", dropApplet, "|", "tee", "/tmp/dragdrop.txt"}
+	cmdArgs := []string{"python3", dropApplet}
 	cmd := cont.Command(ctx, cmdArgs...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	if err := cmd.Start(); err != nil {
 		return errors.Wrapf(err, "command %v", cmdArgs)
 	}
-
 	dropAppletWindow, err := setWindowState(ctx, tconn, dropAppletTitle, ash.WindowStateSecondarySnapped)
 	if err != nil {
 		return errors.Wrap(err, "set drop app right-snapped")

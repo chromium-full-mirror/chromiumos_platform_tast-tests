@@ -39,36 +39,34 @@ const DefaultAppTimeout = 15 * time.Minute
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
 	"app_gedit_install_uninstall.go": {foundation: true, timeout: 12 * time.Minute, testBaguette: true},
-	"audio_basic.go":                 {foundation: true, testBaguette: true},
+	// TODO(b/377716353): enable for baguette once alsa/pulseaudio-utils are installed in baguette image
+	"audio_basic.go": {foundation: true},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	// TODO(b/377716353): audio streams never settle on baguette, low priority to debug
-	"audio_playback_configurations.go": {timeout: 10 * time.Minute, testBaguette: false},
+	"audio_playback_configurations.go": {timeout: 10 * time.Minute},
 	// TODO(b/377716353): requires changes to private autotest API
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
 	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
 	"command_cd.go":                     {foundation: true},
 	"command_ps.go":                     {foundation: true, testBaguette: true},
-	"command_vim.go":                    {foundation: true, testBaguette: true},
-	"copy_files_to_linux_files.go":      {},
-	// TODO(b/377716353): crash_reporter PoC exists for baguette, but requires more filtering.
-	"crash_reporter.go": {testBaguette: false},
-	// TODO(b/377716353): drag_drop seems to fail on just the last test in baguette, skip for now and debug more later
-	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, testBaguette: false},
-	"files_app_watch.go": {testBaguette: true},
-	// TODO(b/377716353): missing dbus signal, requires investigation
-	"fs_corruption.go":        {timeout: 10 * time.Minute},
-	"home_directory_share.go": {testBaguette: true},
-	"icon_and_username.go":    {testBaguette: true},
-	"launch_terminal.go":      {testBaguette: true},
-	// TODO(b/377716353): failed to build program
+	// TODO(b/377716353): enable for baguette once vim is installed in baguette image
+	"command_vim.go":               {foundation: true},
+	"copy_files_to_linux_files.go": {},
+	// TODO(b/377716353): crash_reporter appears to not be hooked up in baguette, currently debugging
+	"crash_reporter.go":         {},
+	"drag_drop.go":              {foundation: true},
+	"files_app_watch.go":        {},
+	"fs_corruption.go":          {timeout: 10 * time.Minute},
+	"home_directory_share.go":   {},
+	"icon_and_username.go":      {},
+	"launch_terminal.go":        {},
 	"nested_vm.go":              {},
-	"no_access_to_downloads.go": {testBaguette: true},
-	// TODO(b/377716353): needs shared fonts
-	"no_shared_folder.go": {},
-	"notify.go":           {testBaguette: false},
+	"no_access_to_downloads.go": {},
+	"no_shared_folder.go":       {},
+	"notify.go":                 {},
 	// OomEvent test was for crostini data-collection, no need in baguette.
-	"oom_event.go":                 {timeout: 10 * time.Minute, testBaguette: false},
+	"oom_event.go":                 {timeout: 10 * time.Minute},
 	"open_with_terminal.go":        {},
 	"pulse_audio_basic.go":         {},
 	"remove_cancel.go":             {foundation: true},
@@ -92,19 +90,17 @@ var standardTests = map[string]testOptions{
 	"share_folders.go":             {},
 	"share_folder_zip_file.go":     {},
 	"share_invalid_paths.go":       {},
-	// Baguette has no lxc, and therefore no snapshots.
-	"snapshot.go":               {timeout: 6 * time.Minute, testBaguette: false},
-	"sshfs_mount.go":            {},
-	"sync_time.go":              {},
-	"task_manager.go":           {},
-	"uninstall_invalid_app.go":  {},
-	"usb_share_mass_storage.go": {},
-	"verify_app_x11.go":         {},
-	// Baguette will not support vmc extra disk mounting automatically.
-	"vmc_extra_disk.go": {testBaguette: false},
-	"vmc_start.go":      {},
-	"webserver.go":      {foundation: true},
-	"xattrs.go":         {},
+	"snapshot.go":                  {timeout: 6 * time.Minute},
+	"sshfs_mount.go":               {},
+	"sync_time.go":                 {},
+	"task_manager.go":              {},
+	"uninstall_invalid_app.go":     {},
+	"usb_share_mass_storage.go":    {},
+	"verify_app_x11.go":            {},
+	"vmc_extra_disk.go":            {},
+	"vmc_start.go":                 {},
+	"webserver.go":                 {foundation: true},
+	"xattrs.go":                    {},
 }
 
 func TestFixTestParams(t *testing.T) {
