@@ -28,7 +28,7 @@ func init() {
 		Desc: "Performance for cryptohome mount operation with an android app installed",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"hardikgoyal@google.com", // Test author
+			"jadmanski@google.com", // Test author
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},

@@ -27,7 +27,7 @@ func init() {
 		Desc: "Test addition and authentication of recovery auth factor with only password migration to USS",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"hardikgoyal@chromium.org",
+			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "group:cryptohome"},

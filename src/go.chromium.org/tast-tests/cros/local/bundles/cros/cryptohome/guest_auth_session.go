@@ -23,8 +23,7 @@ func init() {
 		Desc: "Test guest sessions with auth session API",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"dlunev@chromium.org",
-			"hardikgoyal@chromium.org",
+			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline", "group:cryptohome", "group:hw_agnostic"},

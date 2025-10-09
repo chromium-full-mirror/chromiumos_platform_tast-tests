@@ -24,7 +24,7 @@ func init() {
 		Desc: "Test that checks pin counter mechanism on lock screen",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"hardikgoyal@google.com",
+			"jadmanski@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
