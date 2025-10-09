@@ -58,7 +58,7 @@ func MojoChangeESimNickname(ctx context.Context, s *testing.State) {
 	defer profile.UninstallProfile(ctx)
 
 	s.Log("Changing profile nickname")
-	_, err = profile.SetProfileNickname(ctx, mojo.NewString16(testName))
+	_, err = profile.SetProfileNickname(ctx, testName)
 	if err != nil {
 		s.Fatal("Failed to set eSIM profile nickname via Mojo: ", err)
 	}
@@ -68,7 +68,7 @@ func MojoChangeESimNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get eSIM profile properties via Mojo: ", err)
 	}
 
-	if profileProperties.Nickname.String() != testName {
+	if profileProperties.Nickname != testName {
 		s.Fatalf("Failed to confirm eSIM profile nickname, got: %v, want: %v",
 			profileProperties.Nickname, testName)
 	}

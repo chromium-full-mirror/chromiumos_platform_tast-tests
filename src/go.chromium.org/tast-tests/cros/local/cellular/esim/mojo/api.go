@@ -8,7 +8,6 @@ import (
 	"context"
 	"sync"
 	"time"
-	"unicode/utf16"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -89,18 +88,13 @@ type ESimProfile struct {
 	Iccid   string
 }
 
-// String16 represents a UTF-16 string.
-type String16 struct {
-	Data []uint16 `json:"data"`
-}
-
 // ESimProfileProperties are the properties of an eSIM profile object.
 type ESimProfileProperties struct {
 	Eid             string       `json:"eid"`
 	Iccid           string       `json:"iccid"`
-	Name            String16     `json:"name"`
-	Nickname        String16     `json:"nickname"`
-	ServiceProvider String16     `json:"serviceProvider"`
+	Name            string       `json:"name"`
+	Nickname        string       `json:"nickname"`
+	ServiceProvider string       `json:"serviceProvider"`
 	State           ProfileState `json:"state"`
 	ActivationCode  string       `json:"activationCode"`
 }
@@ -260,15 +254,6 @@ func (e *Euicc) EidQRCode(ctx context.Context) (QRCode, error) {
 	return result, nil
 }
 
-// NewString16 creates a String16 from a string.
-func NewString16(s string) String16 {
-	return String16{Data: utf16.Encode([]rune(s))}
-}
-
-func (s String16) String() string {
-	return string(utf16.Decode(s.Data))
-}
-
 // Properties returns properties struct for this ESimProfile.
 func (e *ESimProfile) Properties(ctx context.Context) (ESimProfileProperties, error) {
 	var result ESimProfileProperties
@@ -308,7 +293,7 @@ func (e *ESimProfile) UninstallProfile(ctx context.Context) (ESimOperationResult
 
 // SetProfileNickname sets a nickname for this eSIM profile. Returns
 // the result code for the operation.
-func (e *ESimProfile) SetProfileNickname(ctx context.Context, nickname String16) (ESimOperationResult, error) {
+func (e *ESimProfile) SetProfileNickname(ctx context.Context, nickname string) (ESimOperationResult, error) {
 	var result ESimOperationResult
 
 	js := "function(iccid, name) {return this.setProfileNickname(iccid, name)}"
