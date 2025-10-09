@@ -257,7 +257,8 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 		// Check if the API is still available.
 		checkCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
-
+		// TODO: Remove after b/446497377 is fixed.
+		testing.ContextLogf(ctx, "TestAPIConn reuse check: conn address %p, locked: %t", *extConn, (*extConn).locked)
 		if err := (*extConn).WaitForExpr(checkCtx, extension.TastLibraryLoadedExpr); err != nil {
 			testing.ContextLog(ctx, "Test API extension became unavailable: ", err)
 			return nil, err
@@ -282,8 +283,13 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 		return true
 	}
 	if *extConn, err = s.NewConnForWorkerTarget(ctx, MatchTargetURL(bgURL), check); err != nil {
+		// TODO: Remove after b/446497377 is fixed.
+		testing.ContextLogf(ctx,
+			"TestAPIConn created failed for new worker with old conn %p: %v", *extConn, err)
 		return nil, err
 	}
+	// TODO: Remove after b/446497377 is fixed.
+	testing.ContextLogf(ctx, "TestAPIConn created successfully: %p", *extConn)
 
 	(*extConn).locked = true
 
