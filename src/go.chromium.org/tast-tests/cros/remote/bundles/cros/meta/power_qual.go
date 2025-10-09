@@ -170,6 +170,8 @@ func PowerQual(ctx context.Context, s *testing.State) {
 		// UnorderedTests will be put into a single group and run together.
 		testGroups = append(testGroups, run.UnorderedTests)
 	}
+	// Disable battery charge limit.
+	flags = append(flags, "-var=disable_charge_limit=true")
 
 	var failedTestCount int
 	for i, tests := range testGroups {

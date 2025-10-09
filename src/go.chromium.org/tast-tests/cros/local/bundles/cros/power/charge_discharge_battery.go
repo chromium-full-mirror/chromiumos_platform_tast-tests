@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -25,11 +26,13 @@ func init() {
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
 		),
-		// min_charge_percent is the lower end of the target range.
-		// max_charge_percent is the higher end of the target range.
 		Vars: []string{
+			// min_charge_percent is the lower end of the target range.
 			"min_charge_percent",
+			// max_charge_percent is the higher end of the target range.
 			"max_charge_percent",
+			// disable_charge_limit disables the battery charge limit if true.
+			"disable_charge_limit",
 		},
 		Params: []testing.Param{{
 			Name: "power_test_prep",
@@ -176,6 +179,30 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 
 		chargeParam.MinChargePercentage = float64(minPercent)
 		chargeParam.MaxChargePercentage = float64(maxPercent)
+	}
+
+	if disableChargeLimit, ok := s.Var("disable_charge_limit"); ok {
+		disable, err := strconv.ParseBool(disableChargeLimit)
+		if err != nil {
+			s.Fatalf("Failed to parse disable_charge_limit from %q: %v", disableChargeLimit, err)
+		}
+
+		if disable && setup.ChargeControlV2Support(ctx) && setup.ChargeLimitEnabled(ctx) {
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+
+			prefs := setup.TmpPrefs{}
+			cleanup, err := prefs.InitTmpPrefs(ctx)
+			if err != nil {
+				s.Fatal("Failed to initialize temporary prefs: ", err)
+			}
+			defer cleanup(cleanupCtx)
+
+			if _, err := setup.StopChargeLimit(ctx, &prefs); err != nil {
+				s.Fatal("Failed to stop charge limit: ", err)
+			}
+		}
 	}
 
 	if restartPowerd, err := setup.DisableService(ctx, "powerd"); err == nil {
