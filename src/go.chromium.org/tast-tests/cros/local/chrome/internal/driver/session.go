@@ -198,6 +198,7 @@ func (s *Session) NewConnForWorkerTarget(ctx context.Context, tm TargetMatcher, 
 		conn, err := s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
 		if err != nil {
 			lastError = err
+			continue
 		}
 		if check(conn) {
 			return conn, nil
