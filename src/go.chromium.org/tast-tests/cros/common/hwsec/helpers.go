@@ -364,7 +364,7 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 		return errors.Wrap(err, "failed to pre clear TPM")
 	}
 
-	h.restartDaemonsAndInvoke(ctx, func(ctx context.Context) error {
+	if err := h.restartDaemonsAndInvoke(ctx, func(ctx context.Context) error {
 		if err := h.tpmClearer.ClearTPM(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear TPM")
 		}
@@ -379,9 +379,7 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 			return errors.Wrap(err, "failed to post clear TPM")
 		}
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		if err := h.saveTPMClearLogs(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to save TPM clear logs: ", err)
 		}
