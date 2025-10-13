@@ -6,8 +6,10 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
@@ -50,6 +52,16 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_lowperf",
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -76,5 +88,11 @@ func CommandVim(ctx context.Context, s *testing.State) {
 
 	if err := guestos.CommandVim(ctx, terminalApp, keyboard, cont); err != nil {
 		s.Fatal("Vim test failed: ", err)
+	}
+
+	if strings.Contains(s.TestName(), "baguette") {
+		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
 	}
 }
