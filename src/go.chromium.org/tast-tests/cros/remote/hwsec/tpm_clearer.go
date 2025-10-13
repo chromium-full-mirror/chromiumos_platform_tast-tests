@@ -11,6 +11,7 @@ This file implements the TPM clear tool in remote tast.
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -72,12 +73,15 @@ func (tc *TPMClearer) ClearTPM(ctx context.Context) error {
 		testing.ContextLogf(ctx, "clear_tpm_owner_done = %q; want 0", output)
 	}
 
+	// Take the combined output even though crossystem clear_tpm_owner_request adds ERROR lines to stderr
+	// on success cases (b/451657349). This allows context to be logged in failure cases.
 	rawOutput, err = tc.cmdRunner.RunWithCombinedOutput(ctx, "crossystem", "clear_tpm_owner_request")
 	output = string(rawOutput)
 	if err != nil {
 		return errors.Wrapf(err, "failed to query clear_tpm_owner_request, output: %q", output)
 	}
-	if output != "1" {
+	// Check the trailing value from a successful call to skip the entries from stderr.
+	if !strings.HasSuffix(output, "1") {
 		return errors.Wrapf(err, "clear_tpm_owner_request = %q; want 1", output)
 	}
 
@@ -109,12 +113,15 @@ func (tc *TPMClearer) PostClearTPM(ctx context.Context) error {
 		testing.ContextLogf(ctx, "clear_tpm_owner_done = %q; want 1", output)
 	}
 
+	// Take the combined output even though crossystem clear_tpm_owner_request adds ERROR lines to stderr
+	// on success cases (b/451657349). This allows context to be logged in failure cases.
 	rawOutput, err = tc.cmdRunner.RunWithCombinedOutput(ctx, "crossystem", "clear_tpm_owner_request")
 	output = string(rawOutput)
 	if err != nil {
 		return errors.Wrapf(err, "failed to query clear_tpm_owner_request, output: %q", output)
 	}
-	if output != "0" {
+	// Check the trailing value from a successful call to skip the entries from stderr.
+	if !strings.HasSuffix(output, "0") {
 		return errors.Wrapf(err, "clear_tpm_owner_request = %q; want 0", output)
 	}
 
