@@ -247,11 +247,11 @@ func getVideoURL(ctx context.Context) string {
 	// Example query:
 	// https://healthmon.chromeos.goog/time_series/tast.power.VideoCall.25m_ash/webrtc_limitation.limitation_cpu?skuFilter=sku%3Dblacktip_IntelR_CeleronR_CPU_N3350_1_10GHz_4GB
 	regexp := regexp.MustCompile(`Intel[ ]Pentium[ ]Silver[ ]N[0-5]{4}|` + // Intel Pentium Sliver N5000
-		`Intel[ ][Pentium|Celeron][ ][0-9]{4,5}[UY]|` + // Intel Pentium 6405U, Intel Celeron 5205U, Intel Celeron 3965Y
+		`Intel[ ](Pentium|Celeron)[ ][0-9]{4,5}[UY]|` + // Intel Pentium 6405U, Intel Celeron 5205U, Intel Celeron 3965Y
 		`Intel[ ]Celeron[ ]N[3-4][0-9]{3}|` + // Intel Celeron N3350, N4500
 		`Intel[ ]Core[ ]m3-[0-9]{4}Y|` + // Intel Core m3-8100Y
 		`Intel[ ]Core[ ]i[357]-[67]Y[0-9]{2}|` + // Intel Core i7-7Y75
-		`Intel[ ]Core[ ]i[357]-(8[0-9]{3}U|9[0-9]{3}U|10[0-9]{3}U)` + // Intel Core i7-8650U, i7-10610U
+		`Intel[ ]Core[ ]i[357]-(8[0-9]{3}U|9[0-9]{3}U|10[0-9]{3}U)|` + // Intel Core i7-8650U, i7-10610U
 		`Intel[ ]Core[ ]i[5]-[0-9]{4}G[0-9]|` + // Intel Core i5-1135G7
 		`AMD[ ]Athlon[ ]Gold[ ]3[0-9]{3}C|` + // AMD Athlon Gold 3150C
 		`AMD[ ]Ryzen[ ]3[ ]3[0-9]{3}C|` + // AMD Ryzen 3 3250C
