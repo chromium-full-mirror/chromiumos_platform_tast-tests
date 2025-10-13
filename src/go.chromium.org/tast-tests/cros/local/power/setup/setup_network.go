@@ -140,50 +140,6 @@ func DisableNetworkMulticast(ctx context.Context, iface string) (CleanupCallback
 	}, nil
 }
 
-// BlockNetworkTrafficsWithIPTables blocks network traffics with |iptables| and |ip6tables|.
-func BlockNetworkTrafficsWithIPTables(ctx context.Context) (CleanupCallback, error) {
-	var (
-		blockRules = [][]string{
-			// Rules to block multicast traffics.
-			{"iptables", "-I", "INPUT", "-s", "224.0.0.0/4", "-j", "DROP", "-w"},
-			{"iptables", "-I", "INPUT", "-d", "224.0.0.0/4", "-j", "DROP", "-w"},
-			{"ip6tables", "-I", "INPUT", "-s", "ff00::/8", "-j", "DROP", "-w"},
-			{"ip6tables", "-I", "INPUT", "-d", "ff00::/8", "-j", "DROP", "-w"},
-			// Rules to block NetBIOS traffics.
-			{"iptables", "-I", "INPUT", "-i", "eth0", "-p", "udp", "--dport", "137:139", "-j", "DROP", "-w"},
-			{"iptables", "-I", "INPUT", "-i", "eth0", "-p", "tcp", "--dport", "137:139", "-j", "DROP", "-w"},
-			// Rule to block ICMPv6 traffic.
-			{"ip6tables", "-I", "INPUT", "-i", "eth0", "-p", "icmpv6", "--icmpv6-type", "143", "-j", "DROP", "-w"},
-		}
-		unblockRules [][]string
-	)
-
-	cleanup := func(ctx context.Context) error {
-		var firstErr error
-		testing.ContextLog(ctx, "Unblocking network traffics, rule counts: ", len(unblockRules))
-		for _, unblockRule := range unblockRules {
-			if err := testexec.CommandContext(ctx, unblockRule[0], unblockRule[1:]...).Run(testexec.DumpLogOnError); err != nil {
-				if firstErr == nil {
-					firstErr = err
-				}
-				testing.ContextLogf(ctx, "Unable to remove rule: %v: %v", unblockRule, err)
-			}
-		}
-		return firstErr
-	}
-
-	testing.ContextLog(ctx, "Blocking network traffics")
-	for _, blockRule := range blockRules {
-		if err := testexec.CommandContext(ctx, blockRule[0], blockRule[1:]...).Run(testexec.DumpLogOnError); err != nil {
-			return cleanup, errors.Wrapf(err, "unable to apply rule: %v", blockRule)
-		}
-		// Replace the insert "-I" with delete "-D" to remove the rule.
-		unblockRule := append([]string{blockRule[0], "-D"}, blockRule[2:]...)
-		unblockRules = append(unblockRules, unblockRule)
-	}
-	return cleanup, nil
-}
-
 // DisableAllMulticast disables multicast on all ethernet and wlan interfaces.
 func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
 	return Nested(ctx, "disable ntwork multicast", func(s *Setup) error {
@@ -199,7 +155,6 @@ func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
 			}
 			s.Add(DisableNetworkMulticast(ctx, iface))
 		}
-		s.Add(BlockNetworkTrafficsWithIPTables(ctx))
 		return nil
 	})
 }
