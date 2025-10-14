@@ -44,6 +44,7 @@ func init() {
 				WakeSignal:    ti50.GpioTi50PltRstL,
 				WakeSignalVal: true,
 			},
+			ExtraAttr: []string{"gsc_smoke"},
 		}, {
 			Name: "regular_spi",
 			Val: testBasicSleepConfig{

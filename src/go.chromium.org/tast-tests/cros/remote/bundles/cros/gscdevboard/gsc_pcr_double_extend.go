@@ -57,6 +57,7 @@ func init() {
 				secondExtend: nonStandardExtend,
 				secondDigest: ti50.DigestNormalBoot,
 			},
+			ExtraAttr: []string{"gsc_smoke"},
 		}, {
 			// GSC should allow double extending PCR1
 			Name: "pcr1",

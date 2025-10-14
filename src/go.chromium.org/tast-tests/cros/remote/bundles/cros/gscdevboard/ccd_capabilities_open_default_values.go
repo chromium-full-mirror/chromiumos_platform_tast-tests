@@ -33,7 +33,8 @@ func init() {
 		Attr: []string{"group:gsc",
 			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield", "gsc_ot_fpga_cw310",
 			"gsc_image_ti50",
-			"gsc_nightly"},
+			"gsc_nightly",
+			"gsc_smoke"},
 		Fixture: fixture.GSCOpenCCD,
 	})
 }

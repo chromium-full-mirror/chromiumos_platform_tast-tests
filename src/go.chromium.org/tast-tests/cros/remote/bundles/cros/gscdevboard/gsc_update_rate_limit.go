@@ -47,6 +47,7 @@ func init() {
 				resetType:    reboot,
 				limitsUpdate: true,
 			},
+			ExtraAttr: []string{"gsc_smoke"},
 		}, {
 			Name: "poweron",
 			Val: updateConfig{
