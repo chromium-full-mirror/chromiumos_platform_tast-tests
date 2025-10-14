@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCTestlab,
 		Desc:    "Verify testlab mode can be enabled and disabled with physical presence",
-		Timeout: 5 * time.Minute,
+		Timeout: 1 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"mruthven@chromium.org", // Test Author
