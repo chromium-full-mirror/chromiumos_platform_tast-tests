@@ -315,7 +315,7 @@ func init() {
 			}, {
 				Name:              "camera",
 				Fixture:           commonfixture.RebootForProbeFunction,
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360", "wugtrio")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("blacktip360")),
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
@@ -360,7 +360,7 @@ func init() {
 			}, {
 				Name:              "input_device_private",
 				Fixture:           fixture.RebootAndDecryptProbeConfig,
-				ExtraHardwareDeps: common.UnreleasedDeviceDeps(hwdep.SkipOnModel("meliks")),
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,

@@ -23,7 +23,6 @@ var (
 		"blacktip360": {"camera": {}},
 		"domilly":     {"display_panel": {}},
 		"santa":       {"battery": {}},
-		"wugtrio":     {"camera": {}},
 		"wyrdeer":     {"battery": {}},
 	}
 )
