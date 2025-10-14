@@ -35,7 +35,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCPCRDoubleExtend,
 		Desc:    "Verify GSC blocks PCR0 double extends",
-		Timeout: 10 * time.Minute,
+		Timeout: 30 * time.Second,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"mruthven@google.com",   // Test Author
