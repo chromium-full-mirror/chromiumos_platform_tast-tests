@@ -228,8 +228,6 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 		return errors.Wrap(err, "failed to store current pd state before turning on DP alt")
 	}
 
-	testing.ContextLog(ctx, "Resetting usb-c connection to DP alt-mode")
-
 	if err := s.ServoCcOff(ctx); err != nil {
 		return errors.Wrap(err, "failed to turn off cc")
 	}
@@ -239,6 +237,8 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 	}
 
 	if config.DPMode == DPEnable {
+		testing.ContextLog(ctx, "Resetting usb-c connection to DP alt-mode")
+
 		if err := s.RunServoCommand(ctx, fmt.Sprintf("usbc_action dp pins %s", config.PinsCDEF)); err != nil {
 			return errors.Wrap(err, "failed to set pin assignments")
 		}
@@ -255,6 +255,7 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 	if err := s.SetPDRole(ctx, PDRoleSrc); err != nil {
 		return errors.Wrap(err, "failed to set pd role")
 	}
+
 	if err := s.SetPDCommunication(ctx, On); err != nil {
 		return errors.Wrap(err, "failed to enable pd comms")
 	}
@@ -278,7 +279,7 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 		}
 
 		return nil
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 20 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for Servo DUT port to be ready")
 	}
 
@@ -305,6 +306,13 @@ func (s *Servo) ServoSetDPConfigs(ctx context.Context, config *TypeCInfo, mfPref
 			return nil
 		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 			return errors.Wrap(err, "timed out waiting for servo DUT port to sink power")
+		}
+		// servo does not broadcast that it's USB capable in sink mode while dp alt mode is disabled
+		// but pd comm is enabled, which in some cases can cause the DUT to lose ethernet.
+		if config.DPMode == DPDisable {
+			if s.RunServoCommand(ctx, "cc snk"); err != nil {
+				return errors.Wrap(err, "failed to disable pd comms")
+			}
 		}
 	}
 
