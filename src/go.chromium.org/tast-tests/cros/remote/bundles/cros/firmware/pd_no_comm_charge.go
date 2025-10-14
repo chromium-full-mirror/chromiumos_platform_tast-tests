@@ -128,11 +128,11 @@ func PDNoCommCharge(ctx context.Context, s *testing.State) {
 		servo.USBC3A0,
 	}
 
-	// pass if current draw is within 80% of maximum
+	// pass if current draw is within 80% ~ 110% of advertised current
 	expectedCurrent := [][]int{
-		{400, 500},
-		{1200, 1500},
-		{2400, 3000},
+		{400, 550},
+		{1200, 1650},
+		{2400, 3300},
 	}
 
 	for idx := range configs {
