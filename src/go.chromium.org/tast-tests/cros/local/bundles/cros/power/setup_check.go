@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Attr: []string{
-			"group:mainline",
+			"group:mainline", "informational",
 			"group:release-health",
 			"release-health_power",
 		},
