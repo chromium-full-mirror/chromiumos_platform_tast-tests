@@ -27,7 +27,10 @@ func init() {
 		BugComponent: "b:1361410",
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{},
+		Attr: []string{
+			"group:power",
+			"power_weekly_misc",
+		},
 		HardwareDeps: hwdep.D(
 			hwdep.ChromeEC(),
 			hwdep.Battery(),
