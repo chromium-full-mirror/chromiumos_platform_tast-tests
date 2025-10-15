@@ -81,6 +81,7 @@ func (c *CameraServiceHelper) VerifyVideo(ctx context.Context, outDir, cameraID 
 	defer cancel()
 
 	detectColorCount := 0
+	testing.ContextLogf(ctx, "Verifying video with camera: %s and exposure: %d", cameraID, c.exposureTimeUs[cameraID])
 	for timeoutCtx.Err() == nil {
 		req := &passport.GetAveragePixelRequest{DeviceId: cameraID, ExposureMicroseconds: c.exposureTimeUs[cameraID]}
 		resp, err := c.service.GetAveragePixel(ctx, req)

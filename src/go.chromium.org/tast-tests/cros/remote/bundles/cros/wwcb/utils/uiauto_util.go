@@ -128,14 +128,16 @@ func CloseWindow(ctx context.Context, keyboardSvc inputspb.KeyboardServiceClient
 
 // ClickFullScreenButton clicks button to full screen on Gallery.
 func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
-	connectButtonNode := ui.Node().NameContaining("fullscreen").Role(ui.Role_ROLE_BUTTON).Finder()
+	fullscreenButtonNode := ui.Node().NameContaining("fullscreen").Role(ui.Role_ROLE_BUTTON).Finder()
 
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: connectButtonNode}); err != nil {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: fullscreenButtonNode}); err != nil {
 		return errors.Wrap(err, "failed to wait for fullscreen button to show")
 	}
-
-	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: connectButtonNode}); err != nil {
-		return errors.Wrap(err, "failed to click the connect button")
+	if _, err := uiautoSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{Finder: fullscreenButtonNode}); err != nil {
+		return errors.Wrap(err, "failed to ensure fullscreen button is focused")
+	}
+	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: fullscreenButtonNode}); err != nil {
+		return errors.Wrap(err, "failed to click the fullscreen button")
 	}
 	return nil
 }

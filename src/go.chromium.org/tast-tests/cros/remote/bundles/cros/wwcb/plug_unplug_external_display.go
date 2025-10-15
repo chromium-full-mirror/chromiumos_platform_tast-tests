@@ -160,6 +160,10 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to set the window state of the %s as %s: %v", galleryTitle, wwcb.WindowStateType_WINDOW_STATE_MAXIMIZED.String(), err)
 	}
 
+	if err := utils.ClickFullScreenButton(ctx, uiautoSvc); err != nil {
+		s.Fatal("Failed to click on fullscreen button on the Gallery: ", err)
+	}
+
 	if err := utils.ClickOnPlayButton(ctx, uiautoSvc); err != nil {
 		s.Fatal("Failed to click on play button on the Gallery: ", err)
 	}
