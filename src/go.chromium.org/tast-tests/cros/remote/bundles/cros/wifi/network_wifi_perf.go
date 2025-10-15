@@ -53,10 +53,11 @@ func init() {
 			wificell.ShillServiceName,
 			"tast.cros.autoupdate.UpdateService",
 		},
-		Vars:         []string{"router"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
-		Timeout:      time.Minute * 60,
+		Vars:            []string{"router"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		Timeout:         time.Minute * 60,
 		Params: []testing.Param{
 			{
 				// Network: open HE20 802.11ax.

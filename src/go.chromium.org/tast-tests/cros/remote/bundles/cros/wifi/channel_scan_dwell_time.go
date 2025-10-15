@@ -46,12 +46,13 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_perf", "group:release-health", "release-health_wifi"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_perf", "group:release-health", "release-health_wifi"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

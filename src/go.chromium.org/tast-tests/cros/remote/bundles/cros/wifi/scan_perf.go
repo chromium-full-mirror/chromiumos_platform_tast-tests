@@ -66,9 +66,10 @@ func init() {
 			wificell.ShillServiceName,
 			wificell.BluetoothServiceName,
 		},
-		Vars:         []string{"router", "pcap"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
+		Vars:            []string{"router", "pcap"},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				// Default case, DTIM = 2
