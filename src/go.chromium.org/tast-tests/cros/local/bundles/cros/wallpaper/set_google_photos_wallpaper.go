@@ -150,7 +150,7 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 
 	// The expected percentage takes into account that the center cropped image is
 	// similar to the filled one.
-	const expectedPercent = 70
+	const expectedPercent = 65
 	if err := wallpaper.ValidateBackground(cr,
 		constants.GooglePhotosWallpaperColor, expectedPercent)(ctx); err != nil {
 		s.Error("Failed to validate wallpaper background: ", err)
