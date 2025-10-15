@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
@@ -40,6 +41,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_lowperf",
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -83,5 +94,11 @@ func CommandCd(ctx context.Context, s *testing.State) {
 	// Check the content of the test file.
 	if err := cont.CheckFileContent(ctx, filepath.Join("/home", userName, folderName, outputFile), fmt.Sprintf("/home/%s/%s\n", userName, folderName)); err != nil {
 		s.Fatal("Cd failed to take user into the newly created folder: ", err)
+	}
+
+	if strings.Contains(s.TestName(), "baguette") {
+		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
 	}
 }

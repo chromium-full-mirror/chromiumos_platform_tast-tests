@@ -48,7 +48,7 @@ var standardTests = map[string]testOptions{
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
 	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
-	"command_cd.go":                     {foundation: true},
+	"command_cd.go":                     {foundation: true, testBaguette: true},
 	"command_ps.go":                     {foundation: true, testBaguette: true},
 	"command_vim.go":                    {foundation: true, testBaguette: true},
 	"copy_files_to_linux_files.go":      {},
@@ -97,18 +97,21 @@ var standardTests = map[string]testOptions{
 	"share_folder_zip_file.go":     {},
 	"share_invalid_paths.go":       {},
 	// Baguette has no lxc, and therefore no snapshots.
-	"snapshot.go":               {timeout: 6 * time.Minute, testBaguette: false},
-	"sshfs_mount.go":            {},
-	"sync_time.go":              {},
-	"task_manager.go":           {},
-	"uninstall_invalid_app.go":  {},
+	"snapshot.go": {timeout: 6 * time.Minute, testBaguette: false},
+	// TODO(b/377716353): couldn't find sshfs mount, may be named differently
+	"sshfs_mount.go":  {},
+	"sync_time.go":    {testBaguette: true},
+	"task_manager.go": {testBaguette: true},
+	// TODO(b/377716353): failed to mount usb device
 	"usb_share_mass_storage.go": {},
-	"verify_app_x11.go":         {},
+	"verify_app_x11.go":         {testBaguette: true},
 	// Baguette will not support vmc extra disk mounting automatically.
 	"vmc_extra_disk.go": {testBaguette: false},
-	"vmc_start.go":      {},
-	"webserver.go":      {foundation: true},
-	"xattrs.go":         {},
+	"vmc_start.go":      {testBaguette: true},
+	// Baguette uses distinct port-forwarding mechanism from crostini.
+	"webserver.go": {testBaguette: false, foundation: true},
+	// TODO(b/377716353): failed to run getfattr
+	"xattrs.go": {},
 }
 
 func TestFixTestParams(t *testing.T) {

@@ -56,10 +56,16 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 		insideFileContents  = "inside"
 		deviceName          = "Mass Storage Gadget"
 		deviceLabel         = "virtual-usb"
-		containerHomeDir    = "/home/testuser"
-		containerMountDir   = containerHomeDir + "/usb-drive"
 		mountDir            = "/media/removable/" + deviceLabel
 	)
+	var containerHomeDir, containerMountDir string
+	if strings.Contains(s.TestName(), "baguette") {
+		containerHomeDir = "/home/tast-user"
+		containerMountDir = containerHomeDir + "/usb-drive"
+	} else {
+		containerHomeDir = "/home/testuser"
+		containerMountDir = containerHomeDir + "/usb-drive"
+	}
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
