@@ -198,12 +198,16 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 		suspendSeconds := minSuspendResumeSeconds + rand.Intn(maxSuspendResumeSeconds-minSuspendResumeSeconds)
 
-		if err := func() (retErr error) {
+		func() {
 			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 			if err != nil {
-				return err
+				s.Log("Failed to start ec uart capture: ", err)
 			}
-			defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
+			defer func() {
+				if err := closeUART(ctx); err != nil {
+					s.Log("Failed to close ec uart capture: ", err)
+				}
+			}()
 
 			if err := timeSuspendWakeCycle(ctx, h, suspendSeconds); err != nil {
 				ecLogs, _ := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
@@ -212,10 +216,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 				saveLogsForFailedIter(ctx, h, ecLogs, i)
 				testing.ContextLogf(ctx, "Last %d EC Logs from failure: %v", numLines, tail)
 			}
-			return nil
-		}(); err != nil {
-			s.Error("Failed to open ec uart capture: ", err)
-		}
+		}()
 
 		func() {
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 30*time.Second)
