@@ -173,7 +173,7 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, s *testin
 	for _, camera := range resp.GetCameras() {
 		cameraIDs = append(cameraIDs, camera.GetId())
 	}
-	exposureTimesToTry := []int32{1500, 2250, 3000, 6000, 12000, 24000, 36000, 48000, 0}
+	exposureTimesToTry := []int32{750, 1000, 1500, 2250, 3000, 6000, 12000, 24000, 36000, 48000, 0}
 	exposureTimeIdx := 0
 	displayMappings := make(map[string]string)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -182,7 +182,9 @@ func (c *CameraServiceHelper) PairWebcamToDisplay(ctx context.Context, s *testin
 		// affected by glare and overexposure, so start with those and then try 0
 		// which is auto exposure as a last resort.
 		for _, cameraID := range cameraIDs {
-			c.exposureTimeUs[cameraID] = exposureTimesToTry[exposureTimeIdx]
+			if !cameraAlreadyMatched(displayMappings, cameraID) {
+				c.exposureTimeUs[cameraID] = exposureTimesToTry[exposureTimeIdx]
+			}
 		}
 		exposureTimeIdx++
 		if exposureTimeIdx == len(exposureTimesToTry) {
