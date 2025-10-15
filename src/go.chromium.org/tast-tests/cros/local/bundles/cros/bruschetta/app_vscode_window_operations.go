@@ -22,7 +22,7 @@ func init() {
 		Func:         AppVscodeWindowOperations,
 		Desc:         "Performs maximize/restore/minimize/close actions on VS Code",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
+		Attr:         []string{"group:mainline", "informational", "group:bruschetta_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		VarDeps:      uidetection.UIDetectionVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
