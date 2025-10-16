@@ -122,7 +122,10 @@ func (tc *TPMClearer) PostClearTPM(ctx context.Context) error {
 	}
 	// Check the trailing value from a successful call to skip the entries from stderr.
 	if !strings.HasSuffix(output, "0") {
-		return errors.Wrapf(err, "clear_tpm_owner_request = %q; want 0", output)
+		// Due to b/452029743 clear_tpm_owner_request on reven does not give reliable output.
+		// Log the failure instead of failing the test allowing the hwsec-ownership-id check
+		// confirm if the TPM was actually cleared.
+		testing.ContextLogf(ctx, "Unexpected clear_tpm_owner_request output: %q want: 0", output)
 	}
 
 	return nil
