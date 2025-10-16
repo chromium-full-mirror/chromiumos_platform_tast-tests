@@ -212,19 +212,23 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 	return nil
 }
 
+// getNetworkState returns true if the network interface has a connected cable.
+func getNetworkState(ctx context.Context, dut *dut.DUT, network string) (bool, error) {
+	out, err := dut.Conn().CommandContext(ctx, "sudo", "ip", "link", "show", network).Output()
+	if err != nil {
+		return false, errors.Wrap(err, "retrieve network state")
+	}
+
+	return strings.Contains(string(out), "LOWER_UP"), nil
+}
+
 // VerifyNetworkState verifies the state of the given network interface is as expected or not.
+// State of network is whether or not a cable connection is detected for the given interface.
 func VerifyNetworkState(ctx context.Context, dut *dut.DUT, network string, expectedState bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/net/"+network+"/operstate").Output()
+		currentState, err := getNetworkState(ctx, dut, network)
 		if err != nil {
-			return errors.Wrap(err, "retrieve ethernet operstate")
-		}
-
-		var currentState bool
-		if strings.TrimSpace(string(out)) == "up" {
-			currentState = true
-		} else {
-			currentState = false
+			return testing.PollBreak(errors.Wrap(err, "failed to get ethernet state"))
 		}
 
 		if currentState != expectedState {
@@ -246,14 +250,14 @@ func VerifyEthernetState(ctx context.Context, dut *dut.DUT, isDockEthConnected b
 			return errors.Wrap(err, "list networks interface")
 		}
 
-		ethStates := make(map[string]string)
+		ethStates := make(map[string]bool)
 		for _, network := range networks {
 			if strings.Contains(network, "eth") {
-				out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/net/"+network+"/operstate").Output()
+				state, err := getNetworkState(ctx, dut, network)
 				if err != nil {
-					return errors.Wrap(err, "retrieve ethernet operstate")
+					return errors.Wrap(err, "retrieve ethernet state")
 				}
-				ethStates[network] = strings.TrimSpace(string(out))
+				ethStates[network] = state
 			}
 		}
 
@@ -264,7 +268,7 @@ func VerifyEthernetState(ctx context.Context, dut *dut.DUT, isDockEthConnected b
 
 		allUP := true
 		for _, state := range ethStates {
-			if state != "up" {
+			if !state {
 				allUP = false
 				break
 			}
