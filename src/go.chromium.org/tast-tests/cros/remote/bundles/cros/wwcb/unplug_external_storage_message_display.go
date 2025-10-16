@@ -137,34 +137,37 @@ func UnplugExternalStorageMessageDisplay(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to launch Files app: ", err)
 	}
 
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
+	}
+	s.Log("Mount points prior to plugging in USB devices: ", beforeMountPoints)
+
 	tf := s.FixtValue().(*topology.TestFixture)
 	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage)
 	if err != nil {
 		s.Fatal("Failed to connect to the external storage: ", err)
 	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		mountPoints, err := utils.GetMountPoints(ctx, dut)
-		if err != nil {
-			errors.Wrap(err, "get mount points")
+
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
+	if err != nil {
+		s.Fatal("Failed to get find new storage mount point: ", err)
+	}
+	s.Log("Found following new mount points: ", mountPoints)
+	for _, mountPoint := range mountPoints {
+		usbTextPath := filepath.Join(mountPoint, "sample.txt")
+		// Copy file to external storage.
+		if err := utils.CopyFileToExternalStorage(ctx, dut, mountPoint, remoteTextPath); err != nil {
+			errors.Wrap(err, "copy file to external storage")
 		}
-		for _, mountPoint := range mountPoints {
-			usbTextPath := filepath.Join(mountPoint, "sample.txt")
-			// Copy file to external storage.
-			if err := utils.CopyFileToExternalStorage(ctx, dut, mountPoint, remoteTextPath); err != nil {
-				errors.Wrap(err, "copy file to external storage")
-			}
-			// Check external storage not read only.
-			if readOnly, err := utils.GetDeviceWritableStatus(ctx, dut, mountPoint); err != nil {
-				errors.Wrap(err, "get device writable status")
-			} else if !readOnly {
-				if err := utils.CompareTwoFiles(ctx, dut, remoteTextPath, usbTextPath); err != nil {
-					errors.Wrap(err, "comparison of the dut file with the usb file")
-				}
+		// Check external storage not read only.
+		if readOnly, err := utils.GetDeviceWritableStatus(ctx, dut, mountPoint); err != nil {
+			errors.Wrap(err, "get device writable status")
+		} else if !readOnly {
+			if err := utils.CompareTwoFiles(ctx, dut, remoteTextPath, usbTextPath); err != nil {
+				errors.Wrap(err, "comparison of the dut file with the usb file")
 			}
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to check external storage file: ", err)
 	}
 
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)

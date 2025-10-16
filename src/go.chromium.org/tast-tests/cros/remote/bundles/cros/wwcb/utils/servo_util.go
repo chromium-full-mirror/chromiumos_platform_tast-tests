@@ -18,11 +18,8 @@ import (
 // DisableServoPower switches the servo's power role from source to sink. Surrounding the power role
 // change, the function will disable/enable the servo's USB-A ports to prevent enumeration failure.
 func DisableServoPower(ctx context.Context, dut *dut.DUT, svo *servo.Servo) error {
-	if err := svo.SetOnOff(ctx, servo.BottomUSBKeyPwr, servo.Off); err != nil {
-		return errors.Wrap(err, "failed to turn off servo bottom mux")
-	}
-	if err := svo.SetOnOff(ctx, servo.TopUSBKeyPwr, servo.Off); err != nil {
-		return errors.Wrap(err, "failed to turn off servo top mux")
+	if err := DisableServoUSBPorts(ctx, dut, svo); err != nil {
+		return errors.Wrap(err, "failed to disable servo USB drive")
 	}
 
 	// GoBigSleepLint: Allow USB-A devices to disconnect.
@@ -39,13 +36,6 @@ func DisableServoPower(ctx context.Context, dut *dut.DUT, svo *servo.Servo) erro
 		return errors.Wrap(err, "unable to sleep after servo power role change")
 	}
 
-	if err := svo.SetOnOff(ctx, servo.BottomUSBKeyPwr, servo.On); err != nil {
-		return errors.Wrap(err, "failed to turn on servo bottom mux")
-	}
-	if err := svo.SetOnOff(ctx, servo.TopUSBKeyPwr, servo.On); err != nil {
-		return errors.Wrap(err, "failed to turn on servo top mux")
-	}
-
 	return nil
 }
 
@@ -60,12 +50,18 @@ func EnableServoPower(ctx context.Context, dut *dut.DUT, svo *servo.Servo) error
 		return errors.Wrap(err, "unable to sleep after servo power role change")
 	}
 
-	if err := svo.SetOnOff(ctx, servo.BottomUSBKeyPwr, servo.On); err != nil {
-		return errors.Wrap(err, "failed to turn on servo bottom mux")
-	}
-	if err := svo.SetOnOff(ctx, servo.TopUSBKeyPwr, servo.On); err != nil {
-		return errors.Wrap(err, "failed to turn on servo top mux")
-	}
+	return nil
+}
 
+// DisableServoUSBPorts disables power to both serov USB ports to prevent any
+// servo connected devices (eg the recovery storage drive present in all lab setups)
+// from interfereing with PASIT tests.
+func DisableServoUSBPorts(ctx context.Context, dut *dut.DUT, svo *servo.Servo) error {
+	if err := svo.SetOnOff(ctx, servo.BottomUSBKeyPwr, servo.Off); err != nil {
+		return errors.Wrap(err, "failed to turn off servo bottom mux")
+	}
+	if err := svo.SetOnOff(ctx, servo.TopUSBKeyPwr, servo.Off); err != nil {
+		return errors.Wrap(err, "failed to turn off servo top mux")
+	}
 	return nil
 }

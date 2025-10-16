@@ -103,6 +103,12 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		defer pxy.Servo().RunECCommand(cleanupCtx, "tabletmode on")
 	}
 
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
+	}
+	s.Log("Mount points prior to plugging in USB devices: ", beforeMountPoints)
+
 	// Plug external storage.
 	tf := s.FixtValue().(*topology.TestFixture)
 	usbID, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage)
@@ -176,10 +182,11 @@ func PlugExternalStorageWhileSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Files app after resume: ", err)
 	}
 
-	mountPoints, err := utils.GetMountPoints(ctx, dut)
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
 	if err != nil {
-		s.Fatal("Failed to get mount points: ", err)
+		s.Fatal("Failed to get find new storage mount point: ", err)
 	}
+	s.Log("Found following new mount points: ", mountPoints)
 	for _, mountPoint := range mountPoints {
 		usbTextPath := filepath.Join(mountPoint, "sample.txt")
 		// Copy file to external storage.

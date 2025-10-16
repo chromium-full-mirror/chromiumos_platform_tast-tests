@@ -486,22 +486,6 @@ func CompareTwoFiles(ctx context.Context, dut *dut.DUT, fileA, fileB string) err
 	return nil
 }
 
-// GetMountPoints gets the mount point information.
-func GetMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
-	var mountPoints []string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		lsblkOutput, err := dut.Conn().CommandContext(ctx, "sh", "-c", "lsblk -l -o mountpoint | grep removable").Output(testexec.DumpLogOnError)
-		if err != nil {
-			return errors.Wrap(err, "received an incorrect result when using lsblk in the command")
-		}
-		mountPoints = strings.Split(strings.TrimSpace(string(lsblkOutput)), "\n")
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
-		return nil, err
-	}
-	return mountPoints, nil
-}
-
 // GetDeviceWritableStatus gets the read-write protection status of the device.
 func GetDeviceWritableStatus(ctx context.Context, dut *dut.DUT, mountPoint string) (bool, error) {
 	const writeProtectionFlag = "1\n"
@@ -510,6 +494,7 @@ func GetDeviceWritableStatus(ctx context.Context, dut *dut.DUT, mountPoint strin
 		return false, errors.Wrap(err, "can't get device node")
 	}
 	deviceNode := strings.TrimSpace(string(output))
+	testing.ContextLogf(ctx, "device node: %s for mount point: %s", deviceNode, mountPoint)
 	output, err = dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("sudo blockdev --getro %s", deviceNode)).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return false, errors.Wrap(err, "can't get usb read-write mode")
@@ -922,8 +907,60 @@ func VerifyDockingInterface(ctx context.Context, dut *dut.DUT, capFile string, d
 	return nil
 }
 
+// NewRemovableMountPoints gets a list of all removable mount points, detected and returns any new ones not found in previous.
+//
+// Will block until at least one removable mountpoint is found, and then compare the new list with the previous list.
+// ctx is the context for the function.
+// dut is a representation of the device under test.
+// previous is a list of mount points that should be filtered out of the result.
+// retryUntilNotEmpty will use testing.Poll and call RemovableMountPoints until either a timeout or there is at least one new mount point found.
+// Returns a list of new mount points, or an error if one is encountered.
+func NewRemovableMountPoints(ctx context.Context, dut *dut.DUT, previous []string, retryUntilNotEmpty bool) ([]string, error) {
+	var newMounts []string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Use the non-blocking version to avoid polling within a poll.
+		allMounts, err := RemovableMountPointsNonBlocking(ctx, dut)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get removable mount points"))
+		}
+
+		previousMounts := make(map[string]struct{}, len(previous))
+		for _, mount := range previous {
+			previousMounts[mount] = struct{}{}
+		}
+
+		newMounts = nil
+		for _, mount := range allMounts {
+			if _, ok := previousMounts[mount]; !ok {
+				newMounts = append(newMounts, mount)
+			}
+		}
+
+		if len(newMounts) == 0 && retryUntilNotEmpty {
+			return errors.New("no new removable mount points found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to find new removable mount points")
+	}
+	return newMounts, nil
+}
+
 // RemovableMountPoints should retrieve the list of mount points that have removable in its location
+//
+// Will block until at least one removable mountpoint is found.
 func RemovableMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	return removableMountPoints(ctx, dut, true)
+}
+
+// RemovableMountPointsNonBlocking should retrieve the list of mount points that have removable in its location
+//
+// Will only retry until the command to get mount points doesn't fail, and may return an empty list.
+func RemovableMountPointsNonBlocking(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	return removableMountPoints(ctx, dut, false)
+}
+
+func removableMountPoints(ctx context.Context, dut *dut.DUT, blockUntilNotEmpty bool) ([]string, error) {
 	var mountPoints []string
 
 	nonPollingError := false
@@ -940,7 +977,7 @@ func RemovableMountPoints(ctx context.Context, dut *dut.DUT) ([]string, error) {
 				mountPoints = append(mountPoints, line)
 			}
 		}
-		if mountPoints != nil {
+		if mountPoints != nil || !blockUntilNotEmpty {
 			return nil
 		}
 		return errors.New("Have not found removable mount points")

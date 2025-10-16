@@ -89,6 +89,11 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
+	}
+	s.Log("Mount points prior to plugging in USB devices: ", beforeMountPoints)
 
 	// Plug in the USB devices.
 	tf := s.FixtValue().(*topology.TestFixture)
@@ -168,17 +173,12 @@ func ExternalStorageSuspendAndResume(ctx context.Context, s *testing.State) {
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTXTPath).Output()
 
 	// Retrieve USB path.
-	mountPoints, err := utils.GetMountPoints(ctx, dut)
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
 	if err != nil {
-		s.Fatal("Failed to get the original USB devices after check all partitions are mounted: ", err)
+		s.Fatal("Failed to get find new storage mount point: ", err)
 	}
-
-	var mountPoint string
-	if len(mountPoints) >= 1 {
-		mountPoint = mountPoints[0]
-	} else {
-		s.Fatalf("Failed to proceed due to incorrect number of mountPoints, got %d want at least 1", len(mountPoints))
-	}
+	s.Log("Found following new mount points: ", mountPoints)
+	mountPoint := mountPoints[0]
 
 	// Copy file to storage media.
 	if err := utils.CopyFileToExternalStorage(ctx, dut, mountPoint, remoteTXTPath); err != nil {

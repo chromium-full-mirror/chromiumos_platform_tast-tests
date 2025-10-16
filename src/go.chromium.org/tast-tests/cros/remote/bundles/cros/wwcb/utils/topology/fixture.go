@@ -19,6 +19,7 @@ import (
 	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/chromiumos/config/go/test/lab/api/passport"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils/api"
 	"go.chromium.org/tast/core/dut"
@@ -72,7 +73,7 @@ func init() {
 		SetUpTimeout:    setupTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"USBID", "ExtCameraID", "DockingID", "ExtDispID1", "ExtDispID2", "EthernetID", "USBTypeAIDArray"},
+		Vars:            []string{"USBID", "ExtCameraID", "DockingID", "ExtDispID1", "ExtDispID2", "EthernetID", "USBTypeAIDArray", "servo"},
 		Params: []testing.FixtureParam{
 			{
 				Name: "storage",
@@ -186,6 +187,23 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	hostname := s.DUT().HostName()
 	if host, _, err := net.SplitHostPort(hostname); err == nil {
 		hostname = host
+	}
+
+	// We never want the Servo USB connected for PASIT tests so if we
+	// have a servo configured disable the USB ports on the servo
+	if servoSpec, ok := s.Var("servo"); ok {
+		dut := s.DUT()
+		pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
+		if err != nil {
+			s.Fatal("Failed to connect to servo: ", err)
+		}
+		defer pxy.Close(ctx)
+		s.Log("Disabling servo USB ports")
+		if err := utils.DisableServoUSBPorts(ctx, dut, pxy.Servo()); err != nil {
+			s.Fatal("Failed to disable servo USB ports: ", err)
+		}
+	} else {
+		s.Log("Warning no servo configured if one is connected it may be connecting USB devies to the DUT that interfere with PASIT tests")
 	}
 
 	var pasitTopology *labapi.PasitHost

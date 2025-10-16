@@ -90,6 +90,12 @@ func ExternalStorageBootWithMediaConnect(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to get original USB devices: ", err)
 	}
 
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
+	}
+	s.Log("Mount points prior to plugging in USB devices: ", beforeMountPoints)
+
 	// Plug in the USB devices.
 	tf := s.FixtValue().(*topology.TestFixture)
 	if _, err := tf.Helper.ActivateDeviceByType(ctx, topology.DeviceTypeStorage); err != nil {
@@ -145,10 +151,11 @@ func ExternalStorageBootWithMediaConnect(ctx context.Context, s *testing.State) 
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTXTPath).Output()
 
 	// Retrieve USB path.
-	mountPoints, err := utils.GetMountPoints(ctx, dut)
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
 	if err != nil {
-		s.Fatal("Failed to get the original USB devices after check all partitions are mounted: ", err)
+		s.Fatal("Failed to get find new storage mount point: ", err)
 	}
+	s.Log("Found following new mount points: ", mountPoints)
 	mountPoint := mountPoints[0]
 
 	// Copy file to storage media.

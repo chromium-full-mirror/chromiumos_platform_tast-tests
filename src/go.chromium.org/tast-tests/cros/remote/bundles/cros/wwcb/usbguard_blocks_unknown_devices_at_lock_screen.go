@@ -134,8 +134,8 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to write data to devicesContent.txt: ", err)
 	}
 	// Check no USB storage mounted.
-	wentMountPoints := 0
-	if err := checkMountPoints(ctx, dut, wentMountPoints); err != nil {
+	wantMountPoints := 0
+	if err := checkMountPoints(ctx, dut, wantMountPoints); err != nil {
 		s.Fatal("Failed to check mount points should not be USB storage mounted: ", err)
 	}
 
@@ -151,7 +151,7 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 	}
 
 	// Check no USB storage mounted.
-	if err := checkMountPoints(ctx, dut, wentMountPoints); err != nil {
+	if err := checkMountPoints(ctx, dut, wantMountPoints); err != nil {
 		s.Fatal("Failed to check mount points should not be USB storage mounted after open fixture: ", err)
 	}
 
@@ -196,10 +196,10 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 			s.Fatal("Failed to unlock the screen: ", err)
 		}
 	}
-	wentMountPoints = 1
+	wantMountPoints = 1
 	// Check USB storage mounted.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := checkMountPoints(ctx, dut, wentMountPoints); err != nil {
+		if err := checkMountPoints(ctx, dut, wantMountPoints); err != nil {
 			return errors.Wrap(err, "check mount points")
 		}
 		return nil
@@ -209,13 +209,14 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 }
 
 func checkMountPoints(ctx context.Context, dut *dut.DUT, count int) error {
-	if mountPoints, err := utils.GetMountPoints(ctx, dut); err != nil && count > 0 {
+	if mountPoints, err := utils.RemovableMountPoints(ctx, dut); err != nil && count > 0 {
 		return errors.Wrap(err, "get mount points")
 	} else if count > 0 && len(mountPoints) < count {
 		return errors.Errorf("mount points got:%d went:%d", len(mountPoints), count)
 	}
 	return nil
 }
+
 func suspendAndResume(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
 	if err := utils.SuspendDUT(ctx, dut, pxy); err != nil {
 		return errors.Wrap(err, "suspend DUT")

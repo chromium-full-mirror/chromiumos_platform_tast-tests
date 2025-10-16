@@ -110,7 +110,7 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 
 	// Get mount points before turning on External Storage fixture
-	beforeMountPoints, err := utils.RemovableMountPoints(ctx, dut)
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get initial mount points: ", err)
 	}
@@ -151,20 +151,11 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	var afterMountPoints = []string{}
-
-	// Retrieve USB path.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		afterMountPoints, err = utils.GetMountPoints(ctx, dut)
-		if err != nil {
-			return errors.Wrap(err, "failed to get mount point")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: verifyTimeout, Interval: verifyInterval}); err != nil {
-		s.Fatal("Failed to retrieve USB path after plug")
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
+	if err != nil {
+		s.Fatal("Failed to get find new storage mount point: ", err)
 	}
-
-	var mountPoints = utils.FindDifference(afterMountPoints, beforeMountPoints)
+	s.Log("Found following new mount points: ", mountPoints)
 
 	if len(mountPoints) == 0 {
 		s.Fatal("Failed to detect any entry in removable directory")

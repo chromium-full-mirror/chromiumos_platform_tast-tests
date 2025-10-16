@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
@@ -68,12 +67,11 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	mountPointsBeforePlugInUSB, err := utils.RemovableMountPoints(ctx, dut)
+	beforeMountPoints, err := utils.RemovableMountPointsNonBlocking(ctx, dut)
 	if err != nil {
-		s.Fatal("Failed to get mount points prior to plugging in USB devices: ", err)
+		s.Fatal("Failed to get mount points prior to plugging in new USB devices: ", err)
 	}
-
-	s.Log("Following mount points were found prior to plugging in USB devices: ", mountPointsBeforePlugInUSB)
+	s.Log("Mount points prior to plugging in USB devices: ", beforeMountPoints)
 
 	// Plug in the USB devices.
 	tf := s.FixtValue().(*topology.TestFixture)
@@ -111,12 +109,11 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	defer utils.StopAndSaveScreenRecording(cleanupCtx, s, screenRecorder)
 
 	// Retrieve removable block devices' mount points.
-	mountPointsAfterPlugInUSB, err := utils.RemovableMountPoints(ctx, dut)
+	mountPoints, err := utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
 	if err != nil {
-		s.Fatal("Failed to get USB devices after sign-in account: ", err)
+		s.Fatal("Failed to get find new storage mount point: ", err)
 	}
-
-	s.Log("Following mount points were found after plugging in USB devices: ", mountPointsAfterPlugInUSB)
+	s.Log("Found following new mount points: ", mountPoints)
 
 	// Eject all removable block devices.
 	externalStorageSvc := wwcb.NewExternalStorageServiceClient(cl.Conn)
@@ -126,14 +123,10 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	}
 
 	// Check all partitions are unmounted.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, _ := utils.GetMountPoints(ctx, dut)
-		if len(after)-len(mountPointsBeforePlugInUSB) != 0 {
-			return errors.Errorf("unexpected change in the number of USB devices detected after eject; expect: %d, actual: %d (from %d to %d)", len(mountPointsBeforePlugInUSB), len(after), len(mountPointsBeforePlugInUSB), len(after))
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-		s.Fatal("Failed to detect the normal number of devices after eject: ", err)
+	mountPoints, err = utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, false)
+	if len(mountPoints) > 0 {
+		s.Log("Found following new mount points: ", mountPoints)
+		s.Fatal("Unexpected mount points detected after eject; expect: 0, actual: ", len(mountPoints))
 	}
 
 	// Unplug the USB devices.
@@ -153,14 +146,9 @@ func ExternalStorageEject(ctx context.Context, s *testing.State) {
 	}
 
 	// Check all partitions are mounted.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, _ := utils.GetMountPoints(ctx, dut)
-		if len(after)-len(mountPointsBeforePlugInUSB) == 0 {
-			return errors.Errorf("unexpected change in the number of USB devices detected after eject; expect: %d, actual: %d (from %d to %d)", len(mountPointsBeforePlugInUSB), len(after), len(mountPointsBeforePlugInUSB), len(after))
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-		s.Fatal("Failed to detect the normal number of devices after eject: ", err)
+	mountPoints, err = utils.NewRemovableMountPoints(ctx, dut, beforeMountPoints, true)
+	if len(mountPoints) == 0 {
+		s.Fatal("Unexpected change in the number of USB devices detected after eject; expect: > 0 actual: ", len(mountPoints))
 	}
 
 	// Close the Files app.
