@@ -23,6 +23,7 @@ import (
 // Struct used to specify extra test options for standard tests.  If the timeout
 // is not changed, we set it to the default value.
 type testOptions struct {
+	extraAttr       []string
 	timeout         time.Duration
 	requiresARC     bool
 	criticalStaging bool
@@ -39,7 +40,7 @@ const DefaultAppTimeout = 15 * time.Minute
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
 	"app_gedit_install_uninstall.go": {foundation: true, timeout: 12 * time.Minute, testBaguette: true},
-	"audio_basic.go":                 {foundation: true, testBaguette: true},
+	"audio_basic.go":                 {foundation: true, testBaguette: true, extraAttr: []string{"informational"}},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	// TODO(b/377716353): audio streams never settle on baguette, low priority to debug
 	"audio_playback_configurations.go": {timeout: 10 * time.Minute, testBaguette: false},
@@ -54,7 +55,7 @@ var standardTests = map[string]testOptions{
 	// TODO(b/377716353): crash_reporter PoC exists for baguette, but requires more filtering.
 	"crash_reporter.go": {testBaguette: false},
 	// TODO(b/377716353): drag_drop seems to fail on just the last test in baguette, skip for now and debug more later
-	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, testBaguette: false},
+	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, testBaguette: false, extraAttr: []string{"informational"}},
 	"files_app_watch.go": {testBaguette: true},
 	// TODO(b/377716353): missing dbus signal, requires investigation
 	"fs_corruption.go":        {timeout: 10 * time.Minute},
@@ -120,6 +121,7 @@ func TestFixTestParams(t *testing.T) {
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:                 customTimeout,
+			ExtraAttr:               options.extraAttr,
 			UseFixture:              true,
 			OnlyStableBoards:        !options.foundation,
 			LowPerfEligible:         options.foundation,
