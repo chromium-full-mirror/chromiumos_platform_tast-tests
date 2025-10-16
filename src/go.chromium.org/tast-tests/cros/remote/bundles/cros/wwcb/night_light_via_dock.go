@@ -260,10 +260,11 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	for _, test := range []struct {
 		name                  string
 		hotkey                string
+		fallbackHotkey        string
 		colorTemperatureValue string
 	}{
-		{nightLightWarmer, "Search+Right", "100"},
-		{nightLightCooler, "Search+Left", "0"},
+		{nightLightWarmer, "Search+Right", "End", "100"},
+		{nightLightCooler, "Search+Left", "Home", "0"},
 	} {
 		if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: test.hotkey}); err != nil {
 			s.Fatalf("Failed to type %s: %v", test.hotkey, err)
@@ -272,6 +273,18 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 		clrTmpSilderInfo, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsColorTemperatureSliderFinder})
 		if err != nil {
 			s.Fatal("Failed to get node info of color temperature slider: ", err)
+		}
+
+		if clrTmpSilderInfo.NodeInfo.Value != test.colorTemperatureValue {
+			s.Logf("Failed to set color temperature with %s, trying with %s", test.hotkey, test.fallbackHotkey)
+			if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: test.fallbackHotkey}); err != nil {
+				s.Fatalf("Failed to type %s: %v", test.fallbackHotkey, err)
+			}
+
+			clrTmpSilderInfo, err = uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: settingsColorTemperatureSliderFinder})
+			if err != nil {
+				s.Fatal("Failed to get node info of color temperature slider after fallback: ", err)
+			}
 		}
 
 		if clrTmpSilderInfo.NodeInfo.Value != test.colorTemperatureValue {
