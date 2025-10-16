@@ -97,6 +97,16 @@ func init() {
 				},
 			},
 			{
+				Name:      "motionmark1_3_1",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
+				Val: benchmarkcuj.BenchmarkTest{
+					BenchmarkInfo: benchmarkcuj.MotionMark1_3_1Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
 				Name:              "vulkan_motionmark1_3",
 				ExtraAttr:         []string{"group:cuj"},
 				Timeout:           defaultTimeout,

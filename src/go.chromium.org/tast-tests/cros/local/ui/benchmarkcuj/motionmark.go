@@ -44,6 +44,16 @@ var MotionMarkInfo = benchmarkInfo{
 var MotionMark1_3Info = benchmarkInfo{
 	name:           "MotionMark1.3",
 	windowState:    ash.WindowStateFullscreen,
+	benchmarkURL:   "https://chromium-workloads.web.app/motionmark/v1.3/MotionMark/",
+	benchmarkSetUp: SetUpMotionMark,
+	benchmarkRun:   RunMotionMark,
+	benchmarkScore: RetrieveMotionMarkScore,
+}
+
+// MotionMark1_3_1Info contains the information for running MotionMark 1.3.1 Benchmark.
+var MotionMark1_3_1Info = benchmarkInfo{
+	name:           "MotionMark1.3.1",
+	windowState:    ash.WindowStateFullscreen,
 	benchmarkURL:   "https://chromium-workloads.web.app/motionmark/v1.3.1/MotionMark/",
 	benchmarkSetUp: SetUpMotionMark,
 	benchmarkRun:   RunMotionMark,
