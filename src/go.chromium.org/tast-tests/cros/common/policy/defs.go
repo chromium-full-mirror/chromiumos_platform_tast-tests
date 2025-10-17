@@ -28855,7 +28855,6 @@ func (p *DevicePowerBatteryChargingOptimization) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1320. SmartCardConnectAllowedForUrls
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SmartCardConnectAllowedForUrls struct {
 	Stat Status
@@ -28887,7 +28886,6 @@ func (p *SmartCardConnectAllowedForUrls) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1321. SmartCardConnectBlockedForUrls
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SmartCardConnectBlockedForUrls struct {
 	Stat Status
@@ -29708,7 +29706,6 @@ func (p *DeviceLoginScreenFaceGazeEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1355. DefaultSmartCardConnectSetting
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DefaultSmartCardConnectSetting struct {
 	Stat Status
