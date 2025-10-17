@@ -86,7 +86,7 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 	}
 
 	pipeWireSinksPattern := regexp.MustCompile(
-		"[0-9]+\t(alsa-sink|alsa_output.pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+		"[0-9]+\t(alsa-sink|alsa_output.(platform-[0-9]+.pci-)?pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 	pulseAudioSinksPattern := regexp.MustCompile(
 		"1\talsa_output.hw_0_0\tmodule-alsa-sink.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
 
@@ -129,7 +129,7 @@ func AudioBasic(ctx context.Context, s *testing.State) {
 
 	s.Log("List PulseAudio sources")
 	pipeWireSourcesPattern := regexp.MustCompile(
-		"[0-9]+\t(alsa-source|alsa_input.pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
+		"[0-9]+\t(alsa-source|alsa_input.(platform-[0-9]+.pci-)?pci-[0-9_.]*stereo-fallback)\tPipeWire\t(s16le|s32le) 2ch 48000Hz\t(IDLE|SUSPENDED)\n")
 	pulseAudioSourcesPattern := regexp.MustCompile(
 		"[0-9]+\talsa_input.hw_0_0\tmodule-alsa-source.c\ts16le 2ch (44100|48000)Hz\t(IDLE|SUSPENDED)\n")
 
