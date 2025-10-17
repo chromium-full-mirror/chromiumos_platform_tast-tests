@@ -19,7 +19,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// TODO(b/452850643): Remove devices when issues are fixed
+var browserPlayUnstableModels = []string{
+	"fizz-cfm", "kalista-cfm",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -42,6 +48,13 @@ func init() {
 			),
 		)}.Instance(),
 		Data: []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(browserPlayUnstableModels...)),
+		}, {
+			Name:              "unstable_model",
+			ExtraHardwareDeps: hwdep.D(hwdep.Model(browserPlayUnstableModels...)),
+			ExtraAttr:         []string{"informational"},
+		}},
 	})
 }
 
