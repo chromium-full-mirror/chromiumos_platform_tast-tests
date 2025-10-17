@@ -381,6 +381,9 @@ func StopAndSaveScreenRecording(ctx context.Context, s *testing.State, screenRec
 
 	destPath := filepath.Join(s.OutDir(), filepath.Base(stopRes.FileName))
 	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), stopRes.FileName, destPath, linuxssh.DereferenceSymlinks); err != nil {
-		s.Fatal("Failed to copy screen recording to logs location: ", err)
+		// TODO b/452666468 - not critical to test validation so ignore errors for now
+		// future improvement might be to use the cros/local/chrome/uiauto/screen_recorder.go
+		// implementation instead of PASIT specific one.
+		s.Log("WARNING: Failed to copy screen recording to logs location: ", err)
 	}
 }
