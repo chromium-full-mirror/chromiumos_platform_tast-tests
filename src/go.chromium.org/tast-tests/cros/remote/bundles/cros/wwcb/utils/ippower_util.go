@@ -91,7 +91,11 @@ func SetRPM(ctx context.Context, rpm *labapi.RPM, enabled bool) error {
 	if rpm.Type != labapi.RPMType_RPM_TYPE_IP9850 {
 		return errors.Errorf("invalid RPM type %v", rpm)
 	}
-	address := fmt.Sprintf("%s:%d", rpm.PowerUnitHostname.Address, rpm.PowerUnitHostname.Port)
+	address := rpm.PowerUnitHostname.Address
+	if rpm.PowerUnitHostname.Port != 0 {
+		// only use port if it is set in proto otherwise just use the address field
+		address = fmt.Sprintf("%s:%d", rpm.PowerUnitHostname.Address, rpm.PowerUnitHostname.Port)
+	}
 	port, err := strconv.Atoi(rpm.PowerUnitOutlet)
 	if err != nil {
 		return errors.Wrapf(err, "RPM has invalid port must be an integer: %v", rpm)
