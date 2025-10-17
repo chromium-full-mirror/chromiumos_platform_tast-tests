@@ -54,6 +54,8 @@ func ECChargerHpb(ctx context.Context, s *testing.State) {
 	defer func() {
 		s.Log("Reconnect to charger on test end")
 		// Restore servo to default charging
+		h.Servo.SetString(ctx, "usbc_pr", "20")
+		h.Servo.SetString(ctx, "servo_dts_mode", "on")
 		h.Servo.SetString(ctx, "servo_pd_role", "src")
 
 		if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
