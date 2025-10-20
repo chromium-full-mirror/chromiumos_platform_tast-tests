@@ -32,8 +32,8 @@ const (
 
 // Console Regular expressions.
 var (
-	// Regex to check if access denied shows up in the command output
-	accessDeniedRE = regexp.MustCompile(`(?i)access denied`)
+	// AccessDeniedRE is the regex to check if access denied shows up in the command output
+	AccessDeniedRE = regexp.MustCompile(`(?i)access denied`)
 	// Regex to extract CCD states and resolve `Default` states to their true states.
 	capDefaultRE = regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y\-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y\-]\s[0-3]=([A-Za-z]+))`)
 	// Regex to extract CCD level from the ccd ouutput
@@ -524,7 +524,7 @@ func (i *CrOSImage) runCommand(ctx context.Context, cmd string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to execute `"+cmd+"`")
 	}
-	if accessDeniedRE.MatchString(output) {
+	if AccessDeniedRE.MatchString(output) {
 		return errors.Wrap(err, "got access denied when trying to run `"+cmd+"`")
 	}
 	return nil

@@ -7,6 +7,7 @@ package gscdevboard
 import (
 	"context"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +15,12 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/testing"
+)
+
+var (
+	// These commands require some special handling. Skip them. They're both
+	// restricted, so they'll only run when the console is unlocked
+	skipCommandRE = regexp.MustCompile(`(reboot|i2cscan)`)
 )
 
 const (
@@ -89,6 +96,41 @@ func GSCHelp(ctx context.Context, s *testing.State) {
 	if len(extra) != 0 {
 		s.Errorf("extra commands: %s", extra)
 	}
+	err = i.TestlabOpen(ctx)
+	th.MustSucceed(err, "Failed to open CCD")
+	err = i.SetCCDCapability(ctx, ti50.GscFullConsole, ti50.CapIfOpened)
+	th.MustSucceed(err, "Failed to set capability")
+	err = i.CCDLock(ctx)
+	th.MustSucceed(err, "Failed to open CCD")
+	for j, command := range actualCommands {
+		expectRestricted := strings.HasPrefix(command, "-")
+		if isRestricted, out, err := commandIsBlocked(ctx, i, command); err != nil {
+			s.Errorf("Error running %s: %+v", command, err)
+		} else if isRestricted {
+			if expectRestricted {
+				s.Logf("%s is restricted", command)
+			} else {
+				s.Errorf("%d %s is restricted: %s", j, command, out)
+			}
+		} else if expectRestricted {
+			s.Errorf("%d %s is not restricted", j, command)
+		}
+	}
+	err = i.TestlabOpen(ctx)
+	th.MustSucceed(err, "Failed to open CCD")
+	for j, command := range actualCommands {
+		if skipCommandRE.MatchString(command) {
+			s.Logf("skip %s command", command)
+			continue
+		}
+		if isRestricted, out, err := commandIsBlocked(ctx, i, command); err != nil {
+			s.Errorf("Error running %s: %+v", command, err)
+		} else if isRestricted {
+			s.Errorf("%d %s is restricted with ccd unlocked: %s", j, command, out)
+		} else {
+			s.Logf("%s ok", command)
+		}
+	}
 }
 
 func commandDifference(expectedCommands, commands []string) (extra, missing []string) {
@@ -116,4 +158,13 @@ func commandDifference(expectedCommands, commands []string) (extra, missing []st
 		}
 	}
 	return
+}
+
+func commandIsBlocked(ctx context.Context, i *ti50.CrOSImage, command string) (bool, string, error) {
+	command = strings.TrimLeft(command, "-")
+	out, err := i.Command(ctx, command)
+	if err != nil {
+		return false, "", err
+	}
+	return ti50.AccessDeniedRE.MatchString(out), out, nil
 }
