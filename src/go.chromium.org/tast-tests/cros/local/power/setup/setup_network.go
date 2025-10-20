@@ -198,3 +198,23 @@ func waitForEthernet(ctx context.Context) error {
 	testing.ContextLog(ctx, "Wait for ethernet took: ", time.Since(start))
 	return nil
 }
+
+// ensureEthernetConnectedFor ensures that Ethernet remains connected continuously
+// for at least the specified duration within the given timeout period.
+func ensureEthernetConnectedFor(ctx context.Context, duration, timeout time.Duration) error {
+	if err := waitForEthernet(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for an ethernet service")
+	}
+	timer := time.Now()
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if time.Since(timer) >= duration {
+			return nil
+		}
+		if !IsEthernetConnected(ctx) {
+			// Reset timer until the ethernet gets connected.
+			timer = time.Now()
+			return errors.New("ethernet is not connected")
+		}
+		return errors.Errorf("still waiting for the ethernet connected for %v", duration)
+	}, &testing.PollOptions{Interval: time.Second, Timeout: timeout})
+}

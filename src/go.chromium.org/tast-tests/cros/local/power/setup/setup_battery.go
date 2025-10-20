@@ -142,6 +142,12 @@ func DisableBatteryCharging(ctx context.Context) error {
 // It disables all multicast after the preparation and returns a cleanup function.
 // TODO(b/432384910, b/445765922): Remove multicast actions after the USB reconnect issue got fixed.
 func Battery(ctx context.Context, total time.Duration, discharge bool) (CleanupCallback, error) {
+	const (
+		testDurationThreshold = 20 * time.Minute
+		ethernetDuration      = 5 * time.Second
+		ethernetTimeout       = 30 * time.Second
+	)
+
 	cleanup := func(context.Context) error { return nil }
 	if !discharge {
 		return cleanup, nil
@@ -152,7 +158,7 @@ func Battery(ctx context.Context, total time.Duration, discharge bool) (CleanupC
 
 	// For tests that take more than 20 minutes, make sure the device has at least
 	// 50% of battery.
-	if total >= 20*time.Minute {
+	if total >= testDurationThreshold {
 		testing.ContextLogf(ctx, "Prepare the device to have at least %.2f%% battery", power.RegressionTestChargeParam.MinChargePercentage)
 		if err := PrepareBattery(ctx, power.RegressionTestChargeParam); err != nil {
 			return cleanup, errors.Wrap(err, "failed to prepare battery")
@@ -161,8 +167,10 @@ func Battery(ctx context.Context, total time.Duration, discharge bool) (CleanupC
 	if !isEthernetConnected {
 		return cleanup, nil
 	}
-	if err := waitForEthernet(ctx); err != nil {
-		return cleanup, errors.Wrap(err, "failed to wait for ethernet")
+	// The USB may not immediately disconnected after preparing the battery.
+	// Make sure the ethernet is connected for specified duration before applying the actions.
+	if err := ensureEthernetConnectedFor(ctx, ethernetDuration, ethernetTimeout); err != nil {
+		return cleanup, errors.Wrap(err, "failed to ensure ethernet is connected")
 	}
 	return DisableAllMulticast(ctx)
 
