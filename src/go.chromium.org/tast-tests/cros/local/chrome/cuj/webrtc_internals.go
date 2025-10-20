@@ -40,7 +40,7 @@ var (
 	createDumpSectionReg                    = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
 	createDumpSection                       = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
 	webRTCRootWebArea                       = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
-	webRTCDownloadButton                    = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
+	webRTCDownloadButton                    = nodewith.Name("Download the \"webrtc-internals dump\"").Role(role.Button).Ancestor(webRTCRootWebArea)
 	createDiagnosticAudioRecordingsSection  = nodewith.Name("Create diagnostic audio recordings").Role(role.DisclosureTriangle)
 	enableDiagnosticAudioRecordingsCheckbox = nodewith.Name("Enable diagnostic audio recordings").Role(role.CheckBox)
 )
