@@ -155,6 +155,19 @@ func verifyRuntimeHWIDFileContent(ctx context.Context, d *dut.DUT, fileContent s
 	if checksum != expectedChecksum {
 		return errors.Errorf("checksum mismatch: got %q, want %q", checksum, expectedChecksum)
 	}
+
+	cmd := []string{
+		"runtime_hwid_tool", "get", "--verbosity=1",
+	}
+	out, err := d.Conn().CommandContext(ctx, cmd[0], cmd[1:]...).Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to invoke runtime_hwid_tool")
+	}
+	runtimeHwidToolOut := strings.TrimSpace(string(out))
+	if runtimeHwidToolOut != runtimeHwid {
+		return errors.Errorf("runtime_hwid_tool output mismatch: got %q, want %q", runtimeHwidToolOut, runtimeHwid)
+	}
+
 	return nil
 }
 

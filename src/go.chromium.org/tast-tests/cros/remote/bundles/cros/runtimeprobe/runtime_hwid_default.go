@@ -6,6 +6,7 @@ package runtimeprobe
 
 import (
 	"context"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/runtimeprobe/utils"
@@ -49,5 +50,24 @@ func RuntimeHWIDDefault(ctx context.Context, s *testing.State) {
 	// Checks that the Runtime HWID file doesn't exist on DUT.
 	if err := d.Conn().CommandContext(ctx, "test", "-f", runtimeHWIDFilePath).Run(); err == nil {
 		s.Fatalf("File %q exists after reboot", runtimeHWIDFilePath)
+	}
+
+	cmd := []string{
+		"runtime_hwid_tool", "get", "--verbosity=1",
+	}
+	out, err := d.Conn().CommandContext(ctx, cmd[0], cmd[1:]...).Output()
+	if err != nil {
+		s.Fatal("Failed to invoke runtime_hwid_tool: ", err)
+	}
+	runtimeHwidToolOut := strings.TrimSpace(string(out))
+
+	out, err = d.Conn().CommandContext(ctx, "crossystem", "hwid").Output()
+	if err != nil {
+		s.Fatal("Failed to run \"crossystem hwid\": ", err)
+	}
+	factoryHwid := strings.TrimSpace(string(out))
+
+	if runtimeHwidToolOut != factoryHwid {
+		s.Fatalf("runtime_hwid_tool output mismatch: got %q, want %q", runtimeHwidToolOut, factoryHwid)
 	}
 }
