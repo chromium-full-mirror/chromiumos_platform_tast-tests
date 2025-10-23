@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
@@ -63,7 +64,7 @@ var (
 type Element struct {
 	ele      *element.Element
 	tconn    *chrome.TestConn
-	username string
+	creds    credconfig.Creds
 	roomName string
 }
 
@@ -99,11 +100,11 @@ func ParseElementAPKURL(ctx context.Context, testCaseVar func(string) (string, b
 }
 
 // NewElement returns a new Element object.
-func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, username, apkURL string) *Element {
+func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, creds credconfig.Creds, apkURL string) *Element {
 	return &Element{
-		ele:      element.New(tconn, kb, a, d, apkURL),
-		tconn:    tconn,
-		username: username,
+		ele:   element.New(tconn, kb, a, d, apkURL),
+		tconn: tconn,
+		creds: creds,
 	}
 }
 
@@ -132,7 +133,7 @@ func (e *Element) SetUp(ctx context.Context) error {
 	if err := apputil.DismissMobilePrompt(ctx, e.tconn); err != nil {
 		return errors.Wrap(err, "failed to dismiss mobile prompt")
 	}
-	if err := e.ele.Login(ctx, e.username); err != nil {
+	if err := e.ele.Login(ctx, e.creds); err != nil {
 		return errors.Wrap(err, "failed to login to the Element app")
 	}
 

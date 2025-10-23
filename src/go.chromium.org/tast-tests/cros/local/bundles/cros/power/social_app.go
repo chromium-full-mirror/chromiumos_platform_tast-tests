@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -98,12 +97,6 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	splitAccount := strings.Split(cr.Creds().User, "@")
-	if len(splitAccount) < 1 {
-		s.Fatal("Failed to get username from the account: ", cr.Creds().User)
-	}
-	username := splitAccount[0]
-
 	apkURL, err := socialapp.ParseElementAPKURL(ctx, s.Var)
 	if err != nil {
 		// If the DUT failed to parse the APK URL, the returned |apkURL| would be empty.
@@ -111,7 +104,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		// the app from Play Store in this case.
 		s.Log("Failed to parse Element APK URL: ", err)
 	}
-	app := socialapp.NewElement(tconn, kb, a, d, username, apkURL)
+	app := socialapp.NewElement(tconn, kb, a, d, cr.Creds(), apkURL)
 
 	batteryCleanup, err := setup.Battery(ctx, socialAppOperatingTimeout, discharge)
 	if err != nil {

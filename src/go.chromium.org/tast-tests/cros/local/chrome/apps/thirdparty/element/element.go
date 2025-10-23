@@ -8,10 +8,11 @@ package element
 import (
 	"context"
 	"fmt"
-	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
@@ -111,7 +112,7 @@ func (e *Element) Close(ctx context.Context) error {
 
 // Login logs in to Element app with Google account.
 // It will create an account if the account has not been created.
-func (e *Element) Login(ctx context.Context, username string) error {
+func (e *Element) Login(ctx context.Context, creds credconfig.Creds) error {
 	haveAccountButton := e.d.Object(ui.Text("SIGN IN"), ui.ResourceID(elementIDPrefix+"loginSplashAlreadyHaveAccount"))
 	continueButton := e.d.Object(ui.Text("Continue"), ui.ClassName(buttonClass))
 	if err := uiauto.NamedCombine("login to Element app",
@@ -123,8 +124,8 @@ func (e *Element) Login(ctx context.Context, username string) error {
 		return err
 	}
 
-	if err := e.loginWithGoogle(ctx, username); err != nil {
-		return errors.Wrap(err, "failed to login with Google")
+	if err := e.loginWithGaiaAccount(creds)(ctx); err != nil {
+		return errors.Wrap(err, "failed to login with Gaia account")
 	}
 
 	const waitingStatusTextID = elementIDPrefix + "waitingStatusText"
@@ -145,87 +146,43 @@ func (e *Element) Login(ctx context.Context, username string) error {
 	)(ctx)
 }
 
-// loginWithGoogle completes the login flow with Google account.
-func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
-	if err := e.waitForLoginWindowMaximized(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for login window maximized")
-	}
+// loginWithGaiaAccount completes the login flow with Gaia account.
+func (e *Element) loginWithGaiaAccount(creds credconfig.Creds) uiauto.Action {
+	email := creds.User
+	usernameOrEmailField := nodewith.Name("Username or Email").Role(role.TextField)
+	emailText := nodewith.Name(email).Role(role.StaticText).Ancestor(usernameOrEmailField)
+	setEmail := uiauto.NamedCombine("set email as "+email,
+		e.ui.DoDefaultUntil(usernameOrEmailField,
+			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(usernameOrEmailField.Focused()),
+		),
+		e.kb.TypeAction(email),
+		e.ui.WaitUntilExists(emailText),
+	)
 
-	continueWithGoogleLink := nodewith.Name("Continue with Google").Role(role.Link)
-
-	userLinkRegexp := regexp.MustCompile(fmt.Sprintf("%s@gmail.com$", username))
-	userLink := nodewith.NameRegex(userLinkRegexp).Role(role.Link)
+	password := creds.Pass
+	passwordField := nodewith.Name("Password").Role(role.TextField)
+	hiddenPassword := strings.Repeat("•", len(password))
+	passwordText := nodewith.Name(hiddenPassword).Role(role.StaticText).Ancestor(passwordField)
+	setPassword := uiauto.NamedCombine("set password",
+		e.ui.DoDefaultUntil(passwordField,
+			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(passwordField.Focused()),
+		),
+		e.kb.TypeAction(password),
+		e.ui.WaitUntilExists(passwordText),
+	)
 
 	continueButton := nodewith.Name("Continue").Role(role.Button)
-	createAccountButton := nodewith.Name("Create Account").Role(role.Button)
-
-	// These two UI nodes are not directly interacted with by the script (e.g., via clicks);
-	// instead, they are used to indicate the current state of the login flow.
-	signInHeading := nodewith.Name("Sign in to matrix.org").Role(role.Heading)
-	allowAccessHeading := nodewith.Name("Allow access to your account?").Role(role.Heading)
-
-	loginUICandidates := []*nodewith.Finder{
-		continueWithGoogleLink,
-		userLink,
-		createAccountButton,
-		signInHeading,
-		allowAccessHeading,
-	}
-
-	for {
-		// It may have different subsequent UI operations depending on whether the
-		// account has been authorized, so check all possible UIs first and then
-		// decide on the next UI operation.
-		foundNode, err := e.ui.FindAnyExists(ctx, loginUICandidates...)
-		if err != nil {
-			return errors.Wrap(err, "failed to find any UI related to an unauthorized account")
-		}
-
-		switch foundNode {
-		// Consecutive logins allow the user to skip selecting a different
-		// third-party login option.
-		case continueWithGoogleLink:
-			if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
-				continueWithGoogleLink,
-				e.ui.WithTimeout(longUITimeout).WaitUntilGone(continueWithGoogleLink),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click on the continue with google link")
-			}
-
-		// Sometimes it requires to select the google account.
-		case userLink:
-			if err := e.ui.WithTimeout(loadTimeout).DoDefaultUntil(
-				userLink,
-				e.ui.WithTimeout(longUITimeout).WaitUntilAnyExists(signInHeading, createAccountButton, allowAccessHeading),
-			)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the user link to select an user")
-			}
-
-		// Sometimes the account would forget the permission of the element app.
-		// Re-grant the permission for the app by clicking the continue button.
-		case signInHeading:
-			if err := e.ui.DoDefault(continueButton)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click continue button")
-			}
-
-		case createAccountButton:
-			return e.createAccount(username)(ctx)
-
-		case allowAccessHeading:
-			return e.ui.DoDefault(continueButton)(ctx)
-
-		default:
-			return errors.New("unexpected UI state")
-		}
-
-		// Remove the detected UI from the list to avoid unexpected behavior.
-		for i := range loginUICandidates {
-			if loginUICandidates[i] == foundNode {
-				loginUICandidates = append(loginUICandidates[:i], loginUICandidates[i+1:]...)
-				break
-			}
-		}
-	}
+	allowAccessText := nodewith.Name("Allow access to your account?").Role(role.StaticText)
+	return uiauto.NamedCombine("sign in with Gaia account",
+		e.waitForLoginWindowMaximized,
+		setEmail,
+		setPassword,
+		e.ui.DoDefault(continueButton),
+		e.ui.WaitUntilExists(allowAccessText),
+		e.ui.DoDefaultUntil(continueButton,
+			e.ui.WaitUntilGone(allowAccessText),
+		),
+	)
 }
 
 // waitForLoginWindowMaximized activates and maximizes the login window.

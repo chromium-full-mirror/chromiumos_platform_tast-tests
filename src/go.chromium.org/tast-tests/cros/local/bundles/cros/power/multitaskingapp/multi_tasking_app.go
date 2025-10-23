@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/utils"
@@ -127,12 +126,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		}
 	}(cleanupCtx)
 
-	splitAccount := strings.Split(cr.Creds().User, "@")
-	if len(splitAccount) < 1 {
-		return errors.Wrapf(err, "failed to get username from the account: %s", cr.Creds().User)
-	}
-	username := splitAccount[0]
-	socialApp := socialapp.NewElement(tconn, kb, a, d, username, elementAPKURL)
+	socialApp := socialapp.NewElement(tconn, kb, a, d, cr.Creds(), elementAPKURL)
 	if err := socialApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install social app")
 	}
