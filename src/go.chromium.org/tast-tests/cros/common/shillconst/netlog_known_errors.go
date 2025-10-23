@@ -25,6 +25,13 @@ func InitializeAllowedEntries() []AllowedEntry {
 		// The "dhcpcd is not running" error comes from stopping an already stopped
 		// dhcpcd client, which may occur in the test's context.
 		{"dhcpcd", "", "dhcpcd is not running", 0},
+		// (b/453835944) When shill exits, the running dhcpcd is also killed. During
+		// this process, dhcpcd will send out events like "STOP" and "STOPPED". If
+		// those events arrive after shill exits, the "NotifyDHCPEvent doesn't exist"
+		// error log will be triggered, so this error log is an intended behavior.
+		{"dhcpcd-script", "dbus_method_invoker.h", `.*Method "NotifyDHCPEvent" with signature "a{ss}" on interface "org\.chromium\.flimflam\.Manager" doesn't exist.*`, 0},
+		{"dhcpcd-script", "dhcpcd_script.cc", `.*Method "NotifyDHCPEvent" with signature "a{ss}" on interface "org\.chromium\.flimflam\.Manager" doesn't exist.*`, 0},
+		{"dhcpcd-script", "object_proxy.cc", `.*Method "NotifyDHCPEvent" with signature "a{ss}" on interface "org\.chromium\.flimflam\.Manager" doesn't exist.*`, 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get connected service properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for the default service.*", 0},
@@ -64,19 +71,19 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"shill", "http_request.cc", ".*Failed to start DNS client.*", 0},                                                         // b/211000413
 		// This can be triggered during portal detection, which can be transient issue on the lab network.
 		{"shill", "http_transport_curl.cc", ".*Domain=curl_easy_error, Code=28, Message=Timeout was reached.*", 0},
-		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.ClearDNSProxyAddresses.*", 0}, // b/239574927
-		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.GetProperties.*", 0},          // b/239574927
-		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.SetDNSProxyAddresses.*", 0},   // b/299130808
-		{"dnsproxyd", "client.cc", ".*Unable to get shill Manager properties.*", 0},                                 // b/239574927
-		{"shill", "netlink_manager.cc", ".*OnNetlinkMessageError.*Device or resource busy.*", 0},                    // b/239582086
-		{"shill", "network.cc", ".*IP flag write failed:.*", 0},                                                     // b/243403055
-		{"shill", "object_proxy.cc", ".*Failed to call method: fi.w1.wpa_supplicant1.CreateInterface.*", 0},         // b/215373366
-		{"shill", "object_proxy.cc", ".*Failed to call method: fi.w1.wpa_supplicant1.Interface.Scan.*", 0},          // b/215373366
-		{"shill", "object_proxy.cc", ".*Failed to call method: org.chromium.PatchPanel.GetTrafficCounters.*", 0},    // b/215373366
-		{"shill", "object_proxy.cc", ".*Failed to call method: org.chromium.dhcpcd.Release.*", 0},                   // b/215373366
-		{"shill", "object_proxy.cc", ".*Failed to call method: org.freedesktop.DBus.Properties.GetAll.*", 0},        // b/215373366
-		{"shill", "portal_detector.cc", ".*HTTP probe failed to start.*", 0},                                        // b/213611282
-		{"shill", "upstart_proxy.cc", ".*Error.AlreadyStarted Job is already running: shill-event", 0},              // b/213930243
+		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.ClearDNSProxyAddresses.*", 0},                         // b/239574927
+		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.GetProperties.*", 0},                                  // b/239574927
+		{"dnsproxyd", "object_proxy.cc", ".*Failed to call method: .*flimflam.Manager.SetDNSProxyAddresses.*", 0},                           // b/299130808
+		{"dnsproxyd", "client.cc", ".*Unable to get shill Manager properties.*", 0},                                                         // b/239574927
+		{"shill", "netlink_manager.cc", ".*OnNetlinkMessageError.*Device or resource busy.*", 0},                                            // b/239582086
+		{"shill", "network.cc", ".*IP flag write failed:.*", 0},                                                                             // b/243403055
+		{"shill", "object_proxy.cc", ".*Failed to call method: fi.w1.wpa_supplicant1.CreateInterface.*", 0},                                 // b/215373366
+		{"shill", "object_proxy.cc", ".*Failed to call method: fi.w1.wpa_supplicant1.Interface.Scan.*", 0},                                  // b/215373366
+		{"shill", "object_proxy.cc", ".*Failed to call method: org.chromium.PatchPanel.GetTrafficCounters.*", 0},                            // b/215373366
+		{"shill", "object_proxy.cc", ".*Failed to call method: org.chromium.dhcpcd.Release.*", 0},                                           // b/215373366
+		{"shill", "object_proxy.cc", ".*Failed to call method: org.freedesktop.DBus.Properties.GetAll.*", 0},                                // b/215373366
+		{"shill", "portal_detector.cc", ".*HTTP probe failed to start.*", 0},                                                                // b/213611282
+		{"shill", "upstart_proxy.cc", ".*Error.AlreadyStarted Job is already running: shill-event", 0},                                      // b/213930243
 		{"shill", "utils.cc", ".*AddDBusError.*com.ubuntu.Upstart0_6.Error.AlreadyStarted, Message=Job is already running: shill-event", 0}, // b/413715354
 		// Need to try to get more info about these:
 		// {"shill", "unknown", ".*", 0},
