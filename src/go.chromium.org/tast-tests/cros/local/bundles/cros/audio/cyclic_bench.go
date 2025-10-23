@@ -101,7 +101,9 @@ var cyclicBenchUnstableModels = []string{
 	// elm(b/428662054)
 	"elm",
 	// corsola(b/423801869)
-	"corsola", "staryu",
+	"chinchou", "chinchou360", "keldeo", "kyogre", "ponyta", "ponyta360", "rusty", "skitty", "squirtle", "steelix", "tentacruel", "veluza", "voltorb",
+	// staryu(b/423801869)
+	"starmie", "wugtrio", "wyrdeer",
 }
 
 func init() {
