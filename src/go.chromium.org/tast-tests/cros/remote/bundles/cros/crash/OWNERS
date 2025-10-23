@@ -1,5 +1,6 @@
 include /src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
 
+per-file kdump.go=jiejiang@chromium.org
 per-file kernel_crash.go=tfiga@chromium.org
 per-file watchdog_crash.go=tfiga@chromium.org
 per-file pstore_ecc_check.go=tfiga@chromium.org, naoyatezuka@google.com

@@ -1,0 +1,4 @@
+include chromiumos/owners:v1:/kernel/OWNERS.kdump
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
