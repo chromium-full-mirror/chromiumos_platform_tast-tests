@@ -6,8 +6,10 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -68,4 +70,9 @@ func RestartIcon(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch terminal after shutdown: ", err)
 	}
 
+	if strings.Contains(s.TestName(), "baguette") {
+		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
+			s.Fatal("Failed to exit Terminal window: ", err)
+		}
+	}
 }
