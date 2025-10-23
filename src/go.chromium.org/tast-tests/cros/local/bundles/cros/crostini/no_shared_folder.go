@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -31,6 +32,11 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -50,7 +56,13 @@ func NoSharedFolder(ctx context.Context, s *testing.State) {
 
 	// Check list of shared folders in Settings app.
 	sharedFolders := sharedfolders.NewSharedFolders(tconn)
-	if err := sharedFolders.CheckNoSharedFolders(cont, cr)(ctx); err != nil {
-		s.Fatal("Failed to check shared folders list by default: ", err)
+	if strings.Contains(s.TestName(), "baguette") {
+		if err := sharedFolders.CheckNoSharedFoldersBaguette(cont, cr)(ctx); err != nil {
+			s.Fatal("Failed to check shared folders list by default: ", err)
+		}
+	} else {
+		if err := sharedFolders.CheckNoSharedFolders(cont, cr)(ctx); err != nil {
+			s.Fatal("Failed to check shared folders list by default: ", err)
+		}
 	}
 }

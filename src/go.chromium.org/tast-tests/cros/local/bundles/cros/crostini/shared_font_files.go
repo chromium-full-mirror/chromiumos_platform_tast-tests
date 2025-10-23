@@ -45,6 +45,16 @@ func SharedFontFiles(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
 	cont := pre.Cont
 
+	if strings.Contains(s.TestName(), "baguette") {
+		s.Log("Installing cros-host-fonts")
+		if err := cont.Command(ctx, "sudo", "apt-get", "update").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to run apt-update: ", err)
+		}
+		if err := cont.Command(ctx, "sudo", "apt-get", "-y", "install", "cros-host-fonts").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to install cros-host-fonts: ", err)
+		}
+	}
+
 	const sharedFonts = "/usr/share/fonts/chromeos"
 	s.Log("1. Verifying mounted fonts dir exists")
 

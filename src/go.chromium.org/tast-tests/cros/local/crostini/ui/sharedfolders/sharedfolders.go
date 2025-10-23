@@ -22,19 +22,25 @@ import (
 
 // Folder sharing strings.
 const (
-	ManageLinuxSharing     = "Manage Linux sharing"
-	ShareWithLinux         = `Share with Linux`
-	DialogName             = "Share folder with Linux"
-	MountPath              = "/mnt/chromeos"
-	MountFolderMyFiles     = "MyFiles"
-	MountPathMyFiles       = MountPath + "/" + MountFolderMyFiles
-	MountFolderGoogleDrive = "GoogleDrive"
-	MountPathGoogleDrive   = MountPath + "/" + MountFolderGoogleDrive
-	MountFolderMyDrive     = "MyDrive"
-	MountPathMyDrive       = MountPathGoogleDrive + "/" + MountFolderMyDrive
-	MountPathDownloads     = MountPathMyFiles + "/" + filesapp.Downloads
-	MountFolderPlay        = "PlayFiles"
-	MountPathPlay          = MountPath + "/" + MountFolderPlay
+	ManageLinuxSharing           = "Manage Linux sharing"
+	ShareWithLinux               = `Share with Linux`
+	DialogName                   = "Share folder with Linux"
+	MountPath                    = "/mnt/chromeos"
+	BaguetteMountPath            = "/mnt/shared"
+	MountFolderMyFiles           = "MyFiles"
+	MountPathMyFiles             = MountPath + "/" + MountFolderMyFiles
+	BaguetteMountPathMyFiles     = BaguetteMountPath + "/" + MountFolderMyFiles
+	MountFolderGoogleDrive       = "GoogleDrive"
+	MountPathGoogleDrive         = MountPath + "/" + MountFolderGoogleDrive
+	BaguetteMountPathGoogleDrive = BaguetteMountPath + "/" + MountFolderGoogleDrive
+	MountFolderMyDrive           = "MyDrive"
+	MountPathMyDrive             = MountPathGoogleDrive + "/" + MountFolderMyDrive
+	BaguetteMountPathMyDrive     = BaguetteMountPathGoogleDrive + "/" + MountFolderMyDrive
+	MountPathDownloads           = MountPathMyFiles + "/" + filesapp.Downloads
+	BaguetteMountPathDownloads   = BaguetteMountPathMyFiles + "/" + filesapp.Downloads
+	MountFolderPlay              = "PlayFiles"
+	MountPathPlay                = MountPath + "/" + MountFolderPlay
+	BaguetteMountPathPlay        = BaguetteMountPath + "/" + MountFolderPlay
 )
 
 // Strings for sharing My files.
@@ -212,6 +218,40 @@ func (sf *SharedFolders) CheckNoSharedFolders(cont *vm.Container, cr *chrome.Chr
 				return err
 			} else if len(list) != 1 || list[0] != "fonts" {
 				return errors.Errorf("failed to verify the folders in /mnt/chromeos, got %q, want [fonts]", list)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to verify file list in container")
+		}
+
+		return nil
+	}
+}
+
+// CheckNoSharedFoldersBaguette checks there are no folders listed in the Managed shared folders page (for baguette guest)
+func (sf *SharedFolders) CheckNoSharedFoldersBaguette(cont *vm.Container, cr *chrome.Chrome) uiauto.Action {
+	return func(ctx context.Context) error {
+		s, err := settings.OpenLinuxSettings(ctx, sf.tconn, cr, settings.ManageSharedFolders)
+		if err != nil {
+			return errors.Wrap(err, "failed to find Manage shared folders")
+		}
+		defer s.Close(ctx)
+
+		sharedFoldersList, err := s.GetSharedFolders(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the shared folders list")
+		}
+		if sharedFoldersList != nil {
+			return errors.Errorf("failed to verify the shared folders list: got %s, want []", sharedFoldersList)
+		}
+
+		// Check no shared folders mounted in the container.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			list, err := cont.GetFileList(ctx, BaguetteMountPath)
+			if err != nil {
+				return err
+			} else if len(list) != 1 || list[0] != "fonts" {
+				return errors.Errorf("failed to verify the folders in /mnt/shared, got %q, want [fonts]", list)
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {

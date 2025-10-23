@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/listset"
@@ -37,6 +38,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -76,12 +82,12 @@ func ShareDownloads(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to share Downloads with Crostini: ", err)
 	}
 
-	if err := checkShareDownloadsResults(ctx, tconn, cont, cr); err != nil {
+	if err := checkShareDownloadsResults(ctx, tconn, cont, cr, s.TestName()); err != nil {
 		s.Fatal("Failed to check share results after sharing Downloads: ", err)
 	}
 }
 
-func checkShareDownloadsResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, cr *chrome.Chrome) error {
+func checkShareDownloadsResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, cr *chrome.Chrome, tn string) error {
 	// Check shared folders on the Settings app.
 	s, err := settings.OpenLinuxSettings(ctx, tconn, cr, settings.ManageSharedFolders)
 	if err != nil {
@@ -100,7 +106,12 @@ func checkShareDownloadsResults(ctx context.Context, tconn *chrome.TestConn, con
 
 	// Check the file list in the container.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		list, err := cont.GetFileList(ctx, sharedfolders.MountPath)
+		var list []string
+		if strings.Contains(tn, "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPath)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPath)
+		}
 		if err != nil {
 			return err
 		}
@@ -108,7 +119,11 @@ func checkShareDownloadsResults(ctx context.Context, tconn *chrome.TestConn, con
 			return err
 		}
 
-		list, err = cont.GetFileList(ctx, sharedfolders.MountPathMyFiles)
+		if strings.Contains(tn, "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPathMyFiles)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPathMyFiles)
+		}
 		if err != nil {
 			return err
 		}

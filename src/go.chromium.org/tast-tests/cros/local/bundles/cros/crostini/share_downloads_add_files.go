@@ -40,6 +40,11 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -108,7 +113,12 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 	// This step is necessary, without this step,
 	// the following test will fail because it runs faster than mounting.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		list, err := cont.GetFileList(ctx, sharedfolders.MountPath)
+		var list []string
+		if strings.Contains(s.TestName(), "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPath)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPath)
+		}
 		if err != nil {
 			return err
 		}
@@ -116,7 +126,11 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 			return err
 		}
 
-		list, err = cont.GetFileList(ctx, sharedfolders.MountPathMyFiles)
+		if strings.Contains(s.TestName(), "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPathMyFiles)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPathMyFiles)
+		}
 		if err != nil {
 			return err
 		}
@@ -146,7 +160,12 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		}
 
 		// Check file list in the container.
-		fileList, err := cont.GetFileList(ctx, filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads))
+		var fileList []string
+		if strings.Contains(s.TestName(), "baguette") {
+			fileList, err = cont.GetFileList(ctx, filepath.Join(sharedfolders.BaguetteMountPathMyFiles, filesapp.Downloads))
+		} else {
+			fileList, err = cont.GetFileList(ctx, filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads))
+		}
 		if err != nil {
 			s.Fatal("Failed to get file list of /mnt/chromeos/MyFiles/Downloads: ", err)
 		}
@@ -155,8 +174,14 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		}
 
 		// Check the content of the test file in the container.
-		if err := cont.CheckFileContent(ctx, filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads, testFile), testString); err != nil {
-			s.Fatal("Failed to verify the content of the test file: ", err)
+		if strings.Contains(s.TestName(), "baguette") {
+			if err := cont.CheckFileContent(ctx, filepath.Join(sharedfolders.BaguetteMountPathMyFiles, filesapp.Downloads, testFile), testString); err != nil {
+				s.Fatal("Failed to verify the content of the test file: ", err)
+			}
+		} else {
+			if err := cont.CheckFileContent(ctx, filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads, testFile), testString); err != nil {
+				s.Fatal("Failed to verify the content of the test file: ", err)
+			}
 		}
 	})
 
@@ -168,8 +193,14 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		)
 
 		// Add a folder in the container.
-		if err := cont.Command(ctx, "mkdir", filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads, testFolder)).Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to create a folder in : ", err)
+		if strings.Contains(s.TestName(), "baguette") {
+			if err := cont.Command(ctx, "mkdir", filepath.Join(sharedfolders.BaguetteMountPathMyFiles, filesapp.Downloads, testFolder)).Run(testexec.DumpLogOnError); err != nil {
+				s.Fatal("Failed to create a folder in : ", err)
+			}
+		} else {
+			if err := cont.Command(ctx, "mkdir", filepath.Join(sharedfolders.MountPathMyFiles, filesapp.Downloads, testFolder)).Run(testexec.DumpLogOnError); err != nil {
+				s.Fatal("Failed to create a folder in : ", err)
+			}
 		}
 
 		// Create a file in a temp directory in ChromeOS and push it to the container.
@@ -184,8 +215,14 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create file in ChromeOS: ", err)
 		}
 		defer os.Remove(filePath)
-		if err := cont.PushFile(ctx, filePath, filepath.Join(sharedfolders.MountPathDownloads, testFile)); err != nil {
-			s.Fatal("Failed to push test file to the container: ", err)
+		if strings.Contains(s.TestName(), "baguette") {
+			if err := cont.PushFile(ctx, filePath, filepath.Join(sharedfolders.BaguetteMountPathDownloads, testFile)); err != nil {
+				s.Fatal("Failed to push test file to the container: ", err)
+			}
+		} else {
+			if err := cont.PushFile(ctx, filePath, filepath.Join(sharedfolders.MountPathDownloads, testFile)); err != nil {
+				s.Fatal("Failed to push test file to the container: ", err)
+			}
 		}
 
 		if err := uiauto.Combine("open Downloads and find the test files",
@@ -219,7 +256,11 @@ func ShareDownloadsAddFiles(ctx context.Context, s *testing.State) {
 		}
 
 		// Check the permission.
-		filePath = filepath.Join(sharedfolders.MountPathDownloads, testFile)
+		if strings.Contains(s.TestName(), "baguette") {
+			filePath = filepath.Join(sharedfolders.BaguetteMountPathDownloads, testFile)
+		} else {
+			filePath = filepath.Join(sharedfolders.MountPathDownloads, testFile)
+		}
 		result, err := cont.Command(ctx, "ls", "-l", filePath).Output()
 		if err != nil {
 			s.Fatal("Failed to run ls on the test file in the container: ", err)

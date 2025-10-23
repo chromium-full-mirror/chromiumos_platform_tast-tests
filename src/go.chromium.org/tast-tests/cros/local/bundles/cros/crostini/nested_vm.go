@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -33,6 +34,11 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})
@@ -40,6 +46,16 @@ func init() {
 
 func NestedVM(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
+
+	if strings.Contains(s.TestName(), "baguette") {
+		s.Log("Installing GCC")
+		if err := cont.Command(ctx, "sudo", "apt-get", "update").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to run apt-update: ", err)
+		}
+		if err := cont.Command(ctx, "sudo", "apt-get", "-y", "install", "gcc").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to install GCC: ", err)
+		}
+	}
 
 	if err := cont.Command(ctx, "ls", "/dev/kvm").Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to find /dev/kvm in VM: ", err)

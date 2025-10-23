@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/listset"
@@ -46,6 +47,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -120,7 +126,7 @@ func ShareFolders(ctx context.Context, s *testing.State) {
 	defer st.Close(ctx)
 
 	// Check results after sharing two folders.
-	if err := checkShareFoldersResults(ctx, tconn, cont, st, []string{folder1, folder2}, []string{sharedFolder1, sharedFolder2}); err != nil {
+	if err := checkShareFoldersResults(ctx, tconn, cont, st, []string{folder1, folder2}, []string{sharedFolder1, sharedFolder2}, s.TestName()); err != nil {
 		s.Fatal("Failed to check share results after sharing two folders: ", err)
 	}
 
@@ -130,12 +136,12 @@ func ShareFolders(ctx context.Context, s *testing.State) {
 	}
 
 	// Check results after unsharing one folder.
-	if err := checkShareFoldersResults(ctx, tconn, cont, st, []string{folder2}, []string{sharedFolder2}); err != nil {
+	if err := checkShareFoldersResults(ctx, tconn, cont, st, []string{folder2}, []string{sharedFolder2}, s.TestName()); err != nil {
 		s.Fatal("Failed to check share results after unshare one folder: ", err)
 	}
 }
 
-func checkShareFoldersResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, s *settings.Settings, testFolders, sharedFolders []string) error {
+func checkShareFoldersResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, s *settings.Settings, testFolders, sharedFolders []string, tn string) error {
 	// Check shared folders on the Settings app.
 	sharedFoldersList, err := s.GetSharedFolders(ctx)
 	if err != nil {
@@ -147,7 +153,12 @@ func checkShareFoldersResults(ctx context.Context, tconn *chrome.TestConn, cont 
 
 	// Check the file list in the container.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		list, err := cont.GetFileList(ctx, sharedfolders.MountPathDownloads)
+		var list []string
+		if strings.Contains(tn, "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPathDownloads)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPathDownloads)
+		}
 		if err != nil {
 			return err
 		}

@@ -6,6 +6,7 @@ package crostini
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -32,6 +33,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -67,11 +73,21 @@ func ShareFilesCancel(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 	// Share My files.
-	if err := uiauto.Combine("click Share with Linux on My files and click button Cancel on the confirmation dialog",
-		sharedFolders.ShareMyFiles(ctx, filesApp),
-		ui.LeftClick(sharedfolders.ShareConfirmDialog.CancelButton),
-		ui.WithTimeout(5*time.Second).WaitUntilGone(sharedfolders.ShareToastNotification.Toast),
-		sharedFolders.CheckNoSharedFolders(cont, cr))(ctx); err != nil {
-		s.Fatal("Failed to test cancel share My files: ", err)
+	if strings.Contains(s.TestName(), "baguette") {
+		if err := uiauto.Combine("click Share with Linux on My files and click button Cancel on the confirmation dialog",
+			sharedFolders.ShareMyFiles(ctx, filesApp),
+			ui.LeftClick(sharedfolders.ShareConfirmDialog.CancelButton),
+			ui.WithTimeout(5*time.Second).WaitUntilGone(sharedfolders.ShareToastNotification.Toast),
+			sharedFolders.CheckNoSharedFoldersBaguette(cont, cr))(ctx); err != nil {
+			s.Fatal("Failed to test cancel share My files: ", err)
+		}
+	} else {
+		if err := uiauto.Combine("click Share with Linux on My files and click button Cancel on the confirmation dialog",
+			sharedFolders.ShareMyFiles(ctx, filesApp),
+			ui.LeftClick(sharedfolders.ShareConfirmDialog.CancelButton),
+			ui.WithTimeout(5*time.Second).WaitUntilGone(sharedfolders.ShareToastNotification.Toast),
+			sharedFolders.CheckNoSharedFolders(cont, cr))(ctx); err != nil {
+			s.Fatal("Failed to test cancel share My files: ", err)
+		}
 	}
 }

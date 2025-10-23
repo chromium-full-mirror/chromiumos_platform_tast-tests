@@ -44,8 +44,8 @@ var standardTests = map[string]testOptions{
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	// TODO(b/377716353): audio streams never settle on baguette, low priority to debug
 	"audio_playback_configurations.go": {timeout: 10 * time.Minute, testBaguette: false},
-	// TODO(b/377716353): unable to find terminal after restore
-	"backup_restore.go":                 {timeout: 10 * time.Minute},
+	// TODO(b/377716353): private autotest backup leaves baguette in a bad state somehow, debug more later since we cover backup/restore elsewhere.
+	"backup_restore.go":                 {timeout: 10 * time.Minute, testBaguette: false},
 	"basic.go":                          {foundation: true, testBaguette: true},
 	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
 	"command_cd.go":                     {foundation: true, testBaguette: true},
@@ -55,19 +55,17 @@ var standardTests = map[string]testOptions{
 	// TODO(b/377716353): crash_reporter PoC exists for baguette, but requires more filtering.
 	"crash_reporter.go": {testBaguette: false},
 	// TODO(b/377716353): drag_drop seems to fail on just the last test in baguette, skip for now and debug more later
-	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, testBaguette: false, extraAttr: []string{"informational"}},
+	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, extraAttr: []string{"informational"}},
 	"files_app_watch.go": {testBaguette: true},
 	// TODO(b/377716353): missing dbus signal, requires investigation
-	"fs_corruption.go":        {timeout: 10 * time.Minute},
-	"home_directory_share.go": {testBaguette: true},
-	"icon_and_username.go":    {testBaguette: true},
-	"launch_terminal.go":      {testBaguette: true},
-	// TODO(b/377716353): failed to build program
-	"nested_vm.go":              {},
+	"fs_corruption.go":          {timeout: 10 * time.Minute},
+	"home_directory_share.go":   {testBaguette: true},
+	"icon_and_username.go":      {testBaguette: true},
+	"launch_terminal.go":        {testBaguette: true},
+	"nested_vm.go":              {testBaguette: true},
 	"no_access_to_downloads.go": {testBaguette: true},
-	// TODO(b/377716353): needs shared fonts
-	"no_shared_folder.go": {},
-	"notify.go":           {testBaguette: false},
+	"no_shared_folder.go":       {testBaguette: true},
+	"notify.go":                 {testBaguette: false},
 	// OomEvent test was for crostini data-collection, no need in baguette.
 	"oom_event.go":             {timeout: 10 * time.Minute, testBaguette: false},
 	"open_with_terminal.go":    {testBaguette: true},
@@ -84,18 +82,18 @@ var standardTests = map[string]testOptions{
 	"restart_icon.go":             {testBaguette: true},
 	// TODO(b/377716353): ARC fails to boot
 	"run_with_arc.go": {requiresARC: true},
-	// TODO(b/377716353): needs shared fonts
+	// TODO(b/377716353): needs shared fonts mount fix
 	"shared_font_files.go":         {foundation: true},
-	"share_downloads_add_files.go": {},
-	"share_downloads.go":           {},
-	"share_files_cancel.go":        {},
-	"share_files_manage.go":        {},
-	"share_files_ok.go":            {foundation: true},
-	"share_files_restart.go":       {},
-	"share_files_toast.go":         {},
-	"share_folders.go":             {},
-	"share_folder_zip_file.go":     {},
-	"share_invalid_paths.go":       {},
+	"share_downloads_add_files.go": {testBaguette: true},
+	"share_downloads.go":           {testBaguette: true},
+	"share_files_cancel.go":        {testBaguette: true},
+	"share_files_manage.go":        {testBaguette: true},
+	"share_files_ok.go":            {testBaguette: true, foundation: true},
+	"share_files_restart.go":       {testBaguette: true},
+	"share_files_toast.go":         {testBaguette: true},
+	"share_folders.go":             {testBaguette: true},
+	"share_folder_zip_file.go":     {testBaguette: true},
+	"share_invalid_paths.go":       {testBaguette: true},
 	// Baguette has no lxc, and therefore no snapshots.
 	"snapshot.go": {timeout: 6 * time.Minute, testBaguette: false},
 	// TODO(b/377716353): couldn't find sshfs mount, may be named differently
@@ -110,8 +108,8 @@ var standardTests = map[string]testOptions{
 	"vmc_start.go":      {testBaguette: true},
 	// Baguette uses distinct port-forwarding mechanism from crostini.
 	"webserver.go": {testBaguette: false, foundation: true},
-	// TODO(b/377716353): failed to run getfattr
-	"xattrs.go": {},
+	// Baguette image does not set extended attributes
+	"xattrs.go": {testBaguette: false},
 }
 
 func TestFixTestParams(t *testing.T) {

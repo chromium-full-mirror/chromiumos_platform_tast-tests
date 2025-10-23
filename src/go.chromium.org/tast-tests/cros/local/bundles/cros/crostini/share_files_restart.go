@@ -6,6 +6,8 @@ package crostini
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -38,6 +40,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "baguette_stable",
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "baguettePolicy",
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -75,7 +82,7 @@ func ShareFilesRestart(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to share My files: ", err)
 	}
 
-	if err := checkResults(ctx, tconn, cont, cr); err != nil {
+	if err := checkResults(ctx, tconn, cont, cr, s.TestName()); err != nil {
 		s.Fatal("Faied to verify results after sharing My files: ", err)
 	}
 
@@ -89,12 +96,12 @@ func ShareFilesRestart(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the shared folders again after restart Crostini.
-	if err := checkResults(ctx, tconn, cont, cr); err != nil {
+	if err := checkResults(ctx, tconn, cont, cr, s.TestName()); err != nil {
 		s.Fatal("Faied to verify results after restarting Crostini: ", err)
 	}
 }
 
-func checkResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, cr *chrome.Chrome) error {
+func checkResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container, cr *chrome.Chrome, tn string) error {
 	// Check shared folders on the Settings app.
 	st, err := settings.OpenLinuxSettings(ctx, tconn, cr, settings.ManageSharedFolders)
 	if err != nil {
@@ -113,11 +120,19 @@ func checkResults(ctx context.Context, tconn *chrome.TestConn, cont *vm.Containe
 
 	// Check the file list in the container.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		list, err := cont.GetFileList(ctx, sharedfolders.MountPath)
+		var list []string
+		if strings.Contains(tn, "baguette") {
+			list, err = cont.GetFileList(ctx, sharedfolders.BaguetteMountPath)
+		} else {
+			list, err = cont.GetFileList(ctx, sharedfolders.MountPath)
+		}
 		if err != nil {
 			return err
 		}
 		want := []string{"fonts", sharedfolders.MountFolderMyFiles}
+		// baguette and crostini sort file output differently, so sort lists to compare actual contents.
+		sort.Strings(want)
+		sort.Strings(list)
 		if diff := cmp.Diff(want, list); diff != "" {
 			return errors.Errorf("failed to verify file list in /mnt/chromeos, got %s, want %s", list, want)
 		}
