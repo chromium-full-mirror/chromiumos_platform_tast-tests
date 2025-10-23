@@ -22,8 +22,8 @@ var resultsChart string
 func TestPowerQualBounds(t *testing.T) {
 	testCases := []string{
 		"qual",
+		"browsinglight",
 		"browsing",
-		"browsingheavy",
 		"videoplayback",
 		"videocall",
 	}

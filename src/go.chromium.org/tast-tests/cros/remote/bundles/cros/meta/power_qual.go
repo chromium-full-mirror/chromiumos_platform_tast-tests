@@ -44,12 +44,12 @@ func init() {
 			},
 			{
 				Name:              "qual",
-				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual.json",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual_v2.json",
 				ExtraRequirements: []string{"pwr-batLife-0009-v03", "pwr-batLife-0010-v03", "pwr-batLife-0011-v03", "pwr-batLife-0012-v01"},
 			},
 			{
-				Name: "browsingheavy",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_heavy.json",
+				Name: "browsing",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_v2.json",
 			},
 			{
 				Name: "videoplayback",
@@ -60,16 +60,16 @@ func init() {
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_call.json",
 			},
 			{
-				Name: "browsing",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing.json",
+				Name: "browsinglight",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_light_v2.json",
 			},
 			{
 				Name: "short",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/short.json",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/short_v2.json",
 			},
 			{
 				Name: "segment",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/segment.json",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/segment_v2.json",
 				ExtraAttr: []string{
 					"group:release-health",
 					"release-health_power",
@@ -77,11 +77,11 @@ func init() {
 			},
 			{
 				Name: "qual_arc",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual_arc.json",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual_arc_v2.json",
 			},
 			{
 				Name: "qual_noarc",
-				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual_noarc.json",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/qual_noarc_v2.json",
 			},
 			// TODO(b/274972858): add other parameterized tests.
 			// For example, add "essential" and "advanced" tests that use different configurations.
@@ -91,8 +91,8 @@ func init() {
 
 var powerQualBounds = []bounds.MetricBounds{{
 	// pwr-batLife-0009-v03 requirements
-	Test:   bounds.MatchRegexp(`\.(qual|browsingheavy)$`),
-	Metric: bounds.MatchRegexp(`.*(BrowsingHeavy|BrowsingHeavyQual)\.minutes_battery_life$`),
+	Test:   bounds.MatchRegexp(`\.(qual|browsing)$`),
+	Metric: bounds.MatchRegexp(`.*(Browsing|BrowsingQual)\.minutes_battery_life$`),
 	Bounds: bounds.Min(480),
 }, {
 	// pwr-batLife-0010-v03 requirements
@@ -107,22 +107,22 @@ var powerQualBounds = []bounds.MetricBounds{{
 	Bounds: bounds.Min(240),
 }, {
 	// pwr-batLife-0012-v01 requirements
-	Test:   bounds.MatchRegexp(`\.(qual|browsing)$`),
-	Metric: bounds.MatchRegexp(`.*(Browsing|BrowsingQual)\.minutes_battery_life$`),
+	Test:   bounds.MatchRegexp(`\.(qual|browsinglight)$`),
+	Metric: bounds.MatchRegexp(`.*(BrowsingLight|BrowsingLightQual)\.minutes_battery_life$`),
 	Bounds: bounds.Min(600),
 }, {
 	// pwr-batLife-0009-v03, pwr-batLife-0010-v03, pwr-batLife-0011-v03, pwr-batLife-0012-v01
-	Test:   bounds.MatchRegexp(`\.(qual|videoplayback|videocall|browsing)$`),
+	Test:   bounds.MatchRegexp(`\.(qual|videoplayback|videocall|browsinglight)$`),
 	Metric: bounds.MatchRegexp(`.*\.level_backlight_percent_linear$`),
 	Bounds: bounds.Between(20, 100),
 }, {
 	// pwr-batLife-0009-v03, pwr-batLife-0012-v01
-	Test:   bounds.MatchRegexp(`\.(qual|browsing|browsingheavy)$`),
+	Test:   bounds.MatchRegexp(`\.(qual|browsinglight|browsing)$`),
 	Metric: bounds.MatchRegexp(`.*\.browsing_test_cached_site_version$`),
 	Bounds: bounds.Between(20230809, 40000000),
 }, {
 	// pwr-batLife-0009-v03, pwr-batLife-0012-v01
-	Test:   bounds.MatchRegexp(`\.(qual|browsing|browsingheavy)$`),
+	Test:   bounds.MatchRegexp(`\.(qual|browsinglight|browsing)$`),
 	Metric: bounds.MatchRegexp(`.*\.browsing_test_config_version$`),
 	Bounds: bounds.Between(20230920, 40000000),
 }, {

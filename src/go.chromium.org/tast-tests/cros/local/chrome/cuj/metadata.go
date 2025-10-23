@@ -600,7 +600,7 @@ var Registry = map[string]Metadata{
 	// There are no recommended metrics for this test, as the metric names
 	// vary based on which processes are active during the test.
 	"multivm.PerProcessMemory.arc": Metadata{},
-	"power.Browsing.fast_ash": Metadata{
+	"power.Browsing.light_fast_ash": Metadata{
 		Metrics: powerMetrics,
 	},
 	"power.Idle.default_fast_ash": Metadata{

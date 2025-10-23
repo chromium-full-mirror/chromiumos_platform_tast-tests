@@ -92,17 +92,17 @@ func init() {
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
-				Name: "cpd_browsing",
+				Name: "cpd_browsing_light",
 				Val: testParams{
-					subtest:  "power.Browsing.ash",
+					subtest:  "power.Browsing.light_ash",
 					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 			{
-				Name: "cpd_browsing_heavy",
+				Name: "cpd_browsing",
 				Val: testParams{
-					subtest:  "power.Browsing.heavy_ash",
+					subtest:  "power.Browsing.ash",
 					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
@@ -124,9 +124,9 @@ func init() {
 				ExtraAttr: []string{"group:power", "power_regression_htl"},
 			},
 			{
-				Name: "htl_browsing_heavy_20min_ash",
+				Name: "htl_browsing_20min_ash",
 				Val: testParams{
-					subtest:  "power.Browsing.heavy_20min_ash",
+					subtest:  "power.Browsing.20min_ash",
 					useAccum: true,
 				},
 				ExtraAttr: []string{"group:power", "power_regression_htl"},

@@ -49,23 +49,23 @@ func init() {
 			"config_name", // Used in "custom" variant. The name of config file.
 		},
 		Params: []testing.Param{{
-			Name:    "ash",
+			Name:    "light_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
-			Name:              "ash_arc",
+			Name:              "light_ash_arc",
 			Fixture:           "powerAshARC",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:    "20min_ash",
+			Name:    "light_20min_ash",
 			Fixture: "powerAsh",
 			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 		}, {
-			Name:    "fast_ash",
+			Name:    "light_fast_ash",
 			Fixture: "powerAsh",
 			Timeout: 3*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:     browsingTestParam{ConfigName: "browsing_3min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}},
@@ -77,18 +77,18 @@ func init() {
 				"release-health_power",
 			},
 		}, {
-			Name:    "heavy_ash",
+			Name:    "ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
-			Name:              "heavy_ash_arc",
+			Name:              "ash_arc",
 			Fixture:           "powerAshARC",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"arc"},
 		}, {
-			Name:    "heavy_20min_ash",
+			Name:    "20min_ash",
 			Fixture: "powerAsh",
 			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout + setup.BatteryPreparationTimeout,
 			Val:     browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},

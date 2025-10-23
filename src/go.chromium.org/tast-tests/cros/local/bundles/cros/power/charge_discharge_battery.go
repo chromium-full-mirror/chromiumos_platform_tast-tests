@@ -71,7 +71,7 @@ func init() {
 				IsPowerQual:           false},
 			Timeout: 5 * time.Hour,
 		}, {
-			Name: "power_qual_prep_80_browsing",
+			Name: "power_qual_prep_80_browsing_light",
 			Val: power.ChargeParams{
 				MinChargePercentage:   78.0,
 				MaxChargePercentage:   80.0,
@@ -81,7 +81,7 @@ func init() {
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_75_browsing_heavy",
+			Name: "power_qual_prep_75_browsing",
 			Val: power.ChargeParams{
 				MinChargePercentage:   73.0,
 				MaxChargePercentage:   75.0,
