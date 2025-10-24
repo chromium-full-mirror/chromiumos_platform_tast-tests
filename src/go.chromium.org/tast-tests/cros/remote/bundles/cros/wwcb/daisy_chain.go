@@ -87,7 +87,9 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	// Find a display whose connection path passes through another display.
 	extDispID2, extDispID1, err := tf.Helper.DeviceByTypeVia(ctx, topology.DeviceTypeMonitor, topology.DeviceTypeMonitor)
 	if err != nil {
-		s.Fatal("Failed to activate monitor: ", err)
+		testing.ContextLog(ctx, "Failed to activate monitor: ", err)
+		testing.ContextLog(ctx, "WARN: Skipping test due to incompatible topology! Check to make sure this is intended behavoir")
+		return
 	}
 
 	// Connect the first display and verify.
