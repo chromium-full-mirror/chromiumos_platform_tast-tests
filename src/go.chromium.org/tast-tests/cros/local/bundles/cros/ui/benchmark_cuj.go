@@ -235,10 +235,9 @@ func init() {
 			},
 			// WPR variants.
 			{
-				Name:      "speedometer_wpr",
-				Timeout:   defaultTimeout,
-				Fixture:   benchmarkcuj.SpeedometerWPRReplayFixture,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Name:    "speedometer_wpr",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.SpeedometerWPRReplayFixture,
 				Val: benchmarkcuj.BenchmarkTest{
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
@@ -256,10 +255,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "motionmark_wpr",
-				Timeout:   defaultTimeout,
-				Fixture:   benchmarkcuj.MotionmarkWPRReplayFixture,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Name:    "motionmark_wpr",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.MotionmarkWPRReplayFixture,
 				Val: benchmarkcuj.BenchmarkTest{
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 					RecorderMode:  cujrecorder.Benchmark,
@@ -277,10 +275,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "kraken_wpr",
-				Timeout:   defaultTimeout,
-				Fixture:   benchmarkcuj.KrakenWPRReplayFixture,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Name:    "kraken_wpr",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.KrakenWPRReplayFixture,
 				Val: benchmarkcuj.BenchmarkTest{
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 					RecorderMode:  cujrecorder.Benchmark,
@@ -298,10 +295,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "octane_wpr",
-				Timeout:   defaultTimeout,
-				Fixture:   benchmarkcuj.OctaneWPRReplayFixture,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Name:    "octane_wpr",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.OctaneWPRReplayFixture,
 				Val: benchmarkcuj.BenchmarkTest{
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 					RecorderMode:  cujrecorder.Benchmark,
