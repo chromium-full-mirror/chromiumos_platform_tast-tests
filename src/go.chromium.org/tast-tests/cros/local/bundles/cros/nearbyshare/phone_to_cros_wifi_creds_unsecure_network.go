@@ -44,21 +44,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 			},
-
-			// Subtests for unstable devices, so they can be omitted from reporting.
-			{
-				Name:    "dataonline_noone_wificreds_unsecure_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOne",
-				Val: nearbycommon.WiFiTestData{
-					WiFiName:        "test_network",
-					WiFiPassword:    "",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					SecurityType:    nearbycommon.SecurityTypeOpen,
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
 		},
 	})
 }

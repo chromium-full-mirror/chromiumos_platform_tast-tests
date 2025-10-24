@@ -34,57 +34,18 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.nearbyservice.NearbyShareService"},
 		Vars:         []string{"secondaryTarget"},
 		Params: []testing.Param{
-			// Disabled by TORA. See: b/348969020
-			// // Stable subset of boards.
-			// {
-			// 	Name:              "dataoffline_hidden_png5kb",
-			// 	Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-			// 	Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-			// 	Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			// 	ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-			// 	ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-			// 		// Companion DUT 1 dependency.
-			// 		"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-			// 	},
-			// 	ExtraSoftwareDeps: []string{"gaia"},
-			// 	ExtraAttr:         []string{"cross-device-remote_cq"},
-			// },
-
-			// Unstable subset of boards (sender).
 			{
-				Name:              "dataoffline_hidden_png5kb_unstable_sender",
-				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
-				},
-			},
-			// Unstable subset of boards (receiver).
-			{
-				Name:              "dataoffline_hidden_png5kb_unstable_receiver",
+				Name:              "dataoffline_hidden_png5kb",
 				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
 				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
 					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.Model(crossdevice.UnstableModels...)),
+					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				},
-			},
-			// Unstable subset of boards (both).
-			{
-				Name:              "dataoffline_hidden_png5kb_unstable_both",
-				Fixture:           "nearbyShareRemoteDataUsageOfflineNoOneBackgroundScanning",
-				Val:               nearbycommon.TestData{Filename: "small_png.zip", TransferTimeout: nearbycommon.SmallFileTransferTimeout},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				ExtraHardwareDepsForAll: map[string]hwdep.Deps{
-					// Companion DUT 1 dependency.
-					"cd1": hwdep.D(hwdep.BackgroundScanning(), hwdep.Model(crossdevice.UnstableModels...)),
-				},
+				ExtraSoftwareDeps: []string{"gaia"},
+				ExtraAttr:         []string{"cross-device-remote_cq"},
 			},
 		},
 	})

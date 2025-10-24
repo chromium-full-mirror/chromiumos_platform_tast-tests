@@ -88,59 +88,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// Subtests for unstable devices, so they can be omitted from reporting.
-			{
-				Name:    "dataoffline_noone_jpg11kb_unstable",
-				Fixture: "nearbyShareDataUsageOfflineNoOne",
-				Val: nearbycommon.TestData{
-					Filename:        "small_jpg.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				},
-				ExtraAttr:         []string{"cross-device_cq"},
-				ExtraData:         []string{"small_jpg.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOne",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_webrtc_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWebRTCOnly",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				},
-				ExtraAttr:         []string{"cross-device_cq"},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:    "dataonline_noone_txt30mb_wlan_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOneWLANOnly",
-				Val: nearbycommon.TestData{
-					Filename:        "big_txt.zip",
-					TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-				},
-				ExtraAttr:         []string{"cross-device_cq"},
-				ExtraData:         []string{"big_txt.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
 		},
 	})
 }

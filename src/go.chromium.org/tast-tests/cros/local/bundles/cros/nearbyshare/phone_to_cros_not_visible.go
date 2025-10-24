@@ -59,32 +59,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout,
 			},
-
-			// Subtests for unstable devices, so they can be omitted from reporting.
-			{
-				Name:    "somecontacts_unstable",
-				Fixture: "nearbyShareDataUsageOfflineSomeContactsAndroidNotSelectedContact",
-				Val: nearbycommon.TestData{
-					Filename:    "small_jpg.zip",
-					TestTimeout: nearbycommon.DetectionTimeout,
-					MimeType:    nearbycommon.MimeTypeJpeg,
-				},
-				ExtraData:         []string{"small_jpg.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout,
-			},
-			{
-				Name:    "noone_unstable",
-				Fixture: "nearbyShareDataUsageOnlineNoOne",
-				Val: nearbycommon.TestData{
-					Filename:    "small_jpg.zip",
-					TestTimeout: nearbycommon.DetectionTimeout,
-					MimeType:    nearbycommon.MimeTypeJpeg,
-				},
-				ExtraData:         []string{"small_jpg.zip"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(crossdevice.UnstableModels...)),
-				Timeout:           nearbycommon.DetectionTimeout,
-			},
 		},
 	})
 }

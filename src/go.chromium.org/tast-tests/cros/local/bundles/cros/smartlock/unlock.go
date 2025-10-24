@@ -38,11 +38,6 @@ func init() {
 				ExtraAttr:         []string{"group:release-health"},
 				ExtraSoftwareDeps: []string{"gaia"},
 			},
-			{
-				Name:              "unstable",
-				Fixture:           "crossdeviceOnboarded",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
-			},
 		},
 	})
 }

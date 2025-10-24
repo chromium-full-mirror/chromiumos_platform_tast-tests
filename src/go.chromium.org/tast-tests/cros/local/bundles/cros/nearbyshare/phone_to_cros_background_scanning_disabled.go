@@ -47,21 +47,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.BackgroundScanning(), hwdep.SkipOnModel(crossdevice.UnstableModels...)),
 				ExtraSoftwareDeps: []string{"gaia"},
 			},
-
-			// Subtests for unstable devices, so they can be omitted from reporting.
-			{
-				Name:    "no_notification_shown_unstable",
-				Fixture: "nearbyShareDataUsageOfflineNoOneBackgroundScanningEnabled",
-				Val: nearbycommon.TestData{
-					Filename:        "small_jpg.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypePng,
-				},
-				ExtraData:         []string{"small_jpg.zip"},
-				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.BackgroundScanning(), hwdep.Model(crossdevice.UnstableModels...)),
-			},
 		},
 	})
 }

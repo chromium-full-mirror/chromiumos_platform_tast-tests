@@ -66,36 +66,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"gaia"},
 				Timeout:           nearbycommon.DetectionTimeout + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
-
-			// Android Nearby prod tests
-			{
-				Name:    "dataoffline_allcontacts_jpg11kb_prod",
-				Fixture: "nearbyShareDataUsageOfflineSelfShareProd",
-				Val: nearbycommon.TestData{
-					Filename:        "small_jpg.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypeJpeg,
-				},
-				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare-prod"},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
-
-			// Android Nearby Dev tests
-			{
-				Name:    "dataoffline_allcontacts_jpg11kb_dev",
-				Fixture: "nearbyShareDataUsageOfflineSelfShareDev",
-				Val: nearbycommon.TestData{
-					Filename:        "small_jpg.zip",
-					TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-					TestTimeout:     nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-					MimeType:        nearbycommon.MimeTypeJpeg,
-				},
-				ExtraAttr: []string{"group:cross-device", "cross-device_nearbyshare-dev"},
-				ExtraData: []string{"small_jpg.zip"},
-				Timeout:   nearbycommon.DetectionTimeout + nearbycommon.SmallFileTransferTimeout,
-			},
 		},
 	})
 }

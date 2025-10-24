@@ -41,11 +41,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(cdcommon.UnstableModels...)),
 				ExtraSoftwareDeps: []string{"gaia"},
 			},
-			{
-				Name:              "unstable",
-				Fixture:           "crossdeviceOnboardedAllFeaturesRerun",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(cdcommon.UnstableModels...)),
-			},
 		},
 	})
 }
