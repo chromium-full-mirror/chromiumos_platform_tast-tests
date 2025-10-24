@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,9 +27,7 @@ func init() {
 		Contacts:     []string{"chromeos-platform-stability-team@google.com", "naoyatezuka@google.com"},
 		BugComponent: "b:1672909",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"reboot", "pstore"},
-		// TODO(b/432640575): Remove this dependency after ECC is enabled on ARM boards.
-		HardwareDeps: hwdep.D(hwdep.X86()),
+		SoftwareDeps: []string{"ecc", "reboot", "pstore"},
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},
 		Timeout:      5 * time.Minute,
 	})
