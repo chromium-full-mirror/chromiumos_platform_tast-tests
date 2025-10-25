@@ -23,7 +23,7 @@ func init() {
 		Contacts:       []string{"cros-cellular-core@google.com", "rmao@google.com"},
 		Attr:           []string{"group:cellular", "cellular_power", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_unstable"},
 		Timeout:        10 * time.Minute,
-		Fixture:        "cellularPower",
+		Fixture:        "cellularPower.ehide",
 	})
 }
 

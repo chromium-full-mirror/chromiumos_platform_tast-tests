@@ -25,7 +25,7 @@ func init() {
 		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      6 * time.Minute,
-		Fixture:      "cellular",
+		Fixture:      "cellular.ehide",
 	})
 }
 

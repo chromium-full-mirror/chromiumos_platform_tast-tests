@@ -21,7 +21,7 @@ func init() {
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent", "group:release-health", "release-health_cellular"},
-		Fixture:      "cellularDUTCheckLocal",
+		Fixture:      "cellularDUTCheckLocal.ehide",
 		Timeout:      4 * time.Minute,
 		Requirements: []string{"cell-gen-0013-v01"},
 		Params: []testing.Param{

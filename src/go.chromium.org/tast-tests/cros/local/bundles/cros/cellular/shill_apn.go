@@ -87,7 +87,7 @@ func init() {
 			Val:       apnTestParam{"callbox_default_attach_different_connect_apn_ipv4v6.pbf", "callbox-default-attach", "callbox-ipv4v6"},
 			ExtraData: []string{"callbox_default_attach_different_connect_apn_ipv4v6.pbf"},
 		}},
-		Fixture: "cellularResetShillProfileOnPostTest",
+		Fixture: "cellularResetShillProfileOnPostTest.ehide",
 		Timeout: 2 * time.Minute,
 	})
 }

@@ -32,7 +32,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:        "cellular",
+		Fixture:        "cellular.ehide",
 		Timeout:        10 * time.Minute,
 		VarDeps:        []string{"cellular.gaiaAccountPool"},
 		SoftwareDeps:   []string{"chrome"},

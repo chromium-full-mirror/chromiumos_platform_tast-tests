@@ -65,6 +65,15 @@ func init() {
 		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularNoUI",
@@ -79,6 +88,15 @@ func init() {
 		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularRebootSetupLocal",
@@ -107,6 +125,15 @@ func init() {
 		Parent:          "cellularSuspendRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularStressLocal",
@@ -121,6 +148,15 @@ func init() {
 		Parent:          "cellularStressRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularE2ELocal",
@@ -163,6 +199,15 @@ func init() {
 		Parent:          "cellularDUTCheckRemote",
 		Impl:            newCellularFixture(),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularAutoconnectLocal",
@@ -270,6 +315,15 @@ func init() {
 		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularNoUIResetShillProfileOnPostTest",
@@ -287,6 +341,15 @@ func init() {
 		Parent:          "cellularRemoteRebootSupport",
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
 		Vars:            []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
@@ -345,6 +408,15 @@ func init() {
 		// TODO: Create parent fixture to combine cellularRemoteRebootSupport with powerMetricsNoUI
 		Parent: "powerMetricsNoUI",
 		Vars:   []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSIMLockCleared",
@@ -388,6 +460,15 @@ func init() {
 		// We dont need to reset on failure since we will be rebooting if we can't connect.
 		Impl: newCellularFixture().setRestartOnFailure([]string{}),
 		Vars: []string{"autotest_host_info_labels"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularEnforceConnectionAndResetShillProfile",

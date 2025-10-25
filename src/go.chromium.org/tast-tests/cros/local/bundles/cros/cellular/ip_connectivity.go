@@ -49,7 +49,7 @@ func init() {
 			Val:       ipTestParams{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf", false, true},
 			ExtraData: []string{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf"},
 		}},
-		Fixture: "cellularResetShillProfileOnPostTest",
+		Fixture: "cellularResetShillProfileOnPostTest.ehide",
 		Timeout: 2 * time.Minute,
 	})
 }

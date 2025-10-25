@@ -22,7 +22,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture:        "cellularStressLocal",
+		Fixture:        "cellularStressLocal.ehide",
 		Timeout:        4 * time.Minute,
 	})
 }

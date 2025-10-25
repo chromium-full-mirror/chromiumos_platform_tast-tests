@@ -40,7 +40,7 @@ func init() {
 			Name: "set_user_apn_list",
 			Val:  shillCellularCustomAPNTestParam{true},
 		}},
-		Fixture: "cellularNoUIResetShillProfileOnPostTest",
+		Fixture: "cellularNoUIResetShillProfileOnPostTest.ehide",
 		Timeout: 6 * time.Minute,
 	})
 }
