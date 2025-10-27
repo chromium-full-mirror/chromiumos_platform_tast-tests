@@ -6,6 +6,7 @@ package crash
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -42,6 +43,11 @@ var (
 	noErrorsRegex        = regexp.MustCompile(`No errors detected`)
 	correctedErrorsRegex = regexp.MustCompile(`\d+ Corrected bytes, \d+ unrecoverable blocks`)
 )
+
+func cleanCrashDir(ctx context.Context, d *dut.DUT) error {
+	cmd := fmt.Sprintf("rm -f %s/*", systemCrashDir)
+	return d.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError)
+}
 
 // checkECCInLog checks if the file at filepath on d contains the message for
 // ECC.
@@ -137,9 +143,24 @@ func PstoreECCCheck(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Waiting for files to become present")
 	res, err := fs.WaitForCrashFiles(ctx, waitReq)
+	// If WaitForCrashFiles fails, res can be nil. In that case, we can't
+	// use res.Matches to remove the specific crash files. As a fallback,
+	// clean the entire crash directory to ensure no crash files are left
+	// behind.
 	if err != nil {
+		if cleanErr := cleanCrashDir(cleanupCtx, d); cleanErr != nil {
+			s.Log("Failed to clean crash directory as a fallback: ", cleanErr)
+		}
 		s.Fatal("Failed to find crash files: ", err)
 	}
+	defer func() {
+		removeReq := &crashservice.RemoveAllFilesRequest{
+			Matches: res.Matches,
+		}
+		if _, err := fs.RemoveAllFiles(cleanupCtx, removeReq); err != nil {
+			s.Error("Failed to remove crash files: ", err)
+		}
+	}()
 
 	if len(res.Matches) != 2 {
 		s.Errorf("Wrong number of crash file match groups: got %d, want 2", len(res.Matches))
@@ -162,12 +183,5 @@ func PstoreECCCheck(ctx context.Context, s *testing.State) {
 	// persist across reboot we trigger in this test.
 	if err := checkECCInLog(ctx, d, consoleRamoopsFile); err != nil {
 		s.Error("Check failed for console-ramoops file: ", err)
-	}
-
-	removeReq := &crashservice.RemoveAllFilesRequest{
-		Matches: res.Matches,
-	}
-	if _, err := fs.RemoveAllFiles(ctx, removeReq); err != nil {
-		s.Error("Failed to remove crash files: ", err)
 	}
 }
