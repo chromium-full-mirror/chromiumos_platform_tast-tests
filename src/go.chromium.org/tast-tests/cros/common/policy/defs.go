@@ -28855,6 +28855,7 @@ func (p *DevicePowerBatteryChargingOptimization) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1320. SmartCardConnectAllowedForUrls
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SmartCardConnectAllowedForUrls struct {
 	Stat Status
@@ -28886,6 +28887,7 @@ func (p *SmartCardConnectAllowedForUrls) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1321. SmartCardConnectBlockedForUrls
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type SmartCardConnectBlockedForUrls struct {
 	Stat Status
@@ -29706,6 +29708,7 @@ func (p *DeviceLoginScreenFaceGazeEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1355. DefaultSmartCardConnectSetting
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DefaultSmartCardConnectSetting struct {
 	Stat Status
@@ -30641,6 +30644,7 @@ func (p *NTPShortcuts) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1389. AutoSignOutEnabled
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type AutoSignOutEnabled struct {
 	Stat Status
@@ -30672,6 +30676,7 @@ func (p *AutoSignOutEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1390. ExtensionInstallCloudPolicyChecksEnabled
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ExtensionInstallCloudPolicyChecksEnabled struct {
 	Stat Status
@@ -30695,300 +30700,6 @@ func (p *ExtensionInstallCloudPolicyChecksEnabled) SetProto(m *protoreflect.Mess
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *ExtensionInstallCloudPolicyChecksEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1391. DevToolsGoogleDeveloperProgramProfileAvailability
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DevToolsGoogleDeveloperProgramProfileAvailability struct {
-	Stat Status
-	Val  int
-}
-
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Name() string {
-	return "DevToolsGoogleDeveloperProgramProfileAvailability"
-}
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Scope() Scope          { return ScopeUser }
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Status() Status        { return p.Stat }
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) UntypedV() interface{} { return p.Val }
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1392. IncognitoModeBlocklist
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type IncognitoModeBlocklist struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *IncognitoModeBlocklist) Name() string          { return "IncognitoModeBlocklist" }
-func (p *IncognitoModeBlocklist) Scope() Scope          { return ScopeUser }
-func (p *IncognitoModeBlocklist) Status() Status        { return p.Stat }
-func (p *IncognitoModeBlocklist) UntypedV() interface{} { return p.Val }
-func (p *IncognitoModeBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *IncognitoModeBlocklist) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *IncognitoModeBlocklist) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1393. IncognitoModeAllowlist
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type IncognitoModeAllowlist struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *IncognitoModeAllowlist) Name() string          { return "IncognitoModeAllowlist" }
-func (p *IncognitoModeAllowlist) Scope() Scope          { return ScopeUser }
-func (p *IncognitoModeAllowlist) Status() Status        { return p.Stat }
-func (p *IncognitoModeAllowlist) UntypedV() interface{} { return p.Val }
-func (p *IncognitoModeAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *IncognitoModeAllowlist) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *IncognitoModeAllowlist) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1394. PreferSlowKexAlgorithms
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type PreferSlowKexAlgorithms struct {
-	Stat Status
-	Val  string
-}
-
-func (p *PreferSlowKexAlgorithms) Name() string          { return "PreferSlowKexAlgorithms" }
-func (p *PreferSlowKexAlgorithms) Scope() Scope          { return ScopeUser }
-func (p *PreferSlowKexAlgorithms) Status() Status        { return p.Stat }
-func (p *PreferSlowKexAlgorithms) UntypedV() interface{} { return p.Val }
-func (p *PreferSlowKexAlgorithms) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *PreferSlowKexAlgorithms) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PreferSlowKexAlgorithms) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1397. SilentPrintingEnabled
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type SilentPrintingEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *SilentPrintingEnabled) Name() string          { return "SilentPrintingEnabled" }
-func (p *SilentPrintingEnabled) Scope() Scope          { return ScopeUser }
-func (p *SilentPrintingEnabled) Status() Status        { return p.Stat }
-func (p *SilentPrintingEnabled) UntypedV() interface{} { return p.Val }
-func (p *SilentPrintingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *SilentPrintingEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *SilentPrintingEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1398. PreferSlowCiphers
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type PreferSlowCiphers struct {
-	Stat Status
-	Val  string
-}
-
-func (p *PreferSlowCiphers) Name() string          { return "PreferSlowCiphers" }
-func (p *PreferSlowCiphers) Scope() Scope          { return ScopeUser }
-func (p *PreferSlowCiphers) Status() Status        { return p.Stat }
-func (p *PreferSlowCiphers) UntypedV() interface{} { return p.Val }
-func (p *PreferSlowCiphers) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *PreferSlowCiphers) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PreferSlowCiphers) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1399. DeveloperToolsAvailabilityAllowlist
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type DeveloperToolsAvailabilityAllowlist struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *DeveloperToolsAvailabilityAllowlist) Name() string {
-	return "DeveloperToolsAvailabilityAllowlist"
-}
-func (p *DeveloperToolsAvailabilityAllowlist) Scope() Scope          { return ScopeUser }
-func (p *DeveloperToolsAvailabilityAllowlist) Status() Status        { return p.Stat }
-func (p *DeveloperToolsAvailabilityAllowlist) UntypedV() interface{} { return p.Val }
-func (p *DeveloperToolsAvailabilityAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *DeveloperToolsAvailabilityAllowlist) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DeveloperToolsAvailabilityAllowlist) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1400. DeveloperToolsAvailabilityBlocklist
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type DeveloperToolsAvailabilityBlocklist struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *DeveloperToolsAvailabilityBlocklist) Name() string {
-	return "DeveloperToolsAvailabilityBlocklist"
-}
-func (p *DeveloperToolsAvailabilityBlocklist) Scope() Scope          { return ScopeUser }
-func (p *DeveloperToolsAvailabilityBlocklist) Status() Status        { return p.Stat }
-func (p *DeveloperToolsAvailabilityBlocklist) UntypedV() interface{} { return p.Val }
-func (p *DeveloperToolsAvailabilityBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *DeveloperToolsAvailabilityBlocklist) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DeveloperToolsAvailabilityBlocklist) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1401. LocalNetworkAccessRestrictionsTemporaryOptOut
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type LocalNetworkAccessRestrictionsTemporaryOptOut struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Name() string {
-	return "LocalNetworkAccessRestrictionsTemporaryOptOut"
-}
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Scope() Scope          { return ScopeUser }
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Status() Status        { return p.Stat }
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) UntypedV() interface{} { return p.Val }
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -32887,24 +32598,6 @@ func newByName(name string) (Policy, error) {
 		return &AutoSignOutEnabled{}, nil
 	case "ExtensionInstallCloudPolicyChecksEnabled":
 		return &ExtensionInstallCloudPolicyChecksEnabled{}, nil
-	case "DevToolsGoogleDeveloperProgramProfileAvailability":
-		return &DevToolsGoogleDeveloperProgramProfileAvailability{}, nil
-	case "IncognitoModeBlocklist":
-		return &IncognitoModeBlocklist{}, nil
-	case "IncognitoModeAllowlist":
-		return &IncognitoModeAllowlist{}, nil
-	case "PreferSlowKexAlgorithms":
-		return &PreferSlowKexAlgorithms{}, nil
-	case "SilentPrintingEnabled":
-		return &SilentPrintingEnabled{}, nil
-	case "PreferSlowCiphers":
-		return &PreferSlowCiphers{}, nil
-	case "DeveloperToolsAvailabilityAllowlist":
-		return &DeveloperToolsAvailabilityAllowlist{}, nil
-	case "DeveloperToolsAvailabilityBlocklist":
-		return &DeveloperToolsAvailabilityBlocklist{}, nil
-	case "LocalNetworkAccessRestrictionsTemporaryOptOut":
-		return &LocalNetworkAccessRestrictionsTemporaryOptOut{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
