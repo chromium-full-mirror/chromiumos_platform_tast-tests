@@ -226,7 +226,11 @@ func hasHover(ctx context.Context) (bool, error) {
 
 // hasALS checks if there is a light sensor on the board.
 func hasALS(ctx context.Context) (bool, error) {
-	output, err := testexec.CommandContext(ctx, "check_powerd_config", "--ambient_light_sensor").CombinedOutput()
+	// check_powerd_config reports an warning before returning the value. Logs stderr and continue the test.
+	stdout, stderr, err := testexec.CommandContext(ctx, "check_powerd_config", "--ambient_light_sensor").SeparatedOutput()
+	if len(stderr) != 0 {
+		testing.ContextLog(ctx, "Stderr from check_powerd_config: ", string(stderr))
+	}
 
 	exitCode, ok := testexec.ExitCode(err)
 	if !ok {
@@ -237,9 +241,9 @@ func hasALS(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	alsNum, err := strconv.ParseUint(strings.TrimSpace(string(output)), 10, 64)
+	alsNum, err := strconv.ParseUint(strings.TrimSpace(string(stdout)), 10, 64)
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to parse light sensor numbers from %q", output)
+		return false, errors.Wrapf(err, "unable to parse light sensor numbers from %q", stdout)
 	}
 
 	if alsNum < 1 {
