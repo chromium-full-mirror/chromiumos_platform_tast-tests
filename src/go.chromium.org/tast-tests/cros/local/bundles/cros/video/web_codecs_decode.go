@@ -18,8 +18,9 @@ func init() {
 		Func: WebCodecsDecode,
 		Desc: "Verifies that WebCodecs API works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
-			"greenjustin@google.com",
 			"chromeos-gfx-video@google.com",
+
+			"greenjustin@google.com",
 			"hiroh@chromium.org", // Test author.
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video

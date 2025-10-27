@@ -28,8 +28,9 @@ func init() {
 		Func: MediaRecorder,
 		Desc: "Verifies that MediaRecorder uses video encode acceleration",
 		Contacts: []string{
-			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
+
+			"bchoobineh@google.com",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

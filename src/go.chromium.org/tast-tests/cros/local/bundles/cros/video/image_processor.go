@@ -26,6 +26,7 @@ func init() {
 		Desc: "Runs ImageProcessor unit tests",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
+
 			"bchoobineh@google.com",
 			"nhebert@chromium.org", // Test author
 		},

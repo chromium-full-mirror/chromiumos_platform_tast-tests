@@ -28,8 +28,9 @@ func init() {
 		Func: MediaRecorderPerf,
 		Desc: "Captures performance data about MediaRecorder for both SW and HW",
 		Contacts: []string{
-			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
+
+			"bchoobineh@google.com",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
