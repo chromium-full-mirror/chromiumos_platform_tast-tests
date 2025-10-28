@@ -56,6 +56,7 @@ func init() {
 			pci.SearchFlag(&policy.DeviceLoginScreenExtensions{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.DeviceRestrictedManagedGuestSessionEnabled{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.ExtensionInstallForcelist{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.PinnedLauncherApps{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{}, pci.VerifiedFunctionalityJS),
 			{
 				Key: "feature_id",
@@ -80,6 +81,8 @@ func init() {
 //     tested here.
 //  4. Clipboard: This is tested by setting clipboard data and checking that it
 //     is cleared.
+//  5. Pinned apps: This is tested by pinning one app by policy and one by the
+//     user and checking that the user-pinned app is unpinned.
 //
 // Printing is not tested due to the set up needed and will be covered in a
 // browser test in Chrome instead.
@@ -94,6 +97,8 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	testAppID := "jndclpdbaamdhonoechobihbbiimdgai"
 	// ID for the Test API extension.
 	testAPIExtensionID := "behllobkkfkfnphdnhnkndlbkcpglgmj"
+	// ID for the Camera App.
+	cameraAppID := "hfhhnacclhffhdffaeplbaeaajmlfbfh"
 
 	opts := []mgs.Option{
 		mgs.Accounts(accountID),
@@ -103,6 +108,9 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 			},
 			&policy.RestrictedManagedGuestSessionExtensionCleanupExemptList{
 				Val: []string{mgs.InSessionExtensionID, testAPIExtensionID},
+			},
+			&policy.PinnedLauncherApps{
+				Val: []string{testAppID},
 			},
 		}),
 		mgs.ExtraPolicies([]policy.Policy{
@@ -223,6 +231,23 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Pin the camera app. This should be removed by the cleanup.
+	if err := ash.PinApp(ctx, tConn, cameraAppID); err != nil {
+		s.Fatalf("Failed to pin app %q: %v", cameraAppID, err)
+	}
+
+	// Check that both apps are pinned.
+	if pinned, err := isAppPinned(ctx, tConn, cameraAppID); err != nil {
+		s.Fatalf("Failed to check if app %q is pinned: %v", cameraAppID, err)
+	} else if !pinned {
+		s.Fatalf("App %q should have been pinned", cameraAppID)
+	}
+	if pinned, err := isAppPinned(ctx, tConn, testAppID); err != nil {
+		s.Fatalf("Failed to check if app %q is pinned: %v", testAppID, err)
+	} else if !pinned {
+		s.Fatalf("App %q should have been pinned", testAppID)
+	}
+
 	// The unload popup only shows up if there was user interaction on the page
 	// (e.g. any click on the page). The cleanup should also be able to close
 	// webpages with onload actions.
@@ -295,6 +320,19 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 		// Pass
 	case <-ctx.Done():
 		s.Fatal("Timeout before getting session unlocked signal: ", err)
+	}
+
+	// Check that user-pinned app is no longer pinned.
+	if pinned, err := isAppPinned(ctx, tConn, cameraAppID); err != nil {
+		s.Fatalf("Failed to check if app %q is pinned: %v", cameraAppID, err)
+	} else if pinned {
+		s.Fatalf("App %q should have been unpinned", cameraAppID)
+	}
+	// Check that policy-pinned app is still pinned.
+	if pinned, err := isAppPinned(ctx, tConn, testAppID); err != nil {
+		s.Fatalf("Failed to check if app %q is pinned: %v", testAppID, err)
+	} else if !pinned {
+		s.Fatalf("App %q should have remained pinned", testAppID)
 	}
 
 	// Check the inSessionConn is still alive. This indicates that the
@@ -400,4 +438,18 @@ func checkConnIsAlive(ctx context.Context, conn *chrome.Conn) error {
 		return errors.New("eval 'true' returned false")
 	}
 	return nil
+}
+
+// isAppPinned checks if an app is pinned to the shelf.
+func isAppPinned(ctx context.Context, tconn *chrome.TestConn, appID string) (bool, error) {
+	pinnedApps, err := ash.GetPinnedAppIds(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get pinned apps")
+	}
+	for _, pinnedApp := range pinnedApps {
+		if pinnedApp == appID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
