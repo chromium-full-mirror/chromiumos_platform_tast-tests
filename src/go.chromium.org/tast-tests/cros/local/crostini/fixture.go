@@ -153,7 +153,7 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: &crostiniFixture{preData: preTestDataBookworm,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX")}, nil
+				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX"), chrome.DisableFeatures("CrostiniContainerless")}, nil
 			},
 		},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
@@ -237,7 +237,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Impl: &crostiniFixture{preData: preTestDataBookworm,
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("EnableRootNsDnsProxy")}, nil
+				return []chrome.Option{chrome.EnableFeatures("EnableRootNsDnsProxy"), chrome.DisableFeatures("CrostiniContainerless")}, nil
 			},
 		},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
@@ -862,6 +862,7 @@ func generateChromeOpts(s *testing.FixtState) []chrome.Option {
 		chrome.ExtraArgs("--vmodule=crostini*=1"),
 		// Don't show time-of-day wallpapers. We want a solid color for screenshots.
 		chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+		chrome.DisableFeatures("CrostiniContainerless"),
 	}
 
 	useLocalImage := checkKeepState(s)
