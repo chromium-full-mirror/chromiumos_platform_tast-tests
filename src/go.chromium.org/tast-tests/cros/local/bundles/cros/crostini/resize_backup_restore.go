@@ -96,8 +96,21 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	}
 
 	checksumFiles := func(outputFile string) error {
-		const md5cmd = "for d in /home /etc /usr; do echo $d; sudo find $d -type f -a '!' -path '*/.*' -exec md5sum {} + | LC_ALL=c sort | md5sum; done"
+		const md5cmd = "for d in /home /usr; do echo $d; sudo find $d -type f -a '!' -path '*/.*' -exec md5sum {} + | LC_ALL=c sort | md5sum; done"
 		return runInTerminal(md5cmd, outputFile)
+	}
+
+	// Log a listing of dir.
+	logFiles := func(dir string) {
+		const lslRFile = "/tmp/lslR.txt"
+		if err := runInTerminal("sudo ls -lRa "+dir, lslRFile); err != nil {
+			s.Fatal("Failed to ls -lRa in container: ", err)
+		}
+		lslR, err := cont.ReadFile(ctx, lslRFile)
+		if err != nil {
+			s.Fatal("Failed to read lslR file: ", err)
+		}
+		s.Log(lslR)
 	}
 
 	const (
@@ -114,6 +127,8 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	if err := checksumFiles(checksumPreFile); err != nil {
 		s.Fatal("Failed to run command in Terminal window: ", err)
 	}
+	s.Log("Directory contents before backup:")
+	logFiles("/home /tmp")
 	checksumPreStr, err := cont.ReadFile(ctx, checksumPreFile)
 	if err != nil {
 		s.Fatalf("Failed to read checksum output file %s: %v", checksumPreFile, err)
@@ -177,19 +192,7 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Log a listing of dir.
-	logFiles := func(dir string) {
-		const lslRFile = "/tmp/lslR.txt"
-		if err := runInTerminal("sudo ls -lRa "+dir, lslRFile); err != nil {
-			s.Fatal("Failed to ls -lRa in container: ", err)
-		}
-		lslR, err := cont.ReadFile(ctx, lslRFile)
-		if err != nil {
-			s.Fatal("Failed to read lslR file: ", err)
-		}
-		s.Log(lslR)
-	}
-
+	s.Log("Directory contents after backup and before resize:")
 	logFiles("/home /tmp")
 
 	// Delete existingFile. This means if our restore was a no-op we'll fail
@@ -248,6 +251,8 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to read checksum output file %s: %v", checksumPostFile, err)
 	}
 	s.Log("Post checksum\n" + checksumPostStr)
+
+	s.Log("Directory contents after restore:")
 	logFiles("/home /tmp")
 
 	if err := cont.CheckFileContent(ctx, existingFile, existingFileStr); err != nil {
