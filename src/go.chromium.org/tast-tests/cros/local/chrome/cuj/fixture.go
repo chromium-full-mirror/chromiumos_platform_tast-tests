@@ -1156,30 +1156,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithMahiEnabled",
-		Desc: "CUJ fixture with Mahi enabled",
-		Contacts: []string{
-			"alanlxl@chromium.org",
-			"thanhdng@chromium.org",
-		},
-		BugComponent: "b:1551116", // ChromeOS > Software > Consumer > Machine Intelligence > GenAI > Mahi
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs("--mahi-restrictions-override"),
-				chrome.EnableFeatures("Mahi"),
-				chrome.EnableFeatures("Pompano"),
-				// TODO(b:356518781): this flag might be renamed.
-				chrome.EnableFeatures("MediaAppPdfMahi"),
-			},
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithCoralEnabled",
 		Desc: "CUJ test fixture with Coral feature enabled",
 		Contacts: []string{
