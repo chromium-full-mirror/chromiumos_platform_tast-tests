@@ -189,6 +189,13 @@ func GSCOpenAPOff(ctx context.Context, s *testing.State) {
 		b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+		s.Log("pressed power button")
+		// Log the console output after the power button press. This
+		// will include the ccd open messages if it was the last power
+		// button press required to open ccd.
+		if out, err := i.Command(ctx, ""); err == nil {
+			s.Log("out: ", out)
+		}
 	}
 	if j != expectedShortPressCount {
 		s.Errorf("Unexpected power button count: expected %d got %d", expectedShortPressCount, j)
