@@ -78,6 +78,15 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reboot into recovery mode: ", err)
 	}
 
+	defer func() {
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			s.Fatal("Failed to reset DUT: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to establish connection after resetting DUT: ", err)
+		}
+	}()
+
 	// Set the Servo as a sink
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
 		s.Fatal("Failed to set servoV4 to SNK: ", err)
