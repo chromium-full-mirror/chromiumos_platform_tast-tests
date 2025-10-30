@@ -31,10 +31,10 @@ const (
 
 // listKdumpFiles lists the files in the kdump directory.
 func listKdumpFiles(ctx context.Context, d *dut.DUT) ([]string, error) {
-	out, err := d.Conn().CommandContext(ctx, "ls", "-1", kdumpDir).Output()
+	out, err := d.Conn().CommandContext(ctx, "ls", "-1", kdumpDir).CombinedOutput()
 	if err != nil {
 		// It's okay if the directory doesn't exist.
-		if strings.Contains(err.Error(), "No such file or directory") {
+		if strings.Contains(string(out), "No such file or directory") {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "failed to list kdump files")
