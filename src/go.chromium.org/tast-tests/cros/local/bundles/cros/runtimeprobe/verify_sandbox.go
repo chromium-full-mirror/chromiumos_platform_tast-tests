@@ -117,7 +117,7 @@ func init() {
 				}},
 				helperTimeout: 15,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix", "karis", "uldrenite", "uldrenite360")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix", "karis", "uldrenite", "uldrenite360", "uldrino")),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
