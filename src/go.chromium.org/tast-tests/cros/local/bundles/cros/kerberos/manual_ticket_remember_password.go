@@ -62,9 +62,6 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
-		// TODO(b/260522530): remove this after KerberosInBrowser feature
-		// is launched (launch/4210638).
-		chrome.DisableFeatures("KerberosRememberPasswordByDefault"),
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment())
@@ -115,7 +112,8 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not open Kerberos section in OS settings: ", err)
 	}
 
-	// Add a Kerberos ticket.
+	// Add a Kerberos ticket. Note: the "Remember password" checkbox is checked
+	// by default.
 	if err := uiauto.Combine("add Kerberos ticket",
 		ui.LeftClick(nodewith.Name("Kerberos tickets").Role(role.Link)),
 		ui.LeftClick(nodewith.Name("Add a ticket").Role(role.Button)),
@@ -123,7 +121,6 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		keyboard.TypeAction(config.KerberosAccount),
 		ui.LeftClick(nodewith.Name("Password").Role(role.TextField)),
 		keyboard.TypeAction(password),
-		ui.LeftClick(nodewith.Name("Remember password").Role(role.CheckBox)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
 		keyboard.AccelAction("Tab"),
 		keyboard.TypeAction(config.RealmsConfig),
@@ -138,7 +135,7 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find active ticket: ", err)
 	}
 
-	// Refresh the Kerberos ticket using "remember password" feature.
+	// Refresh the Kerberos ticket using the "remember password" feature.
 	if err := uiauto.Combine("refresh Kerberos ticket",
 		ui.LeftClick(nodewith.HasClass("icon-more-vert more-actions").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Refresh now").Role(role.MenuItem)),
@@ -152,5 +149,4 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 	if err := kerberos.CheckForTicket(ctx, ui, config); err != nil {
 		s.Fatal("Failed to find active ticket: ", err)
 	}
-
 }
