@@ -243,7 +243,7 @@ func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
 	s.EnablePDConsoleDebug(ctx)
 	defer s.DisablePDConsoleDebug(ctx)
 
-	testing.ContextLog(ctx, "Sending power swap request: ", cmd)
+	testing.ContextLog(ctx, "Sending DUT power swap request: ", cmd)
 
 	switch s.dutPDInfo.version {
 	case TCPMv1, TCPMv2:
@@ -347,8 +347,8 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if pdState, err := s.GetDUTPDState(ctx); err == nil {
-				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
-				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
+				testing.ContextLogf(ctx, "DUT PD state after: %#v", pdState)
+				testing.ContextLog(ctx, "DUT PD Role after: ", pdState.PowerRole)
 				if role != string(pdState.PowerRole) {
 					// Because PDC does not send recv msg, retry swap if it is not successful.
 					if s.dutPDInfo.version == PDC {
@@ -366,7 +366,7 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 		}
 
 	} else {
-		testing.ContextLog(ctx, "PD already at power role: ", role)
+		testing.ContextLog(ctx, "DUT PD already at power role: ", role)
 	}
 
 	return nil
@@ -374,11 +374,13 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 
 // RestorePDPort restores DUT PD port state to the SNK role.
 func (s *Servo) RestorePDPort(ctx context.Context) error {
-	// Set DUT PD to SNK so battery charges.
-	if err := s.SetPDPowerRole(ctx, "SNK"); err != nil {
-		return errors.Wrap(err, "failed to set PD role to SNK")
+	// Set Servo PD to SRC so battery charges.
+	if err := s.ServoCcOff(ctx); err != nil {
+		return errors.Wrap(err, "failed to cc off")
 	}
-
+	if err := s.ServoCcSrc(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to cc srcdts")
+	}
 	return nil
 }
 
