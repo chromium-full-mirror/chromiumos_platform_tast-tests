@@ -7,6 +7,7 @@ package uidetection
 import (
 	"context"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -515,4 +516,45 @@ func (uda *Context) AccurateTimeElementAppears(ctx context.Context, s *Finder) (
 		}
 	}
 	return earliestTime, nil
+}
+
+// FindAnyExists finds all finders concurrently and returns immediately
+// when the first one succeeds.
+func (uda *Context) FindAnyExists(ctx context.Context, finders ...*Finder) (*Finder, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	result := make(chan *Finder, 1)
+	var wg sync.WaitGroup
+	wg.Add(len(finders))
+	for _, f := range finders {
+		f := f
+		go func() {
+			defer wg.Done()
+
+			if err := uda.WaitForLocation(f)(ctx); err != nil {
+				return
+			}
+			select {
+			case result <- f:
+				// Cancel all other goroutines once a finder succeeds.
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
+
+	f, ok := <-result
+	if ok {
+		return f, nil
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return nil, errors.New("failed to find any elements")
 }
