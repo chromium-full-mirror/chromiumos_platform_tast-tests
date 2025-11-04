@@ -122,11 +122,18 @@ func init() {
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{
+				opts := []chrome.Option{
 					chrome.EnableFeatures("CrostiniContainerless"),
 					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
 					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
-				}, nil
+				}
+				if arc.Supported() {
+					opts = append(opts, chrome.ARCEnabled())
+					opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+				} else {
+					opts = append(opts, chrome.ARCDisabled())
+				}
+				return opts, nil
 			},
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,

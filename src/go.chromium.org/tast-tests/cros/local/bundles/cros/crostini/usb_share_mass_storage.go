@@ -78,6 +78,16 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
+	if strings.Contains(s.TestName(), "baguette") {
+		s.Log("Installing fuse2fs, fuse3")
+		if err := cont.Command(ctx, "sudo", "apt-get", "update").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to run apt-update: ", err)
+		}
+		if err := cont.Command(ctx, "sudo", "apt-get", "-y", "install", "fuse2fs", "fuse3").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to install fuse2fs, fuse3: ", err)
+		}
+	}
+
 	_, cleanup, err := setupMassStorage(ctx, deviceLabel)
 	if err != nil {
 		s.Fatal("Unable to setup the mass storage device: ", err)

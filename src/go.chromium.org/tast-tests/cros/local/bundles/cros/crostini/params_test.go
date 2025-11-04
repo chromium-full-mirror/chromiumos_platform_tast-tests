@@ -51,13 +51,13 @@ var standardTests = map[string]testOptions{
 	"command_cd.go":                     {foundation: true, testBaguette: true},
 	"command_ps.go":                     {foundation: true, testBaguette: true},
 	"command_vim.go":                    {foundation: true, testBaguette: true},
-	"copy_files_to_linux_files.go":      {},
+	"copy_files_to_linux_files.go":      {testBaguette: true},
 	// TODO(b/377716353): crash_reporter PoC exists for baguette, but requires more filtering.
 	"crash_reporter.go": {testBaguette: false},
 	// TODO(b/377716353): drag_drop seems to fail on just the last test in baguette, skip for now and debug more later
 	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, extraAttr: []string{"informational"}},
 	"files_app_watch.go": {testBaguette: true},
-	// TODO(b/377716353): missing dbus signal, requires investigation
+	// TODO(b/377716353): missing dbus signal, part of crash-reporter output
 	"fs_corruption.go":          {timeout: 10 * time.Minute},
 	"home_directory_share.go":   {testBaguette: true},
 	"icon_and_username.go":      {testBaguette: true},
@@ -74,16 +74,14 @@ var standardTests = map[string]testOptions{
 	"remove_ok.go":             {foundation: true, testBaguette: true},
 	"resize_backup_restore.go": {timeout: 15 * time.Minute, testBaguette: true},
 	"resize_cancel.go":         {testBaguette: true},
-	// TODO(b/377716353): baguette resizing may not be working, or reporting incorrectly, more to debug.
-	"resize_ok.go":                {},
-	"resize_restart.go":           {},
-	"resize_space_constrained.go": {},
-	"restart.go":                  {testBaguette: true},
-	"restart_icon.go":             {testBaguette: true},
-	// TODO(b/377716353): ARC fails to boot
-	"run_with_arc.go": {requiresARC: true},
-	// TODO(b/377716353): needs shared fonts mount fix
-	"shared_font_files.go":         {foundation: true},
+	// TODO(b/442664131): Re-enable once the ResetAutomation is available for MV3.
+	"resize_ok.go":                 {},
+	"resize_restart.go":            {},
+	"resize_space_constrained.go":  {},
+	"restart.go":                   {testBaguette: true},
+	"restart_icon.go":              {testBaguette: true},
+	"run_with_arc.go":              {requiresARC: true, testBaguette: true},
+	"shared_font_files.go":         {foundation: true, testBaguette: true},
 	"share_downloads_add_files.go": {testBaguette: true},
 	"share_downloads.go":           {testBaguette: true},
 	"share_files_cancel.go":        {testBaguette: true},
@@ -96,11 +94,11 @@ var standardTests = map[string]testOptions{
 	"share_invalid_paths.go":       {testBaguette: true},
 	// Baguette has no lxc, and therefore no snapshots.
 	"snapshot.go": {timeout: 6 * time.Minute, testBaguette: false},
-	// TODO(b/377716353): couldn't find sshfs mount, may be named differently
+	// TODO(b/377716353): enable once sshfs mount cl lands in chromium
 	"sshfs_mount.go":  {},
 	"sync_time.go":    {testBaguette: true},
 	"task_manager.go": {testBaguette: true},
-	// TODO(b/377716353): failed to mount usb device
+	// TODO(b/377716353): user needs to be added to `disk` group
 	"usb_share_mass_storage.go": {},
 	"verify_app_x11.go":         {testBaguette: true},
 	// Baguette will not support vmc extra disk mounting automatically.
