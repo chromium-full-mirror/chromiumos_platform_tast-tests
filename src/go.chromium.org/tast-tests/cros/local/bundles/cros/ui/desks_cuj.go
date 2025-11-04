@@ -52,7 +52,6 @@ func init() {
 				Name:              "pvsched",
 				BugComponent:      "b:167279",
 				Val:               deskscuj.TestParam{},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
 			},

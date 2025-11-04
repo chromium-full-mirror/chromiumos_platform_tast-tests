@@ -25,7 +25,6 @@ func init() {
 			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome", "arc"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
@@ -35,10 +34,12 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Fixture: "loggedInToCUJUserARCSupported",
-				Val:     false, /*tablet*/
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUserARCSupported",
+				Val:       false, /*tablet*/
 			}, {
 				Name:              "tablet",
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.TouchScreen()),
 				Fixture:           "loggedInToCUJUserARCSupported",
 				Val:               true, /*tablet*/
@@ -47,14 +48,13 @@ func init() {
 			// Experimental variants.
 			{
 				Name:      "field_trials",
-				ExtraAttr: []string{"cuj_experimental"},
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val:       false, /*tablet*/
 				Fixture:   "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
 			{
 				Name:              "pvsched",
 				BugComponent:      "b:167279",
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
 				Val:               false, /*tablet*/

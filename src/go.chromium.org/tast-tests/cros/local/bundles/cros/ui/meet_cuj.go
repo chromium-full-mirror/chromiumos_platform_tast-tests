@@ -166,7 +166,6 @@ func init() {
 				Name:              "docs_pvsched",
 				BugComponent:      "b:167279",
 				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1), hwdep.HasParavirtSchedControl()),
 				Val: meetcuj.MeetTest{
 					Bots:          []int{1, 3, 15},
