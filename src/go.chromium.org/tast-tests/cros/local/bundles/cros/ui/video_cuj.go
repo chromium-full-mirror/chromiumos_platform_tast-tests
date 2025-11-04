@@ -56,13 +56,6 @@ func init() {
 				Val:               videocuj.TestParam{},
 			},
 			{
-				Name:              "pvsched",
-				BugComponent:      "b:167279",
-				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
-				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-				Val:               videocuj.TestParam{},
-			},
-			{
 				Name: "coral",
 				// No attrs because this test can only be triggered manually currently.
 				Fixture:           "loggedInToCUJUserWithCoralEnabled",

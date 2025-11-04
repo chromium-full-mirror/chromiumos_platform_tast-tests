@@ -52,13 +52,6 @@ func init() {
 				Val:       false, /*tablet*/
 				Fixture:   "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
-			{
-				Name:              "pvsched",
-				BugComponent:      "b:167279",
-				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-				Fixture:           "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
-				Val:               false, /*tablet*/
-			},
 		},
 	})
 }

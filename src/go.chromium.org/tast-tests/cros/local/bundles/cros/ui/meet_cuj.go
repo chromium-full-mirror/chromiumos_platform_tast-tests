@@ -162,24 +162,6 @@ func init() {
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 			},
 			{
-
-				Name:              "docs_pvsched",
-				BugComponent:      "b:167279",
-				Timeout:           meetcuj.DefaultTestTimeout,
-				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1), hwdep.HasParavirtSchedControl()),
-				Val: meetcuj.MeetTest{
-					Bots:          []int{1, 3, 15},
-					Layout:        googlemeet.TiledLayout,
-					Present:       true,
-					Docs:          true,
-					Split:         true,
-					Cam:           true,
-					ZoomOut:       true,
-					Effects:       true,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
-			}, {
 				Name:      "docs_no_effects",
 				Timeout:   meetcuj.DefaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
