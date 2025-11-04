@@ -22,7 +22,6 @@ import (
 )
 
 const (
-	androidP          string = "android_p"
 	androidContainerR string = "android_container_r"
 	androidVMT        string = "android_vm_t"
 )
@@ -46,10 +45,6 @@ func init() {
 		Fixture:         "arcBootedWithBluetoothFloss",
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
-			Name:              "android_p",
-			ExtraSoftwareDeps: []string{androidP},
-			Val:               androidP,
-		}, {
 			Name:              "android_container_r",
 			ExtraSoftwareDeps: []string{androidContainerR},
 			Val:               androidContainerR,
@@ -130,8 +125,6 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	// The texts are different across Android versions.
 	var allowBluetoothObj *ui.Object
 	switch androidDep {
-	case androidP:
-		allowBluetoothObj = d.Object(ui.Text("ALLOW"))
 	case androidContainerR, androidVMT:
 		allowBluetoothObj = d.Object(ui.Text("Allow"))
 	default:
@@ -149,7 +142,7 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 		// According to Android guidelines, Bluetooth permission is needed to ensure user awareness and consent.
 		apputil.FindAndClick(requestPermissionObj, defaultUITimeout),
 		// User consent of Bluetooth feature is only required on Android 12 (API level 31) or higher.
-		// That means, android_vm_t (API level 32) will have this prompt, but not for android_p (API level 28) and android_r (API level 30).
+		// That means, android_vm_t (API level 32) will have this prompt, but not for android_r (API level 30).
 		apputil.ClickIfExist(allowBluetoothObj, defaultUITimeout),
 		apputil.WaitForExists(permissionStatusObj, defaultUITimeout),
 	)(ctx); err != nil {
