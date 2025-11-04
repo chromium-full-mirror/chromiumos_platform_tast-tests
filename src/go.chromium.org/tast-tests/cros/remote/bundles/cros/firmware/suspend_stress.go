@@ -164,7 +164,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		if failFast {
 			s.Fatalf("%s: %v", msg, err)
 		} else {
-			s.Logf("%s: %v", msg, err)
+			s.Logf("ITERATION FAILURE (%d) %s: %v", iter, msg, err)
 			failures[iter] = append(failures[iter], errors.Wrap(err, msg))
 		}
 	}
@@ -199,30 +199,32 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		suspendSeconds := minSuspendResumeSeconds + rand.Intn(maxSuspendResumeSeconds-minSuspendResumeSeconds)
 
 		func() {
+			var retErr error
 			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 			if err != nil {
 				s.Log("Failed to start ec uart capture: ", err)
 			}
 			defer func() {
+				if retErr != nil {
+					ecLogs, _ := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+					tail, numLines := getLogsTail(ecLogs, numECLogsToPrint)
+					saveLogsForFailedIter(ctx, h, ecLogs, i)
+					testing.ContextLogf(ctx, "Last %d EC Logs from failure: %v", numLines, tail)
+				}
 				if err := closeUART(ctx); err != nil {
 					s.Log("Failed to close ec uart capture: ", err)
 				}
 			}()
 
 			if err := timeSuspendWakeCycle(ctx, h, suspendSeconds); err != nil {
-				ecLogs, _ := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
-				tail, numLines := getLogsTail(ecLogs, numECLogsToPrint)
 				logFailure("Failed waiting for suspend and wake", err, i)
-				saveLogsForFailedIter(ctx, h, ecLogs, i)
-				testing.ContextLogf(ctx, "Last %d EC Logs from failure: %v", numLines, tail)
+				retErr = err
 			}
-		}()
-
-		func() {
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 30*time.Second)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx, firmware.FromHibernation); err != nil {
 				logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
+				retErr = err
 			}
 		}()
 
