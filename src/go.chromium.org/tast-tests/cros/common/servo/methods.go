@@ -448,7 +448,7 @@ func (s *Servo) GetCCDSerial(ctx context.Context) (string, error) {
 
 // RemoveCCDWatchdogs enumerates over all servo devices, removes the watchdogs and enables CCDKeepaliveEn for any CCD devices.
 func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
-	devices, err := s.GetStringList(ctx, Devices)
+	devices, err := s.GetStringListTimeout(ctx, Devices, 20*time.Second)
 	if err != nil {
 		return err
 	}
@@ -786,6 +786,15 @@ func ParseQuotedString(value string) (string, error) {
 // GetStringList parses the value of a control as an encoded list
 func (s *Servo) GetStringList(ctx context.Context, control StringControl) ([]interface{}, error) {
 	v, err := s.GetString(ctx, control)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStringList(v)
+}
+
+// GetStringListTimeout parses the value of a control as an encoded list with a timeout
+func (s *Servo) GetStringListTimeout(ctx context.Context, control StringControl, timeout time.Duration) ([]interface{}, error) {
+	v, err := s.GetStringTimeout(ctx, control, timeout)
 	if err != nil {
 		return nil, err
 	}
