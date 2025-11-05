@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <base/check_op.h>
 #include <base/files/file_descriptor_watcher_posix.h>
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
 
   dbus::Bus::Options options;
   options.bus_type = dbus::Bus::SYSTEM;
-  scoped_refptr<dbus::Bus> bus(new dbus::Bus(options));
+  scoped_refptr<dbus::Bus> bus(new dbus::Bus(std::move(options)));
 
   CHECK(feature::PlatformFeatures::Initialize(bus));
   feature::PlatformFeatures* feature_lib = feature::PlatformFeatures::Get();
