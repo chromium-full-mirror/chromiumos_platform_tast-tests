@@ -1312,7 +1312,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		recorder.CustomScreenshot(ctx)
 		return pv, errors.Wrap(err, "failed to download dump from chrome://webrtc-internals")
 	}
-	dump, readErr := os.ReadFile(path)
+	dump, readErr := cuj.ReadWebRTCFile(path)
 	if readErr != nil {
 		return pv, errors.Wrap(readErr, "failed to read WebRTC internals dump from Downloads folder")
 	}
@@ -1324,7 +1324,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			return pv, errors.Wrap(err, "failed to write WebRTC internals dump to test results folder")
 		}
 		enterpriseEffects := meet.Enterprise && meet.Effects
-		webRTCInternalsPV, err := ReportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], enterpriseEffects, meet.Present)
+		webRTCInternalsPV, err := cuj.ReportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], enterpriseEffects, meet.Present)
 		if err != nil {
 			return pv, errors.Wrap(err, "failed to report info from WebRTC internals dump to performance metrics")
 		}

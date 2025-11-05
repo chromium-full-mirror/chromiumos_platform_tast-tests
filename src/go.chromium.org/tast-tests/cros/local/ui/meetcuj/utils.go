@@ -7,7 +7,6 @@ package meetcuj
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,10 +15,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/bond"
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -27,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -310,107 +306,6 @@ func SetupFakeCameraHAL(ctx context.Context, videoFilePath string, supportedForm
 		testutil.RemoveTestConfig(ctx)
 		upstart.RestartJob(ctx, cameraService)
 	}, nil
-}
-
-// ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
-func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
-	var webRTC webrtcinternals.Dump
-	if err := json.Unmarshal(dump, &webRTC); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal WebRTC internals dump")
-	}
-
-	expectedConns := 1
-	expectedScreenshareConns := 0
-	if present {
-		expectedConns = 2
-		expectedScreenshareConns = 1
-	}
-	var inCountError, outCountErr error
-	numPeerConns := 0
-	numScreenshareConns := 0
-	outboundVideoStream := 0
-	pv := perf.NewValues()
-	for connID, peerConn := range webRTC.PeerConnections {
-		// Only record peer connections that are related to our
-		// currently open Meet window. This is to make our tests more
-		// robust, by ignoring any peer connections that are hanging
-		// around from previous tests.
-		if !strings.Contains(peerConn.URL, meetingCode) {
-			continue
-		}
-		numPeerConns++
-
-		byType := peerConn.Stats.BuildIndex()
-		inTotalCount, inScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
-		}
-		outTotalCount, outScreenshareCount, err := cuj.ReportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
-		}
-
-		if inScreenshareCount != 0 {
-			return nil, errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
-		}
-		if outTotalCount == 0 {
-			testing.ContextLog(ctx, "Found no outbound-rtp video streams in peer connection ", connID)
-			outCountErr = errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
-			continue
-		} else {
-			outboundVideoStream++
-		}
-		expectedInTotalCount := 0
-		switch outScreenshareCount {
-		case 0: // This is the video chat connection.
-			// Sometimes when the connection is unstable, there may be multiple peer connections.
-			// Return failure only if none of the connections have correct inbound video data.
-			expectedInTotalCount = numBots
-
-			testing.ContextLogf(ctx, "Found %v inbound-rtp video streams", inTotalCount)
-			// If an enterprise account turns on effects, it may generate 1~2 inbound-rtp video
-			// streams for the self view of sending client, in particular on lower-end devices.
-			if enterpriseEffects {
-				if inTotalCount < expectedInTotalCount || inTotalCount > expectedInTotalCount+2 {
-					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected to be in range [%d, %d]", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+2)
-				} else {
-					inCountError = nil
-				}
-			} else {
-				if inTotalCount != expectedInTotalCount {
-					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
-				} else {
-					inCountError = nil
-				}
-			}
-		case outTotalCount: // This is the screen share connection.
-			numScreenshareConns++
-			if inTotalCount != expectedInTotalCount {
-				return nil, errors.Errorf("unexpected number of inbound-rtp video streams in screenshare peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
-			}
-		default:
-			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
-		}
-	}
-	if outboundVideoStream < expectedConns && outCountErr != nil {
-		return nil, outCountErr
-	}
-	if inCountError != nil {
-		return nil, inCountError
-	}
-	if numPeerConns < expectedConns {
-		return nil, errors.Errorf("unexpected number of peer connections; got %d, want %d", numPeerConns, expectedConns)
-	} else if numPeerConns > expectedConns {
-		testing.ContextLogf(ctx, "Got more peer connections; got %d, want %d", numPeerConns, expectedConns)
-	}
-
-	if numScreenshareConns < expectedScreenshareConns {
-		return nil, errors.Errorf("unexpected number of screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
-	} else if numScreenshareConns > expectedScreenshareConns {
-		testing.ContextLogf(ctx, "Got more screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
-	}
-
-	return pv, nil
 }
 
 // GetDisabledExperiments gets the list of partially rolled out experiments,

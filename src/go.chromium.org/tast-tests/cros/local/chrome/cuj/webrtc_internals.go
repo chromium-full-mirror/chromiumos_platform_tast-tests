@@ -5,19 +5,22 @@
 package cuj
 
 import (
+	"bufio"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -29,9 +32,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
-	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const createDumpSectionName = "Create Dump"
@@ -40,7 +44,7 @@ var (
 	createDumpSectionReg                    = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
 	createDumpSection                       = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
 	webRTCRootWebArea                       = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
-	webRTCDownloadButton                    = nodewith.Name("Download the \"webrtc-internals dump\"").Role(role.Button).Ancestor(webRTCRootWebArea)
+	webRTCDownloadButton                    = nodewith.Name("Download the \"rtcstats dump\"").Role(role.Button).Ancestor(webRTCRootWebArea)
 	createDiagnosticAudioRecordingsSection  = nodewith.Name("Create diagnostic audio recordings").Role(role.DisclosureTriangle)
 	enableDiagnosticAudioRecordingsCheckbox = nodewith.Name("Enable diagnostic audio recordings").Role(role.CheckBox)
 )
@@ -76,14 +80,6 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		dumpStartTime := time.Now()
 		testing.ContextLog(ctx, "Start to dump WebRTC file at ", dumpStartTime)
 
-		compressResultCheckBox := nodewith.Name("Compress result").Role(role.CheckBox)
-		ensureCompressResultUnchecked := uiauto.NamedCombine("ensure 'Compress Result' unchecked",
-			ui.WaitUntilExists(compressResultCheckBox),
-			uiauto.IfSuccessThen(ui.Exists(compressResultCheckBox.Attribute("checked", "true")),
-				ui.WithTimeout(time.Minute).DoDefaultUntil(compressResultCheckBox,
-					ui.WaitUntilCheckedState(compressResultCheckBox, false),
-				)),
-		)
 		waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
 		if err := uiauto.Combine("invoke the button for the dump download",
 			// Wait for |createDumpSection| node to appear to ensure
@@ -93,18 +89,14 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 				waitForDownloadButton,
 				ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
 			),
-			// The "Compress results" option is checked by default. To
-			// download a WebRTC dump file with a .txt extension, it is
-			// necessary to uncheck this option.
-			ensureCompressResultUnchecked,
 			ui.DoDefault(webRTCDownloadButton),
 		)(ctx); err != nil {
 			return err
 		}
 
 		downloadStartTime := time.Now()
-		// Assume WebRTC dump file name should start with "webrtc".
-		const webRTCFileName = "webrtc*.txt"
+		// WebRTC dump file name should be "rtcstats_dump.gz".
+		const webRTCFileName = "rtcstats_dump.gz"
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			files, err := filepath.Glob(filepath.Join(downloadsPath, webRTCFileName))
 			if err != nil {
@@ -294,12 +286,16 @@ const (
 // ReportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
 // If a non-nil error is returned, all peer connections that were fully validated before
 // the error was encountered are still reported.
-func ReportWebRTCInternals(pv *perf.Values, dump []byte, numBots int, present bool) error {
-	var webRTC webrtcinternals.Dump
-	if err := json.Unmarshal(dump, &webRTC); err != nil {
-		return errors.Wrap(err, "failed to unmarshal WebRTC internals dump")
+func ReportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, enterpriseEffects, present bool) (*perf.Values, error) {
+	stats, err := DecodeRTCStats(dump)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode RTC stats")
 	}
 
+	var (
+		inCountError, outCountErr error
+		foundInbound              bool
+	)
 	expectedConns := 1
 	expectedScreenshareConns := 0
 	if present {
@@ -307,87 +303,165 @@ func ReportWebRTCInternals(pv *perf.Values, dump []byte, numBots int, present bo
 		expectedScreenshareConns = 1
 	}
 
-	if numConns := len(webRTC.PeerConnections); numConns != expectedConns {
-		return errors.Errorf("unexpected number of peer connections: got %d; want %d", numConns, expectedConns)
+	numScreenshareConns := 0
+	outboundVideoStream := 0
+
+	pv := perf.NewValues()
+
+	var sessionIDs []string
+	// Collect all SessionIDs for connections that were created for a specific meeting.
+	for _, s := range stats {
+		if s.EventType == "create" && strings.Contains(s.URL, meetingCode) {
+			sessionIDs = append(sessionIDs, s.SessionID)
+		}
 	}
 
-	numScreenshareConns := 0
-	for connID, peerConn := range webRTC.PeerConnections {
-		byType := peerConn.Stats.BuildIndex()
-		inTotalCount, inScreenshareCount, err := ReportVideoStreams(pv, byType["inbound-rtp"], "framesReceived", ".Inbound", "bot%02d")
-		if err != nil {
-			return errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
+	// Create a map where each key is a SessionID and the value is a slice of stats data.
+	statsData := make(map[string][]map[string]interface{}, len(sessionIDs))
+	for _, s := range stats {
+		if s.EventType != "getStats" || !slices.Contains(sessionIDs, s.SessionID) {
+			continue
+		} else {
+			statsData[s.SessionID] = append(statsData[s.SessionID], s.Data)
 		}
-		outTotalCount, outScreenshareCount, err := ReportVideoStreams(pv, byType["outbound-rtp"], "framesSent", ".Outbound", "stream%d")
+	}
+	numPeerConns := len(statsData)
+
+	for connID, statsList := range statsData {
+		var inTotalCount, inScreenshareCount int
+		if !foundInbound {
+			inTotalCount, inScreenshareCount, err = ReportVideoStreams(pv, statsList, "inbound-rtp", "framesReceived", ".Inbound", "bot%02d")
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to report inbound-rtp video streams in peer connection %v", connID)
+			}
+			if inScreenshareCount != 0 {
+				return nil, errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
+			}
+		}
+		outTotalCount, outScreenshareCount, err := ReportVideoStreams(pv, statsList, "outbound-rtp", "framesSent", ".Outbound", "stream%d")
 		if err != nil {
-			return errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
+			return nil, errors.Wrapf(err, "failed to report outbound-rtp video streams in peer connection %v", connID)
 		}
 
-		if inScreenshareCount != 0 {
-			return errors.Errorf("unexpected number of inbound-rtp screenshare video streams in peer connection %v; got %d, want 0", connID, inScreenshareCount)
-		}
 		if outTotalCount == 0 {
-			return errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
+			testing.ContextLog(ctx, "Found no outbound-rtp video streams in peer connection ", connID)
+			outCountErr = errors.Errorf("found no outbound-rtp video streams in peer connection %v", connID)
+			continue
+		} else {
+			outboundVideoStream++
 		}
 		expectedInTotalCount := 0
 		switch outScreenshareCount {
-		case 0:
+		case 0: // This is the video chat connection.
+			// Sometimes when the connection is unstable, there may be multiple peer connections.
+			// Return failure only if none of the connections have correct inbound video data.
+
+			// Continue if inbound-rtp video streams has been found in the peer connection.
+			if foundInbound {
+				continue
+			}
 			expectedInTotalCount = numBots
-		case outTotalCount:
+
+			testing.ContextLogf(ctx, "Found %v inbound-rtp video streams", inTotalCount)
+			// If an enterprise account turns on effects, it may generate 1~2 inbound-rtp video
+			// streams for the self view of sending client, in particular on lower-end devices.
+			if enterpriseEffects {
+				if inTotalCount < expectedInTotalCount || inTotalCount > expectedInTotalCount+2 {
+					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, expected to be in range [%d, %d]", connID, inTotalCount, expectedInTotalCount, expectedInTotalCount+2)
+				} else {
+					inCountError = nil
+				}
+			} else {
+				if inTotalCount != expectedInTotalCount {
+					inCountError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+				} else {
+					inCountError = nil
+				}
+			}
+			if inCountError == nil {
+				foundInbound = true
+			}
+		case outTotalCount: // This is the screen share connection.
 			numScreenshareConns++
+			if inTotalCount != expectedInTotalCount {
+				return nil, errors.Errorf("unexpected number of inbound-rtp video streams in screenshare peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+			}
 		default:
-			return errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
-		}
-		if inTotalCount != expectedInTotalCount {
-			return errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
 		}
 	}
-
-	if numScreenshareConns != expectedScreenshareConns {
-		return errors.Errorf("unexpected number of screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
+	if outboundVideoStream < expectedConns && outCountErr != nil {
+		return nil, outCountErr
+	}
+	if inCountError != nil {
+		return nil, inCountError
+	}
+	if numPeerConns < expectedConns {
+		return nil, errors.Errorf("unexpected number of peer connections; got %d, want %d", numPeerConns, expectedConns)
+	} else if numPeerConns > expectedConns {
+		testing.ContextLogf(ctx, "Got more peer connections; got %d, want %d", numPeerConns, expectedConns)
 	}
 
-	return nil
+	if numScreenshareConns < expectedScreenshareConns {
+		return nil, errors.Errorf("unexpected number of screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
+	} else if numScreenshareConns > expectedScreenshareConns {
+		testing.ContextLogf(ctx, "Got more screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
+	}
+	return pv, nil
 }
 
-// ReportVideoStreams reports info from a webrtcinternals.StatsIndexByStatsID to performance
-// metrics. Returns the number of active video streams, and how many of them are screenshares.
-func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsID, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
-	totalCount := 0
+// ReportVideoStreams reports info from a stats list to performance metrics.
+// Returns the number of active video streams, and how many of them are screenshares.
+func ReportVideoStreams(pv *perf.Values, statsList []map[string]interface{}, dataType, framesTransmittedAttribute, directionSuffix, variantFormat string) (int, int, error) {
 	screenshareCount := 0
-	orderedIDs := make([]string, 0)
-	for id, byAttribute := range byID {
-		kindTimeline, ok := byAttribute["kind"]
-		if !ok {
-			return 0, 0, errors.Errorf("no kind attribute for %q", id)
-		}
-		kind, err := kindTimeline.Collapse()
-		if err != nil {
-			return 0, 0, errors.Errorf("failed to collapse timeline of kind attribute for %q", id)
-		}
-		if kind != "video" {
-			continue
-		}
+	screenShareSuffix := ""
+	streamsByID := make(map[string][]interface{})
+	orderedStreamIDs := make([]string, 0)
 
-		framesTransmittedTimeline, ok := byAttribute[framesTransmittedAttribute]
-		if !ok {
-			return 0, 0, errors.Errorf("no %s attribute for %q", framesTransmittedAttribute, id)
+	for _, statMap := range statsList {
+		for _, frameItem := range statMap {
+			frameData, ok := frameItem.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			streamID, ok := frameData["id"].(string)
+			if !ok {
+				continue
+			}
+			if kind, ok := frameData["kind"].(string); !ok || kind != "video" {
+				continue
+			}
+			if t, ok := frameData["type"].(string); !ok || t != dataType {
+				continue
+			}
+			framesTransmittedVal := frameData[framesTransmittedAttribute]
+			framesTransmitted, err := reportFloat64(framesTransmittedVal)
+			if err != nil {
+				return 0, 0, errors.Wrapf(err, "failed to parse string %q to float64", framesTransmittedVal)
+			}
+			if framesTransmitted <= 0 {
+				continue
+			}
+			if streamsByID[streamID] != nil {
+				streamsByID[streamID] = append(streamsByID[streamID], frameItem)
+				continue
+			}
+			// Initialize the stream record for the first time.
+			streamsByID[streamID] = []interface{}{frameItem}
+			orderedStreamIDs = append(orderedStreamIDs, streamID)
+			contentType, ok := frameData["contentType"].(string)
+			if ok && contentType == "screenshare" {
+				screenShareSuffix = ".Screenshare"
+				screenshareCount++
+			}
 		}
-		if len(framesTransmittedTimeline) == 0 {
-			return 0, 0, errors.Errorf("no values for %s attribute for %q", framesTransmittedAttribute, id)
-		}
-		if framesTransmittedTimeline[len(framesTransmittedTimeline)-1] == float64(0) {
-			continue
-		}
-
-		orderedIDs = append(orderedIDs, id)
 	}
 
-	sort.Slice(orderedIDs, func(i, j int) bool {
-		// Sort by number of items in the frames transmitted timeline as a simple
-		// proxy for length of time each stream was active. In descending order so
-		// the bots with longest time spent in the meeting sort earlier.
-		return len(byID[orderedIDs[i]][framesTransmittedAttribute]) > len(byID[orderedIDs[j]][framesTransmittedAttribute])
+	sort.Slice(orderedStreamIDs, func(i, j int) bool {
+		// Sort by the number of frames collected as a proxy for active duration.
+		// In descending order so the bots with longest time spent in the meeting
+		// sort earlier.
+		return len(streamsByID[orderedStreamIDs[i]]) > len(streamsByID[orderedStreamIDs[j]])
 	})
 
 	type reportableMetric struct {
@@ -424,38 +498,58 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 		"totalEncodeTime":      0,
 	}
 
-	screenShareSuffix := ""
-	for _, id := range orderedIDs {
-		byAttribute := byID[id]
-		if contentTypeTimeline, ok := byAttribute["contentType"]; ok {
-			contentType, err := contentTypeTimeline.Collapse()
-			if err != nil {
-				return 0, 0, errors.Errorf("failed to collapse timeline of contentType attribute for %q", id)
-			}
-			if contentType == "screenshare" {
-				screenShareSuffix = ".Screenshare"
-				screenshareCount++
-			}
-		}
+	timeline := make(map[string]map[string][]float64)
+	implementationList := make(map[string]string)
+	implementationAttribute := "decoderImplementation"
+	if directionSuffix == ".Outbound" {
+		implementationAttribute = "encoderImplementation"
+	}
 
-		variantSuffix := fmt.Sprintf(variantFormat, totalCount)
-		for _, config := range metrics {
-			timeline, ok := byAttribute[config.attribute]
+	for id, dataList := range streamsByID {
+		for _, v := range dataList {
+			m, ok := v.(map[string]interface{})
 			if !ok {
 				continue
 			}
 
-			var report []float64
-			for _, value := range timeline {
+			if _, ok := timeline[id]; !ok {
+				timeline[id] = make(map[string][]float64)
+			}
+
+			for _, config := range metrics {
+				value, ok := m[config.attribute]
+				if !ok || value == nil {
+					continue
+				}
 				// Skip if the timeline value is nil.
 				if value == nil {
 					continue
 				}
 				metric, err := config.reporter(value)
 				if err != nil {
-					return 0, 0, errors.Wrapf(err, "failed to represent %s attribute for %q as performance metric", config.attribute, id)
+					continue
 				}
-				report = append(report, metric)
+				timeline[id][config.attribute] = append(timeline[id][config.attribute], metric)
+			}
+
+			implementation, ok := m[implementationAttribute].(string)
+			if !ok || implementation == "" {
+				continue
+			}
+			if implementationList[id] == "" {
+				implementation = perf.InvalidNameRe.ReplaceAllString(implementation, "_")
+				implementationList[id] = implementation
+			}
+		}
+	}
+
+	for botNumber, id := range orderedStreamIDs {
+		variantSuffix := fmt.Sprintf(variantFormat, botNumber)
+		metricsMap := timeline[id]
+		for _, config := range metrics {
+			report, ok := metricsMap[config.attribute]
+			if !ok || len(report) == 0 {
+				continue
 			}
 
 			if _, ok := aggregates[config.attribute]; ok {
@@ -474,10 +568,13 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 				Multiple:  true,
 			}, report...)
 		}
-		if err := recordCoderImplementation(pv, byAttribute, screenShareSuffix, directionSuffix, variantSuffix); err != nil {
-			return 0, 0, errors.Wrapf(err, "failed to record coder implementation attribute for %q", id)
-		}
-		totalCount++
+
+		// Record the implementation in the name of the metric:
+		// Example: WebRTCInternals.Video.Screenshare.Outbound.encoderImplementation.SimulcastEncoderAdapter__libvpx__libvpx_.stream0
+		pv.Set(perf.Metric{
+			Name: fmt.Sprintf("WebRTCInternals.Video%s%s.%s.%s.%s", screenShareSuffix, directionSuffix, implementationAttribute, implementationList[id], variantSuffix),
+			Unit: "unitless",
+		}, 0)
 	}
 
 	for _, config := range metrics {
@@ -511,17 +608,25 @@ func ReportVideoStreams(pv *perf.Values, byID webrtcinternals.StatsIndexByStatsI
 			Direction: perf.SmallerIsBetter,
 		}, aggregates["totalEncodeTime"]/aggregates["framesEncoded"]*1000)
 	}
-
+	totalCount := len(orderedStreamIDs)
 	return totalCount, screenshareCount, nil
 }
 
 // reportFloat64 simply typecasts from interface{} to float64.
 func reportFloat64(value interface{}) (float64, error) {
-	report, ok := value.(float64)
-	if !ok {
+	switch v := value.(type) {
+	case float64:
+		return value.(float64), nil
+	case string:
+		// Translate string to float64.
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse string %q to float64", v)
+		}
+		return f, nil
+	default:
 		return 0, errors.Errorf("%v is not of type float64", value)
 	}
-	return report, nil
 }
 
 // reportVideoCodec parses a video codec description from a WebRTC internals dump, and
@@ -555,28 +660,72 @@ func reportPowerEfficient(value interface{}) (float64, error) {
 	return 0, nil
 }
 
-func recordCoderImplementation(pv *perf.Values, byAttribute webrtcinternals.StatsIndexByAttribute, screenShareSuffix, directionSuffix, variantSuffix string) error {
-	attribute := "decoderImplementation"
-	if directionSuffix == ".Outbound" {
-		attribute = "encoderImplementation"
+// ReadWebRTCFile reads a gzipped WebRTC internals dump file and returns
+// its decompressed contents.
+func ReadWebRTCFile(filename string) ([]byte, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %q", filename)
 	}
-	timeline, ok := byAttribute[attribute]
-	if !ok {
-		return errors.Errorf("failed to get %s attribute", attribute)
+
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open gzip reader")
 	}
-	if len(timeline) == 0 {
-		return errors.Errorf("%s attribute has no value", attribute)
+	defer r.Close()
+
+	return io.ReadAll(r)
+}
+
+// RTCStatsLine represents a single parsed line from a WebRTC internals dump.
+// Each line corresponds to a recorded event with its session metadata and
+// data payload.
+type RTCStatsLine struct {
+	EventType string
+	SessionID string
+	Data      map[string]interface{}
+	URL       string
+}
+
+// DecodeRTCStats parses raw WebRTC internals dump data into a structured
+// slice of RTCStatsLine. Each line in the dump is expected to be a JSON
+// array containing event metadata.
+func DecodeRTCStats(data []byte) ([]RTCStatsLine, error) {
+	var results []RTCStatsLine
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	buf := make([]byte, 0, 10*1024*1024)
+	scanner.Buffer(buf, 50*1024*1024)
+
+	for scanner.Scan() {
+		line := bytes.TrimSpace(scanner.Bytes())
+		if len(line) == 0 || line[0] != '[' {
+			continue
+		}
+
+		var parsedArray []interface{}
+		if err := json.Unmarshal(line, &parsedArray); err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal")
+		}
+
+		if len(parsedArray) < 4 {
+			continue
+		}
+
+		stats := RTCStatsLine{}
+		if eventType, ok := parsedArray[0].(string); ok {
+			stats.EventType = eventType
+		}
+		if sessionID, ok := parsedArray[1].(string); ok {
+			stats.SessionID = sessionID
+		}
+		if data, ok := parsedArray[2].(map[string]interface{}); ok {
+			stats.Data = data
+		}
+		if url, ok := parsedArray[3].(string); ok {
+			stats.URL = url
+		}
+
+		results = append(results, stats)
 	}
-	implementation, ok := timeline[0].(string)
-	if !ok {
-		return errors.Errorf("%v is not of type string", implementation)
-	}
-	// Record the implementation in the name of the metric:
-	// Example: WebRTCInternals.Video.Screenshare.Outbound.encoderImplementation.SimulcastEncoderAdapter__libvpx__libvpx_.stream0
-	implementation = perf.InvalidNameRe.ReplaceAllString(implementation, "_")
-	pv.Set(perf.Metric{
-		Name: fmt.Sprintf("WebRTCInternals.Video%s%s.%s.%s.%s", screenShareSuffix, directionSuffix, attribute, implementation, variantSuffix),
-		Unit: "unitless",
-	}, 0)
-	return nil
+	return results, scanner.Err()
 }
