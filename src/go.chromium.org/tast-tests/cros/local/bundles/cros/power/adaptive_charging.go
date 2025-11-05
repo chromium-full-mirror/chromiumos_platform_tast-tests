@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -55,7 +55,7 @@ func init() {
 	})
 }
 
-type adaptiveChargingTestFunc = func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error
+type adaptiveChargingTestFunc = func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, outDir string) error
 
 const powerdChargeHistoryDir = "/var/lib/power_manager/charge_history/"
 
@@ -159,10 +159,9 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 			}
 
 			s.Logf("Running subtest: %s", param.name)
-			if err := param.testFunc(ctx, cr, tconn); err != nil {
+			if err := param.testFunc(ctx, cr, tconn, s.OutDir()); err != nil {
 				s.Fatalf("Failed subtest %s with error: %v", param.name, err)
 			}
-			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 		})
 	}
 }
@@ -170,15 +169,21 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 // testChargeNow will verify that clicking the "Fully Charge Now" button that
 // shows up via notification when Adaptive Charging starts to delay charge
 // successfully cancels Adaptive Charging.
-func testChargeNow(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+func testChargeNow(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, outDir string) (retErr error) {
 	// Battery sustained will be enabled before the notification shows up.
 	if err := pollUntilBatterySustainingState(ctx, true); err != nil {
 		return err
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Wait for the notification center icon to become visible. It's not
 	// visible until a notification appears.
 	ui := uiauto.New(tconn)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, tconn, "ui_dump")
+
 	notificationCenterIcon := nodewith.HasClass("NotificationCenterTray")
 	if err := ui.WithTimeout(time.Minute).WaitUntilExists(notificationCenterIcon)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for the notification center icon to exist")
@@ -208,14 +213,20 @@ func testChargeNow(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 
 // testSettings will disable the re-enable Adaptive Charging via the Settings
 // app.
-func testSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+func testSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, outDir string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	ui := uiauto.New(tconn)
-	toggleAdaptiveCharging := nodewith.Name("Adaptive charging").Role(role.ToggleButton)
+	adaptiveCharging := nodewith.Name("Adaptive charging").Role(role.GenericContainer)
+	toggleAdaptiveCharging := nodewith.Role(role.ToggleButton).Ancestor(adaptiveCharging)
 	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "power", ui.WaitUntilExists(toggleAdaptiveCharging))
 	if err != nil {
 		return err
 	}
-	defer settings.Close(ctx)
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, tconn, "settings_ui_dump")
 
 	if err := ui.LeftClick(toggleAdaptiveCharging)(ctx); err != nil {
 		return errors.Wrap(err, "failed to toggle Adaptive Charging off")
