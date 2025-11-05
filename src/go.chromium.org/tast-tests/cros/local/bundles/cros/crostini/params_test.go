@@ -31,7 +31,7 @@ type testOptions struct {
 	// Foundational tests that should run on all devices. These tests should be lightweight enough
 	// to be stable enough to run on low performance devices and older versions of debian.
 	foundation   bool
-	testBaguette bool
+	skipBaguette bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
@@ -39,75 +39,75 @@ const DefaultAppTimeout = 15 * time.Minute
 
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
-	"app_gedit_install_uninstall.go": {foundation: true, timeout: 12 * time.Minute, testBaguette: true},
-	"audio_basic.go":                 {foundation: true, testBaguette: true, extraAttr: []string{"informational"}},
+	"app_gedit_install_uninstall.go": {foundation: true, timeout: 12 * time.Minute},
+	"audio_basic.go":                 {foundation: true, extraAttr: []string{"informational"}},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	// TODO(b/377716353): audio streams never settle on baguette, low priority to debug
-	"audio_playback_configurations.go": {timeout: 10 * time.Minute, testBaguette: false},
+	"audio_playback_configurations.go": {timeout: 10 * time.Minute, skipBaguette: true},
 	// TODO(b/377716353): private autotest backup leaves baguette in a bad state somehow, debug more later since we cover backup/restore elsewhere.
-	"backup_restore.go":                 {timeout: 10 * time.Minute, testBaguette: false},
-	"basic.go":                          {foundation: true, testBaguette: true},
-	"close_terminal_tabs_and_window.go": {foundation: true, testBaguette: true},
-	"command_cd.go":                     {foundation: true, testBaguette: true},
-	"command_ps.go":                     {foundation: true, testBaguette: true},
-	"command_vim.go":                    {foundation: true, testBaguette: true},
-	"copy_files_to_linux_files.go":      {testBaguette: true},
+	"backup_restore.go":                 {timeout: 10 * time.Minute, skipBaguette: true},
+	"basic.go":                          {foundation: true},
+	"close_terminal_tabs_and_window.go": {foundation: true},
+	"command_cd.go":                     {foundation: true},
+	"command_ps.go":                     {foundation: true},
+	"command_vim.go":                    {foundation: true},
+	"copy_files_to_linux_files.go":      {},
 	// TODO(b/377716353): crash_reporter PoC exists for baguette, but requires more filtering.
-	"crash_reporter.go": {testBaguette: false},
+	"crash_reporter.go": {skipBaguette: true},
 	// TODO(b/377716353): drag_drop seems to fail on just the last test in baguette, skip for now and debug more later
-	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, extraAttr: []string{"informational"}},
-	"files_app_watch.go": {testBaguette: true},
+	"drag_drop.go":       {timeout: 14 * time.Minute, foundation: true, extraAttr: []string{"informational"}, skipBaguette: true},
+	"files_app_watch.go": {},
 	// TODO(b/377716353): missing dbus signal, part of crash-reporter output
-	"fs_corruption.go":          {timeout: 10 * time.Minute},
-	"home_directory_share.go":   {testBaguette: true},
-	"icon_and_username.go":      {testBaguette: true},
-	"launch_terminal.go":        {testBaguette: true},
-	"nested_vm.go":              {testBaguette: true},
-	"no_access_to_downloads.go": {testBaguette: true},
-	"no_shared_folder.go":       {testBaguette: true},
-	"notify.go":                 {testBaguette: false},
+	"fs_corruption.go":          {timeout: 10 * time.Minute, skipBaguette: true},
+	"home_directory_share.go":   {},
+	"icon_and_username.go":      {},
+	"launch_terminal.go":        {},
+	"nested_vm.go":              {},
+	"no_access_to_downloads.go": {},
+	"no_shared_folder.go":       {},
+	"notify.go":                 {skipBaguette: true},
 	// OomEvent test was for crostini data-collection, no need in baguette.
-	"oom_event.go":             {timeout: 10 * time.Minute, testBaguette: false},
-	"open_with_terminal.go":    {testBaguette: true},
-	"pulse_audio_basic.go":     {testBaguette: true},
-	"remove_cancel.go":         {foundation: true, testBaguette: true},
-	"remove_ok.go":             {foundation: true, testBaguette: true},
-	"resize_backup_restore.go": {timeout: 15 * time.Minute, testBaguette: true},
-	"resize_cancel.go":         {testBaguette: true},
+	"oom_event.go":             {timeout: 10 * time.Minute, skipBaguette: true},
+	"open_with_terminal.go":    {},
+	"pulse_audio_basic.go":     {},
+	"remove_cancel.go":         {foundation: true},
+	"remove_ok.go":             {foundation: true},
+	"resize_backup_restore.go": {timeout: 15 * time.Minute},
+	"resize_cancel.go":         {},
 	// TODO(b/442664131): Re-enable once the ResetAutomation is available for MV3.
-	"resize_ok.go":                 {},
-	"resize_restart.go":            {},
-	"resize_space_constrained.go":  {},
-	"restart.go":                   {testBaguette: true},
-	"restart_icon.go":              {testBaguette: true},
-	"run_with_arc.go":              {requiresARC: true, testBaguette: true},
-	"shared_font_files.go":         {foundation: true, testBaguette: true},
-	"share_downloads_add_files.go": {testBaguette: true},
-	"share_downloads.go":           {testBaguette: true},
-	"share_files_cancel.go":        {testBaguette: true},
-	"share_files_manage.go":        {testBaguette: true},
-	"share_files_ok.go":            {testBaguette: true, foundation: true},
-	"share_files_restart.go":       {testBaguette: true},
-	"share_files_toast.go":         {testBaguette: true},
-	"share_folders.go":             {testBaguette: true},
-	"share_folder_zip_file.go":     {testBaguette: true},
-	"share_invalid_paths.go":       {testBaguette: true},
+	"resize_ok.go":                 {skipBaguette: true},
+	"resize_restart.go":            {skipBaguette: true},
+	"resize_space_constrained.go":  {skipBaguette: true},
+	"restart.go":                   {},
+	"restart_icon.go":              {},
+	"run_with_arc.go":              {requiresARC: true},
+	"shared_font_files.go":         {foundation: true},
+	"share_downloads_add_files.go": {},
+	"share_downloads.go":           {},
+	"share_files_cancel.go":        {},
+	"share_files_manage.go":        {},
+	"share_files_ok.go":            {foundation: true},
+	"share_files_restart.go":       {},
+	"share_files_toast.go":         {},
+	"share_folders.go":             {},
+	"share_folder_zip_file.go":     {},
+	"share_invalid_paths.go":       {},
 	// Baguette has no lxc, and therefore no snapshots.
-	"snapshot.go": {timeout: 6 * time.Minute, testBaguette: false},
+	"snapshot.go": {timeout: 6 * time.Minute, skipBaguette: true},
 	// TODO(b/377716353): enable once sshfs mount cl lands in chromium
-	"sshfs_mount.go":  {},
-	"sync_time.go":    {testBaguette: true},
-	"task_manager.go": {testBaguette: true},
+	"sshfs_mount.go":  {skipBaguette: true},
+	"sync_time.go":    {},
+	"task_manager.go": {},
 	// TODO(b/377716353): user needs to be added to `disk` group
-	"usb_share_mass_storage.go": {},
-	"verify_app_x11.go":         {testBaguette: true},
+	"usb_share_mass_storage.go": {skipBaguette: true},
+	"verify_app_x11.go":         {},
 	// Baguette will not support vmc extra disk mounting automatically.
-	"vmc_extra_disk.go": {testBaguette: false},
-	"vmc_start.go":      {testBaguette: true},
+	"vmc_extra_disk.go": {skipBaguette: true},
+	"vmc_start.go":      {},
 	// Baguette uses distinct port-forwarding mechanism from crostini.
-	"webserver.go": {testBaguette: false, foundation: true},
+	"webserver.go": {skipBaguette: true, foundation: true},
 	// Baguette image does not set extended attributes
-	"xattrs.go": {testBaguette: false},
+	"xattrs.go": {skipBaguette: true},
 }
 
 func TestFixTestParams(t *testing.T) {
@@ -126,7 +126,7 @@ func TestFixTestParams(t *testing.T) {
 			LowPerfEligible:         options.foundation,
 			MinimumContainerVersion: minimumContainerVersion,
 			RequiresARC:             options.requiresARC,
-			TestBaguette:            options.testBaguette,
+			TestBaguette:            !options.skipBaguette,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
