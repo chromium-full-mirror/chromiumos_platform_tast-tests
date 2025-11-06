@@ -222,8 +222,20 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 30*time.Second)
 			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx, firmware.FromHibernation); err != nil {
-				logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
+			err = h.WaitConnect(waitConnectCtx, firmware.FromHibernation)
+			if err == nil {
+				return
+			}
+
+			s.Log("RETRIABLE: Failed to reconnect to DUT after suspend: ", err)
+			s.Log("Disconnecting servo for 1s")
+			// Try resetting servo usb-c connection and try again.
+			h.Servo.RunServoCommand(ctx, "fakedisconnect 100 1000")
+
+			waitConnectCtx, cancelWaitConnect = context.WithTimeout(ctx, 30*time.Second)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				logFailure("Failed to reconnnect to DUT after waking and resetting servo usb", err, i)
 				retErr = err
 			}
 		}()
