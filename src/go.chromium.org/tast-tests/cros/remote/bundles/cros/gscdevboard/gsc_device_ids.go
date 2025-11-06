@@ -126,33 +126,6 @@ func init() {
 			"gsc_nightly"},
 		Fixture: fixture.GSCInitialFactory,
 		Params: []testing.Param{{
-			// Verify scratch survives clearing the TPM
-			Name: "ccd_open",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
-					{cmdType: "ccd open"},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
-			// Verify GSC clears the scratch values after the delete command
-			Name: "delete_scratch",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "noCmd"},
-					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
-					{cmdType: "delete", ok: true},
-					{cmdType: "commit", ok: false},
-					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
 			// Verify GSC doesn't save anything in the info space
 			// when there's been no commit
 			Name: "no_commit",
@@ -162,6 +135,10 @@ func init() {
 					{cmdType: "noCmd"}, // Verify IDs start out erased
 					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
 					{cmdType: "factoryDisable", ok: false},
+					// Verify all set commands are blocked after factory disable
+					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: false},
+					{cmdType: "commit", ok: false},
+					{cmdType: "delete", ok: false},
 				},
 			},
 		}, {
@@ -170,7 +147,8 @@ func init() {
 			Val: configTestDeviceIDs{
 				bus: ti50.TpmBusI2c,
 				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: "", ok: true},
+					// Set all IDs to empty strings. Skip IMEI and MIED. Verify GSC can still commit the IDs
+					{cmdType: "setAll", skipOptional: true, fieldVal: "", ok: true},
 					{cmdType: "commit", ok: true},
 					{cmdType: "factoryDisable", ok: true},
 				},
@@ -180,118 +158,37 @@ func init() {
 			Val: configTestDeviceIDs{
 				bus: ti50.TpmBusSpi,
 				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: "", ok: true},
+					// Set all IDs to empty strings. Skip IMEI and MIED. Verify GSC can still commit the IDs
+					{cmdType: "setAll", skipOptional: true, fieldVal: "", ok: true},
 					{cmdType: "commit", ok: true},
 					{cmdType: "factoryDisable", ok: true},
 				},
 			},
 		}, {
-			// Verify GSC rejects all set commands after factory disable.
-			Name: "factory_disable_blocks_set_cmds",
+			Name: "update_ids",
 			Val: configTestDeviceIDs{
 				bus: ti50.TpmBusI2c,
 				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "factoryDisable", ok: false},
-					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: false},
+					{cmdType: "noCmd"}, // Verify IDs start out erased
+					// Verify commit fails when no IDs have been set.
 					{cmdType: "commit", ok: false},
-					{cmdType: "delete", ok: false},
-				},
-			},
-		}, {
-			// Verify GSC rejects strings greater than 31 chars.
-			Name: "long_str_i2c",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: deviceIDStrTooLong, ok: false},
-					{cmdType: "commit", ok: false},
-					{cmdType: "factoryDisable", ok: false},
-				},
-			},
-		}, {
-			Name: "long_str_spi",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusSpi,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: deviceIDStrTooLong, ok: false},
-					{cmdType: "commit", ok: false},
-					{cmdType: "factoryDisable", ok: false},
-				},
-			},
-		}, {
-			// Set a 31 char string. Verify it works.
-			Name: "max_str_i2c",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
 					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
-			Name: "max_str_spi",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusSpi,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
-			Name: "gsc_reset",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "noCmd"},
-					{cmdType: "setAll", fieldVal: "mid", ok: true},
-					{cmdType: "reset"},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
-			// Verify GSC can commit IDs without the imei and meids
-			Name: "skip_optional",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", skipOptional: true, fieldVal: "mid", ok: true},
-					{cmdType: "commit", ok: true},
-					{cmdType: "factoryDisable", ok: true},
-				},
-			},
-		}, {
-			// Verify commit fails when no IDs have been set.
-			Name: "unset_i2c",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
+					// Verify IDs get deleted with the delete command
+					{cmdType: "delete", ok: true},
+					// Commit fails, because no IDs are set
 					{cmdType: "commit", ok: false},
-					{cmdType: "factoryDisable", ok: false},
-				},
-			},
-		}, {
-			Name: "unset_spi",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusSpi,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "commit", ok: false},
-					{cmdType: "factoryDisable", ok: false},
-				},
-			},
-		}, {
-			// Verify GSC can update strings before commit and they
-			// become read only after commit.
-			Name: "update_scratch",
-			Val: configTestDeviceIDs{
-				bus: ti50.TpmBusI2c,
-				setCmds: []testSetDeviceIDCmd{
-					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: true},
 					{cmdType: "setAll", fieldVal: deviceIDStrMedium, ok: true},
+					// Verify IDs can be updated before commit
+					{cmdType: "setAll", skipOptional: true, fieldVal: deviceIDStrMax, ok: true},
+					// Verify scratch IDs survive GSC reset
+					{cmdType: "reset"},
+					// Verify scratch IDs survive ccd open
+					{cmdType: "ccd open"},
+					// Verify GSC rejects strings that are too long.
+					{cmdType: "setAll", fieldVal: deviceIDStrTooLong, ok: false},
 					{cmdType: "commit", ok: true},
-					{cmdType: "setAll", fieldVal: deviceIDStrMax, ok: false},
+					// Verify IDs can't be updated after commit
+					{cmdType: "setAll", fieldVal: "", ok: false},
 					{cmdType: "factoryDisable", ok: true},
 				},
 			},
