@@ -699,7 +699,7 @@ func (s *Servo) SetPDTrySrc(ctx context.Context, port, enable int) (bool, error)
 	}
 
 	trySrcVal := out[0][1]
-	testing.ContextLogf(ctx, "Try.SRC mode = %s", trySrcVal)
+	testing.ContextLogf(ctx, "DUT Try.SRC mode = %s", trySrcVal)
 
 	findStrings := onVals
 	if enable == 0 {

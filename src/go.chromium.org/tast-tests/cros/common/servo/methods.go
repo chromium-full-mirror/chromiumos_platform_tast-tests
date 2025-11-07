@@ -102,7 +102,11 @@ const (
 	BatteryTemperatureCelsius FloatControl = "battery_tempc"
 	VBusVoltage               FloatControl = "vbus_voltage"
 	VBusPower                 FloatControl = "vbus_power"
+	UARTCmdTimeout            FloatControl = "servo_uart_timeout"
 )
+
+// DefaultUARTCmdTimeout is the value servod uses for UARTCmdTimeout on startup.
+const DefaultUARTCmdTimeout float64 = 3
 
 // A OnOffControl accepts either "on" or "off" as a value.
 type OnOffControl string
@@ -908,6 +912,14 @@ func (s *Servo) GetBatteryDesignVoltageDesignMV(ctx context.Context) (int, error
 // GetBatteryFullDesignMAH returns the battery's full design capacity in mAh
 func (s *Servo) GetBatteryFullDesignMAH(ctx context.Context) (int, error) {
 	return s.GetInt(ctx, BatteryFullDesignMAH)
+}
+
+// SetFloat sets a Servo control to a float value.
+func (s *Servo) SetFloat(ctx context.Context, control FloatControl, value float64) error {
+	if err := s.xmlrpc.Run(ctx, xmlrpc.NewCall("set", string(control), value)); err != nil {
+		return errors.Wrapf(err, "setting servo control %q to %f", control, value)
+	}
+	return nil
 }
 
 // GetFloat returns the floating-point value of a specified control.

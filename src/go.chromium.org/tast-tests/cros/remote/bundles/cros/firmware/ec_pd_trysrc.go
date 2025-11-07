@@ -73,6 +73,16 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 		trySrcInt = 1
 	}
 
+	// servo_uart_timeout to a larger value than normal
+	if err := h.Servo.SetFloat(ctx, servo.UARTCmdTimeout, 10); err != nil {
+		s.Fatal("Failed to set servo uart timeout: ", err)
+	}
+	defer func() {
+		if err := h.Servo.SetFloat(ctx, servo.UARTCmdTimeout, servo.DefaultUARTCmdTimeout); err != nil {
+			s.Fatal("Failed to reset servo uart timeout: ", err)
+		}
+	}()
+
 	for i := 0; i < pdConnectIterations; i++ {
 		if _, err := h.Servo.SetPDTrySrc(ctx, servo.PDPortUnderTest, trySrcInt); err != nil {
 			testing.ContextLogf(ctx, "Failed Enabling TrySrc: %q", err)
@@ -85,10 +95,10 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 		} else {
 			if state == snkConnect {
 				snkStats++
-				testing.ContextLog(ctx, "Power Role = SNK")
+				testing.ContextLog(ctx, "Servo Power Role = SNK")
 			} else if state == srcConnect {
 				srcStats++
-				testing.ContextLog(ctx, "Power Role = SRC")
+				testing.ContextLog(ctx, "Servo Power Role = SRC")
 			}
 		}
 		// GoBigSleepLint: Wait a bit before the next iteration, in case any PR_Swap
@@ -96,7 +106,7 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 			s.Fatal("Failed to sleep: ", err)
 		}
 	}
-	testing.ContextLogf(ctx, "SNK = %d: SRC = %d: Total = %d",
+	testing.ContextLogf(ctx, "Servo SNK = %d: SRC = %d: Total = %d",
 		snkStats, srcStats, pdConnectIterations)
 	return snkStats, srcStats
 }
@@ -178,10 +188,10 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 		snkOn, srcOn := executeConnectSequence(ctx, s, true)
 		totalOn := float32(snkOn + srcOn)
 		trySrcOn := float32(snkOn) * 100.0 / totalOn
-		testing.ContextLogf(ctx, "SNK ratio with Try.SRC enabled = %f", trySrcOn)
+		testing.ContextLogf(ctx, "Servo SNK ratio with DUT Try.SRC enabled = %f", trySrcOn)
 
 		if trySrcOn < pdTrySrcOnThreshold {
-			s.Fatalf("SRC %% = %.1f: Must be >  %.1f", trySrcOn, pdTrySrcOnThreshold)
+			s.Fatalf("DUT SRC %% = %.1f: Must be >  %.1f", trySrcOn, pdTrySrcOnThreshold)
 		}
 	}
 
@@ -189,13 +199,13 @@ func ECPDTrysrc(ctx context.Context, s *testing.State) {
 	snkOff, srcOff := executeConnectSequence(ctx, s, false)
 	totalOff := float32(snkOff + srcOff)
 	trySrcOff := float32(snkOff) * 100.0 / totalOff
-	testing.ContextLogf(ctx, "SNK ratio with Try.SRC disabled = %f", trySrcOff)
+	testing.ContextLogf(ctx, "Servo SNK ratio with DUT Try.SRC disabled = %f", trySrcOff)
 
 	// When Try.SRC is off, ideally the SNK/SRC ratio will be close to
 	// 50%. However, in practice there is a wide range related to the
 	// dualrole swap timers in firmware.
 	if trySrcOff < pdTrySrcOffThreshold || trySrcOff > 100-pdTrySrcOffThreshold {
-		s.Fatalf("SRC %% = %.1f: Must be > %.1f & < %.1f", trySrcOff,
+		s.Fatalf("DUT SRC %% = %.1f: Must be > %.1f & < %.1f", trySrcOff,
 			pdTrySrcOffThreshold, 100-pdTrySrcOffThreshold)
 	}
 }
