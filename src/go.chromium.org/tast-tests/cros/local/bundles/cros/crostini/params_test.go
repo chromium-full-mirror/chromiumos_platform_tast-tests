@@ -93,13 +93,11 @@ var standardTests = map[string]testOptions{
 	"share_folder_zip_file.go":     {},
 	"share_invalid_paths.go":       {},
 	// Baguette has no lxc, and therefore no snapshots.
-	"snapshot.go": {timeout: 6 * time.Minute, skipBaguette: true},
-	// TODO(b/377716353): enable once sshfs mount cl lands in chromium
-	"sshfs_mount.go":  {skipBaguette: true},
-	"sync_time.go":    {},
-	"task_manager.go": {},
-	// TODO(b/377716353): user needs to be added to `disk` group
-	"usb_share_mass_storage.go": {skipBaguette: true},
+	"snapshot.go":               {timeout: 6 * time.Minute, skipBaguette: true},
+	"sshfs_mount.go":            {},
+	"sync_time.go":              {},
+	"task_manager.go":           {},
+	"usb_share_mass_storage.go": {},
 	"verify_app_x11.go":         {},
 	// Baguette will not support vmc extra disk mounting automatically.
 	"vmc_extra_disk.go": {skipBaguette: true},
