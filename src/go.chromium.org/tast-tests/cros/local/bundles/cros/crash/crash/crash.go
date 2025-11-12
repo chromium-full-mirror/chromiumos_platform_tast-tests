@@ -397,7 +397,7 @@ func RunCrasherProcessAndAnalyze(ctx context.Context, opts CrasherOptions) (*Cra
 	}
 	// Reports might have these and that's OK!
 	reportOptionalFiletypes := []string{
-		".dmp", ".log", ".proclog", ".pslog",
+		".eventlog", ".dmp", ".log", ".proclog", ".pslog",
 	}
 
 	// Make sure we generated the exact set of files we expected.
