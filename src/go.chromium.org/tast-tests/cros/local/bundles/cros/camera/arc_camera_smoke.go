@@ -13,13 +13,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ARCCameraSmoke,
-		Desc:         "Checks if camera can be probed in ARC",
-		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
-		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"arc", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "arcWithWorkingCamera",
+		Func:            ARCCameraSmoke,
+		Desc:            "Checks if camera can be probed in ARC",
+		Contacts:        []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
+		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Attr:            []string{"group:mainline", "informational"},
+		VariantCategory: `{"name": "Camera:SoC_CameraTypes"}`,
+		SoftwareDeps:    []string{"arc", "chrome", caps.BuiltinOrVividCamera},
+		Fixture:         "arcWithWorkingCamera",
 	})
 }
 
