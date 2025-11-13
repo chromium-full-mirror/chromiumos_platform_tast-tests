@@ -34,7 +34,7 @@ func RunWebXPRT4(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Con
 	if err := benchmarkConn.Navigate(ctx, `http://www.principledtechnologies.com/benchmarkxprt/webxprt/2021/wx4_build_3_7_3/auto.php?testtype=1&tests=63&result=2`); err != nil {
 		return errors.Wrap(err, "failed to start WebXPRT4")
 	}
-	if err := benchmarkConn.WaitForExprWithTimeout(ctx, `document.getElementsByName('Overall Score').length == 1`, 30*time.Minute); err != nil {
+	if err := benchmarkConn.WaitForExprWithTimeout(ctx, `document.getElementsByTagName("overallscore").length == 1`, 30*time.Minute); err != nil {
 		return errors.Wrap(err, "WebXPRT4 run timed out")
 	}
 	return nil
@@ -61,7 +61,7 @@ func RetrieveWebXPRT4Score(ctx context.Context, benchmarkConn *chrome.Conn, scor
 		}
 
 		let scoreMap = new Map();
-		let overallScore = document.getElementsByName("Overall Score");
+		let overallScore = document.getElementsByTagName("overallscore");
 		let testScores = document.getElementsByTagName("resptime");
 		if (overallScore.length != 1) {
 		    resolve(scoreMap);
