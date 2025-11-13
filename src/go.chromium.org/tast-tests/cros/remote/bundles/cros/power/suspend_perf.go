@@ -389,10 +389,10 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 			_ = <-powerStateCh
 
 			if res != nil {
-				if err := evalSystemSuspend(ctx, s.DUT(), pv); err != nil {
+				if err := evalSystemResume(ctx, h, res.Output, pv); err != nil {
 					s.Errorf("Iteration %d: %v", i+1, err)
 				}
-				if err := evalSystemResume(ctx, h, res.Output, pv); err != nil {
+				if err := evalSystemSuspend(ctx, s.DUT(), pv); err != nil {
 					s.Errorf("Iteration %d: %v", i+1, err)
 				}
 				displayAfterResume.StopAndQuery(ctx, s.DUT(), cl)
@@ -483,6 +483,14 @@ func verifyPowerState(ctx context.Context, h *firmware.Helper, powerStateCh chan
 
 func evalSystemSuspend(ctx context.Context, dut *dut.DUT, pv *perf.Values) error {
 	const timingsFile = "/run/power_manager/root/last_resume_timings"
+
+	// Wait for last_resume_timings to be created.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return dut.Conn().CommandContext(ctx, "test", "-f", timingsFile).Run()
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrapf(err, "failed to wait for %s to be created", timingsFile)
+	}
+
 	out, err := dut.Conn().CommandContext(ctx, "cat", timingsFile).Output()
 	if err != nil {
 		// It's possible the file doesn't exist if suspend failed early.
