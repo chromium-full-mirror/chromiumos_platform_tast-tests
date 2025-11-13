@@ -39,6 +39,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+				VariantCategory:   `{"name": "Camera:KernelVersion_ModuleIds"}`,
 				ExtraSoftwareDeps: []string{caps.BuiltinUSBCamera},
 				Val:               vttDefault,
 			},
