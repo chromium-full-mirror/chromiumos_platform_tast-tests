@@ -118,15 +118,10 @@ func (du *dataUploader) upload(src, bucket string) error {
 	if out, err := exec.Command(gsUtil, "copy", src, gsURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to upload %q to the server %q", src, out)
 	}
-
-	testing.ContextLogf(du.ctx, "Set read permission for  %q", gsURL)
+        testing.ContextLogf(du.ctx, "Uploading meta data %q to the server", gsDescURL);
 	if out, err := exec.Command(gsUtil, "copy", du.buildDescriptorPath, gsDescURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to upload %q device information to the server %q", du.buildDescriptorPath, out)
 	}
-	if out, err := exec.Command(gsUtil, "acl", "ch", "-u", "AllUsers:READ", gsDescURL).CombinedOutput(); err != nil {
-		return errors.Wrapf(err, "failed to set read permission for %q to the server %q", gsDescURL, out)
-	}
-
 	return nil
 }
 
