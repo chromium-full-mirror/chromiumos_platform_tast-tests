@@ -37,7 +37,6 @@ func configFiles() []string {
 		"kernel_smoke_mipi/anraggar360-TXfc2c.yaml",
 		"kernel_smoke_mipi/atlas.yaml",
 		"kernel_smoke_mipi/aviko-KC4eb5.yaml",
-		"kernel_smoke_mipi/brya.yaml",
 		"kernel_smoke_mipi/bugzzy-KCfa36.yaml",
 		"kernel_smoke_mipi/ciri-KC523c.yaml",
 		"kernel_smoke_mipi/ciri-KCc1c3.yaml",
@@ -81,6 +80,7 @@ func configFiles() []string {
 var unsupportedModel = []string{
 	"krane", "kakadu", "kodama", "katsu", // kukui
 	"coachz", "homestar", "mrbland", "wormdingler", "quackingstick", // strongbad
+	"brya",                        // brya
 	"rex4es", "screebo4es", "rex", // rex es
 	"voema", // volteer (b/436205097)
 }
