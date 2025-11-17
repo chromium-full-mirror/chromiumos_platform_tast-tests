@@ -7,6 +7,8 @@ package googlesheetscuj
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -34,6 +36,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -194,10 +197,27 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir str
 		}
 
 		if testParam.AUBackgroundEnable {
-			payloadPath := dataPath(updateengine.PayloadFilename)
-			metadataPath := dataPath(updateengine.MetadataFilename)
+			tmpDir, err := os.MkdirTemp("/tmp", "nebraska")
+			if err != nil {
+				return errors.Wrap(err, "failed to create temp dir")
+			}
+			defer os.RemoveAll(tmpDir)
+
+			extFiles := []string{updateengine.PayloadFilename, updateengine.MetadataFilename}
+			for _, file := range extFiles {
+				target := filepath.Join(tmpDir, file)
+				if err := fsutil.CopyFile(dataPath(file), target); err != nil {
+					return errors.Wrapf(err, "failed to copy file to %s", tmpDir)
+				}
+				if err := os.Chmod(target, 0777); err != nil {
+					return errors.Wrap(err, "failed to chmod")
+				}
+			}
+
+			payloadPath := filepath.Join(tmpDir, updateengine.PayloadFilename)
+			metadataPath := filepath.Join(tmpDir, updateengine.MetadataFilename)
 			runner := updateengine.NewAURunner(payloadPath, metadataPath)
-			err := runner.Start(ctx)
+			err = runner.Start(ctx)
 			if err != nil {
 				return errors.Wrap(err, "failed to start AURunner")
 			}
