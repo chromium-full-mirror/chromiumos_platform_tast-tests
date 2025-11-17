@@ -317,8 +317,13 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 			}
 		}
 
-		// If the install or update button is enabled, click it.
-		if opButton, err := FindActionButton(ctx, d, btnText, 5*time.Second); err == nil {
+		// If play or open button exists, the app is already installed or still installing.
+		// Skip searching for install or update button to avoid clicking remote-install buttons.
+		openOrPlayStr := fmt.Sprintf("(%s|%s)", openButtonText, playButtonText)
+		if _, err := FindActionButton(ctx, d, openOrPlayStr, defaultUITimeout); err == nil {
+			testing.ContextLog(ctx, "App is likely installing. Skipping Install button search")
+			// If the install or update button is enabled, click it.
+		} else if opButton, err := FindActionButton(ctx, d, btnText, 5*time.Second); err == nil {
 			if retriesExhausted() {
 				return testing.PollBreak(errors.Errorf("hit %s attempt limit of %d times", op, tryLimit))
 			}
@@ -398,7 +403,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// Make sure we are still on the Play Store installation page by checking whether the "open" or "play" button exists.
 		// If not, reopen the Play Store page by sending the same intent again.
-		if _, err := FindActionButton(ctx, d, fmt.Sprintf("%s|%s", openButtonText, playButtonText), defaultUITimeout); err != nil {
+		if _, err := FindActionButton(ctx, d, openOrPlayStr, defaultUITimeout); err != nil {
 			testing.ContextLog(ctx, "App installation page disappeared; reopen it")
 			if err := OpenAppPage(ctx, a, pkgName); err != nil {
 				return err
