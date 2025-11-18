@@ -97,6 +97,8 @@ const (
 	deferConciergeStartup = "DeferConciergeStartup"
 )
 
+const loginPerfOptinTimeout = 10 * time.Minute
+
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
 
 // NOTE: default set of categories is defined in `loginPerfTraceConfigFileName`.
@@ -144,7 +146,7 @@ func init() {
 			ui.GaiaPoolDefaultVarName,
 		},
 		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
-		Timeout: 25 * time.Minute,
+		Timeout: loginPerfOptinTimeout + 25*time.Minute,
 		Fixture: fixture.GpuRemoteWatcher,
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
@@ -645,7 +647,7 @@ func initializeLoginPerfTest(ctx context.Context,
 
 	testing.ContextLog(ctx, "Opting into Play Store")
 	if arc.Supported() {
-		if err := optin.Perform(ctx, cr, tconn); err != nil {
+		if err := optin.PerformWithTimeout(ctx, cr, tconn, loginPerfOptinTimeout); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to optin to Play Store")
 		}
 		testing.ContextLog(ctx, "Optin finished")

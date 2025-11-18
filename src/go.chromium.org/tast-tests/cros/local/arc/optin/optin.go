@@ -82,7 +82,7 @@ func waitForTerms(ctx context.Context, conn *chrome.Conn) error {
 
 // sleepAndPressRetryButton sleeps for 5 seconds and presses the retry button
 func sleepAndPressRetryButton(ctx context.Context, conn *chrome.Conn) error {
-	// Sleep briefly before retrying.
+	// GoBigSleepLint: Sleep briefly before retrying.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep for re-attempt")
 	}
@@ -195,16 +195,22 @@ func FindOptInExtensionPageAndAcceptTerms(ctx context.Context, cr *chrome.Chrome
 
 // PerformNoWait steps through opt-in flow and does not wait for it to complete.
 func PerformNoWait(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
-	return perform(ctx, cr, tconn, false /*wait*/)
+	return perform(ctx, cr, tconn, false /*wait*/, OptinTimeout)
 }
 
 // Perform steps through opt-in flow and waits for it to complete.
 func Perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
-	return perform(ctx, cr, tconn, true /*wait*/)
+	return perform(ctx, cr, tconn, true /*wait*/, OptinTimeout)
 }
 
-func perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wait bool) error {
-	ctx, cancel := context.WithTimeout(ctx, OptinTimeout)
+// PerformWithTimeout steps through opt-in flow and waits for it to complete
+// using the provided timeout.
+func PerformWithTimeout(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, timeout time.Duration) error {
+	return perform(ctx, cr, tconn, true /*wait*/, timeout)
+}
+
+func perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wait bool, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	SetPlayStoreEnabled(ctx, tconn, true)
