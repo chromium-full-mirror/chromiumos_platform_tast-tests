@@ -7,6 +7,8 @@ package gscdevboard
 import (
 	"context"
 	"encoding/hex"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -16,11 +18,18 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var (
+	// Get AP RO digest
+	aproDigestRE = regexp.MustCompile(`digest: ([a-f0-9]+)\b`)
+)
+
 const (
 	// Command that initializes the AP RO hash data with two regions.
 	setAPROHash string = "80010000003c200000000036b0863a864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e0000c100000800000010c10000f00e00"
 	// expectedHash is the hash the previous command sets
 	expectedHash string = "b0863a864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e"
+	// erasedHash is the gsctool output when the hash is erased
+	erasedHash string = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 	// Command that initializes a different AP RO hash.
 	setOtherAPROHash string = "80010000003c200000000036aaaaaa864df1a0f2d4df2393ae4390fed6e1f01ccbdd562969da9b530e8ece2e0000c100000800000010c10000f00e00"
 	// Cr50 won't clear the hash for 10 seconds after it's triggered.
@@ -28,9 +37,9 @@ const (
 	extraDelay           time.Duration = time.Second * 10
 
 	// expectedStartResult is NOT_RUN(0)
-	expectedStartResult = 0
-	// expectedDefaultTriggeredResult is 4 UNSUPPORTED_TRIGGERED
-	expectedTriggeredResult = 5
+	expectedStartResult = "apro result (0)"
+	// expectedDefaultTriggeredResult is 5 UNSUPPORTED_TRIGGERED
+	expectedTriggeredResult = "apro result (5)"
 
 	// unsupportedBIDType is a board id type that blocks AP RO verification
 	unsupportedBIDType = 0x5256504a
@@ -81,8 +90,9 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 	config := s.Param().(cr50APROTestConfig)
 
 	bus := ti50.TpmBusSpi
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC failed to boot")
+	b.WaitUntilCCDConnected(ctx)
 
 	th.MustSucceed(i.CCDOpen(ctx), "ccd open")
 	th.MustSucceed(i.CCDResetFactory(ctx), "reset factory")
@@ -91,14 +101,14 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 	th.MustSucceed(err, "Could not erase the hash")
 	s.Logf("GSCTool output: %s", out)
 
-	out, err = b.GSCToolCommandViaTPM(ctx, bus, "", "--get_apro_hash")
+	out, err = b.GSCToolCommand(ctx, "", "--get_apro_hash")
 	th.MustSucceed(err, "Could not get the hash")
-	s.Logf("saved hash: %s", out)
-
-	info, err := i.Cr50APROInfo(ctx)
-	th.MustSucceed(err, "Failed to get AP RO info")
-	s.Logf("ap_ro_info: %+v", info)
-
+	digest, err := parseCr50APRODigest(out)
+	th.MustSucceed(err, "Could not parse the hash")
+	s.Logf("saved hash: %s", digest)
+	if digest != erasedHash {
+		s.Fatalf("Digest not erased: got %s", digest)
+	}
 	// Set the AP RO hash
 	setHash, err := hex.DecodeString(setAPROHash)
 	th.MustSucceed(err, "Failed to decode command")
@@ -120,33 +130,41 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 	_, err = tpm.Send(setOtherHash)
 	th.MustSucceed(err, "Failed to run set AP RO hash command")
 
-	info, err = i.Cr50APROInfo(ctx)
-	th.MustSucceed(err, "Failed to get AP RO info")
-	s.Logf("ap_ro_info: %+v", info)
-	if info.Hash != expectedHash {
-		s.Fatalf("Saved incorrect digest: expected %s got %s", expectedHash, info.Hash)
-	}
-	startResult := info.Result
-	if startResult != expectedStartResult {
-		s.Fatalf("Unexpected result after setup: expected %d got %d", expectedStartResult, startResult)
+	out, err = b.GSCToolCommand(ctx, "", "--get_apro_hash")
+	th.MustSucceed(err, "Could not get the hash")
+	digest, err = parseCr50APRODigest(out)
+	th.MustSucceed(err, "Could not parse the hash")
+	s.Logf("saved hash: %s", digest)
+	if digest != expectedHash {
+		s.Fatalf("Saved incorrect digest: expected %q got %q", expectedHash, digest)
 	}
 
-	out, err = b.GSCToolCommandViaTPM(ctx, bus, "", "--get_apro_hash")
+	out, err = b.GSCToolCommand(ctx, "", "--apro_boot")
+	th.MustSucceed(err, "Could not get status")
+	s.Logf("out: %s", out)
+	if !strings.Contains(string(out), expectedStartResult) {
+		s.Fatalf("Unexpected result after setup: expected %q got %q", expectedStartResult, out)
+	}
+
+	out, err = b.GSCToolCommand(ctx, "", "--get_apro_hash")
 	th.MustSucceed(err, "Could not get the hash")
-	s.Logf("saved hash: %s", out)
+	digest, err = parseCr50APRODigest(out)
+	th.MustSucceed(err, "Could not parse the hash")
+	s.Logf("saved hash: %s", digest)
+	if digest != expectedHash {
+		s.Fatalf("Saved incorrect digest: expected %q got %q", expectedHash, digest)
+	}
 
 	out, err = b.GSCToolCommandViaTPM(ctx, bus, "", "--apro_boot", "start")
 	th.MustSucceed(err, "Could not trigger verification")
 	startTime := time.Now()
 	s.Logf("started verification: %s", out)
 
-	info, err = i.Cr50APROInfo(ctx)
-	th.MustSucceed(err, "Failed to get AP RO info")
-	s.Logf("ap_ro_info: %+v", info)
-	triggeredResult := info.Result
-
-	if triggeredResult != expectedTriggeredResult {
-		s.Fatalf("Unexpected result after verification was triggered: expected %d got %d", expectedTriggeredResult, triggeredResult)
+	out, err = b.GSCToolCommand(ctx, "", "--apro_boot")
+	th.MustSucceed(err, "Could not get verification status")
+	s.Logf("out: %s", out)
+	if !strings.Contains(string(out), expectedTriggeredResult) {
+		s.Fatalf("Unexpected result after verification was triggered: expected %q got %q", expectedTriggeredResult, out)
 	}
 	pOpts := testing.PollOptions{Interval: time.Second, Timeout: aPROHashClearedDelay + extraDelay}
 	err = testing.Poll(ctx, func(ctx context.Context) error {
@@ -160,15 +178,15 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 			// command, so Cr50 will process the next reset.
 			b.WaitForTpm(ctx, tpm)
 		}
-		info, err = i.Cr50APROInfo(ctx)
-		if err != nil {
-			return err
-		}
-		if info.Result == startResult {
+
+		out, err := b.GSCToolCommand(ctx, "", "--apro_boot")
+		th.MustSucceed(err, "Could not get verification status")
+		s.Logf("out: %s", out)
+		if strings.Contains(string(out), expectedStartResult) {
 			s.Log("APRO result was cleared")
 			return nil
 		}
-		return errors.Errorf("APRO info still shows triggered(%d)", info.Result)
+		return errors.Errorf("APRO info still shows triggered: %s", out)
 	}, &pOpts)
 
 	if !config.expectClear {
@@ -187,4 +205,12 @@ func Cr50APROVerificationClearResult(ctx context.Context, s *testing.State) {
 	if clearedTime < aPROHashClearedDelay {
 		s.Fatal("APRO result was cleared too soon ", clearedTime)
 	}
+}
+
+func parseCr50APRODigest(out []byte) (string, error) {
+	matches := aproDigestRE.FindStringSubmatch(string(out))
+	if len(matches) != 2 {
+		return "", errors.Errorf("failed to find digest in %q", out)
+	}
+	return matches[1], nil
 }
