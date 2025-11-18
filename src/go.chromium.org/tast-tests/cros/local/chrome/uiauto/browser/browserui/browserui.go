@@ -6,6 +6,8 @@
 package browserui
 
 import (
+	"regexp"
+
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
@@ -19,5 +21,12 @@ var ExtensionsToolbarButton = nodewith.Name("Extensions").Role(role.PopUpButton)
 // ExtensionPopupRootView represents the extension popup root window.
 var ExtensionPopupRootView = nodewith.Role(role.WebView).HasClass("ExtensionViewViews").First()
 
-// NewTabButton represents the "+" button in tab list to create a new tab page.
-var NewTabButton = nodewith.Name("New Tab").Role(role.Button).HasClass("TabStripControlButton")
+var (
+	newTabNameRegex      = regexp.MustCompile(`(?i)^New Tab$`)
+	newTabClassNameRegex = regexp.MustCompile(`(ToolbarButton|TabStripControlButton)`)
+	// NewTabButton represents the "+" button in tab list to create a new tab page
+	// which matches the "New Tab" button in the UI, handling both variations:
+	// 1. "New tab" with class "ToolbarButton".
+	// 2. "New Tab" with class "TabStripControlButton".
+	NewTabButton = nodewith.NameRegex(newTabNameRegex).Role(role.Button).ClassNameRegex(newTabClassNameRegex)
+)

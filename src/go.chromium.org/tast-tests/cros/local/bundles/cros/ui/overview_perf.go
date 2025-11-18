@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -126,7 +127,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 
 		// Wait until the Chrome buttons for tablet mode are ready by checking
 		// the existence and stability of the "New tab" button.
-		if err := uiauto.New(tconn).WaitForLocation(nodewith.ClassName("ToolbarButton").Name("New tab"))(ctx); err != nil {
+		if err := uiauto.New(tconn).WaitForLocation(browserui.NewTabButton)(ctx); err != nil {
 			return false, errors.Wrap(err, "failed to wait for Chrome \"New tab\" button in tablet mode")
 		}
 
