@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -27,7 +26,6 @@ func init() {
 		Contacts:     []string{"chromeos-storage@google.com", "digehlot@google.com"},
 		Attr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		Requirements: []string{tdreq.StorageStable},
 	})
 }
