@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/cleanupfolder"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/listset"
@@ -43,7 +44,7 @@ func init() {
 			}, {
 				Name:              "baguette_stable",
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "baguettePolicy",
+				Fixture:           fixture.BaguettePolicy,
 				Timeout:           7 * time.Minute,
 			},
 		},

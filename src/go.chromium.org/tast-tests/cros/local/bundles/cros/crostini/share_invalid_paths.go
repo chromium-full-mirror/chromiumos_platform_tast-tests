@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/sys/unix"
@@ -36,7 +37,7 @@ func init() {
 			}, {
 				Name:              "baguette_stable",
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "baguettePolicy",
+				Fixture:           fixture.BaguettePolicy,
 				Timeout:           7 * time.Minute,
 			},
 		},

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,12 +38,12 @@ func init() {
 			}, {
 				Name:              "baguette_stable",
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "baguettePolicy",
+				Fixture:           fixture.BaguettePolicy,
 				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "baguette_lowperf",
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "baguettePolicy",
+				Fixture:           fixture.BaguettePolicy,
 				Timeout:           7 * time.Minute,
 			},
 		},

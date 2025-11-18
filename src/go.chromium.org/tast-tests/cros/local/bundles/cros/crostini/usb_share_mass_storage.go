@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -46,7 +47,7 @@ func init() {
 			}, {
 				Name:              "baguette_stable",
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
-				Fixture:           "baguettePolicy",
+				Fixture:           fixture.BaguettePolicy,
 				Timeout:           7 * time.Minute,
 			},
 		},
@@ -84,12 +85,15 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	if strings.Contains(s.TestName(), "baguette") {
-		s.Log("Installing fuse2fs, fuse3")
+		s.Log("Installing fuse2fs")
 		if err := cont.Command(ctx, "sudo", "apt-get", "update").Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to run apt-update: ", err)
 		}
 		if err := cont.Command(ctx, "sudo", "apt-get", "-y", "install", "fuse2fs", "fuse3").Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to install fuse2fs, fuse3: ", err)
+			s.Fatal("Failed to install fuse2fs: ", err)
+		}
+		if err := cont.Command(ctx, "sudo", "usermod", "-a", "-G", "disk", "tast-user").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to install fuse2fs: ", err)
 		}
 	}
 

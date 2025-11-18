@@ -6,6 +6,8 @@ package fixture
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/chrome/fixture.go
 const (
+	// Logged in and ready to install baguette.
+	BaguettePolicy = "baguettePolicy"
 	// Logged into a user session.
 	ChromeLoggedIn = "chromeLoggedIn"
 	// Logged into a user session without select to speak manifest v3.

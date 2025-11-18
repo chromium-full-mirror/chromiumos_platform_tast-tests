@@ -382,7 +382,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			var fixture, precondition string
 			if testCase.UseFixture {
 				if i.baguette {
-					fixture = "\"baguettePolicy\""
+					fixture = "fixture.BaguettePolicy"
 				} else {
 					arcStatus := ""
 					if testCase.LowPerfEligible && !i.stable {
