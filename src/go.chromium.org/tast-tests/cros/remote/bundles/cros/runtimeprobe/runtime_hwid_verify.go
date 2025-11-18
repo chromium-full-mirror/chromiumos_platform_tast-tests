@@ -77,9 +77,9 @@ func RuntimeHWIDVerify(ctx context.Context, s *testing.State) {
 	runtimeHWIDFilePath := filepath.Join(runtimeHWIDFileDir, runtimeHWIDFileName)
 	outPath := filepath.Join(s.OutDir(), runtimeHWIDFileName)
 	if err := linuxssh.GetFile(ctx, d.Conn(), runtimeHWIDFilePath, outPath, linuxssh.DereferenceSymlinks); err != nil {
-		hwid, err := getHWID(ctx, d)
-		if err != nil {
-			s.Fatal("Failed to get HWID: ", err)
+		hwid, getHwidErr := getHWID(ctx, d)
+		if getHwidErr != nil {
+			s.Fatal("Failed to get HWID: ", getHwidErr)
 		}
 		if strings.Contains(hwid, "TEST") || strings.HasSuffix(hwid, "DEV") {
 			s.Logf("Got test/dev HWID %q. Skipping the test", hwid)
