@@ -106,6 +106,7 @@ func init() {
 				"sasukette",
 				"storo",
 				// Guybrush
+				"dewatt",
 				"nipperkin",
 				//Nirva,
 				"craaskyu2",
