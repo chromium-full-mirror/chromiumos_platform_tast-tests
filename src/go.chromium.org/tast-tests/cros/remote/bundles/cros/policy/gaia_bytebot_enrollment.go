@@ -35,7 +35,6 @@ func init() {
 			"vsavu@google.com",
 		},
 		BugComponent: "b:1111632",
-		Attr:         []string{"group:dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome", "gaia"},
 		// b/365541979: Skip on the reven\nuc11.
 		HardwareDeps: hwdep.D(hwdep.SkipDMIProductName("NUC11TNKv5")),
