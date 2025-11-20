@@ -374,8 +374,8 @@ func Browsing(ctx context.Context, s *testing.State) {
 						s.Fatal("Failed to sleep: ", err)
 					}
 
-					js := fmt.Sprintf("window.scrollBy(0, %d)", scrollAmount)
-					if err := tabData.Conn.Eval(ctx, js, nil); err != nil {
+					js := fmt.Sprintf("window.scrollBy(0, %d) == null", scrollAmount)
+					if err := tabData.Conn.WaitForExprWithTimeout(ctx, js, 5*time.Second); err != nil {
 						s.Fatal("Failed to scroll: ", err)
 					}
 					scrollAmount = -scrollAmount
