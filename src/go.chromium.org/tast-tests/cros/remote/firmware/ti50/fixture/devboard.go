@@ -461,20 +461,29 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 
 	i.WaitUntilBooted(ctx)
 
-	if imageVer.Less(rw) || runEraseFlashInfo {
-		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
-		debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties)
-		mustSucceed(s, err, "failed to download debug and efi image")
-
-		if debugImage == "" || efiImage == "" {
-			s.Fatal("Supply EFI and debug image to rollback with ccd")
-		}
-		err = board.RollbackAndRunEraseFlashInfoUpdate(ctx, i, imagePath, efiImage, debugImage)
-		mustSucceed(s, err, "failed efi rollback update to image")
-	} else {
+	if !imageVer.Less(rw) && !runEraseFlashInfo {
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
-		mustSucceed(s, board.DirectUpdate(ctx, i, imagePath), "direct updateto image")
+		if err = board.DirectUpdate(ctx, i, imagePath); err == nil {
+			testing.ContextLogf(ctx, "Direct update ok. Flashed %s", imageVer)
+			return
+		}
+		testing.ContextLogf(ctx, "Direct update failed: %s", err)
+		// Do a power-on GSC reset to clear update state.
+		mustSucceed(s, board.Reset(ctx), "Reset gsc console for DBG")
+		// Reenable CCD
+		gpioApplyStrap(ctx, s, board, ti50.CCDModeOn)
+		i.WaitUntilBooted(ctx)
+		mustSucceed(s, board.GSCToolWaitUntilReady(ctx), "wait until gsc ready")
 	}
+	testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
+	debugImage, efiImage, err := DownloadGSCTestImages(ctx, testbedProperties)
+	mustSucceed(s, err, "failed to download debug and efi image")
+
+	if debugImage == "" || efiImage == "" {
+		s.Fatal("Supply EFI and debug image to rollback with ccd")
+	}
+	err = board.RollbackAndRunEraseFlashInfoUpdate(ctx, i, imagePath, efiImage, debugImage)
+	mustSucceed(s, err, "failed efi rollback update to image")
 }
 
 // startDevboardService uses satlab_rpcservice to start the service, returns host:port.
