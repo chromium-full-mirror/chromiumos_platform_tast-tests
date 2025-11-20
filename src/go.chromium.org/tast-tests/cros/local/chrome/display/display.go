@@ -118,7 +118,6 @@ func GetInfo(ctx context.Context, tconn *chrome.TestConn) ([]Info, error) {
 		// something is wrong.
 		return nil, errors.New("no display info are contained")
 	}
-	testing.ContextLogf(ctx, "Display info: %v", infos)
 	return infos, nil
 }
 
