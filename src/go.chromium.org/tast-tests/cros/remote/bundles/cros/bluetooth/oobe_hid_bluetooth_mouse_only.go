@@ -42,7 +42,7 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 		},
 		HardwareDeps:    hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
-		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
+		VariantCategory: `{"name": "BT_Chipset_Kernel_chromebase_and_chromebox"}`,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled_mouse",
