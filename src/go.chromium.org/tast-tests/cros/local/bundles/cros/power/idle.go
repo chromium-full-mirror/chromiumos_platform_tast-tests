@@ -205,9 +205,16 @@ func Idle(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to turn off display: ", err)
 		}
 	}
-	if err := setBluetoothPower(ctx, params.BluetoothPower); err != nil {
-		s.Fatalf("Failed to set Bluetooth powerd to %t: %v", params.BluetoothPower, err)
+
+	cleanupBluetooth, err := setBluetoothPower(ctx, params.BluetoothPower)
+	if err != nil {
+		s.Fatalf("Failed to set Bluetooth power to %t: %v", params.BluetoothPower, err)
 	}
+	defer func(ctx context.Context) {
+		if err := cleanupBluetooth(ctx); err != nil {
+			s.Log("Failed to restore Bluetooth power state: ", err)
+		}
+	}(cleanupCtx)
 
 	if err := display.SetPSRState(params.PSRState); err != nil {
 		s.Error("Failed to set psr state: ", err)
@@ -255,7 +262,7 @@ func Idle(ctx context.Context, s *testing.State) {
 
 // setBluetoothPower aims to set the Bluetooth power state of a device, handling
 // potential errors and falling back to a default Bluetooth stack if necessary.
-func setBluetoothPower(ctx context.Context, bluetoothPower bool) error {
+func setBluetoothPower(ctx context.Context, bluetoothPower bool) (func(context.Context) error, error) {
 	btStack, err := facade.GetBluetoothStackType(ctx)
 	if err != nil {
 		// Log the error but continue with Bluez as a fallback.
@@ -263,22 +270,24 @@ func setBluetoothPower(ctx context.Context, bluetoothPower bool) error {
 		btStack = facadecommon.BluetoothStackTypeBluez
 	}
 
+	cleanup := func(context.Context) error { return nil }
 	btf, err := facade.NewBluetoothFacade(ctx, btStack)
 	if err != nil {
-		return errors.Wrap(err, "failed to create Bluetooth facade")
+		return cleanup, errors.Wrap(err, "failed to create Bluetooth facade")
 	}
 
 	poweredOn, err := btf.IsPoweredOn(ctx)
 	if err != nil { // Handle potential error from IsPoweredOn.
-		return errors.Wrap(err, "failed to check if Bluetooth is powered on")
+		return cleanup, errors.Wrap(err, "failed to check if Bluetooth is powered on")
 	}
 
 	// Only set power state if it needs to be changed.
 	if poweredOn != bluetoothPower {
 		if err := btf.SetPowered(ctx, bluetoothPower); err != nil {
-			return errors.Wrap(err, "failed to set the adapter enabled state")
+			return cleanup, errors.Wrapf(err, "failed to set the adapter enabled state from %t to %t", poweredOn, bluetoothPower)
 		}
+		cleanup = func(ctx context.Context) error { return btf.SetPowered(ctx, poweredOn) }
 	}
 
-	return nil
+	return cleanup, nil
 }
