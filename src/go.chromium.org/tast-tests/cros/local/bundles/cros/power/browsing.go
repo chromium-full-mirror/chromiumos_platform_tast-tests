@@ -365,8 +365,15 @@ func Browsing(ctx context.Context, s *testing.State) {
 
 			siteCheckpoint := r.StartCheckpoint(site)
 
-			scrollAmount := 600
+			bufferTime := 500 * time.Millisecond
 			if secsPerScroll > 0 {
+				eventTimeout := time.Duration(secsPerScroll)*time.Second - bufferTime
+				// Ensure that scrolling can be executed.
+				if err := waitForPageLoaded(ctx, tabData.Conn, eventTimeout); err != nil {
+					s.Fatal("Failed to wait for initial loading: ", err)
+				}
+
+				scrollAmount := 600
 				for sec := secsPerScroll; sec < secsPerPage; sec += secsPerScroll {
 					endTime := startTime.Add(time.Duration(sec) * time.Second)
 					// GoBigSleepLint: Sleep to measure power
@@ -375,12 +382,20 @@ func Browsing(ctx context.Context, s *testing.State) {
 					}
 
 					js := fmt.Sprintf("window.scrollBy(0, %d) == null", scrollAmount)
-					if err := tabData.Conn.WaitForExprWithTimeout(ctx, js, 5*time.Second); err != nil {
+					// On some low-end devices, browsing heavier pages—such as the Apple page,
+					// may take more time to load to a state where scrolling is feasible.
+					if err := tabData.Conn.WaitForExprWithTimeout(ctx, js, eventTimeout); err != nil {
 						s.Fatal("Failed to scroll: ", err)
 					}
 					scrollAmount = -scrollAmount
 				}
+			} else {
+				// Ensure the page is loaded.
+				if err := waitForPageLoaded(ctx, tabData.Conn, time.Duration(secsPerPage)*time.Second-bufferTime); err != nil {
+					s.Fatal("Failed to wait for the page to be loaded: ", err)
+				}
 			}
+
 			endTime := startTime.Add(time.Duration(secsPerPage) * time.Second)
 			// GoBigSleepLint: Sleep to measure power
 			if err := testing.Sleep(ctx, time.Until(endTime)); err != nil {
@@ -401,6 +416,11 @@ func Browsing(ctx context.Context, s *testing.State) {
 	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
+}
+
+func waitForPageLoaded(ctx context.Context, conn *chrome.Conn, timeout time.Duration) error {
+	readyExpr := `document.readyState === 'interactive' || document.readyState === 'complete'`
+	return conn.WaitForExprWithTimeout(ctx, readyExpr, timeout)
 }
 
 func validateConfig(config *browsingConfig, interval, totalTime time.Duration) error {
