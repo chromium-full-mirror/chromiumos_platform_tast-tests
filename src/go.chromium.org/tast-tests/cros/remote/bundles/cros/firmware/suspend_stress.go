@@ -240,6 +240,13 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 		}()
 
+		if i%50 == 0 {
+			s.Log("Marking servo in use")
+			if err := h.ServoProxy.MarkServoInUse(ctx); err != nil {
+				s.Log("Warning: Failed to mark servo in use: ", err)
+			}
+		}
+
 		if (i+1)%checkFrequency == 0 || i == numIters-1 {
 			s.Log("Checking login, TPM, and ECTool on iteration ", i+1)
 			// Note the original autotest for power_SuspendStress only ran these at the end of the test, but here it runs every iteration.

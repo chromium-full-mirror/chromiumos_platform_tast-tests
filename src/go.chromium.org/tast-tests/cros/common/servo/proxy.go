@@ -425,6 +425,20 @@ func (p *Proxy) isDockerized() bool {
 // Servo returns the proxy's encapsulated Servo object.
 func (p *Proxy) Servo() *Servo { return p.svo }
 
+// MarkServoInUse marks the servo as being used so that the labstation won't reboot or shutdown servod.
+// Call this periodically if the test is going to run for more than 2 hours.
+func (p *Proxy) MarkServoInUse(ctx context.Context) error {
+	if p.isLocal() || p.isDockerized() {
+		return nil
+	}
+	inUseFile := fmt.Sprintf("/var/lib/servod/%d_in_use", p.GetPort())
+	err := p.RunCommand(ctx, true, "touch", inUseFile)
+	if err != nil {
+		return errors.Wrapf(err, "failed to touch inuse file %q", inUseFile)
+	}
+	return nil
+}
+
 func (p *Proxy) runCommandImpl(ctx context.Context, dumpLogOnError, asRoot bool, name string, args ...string) error {
 	var execOpts []testexec.RunOption
 	if dumpLogOnError {
