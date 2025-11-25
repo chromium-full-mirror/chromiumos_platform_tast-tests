@@ -88,6 +88,7 @@ const (
 	BatteryFullDesignMAH         IntControl = "battery_full_design_mah"
 	BatteryFullChargeMAH         IntControl = "battery_full_charge_mah"
 	BatteryVoltageMV             IntControl = "ppvar_vbat_mv"
+	UsbcPr                       IntControl = "usbc_pr"
 	VolumeDownHold               IntControl = "volume_down_hold"    // Integer represents a number of milliseconds.
 	VolumeUpHold                 IntControl = "volume_up_hold"      // Integer represents a number of milliseconds.
 	VolumeUpDownHold             IntControl = "volume_up_down_hold" // Integer represents a number of milliseconds.

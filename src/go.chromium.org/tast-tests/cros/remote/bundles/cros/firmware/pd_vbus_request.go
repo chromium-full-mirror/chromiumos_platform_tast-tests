@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -100,53 +98,9 @@ const (
 	vbusTolerance = 0.12
 )
 
-// voltageSequence is the VBUS Voltage test sequence
-var voltageSequence = [22]int{5, 9, 10, 12, 15, 20, 15, 12, 9, 5, 20, 5, 5, 9, 9, 10, 10, 12, 12, 15, 15, 20}
-
-const (
-	// pass
-	pass int = 0
-	// allowedFail
-	allowedFail = 1
-	// fail
-	fail = 2
-)
-
-// compareVbus is a helper function for testing if VBUS falls within a expected range.
-func compareVbus(ctx context.Context, h *firmware.Helper, s *testing.State, expectedVbusVoltage float64, okToFail bool) (int, string) {
-	var vbusVoltage float64
-	var tolerance float64
-	var voltageDifference float64
-	var resultStr string
-
-	// Read Vbus voltage
-	vbusVoltage, err := h.Servo.GetFloat(ctx, servo.VBusVoltage)
-	if err != nil {
-		return fail, "Failed to read VBus Voltage"
-	}
-	vbusVoltage = vbusVoltage / 1000
-
-	// Compute voltage tolerance range. To handle the case where VBUS is
-	// off, set the minimal tolerance to usbCSinkVoltage * vbusTolerance.
-	tolerance = vbusTolerance * math.Max(expectedVbusVoltage, usbCSinkVoltage)
-	// Verify that measured Vbus voltage is within expected range
-	voltageDifference = math.Abs(expectedVbusVoltage - vbusVoltage)
-
-	resultStr = fmt.Sprintf("Target = %FV:\tAct = %F\tDelta = %F", expectedVbusVoltage, vbusVoltage, voltageDifference)
-
-	if voltageDifference > tolerance {
-		if okToFail {
-			return allowedFail, resultStr
-		}
-		return fail, resultStr
-	}
-
-	return pass, resultStr
-}
-
 // charge starts charging a the given voltage
 func charge(ctx context.Context, h *firmware.Helper, voltage int) error {
-	err := h.Servo.RunServoCommand(ctx, fmt.Sprintf("usbc_action chg %d", voltage))
+	err := h.Servo.SetInt(ctx, servo.UsbcPr, voltage)
 	return err
 }
 
@@ -172,12 +126,6 @@ func charge(ctx context.Context, h *firmware.Helper, voltage int) error {
 //
 // Pass criteria is all voltage transitions are successful.
 func PDVbusRequest(ctx context.Context, s *testing.State) {
-	var expectedVbusVoltage float64
-	var okToFail bool
-	var isOverride bool
-	var pdTesterFailures []string
-	var dutFailures []string
-
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireConfig(ctx); err != nil {
@@ -214,15 +162,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	dutVoltageLimit := h.Config.UsbcInputVoltageLimit
 	dutPowerLimit := h.Config.MaxChargingPower
 
-	isOverride = h.Config.ChargerProfileOverride
-	if isOverride {
-		s.Log("*** Custom charger profile takes over, which may cause voltage-not-matched. It is OK to fail. *** ")
-	}
-
-	// Obtain voltage limit due to maximum charging power. Note that this
-	// voltage limit applies only when EC follows the default policy. There
-	// are other policies like PREFER_LOW_VOLTAGE or PREFER_HIGH_VOLTAGE but
-	// they are not implemented in this test.
+	// Read Servo SRCCAPS
 	srccaps, err := h.Servo.GetPDAdapterSrcCaps(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Source Caps: ", err)
@@ -234,14 +174,41 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		// Servo always returns integer voltages, even though they could theoretically be fractional.
 		chargingVoltages[voltage] = true
 	}
+	s.Logf("srcCaps = %+v allVoltages = %v", srccaps, chargingVoltages)
+
+	// Check that servo v4 is providing:
+	// 5v - All chargers should have this
 	if !chargingVoltages[5] {
 		s.Error("Charger doesn't support 5v, which should be impossible. Please try a different (i.e. 65w or greater) charger")
 	}
+	// The max voltage of the DUT
 	if !chargingVoltages[dutVoltageLimit] {
 		s.Errorf("Charger doesn't support %vv. Please try a different (i.e. 65w or greater) charger", dutVoltageLimit)
 	}
+	// At least 3 voltages
 	if len(chargingVoltages) < 3 {
 		s.Error("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
+	}
+
+	// If a lower voltage can supply the max power the dut can handle (sMaxPowerMw), then
+	// the DUT will probably pick that lower voltage and not the highest available voltage.
+	lowestVoltageForMaxPower := dutVoltageLimit
+	foundMaxPower := false
+	for _, pdo := range srccaps {
+		if (float64(pdo.Current) * float64(pdo.Voltage) / 1000000.0) >= dutPowerLimit {
+			foundMaxPower = true
+			if pdo.Voltage/1000.0 < lowestVoltageForMaxPower {
+				s.Logf("PDO: %+v (%d mW)", pdo, pdo.Current*pdo.Voltage/1000)
+				lowestVoltageForMaxPower = pdo.Voltage / 1000.0
+			} else {
+				s.Logf("DUT might not use this PDO: %+v (%d mW)", pdo, pdo.Current*pdo.Voltage/1000)
+			}
+		} else {
+			s.Logf("PDO: %+v (%d mW)", pdo, pdo.Current*pdo.Voltage/1000)
+		}
+	}
+	if !foundMaxPower {
+		s.Errorf("Charger does not support %f W, use higher wattage charger", dutPowerLimit)
 	}
 
 	// Set dps disable
@@ -255,10 +222,17 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Log("Servo console command dps enable failed: ", err)
 		}
+		// PDTester is set back to 20V SRC mode.
+		err = charge(ctx, h, usbCMaxVoltage)
+		if err != nil {
+			s.Fatal("Failed to set charging voltage: ", usbCMaxVoltage)
+		}
 	}()
 
 	s.Log("Start of PDTester initiated tests")
 
+	// Loop over many voltages, and tell the servo not to advertise any SRC CAP over that
+	// voltage.
 	for voltage := range chargingVoltages {
 		s.Logf("********* %v *********", voltage)
 		// Set charging voltage
@@ -277,40 +251,32 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to get PD State")
 		}
-		// If PDTester is in SNK mode and the DUT is in S0, the DUT should
-		// source VBUS = USBC_SINK_VOLTAGE. If PDTester is in SNK mode, and
-		// the DUT is not in S0, the DUT shouldn't source VBUS, which means
-		// VBUS = 0.
-		if pdState.PowerRole == servo.PowerRoleSNK {
-			expectedVbusVoltage = usbCSinkVoltage
-			ps, err := h.Servo.GetECSystemPowerState(ctx)
-			if err != nil {
-				s.Fatal("Failed to get EC System Power State")
-			}
-			if ps == "S0" {
-				expectedVbusVoltage = 0
-			}
-			okToFail = false
-		} else {
-			if voltage < dutVoltageLimit {
-				expectedVbusVoltage = float64(voltage)
+		s.Logf("Servo PD state: %+v", pdState)
+		if !pdState.IsSourceReady() {
+			s.Fatal("PD state is not SRC ready")
+		}
+		vbus, err := h.Servo.GetFloat(ctx, servo.VBusVoltage)
+		if err != nil {
+			s.Fatal("Failed to get vbus")
+		}
+		vbus = vbus / 1000.0
+
+		if lowestVoltageForMaxPower < voltage {
+			s.Logf("VBus: %f V (expect %d V or %d V)",
+				vbus, voltage, lowestVoltageForMaxPower)
+			if math.Abs(vbus-float64(voltage)) < vbusTolerance*float64(voltage) {
+				lowestVoltageForMaxPower = voltage
+				s.Logf("%d V is now expected", lowestVoltageForMaxPower)
 			} else {
-				expectedVbusVoltage = float64(dutVoltageLimit)
+				if math.Abs(vbus-float64(lowestVoltageForMaxPower)) > vbusTolerance*float64(lowestVoltageForMaxPower) {
+					s.Errorf("Vbus should be within 12%% of %d, got %f V", lowestVoltageForMaxPower, vbus)
+				}
 			}
-			okToFail = isOverride || (voltage > dutVoltageLimit) || (dutPowerLimit == 45.0 && voltage > 16.0)
-		}
-
-		result, resultStr := compareVbus(ctx, h, s, expectedVbusVoltage, okToFail)
-		if result == fail {
-			s.Logf("%s FAIL", resultStr)
-		} else if result == allowedFail {
-			s.Logf("%s FAIL - allowed fail", resultStr)
 		} else {
-			s.Logf("%s PASS", resultStr)
-		}
-
-		if result == fail {
-			pdTesterFailures = append(pdTesterFailures, resultStr)
+			s.Logf("VBus: %f V (expect %d V)", vbus, voltage)
+			if math.Abs(vbus-float64(voltage)) > vbusTolerance*float64(voltage) {
+				s.Errorf("Vbus should be within 12%% of %d, got %f V", voltage, vbus)
+			}
 		}
 	}
 
@@ -320,107 +286,10 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set charging voltage: ", usbCMaxVoltage)
 	}
 
-	if len(pdTesterFailures) > 0 {
-		s.Error("PDTester voltage source cap failures")
-		for _, fail := range pdTesterFailures {
-			s.Error(fail)
-		}
-		number := len(pdTesterFailures)
-		s.Fatal("PDTester failed ", number, " times")
-	}
-
-	// The DUT must be in SNK mode for the pd <port> dev <voltage>
-	// command to have an effect.
-	dutPDState, err := h.Servo.GetDUTPDState(ctx)
-	if err != nil {
-		s.Fatal("Failed to get DUT PD State")
-	}
-
-	if dutPDState.PowerRole != servo.PowerRoleSNK {
-		// DUT needs to be in SINK Mode, attempt to force change
-		h.Servo.SendPowerSwapRequest(ctx)
-
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if dutPDState, err = h.Servo.GetServoPDState(ctx); err == nil {
-				if dutPDState.PowerRole != servo.PowerRoleSNK {
-					s.Fatal("DUT not able to connecto in SINK mode")
-				}
-			} else {
-				s.Fatal("Failed to get DUT PD State")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: pdPowerRolePollTimeout, Interval: pdPowerRolePollInterval}); err != nil {
-			s.Fatal("Failed to get DUT PD State")
-		}
-	}
-
-	s.Log("Start of DUT initiated tests")
-	testedVoltages := make(map[int]bool)
-	for _, v := range voltageSequence {
-		if v > dutVoltageLimit {
-			s.Logf("Target %vV: skipped, over the limit %vV", v, dutVoltageLimit)
-			continue
-		}
-
-		if !chargingVoltages[v] {
-			s.Logf("Target %vV: skipped, voltage unsupported", v)
-			continue
-		}
-		testedVoltages[v] = true
-
-		// Build 'pd <port> dev <voltage> command
-		err = h.Servo.SendRequestSourceVoltage(ctx, v)
-		if err != nil {
-			s.Fatal("Failed to request source voltage")
-		}
-
-		failCount := 0
-		okToFail = isOverride || (v > dutVoltageLimit)
-		err = testing.Poll(ctx, func(ctx context.Context) error {
-			result, resultStr := compareVbus(ctx, h, s, float64(v), okToFail)
-			if result == fail {
-				failCount++
-				if failCount >= maxPollFailCount {
-					s.Logf("%s FAIL", resultStr)
-					dutFailures = append(dutFailures, resultStr)
-					return errors.Wrap(err, "FAIL")
-				}
-			} else {
-				s.Logf("%s PASS", resultStr)
-				return nil
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: pdVBusPollTimeout, Interval: pdVBusPollInterval})
-	}
-	if len(testedVoltages) < 3 {
-		s.Error("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
-	}
-
-	// Make sure DUT is set back to its max voltage so DUT will accept all
-	// options
-	err = h.Servo.SendRequestSourceVoltage(ctx, dutVoltageLimit)
-	if err != nil {
-		s.Fatal("Failed to request source voltage")
-	}
-	s.Log("Sleeping for 10 seconds")
-	// GoBigSleepLint: Wait for voltage to stabilize
-	if err = testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to sleep for 10 seconds: ", err)
-	}
-
 	// The next group of tests need DUT to connect in SNK and SRC modes
 	err = h.Servo.SetDualroleState(ctx, servo.DROn)
 	if err != nil {
 		s.Fatal("Failed to enable DualRole")
-	}
-
-	if len(dutFailures) > 0 {
-		s.Log("DUT voltage request failures")
-		for _, fail := range dutFailures {
-			s.Log(fail)
-		}
-		number := len(dutFailures)
-		s.Fatal("DUT failed ", number, " times")
 	}
 
 	if testParams.Shutdown {
