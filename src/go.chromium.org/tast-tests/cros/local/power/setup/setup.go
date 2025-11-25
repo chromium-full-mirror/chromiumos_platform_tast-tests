@@ -411,7 +411,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		// required, but it avoids extraneous starting and stopping of powerd.
 		// The Charge Limit state (enabled or disabled) is maintained when
 		// powerd is stopped, but powerd must initialize it.
-		if options.ChargeLimit == DisableChargeLimit {
+		// Charge limit requires charge control V2 supports. Only disable charge limit
+		// if charge control V2 is supported.
+		if ChargeControlV2Support(ctx) && options.ChargeLimit == DisableChargeLimit {
 			// TmpPrefs is separate to allow other options to use it if needed.
 			prefs := TmpPrefs{}
 			s.Add(prefs.InitTmpPrefs(ctx))
