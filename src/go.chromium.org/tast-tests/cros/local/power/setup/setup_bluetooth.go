@@ -49,6 +49,10 @@ func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
 		testing.ContextLog(ctx, "Failed to create bluetooth facade")
 		return func(ctx context.Context) error { return nil }, err
 	}
+	if state, err := b.IsPoweredOn(ctx); err == nil && !state {
+		testing.ContextLog(ctx, "Bluetooth adapter is powered off")
+		return func(ctx context.Context) error { return nil }, nil
+	}
 	testing.ContextLog(ctx, "Power off the floss adapter")
 	if err := b.SetPowered(ctx, false); err != nil {
 		return func(ctx context.Context) error { return nil }, err
