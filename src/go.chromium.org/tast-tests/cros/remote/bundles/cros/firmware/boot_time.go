@@ -203,21 +203,6 @@ func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apB
 	// See HOST_STRFTIME in src/platform/ec/util/ec3po/console.py
 	uartAbsoluteTime := regexp.MustCompile(`^\d+-\d+-\d+ \d+:(\d+):(\d+)\.(\d+)`)
 
-	cancel, err := ser.EnableUARTCapture(ctx, servo.ECUARTCapture)
-	defer func() {
-		if err := cancel(ctx); err != nil {
-			s.Fatal("Failed to cancel capture EC UART: ", err)
-		}
-	}()
-
-	s.Log("Rebooting EC")
-	if err := ser.RunECCommand(ctx, "reboot"); err != nil {
-		s.Fatal("Failed to send reboot command: ", err)
-	}
-
-	if err != nil {
-		s.Fatal("Failed to capture EC UART: ", err)
-	}
 	timestampState, err := ser.GetOnOff(ctx, servo.ECUARTTimestamp)
 	if err != nil {
 		s.Fatal("Failed to get EC UART timestamping: ", err)
@@ -237,6 +222,22 @@ func measureBootTimeViaFollowingECLog(ctx context.Context, s *testing.State, apB
 			s.Fatal("Failed to restore EC UART timestamping: ", err)
 		}
 	}()
+
+	cancel, err := ser.EnableUARTCapture(ctx, servo.ECUARTCapture)
+	if err != nil {
+		s.Fatal("Failed to capture EC UART: ", err)
+	}
+
+	defer func() {
+		if err := cancel(ctx); err != nil {
+			s.Fatal("Failed to cancel capture EC UART: ", err)
+		}
+	}()
+
+	s.Log("Rebooting EC")
+	if err := ser.RunECCommand(ctx, "reboot"); err != nil {
+		s.Fatal("Failed to send reboot command: ", err)
+	}
 
 	// Set times to invalid values to start.
 	var (
