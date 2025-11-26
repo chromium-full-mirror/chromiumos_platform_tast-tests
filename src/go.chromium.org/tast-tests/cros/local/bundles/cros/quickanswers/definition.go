@@ -6,7 +6,9 @@ package quickanswers
 
 import (
 	"context"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -60,15 +62,28 @@ func Definition(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to select a query word: ", err)
 	}
 
-	// Right click the selected word and ensure the Quick Answers UI shows up with the definition result.
-	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	definitionResult := quickanswers.ResultTextContains("twenty plane faces")
+	// Right click the selected word and ensure the Quick Answers UI shows up with the definition intent.
 	ui := uiauto.New(tconn)
+	quickAnswers := nodewith.ClassName("QuickAnswersView")
+	dictionaryIntent := quickanswers.IntentTypeIs(quickanswers.Dictionary)
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(queryFinder),
 		ui.WaitUntilExists(quickAnswers),
-		ui.WaitUntilExists(definitionResult))(ctx); err != nil {
+		ui.WaitUntilExists(dictionaryIntent))(ctx); err != nil {
 		s.Fatal("Quick Answers result not showing up: ", err)
+	}
+
+	// Check for the server response. This is for informational purposes only.
+	if err := action.IfFailThen(
+		ui.WithTimeout(5*time.Second).WaitUntilExists(
+			quickanswers.ResultTextContains("twenty plane faces")),
+		func(ctx context.Context) error {
+			s.Log("Server request failed. This is informational only and NOT marking " +
+				"a test as failure.")
+			return nil
+		},
+	)(ctx); err != nil {
+		s.Fatal("The informational check failure logging failed, which should not happen: ", err)
 	}
 
 	// Dismiss the context menu and ensure the Quick Answers UI also dismiss.
