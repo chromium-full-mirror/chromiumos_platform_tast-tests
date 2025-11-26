@@ -29,10 +29,9 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
-		VariantCategory: `{"name": "Camera:SoC_KernelVersion_ModuleIds"}`,
-		SoftwareDeps:    []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
-		Fixture:         "chromeLoggedIn",
-		Timeout:         4*time.Minute + hal3.AdditionalTimeout,
+		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
+		Fixture:      "chromeLoggedIn",
+		Timeout:      4*time.Minute + hal3.AdditionalTimeout,
 	})
 }
 

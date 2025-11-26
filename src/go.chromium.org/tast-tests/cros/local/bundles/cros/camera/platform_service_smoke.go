@@ -41,7 +41,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(testutil.FlakyModel...), hwdep.SkipOnCameraUSBModule(testutil.FlakyUSBCamera...)),
 				Val:               testParam{Count: 2},
 				ExtraAttr:         []string{"informational"},
-				VariantCategory:   `{"name": "Camera:Model_ModuleIds"}`,
 			}, {
 				Name:              "flaky_model",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(testutil.FlakyModel...)),
@@ -53,7 +52,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.CameraUSBModule(testutil.FlakyUSBCamera...)),
 				Val:               testParam{Count: 1},
 				ExtraAttr:         []string{"informational"},
-				VariantCategory:   `{"name": "Camera:ModuleIds"}`,
 			},
 		},
 	})

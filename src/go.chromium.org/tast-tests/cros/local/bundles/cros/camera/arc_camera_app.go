@@ -22,16 +22,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:            ARCCameraApp,
-		Data:            []string{arcapp.CameraAppApk},
-		Desc:            "Checks basic Android camera functionalities work under ARC",
-		Contacts:        []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
-		BugComponent:    "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:            []string{"group:mainline", "informational"},
-		VariantCategory: `{"name": "Camera:SoC_CameraTypes"}`,
-		SoftwareDeps:    []string{"arc", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:         "arcWithWorkingCamera",
-		Timeout:         3 * time.Minute,
+		Func:         ARCCameraApp,
+		Data:         []string{arcapp.CameraAppApk},
+		Desc:         "Checks basic Android camera functionalities work under ARC",
+		Contacts:     []string{"chromeos-camera-app-eng@google.com", "seannli@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"arc", "chrome", caps.BuiltinOrVividCamera},
+		Fixture:      "arcWithWorkingCamera",
+		Timeout:      3 * time.Minute,
 	})
 }
 

@@ -15,14 +15,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:            HAL3StillCapture,
-		Desc:            "Verifies camera still capture function with HAL3 interface",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
-		BugComponent:    "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:            []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional"},
-		VariantCategory: `{"name": "Camera:SoC_KernelVersion_ModuleIds"}`,
-		SoftwareDeps:    []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
-		Fixture:         "chromeLoggedIn",
+		Func:         HAL3StillCapture,
+		Desc:         "Verifies camera still capture function with HAL3 interface",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org", "xinggu@chromium.org"},
+		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:camera", "camera_hal", "camera_functional"},
+		SoftwareDeps: []string{"arc", "arc_camera3", "chrome", caps.BuiltinCamera},
+		Fixture:      "chromeLoggedIn",
 		// Krane needs 4 minutes and 30 seconds for whole dark environment(covering the camera lens).
 		// We also need rooms for preparation time.
 		Timeout: 6*time.Minute + hal3.AdditionalTimeout,

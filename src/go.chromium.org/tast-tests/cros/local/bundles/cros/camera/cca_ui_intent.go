@@ -96,10 +96,9 @@ func init() {
 			"group:release-health",
 			"release-health_camera",
 		},
-		VariantCategory: `{"name": "Camera:SoC_CameraTypes"}`,
-		SoftwareDeps:    []string{"arc", "camera_app", "chrome", "proprietary_codecs"},
-		Timeout:         7 * time.Minute,
-		Fixture:         "ccaTestBridgeReadyWithArcFakeHALCamera",
+		SoftwareDeps: []string{"arc", "camera_app", "chrome", "proprietary_codecs"},
+		Timeout:      7 * time.Minute,
+		Fixture:      "ccaTestBridgeReadyWithArcFakeHALCamera",
 	})
 }
 

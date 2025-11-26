@@ -105,9 +105,8 @@ func init() {
 				// TODO(b/346995892): IPU6 driver in upstream doesn't work with the HAL. Remove once supported.
 				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 			}, {
-				Name:            "all",
-				ExtraAttr:       []string{"informational"},
-				VariantCategory: `{"name": "Camera:KernelVersion_Model_ModuleIds"}`,
+				Name:      "all",
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
