@@ -84,7 +84,8 @@ func init() {
 			Val: idlePerfTest{
 				testType: testTypeFocusMode,
 			},
-			Fixture: fixture.ChromeLoggedInWithFocusMode,
+			ExtraAttr: []string{"cuj_weekly"},
+			Fixture:   fixture.ChromeLoggedInWithFocusMode,
 		}, {
 			Name: "mousekeys",
 			Val: idlePerfTest{
