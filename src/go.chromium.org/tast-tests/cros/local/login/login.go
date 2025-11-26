@@ -20,7 +20,6 @@ import (
 // The user should be provided in `opts` (e.g. using `chrome.FakeLogin`,
 // `chrome.GAIALogin`).
 func SetupUserWithLocalPassword(ctx context.Context, password string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
-	opts = append(opts, chrome.EnableFeatures("AllowPasswordlessRecovery"))
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 
 	cr, err := chrome.New(ctx, opts...)
@@ -101,8 +100,6 @@ func SetupUserWithLocalPasswordAndPin(ctx context.Context, password, pin string,
 // setup screen in OOBE and sets the pin. The user should be provided in `opts`
 // (e.g. using `chrome.FakeLogin`, `chrome.GAIALogin`).
 func SetupUserWithPin(ctx context.Context, pin string, opts ...chrome.Option) (c *chrome.Chrome, retErr error) {
-	opts = append(opts, chrome.EnableFeatures("AllowPasswordlessRecovery"))
-	opts = append(opts, chrome.EnableFeatures("AllowPasswordlessSetup"))
 	opts = append(opts, chrome.DontSkipOOBEAfterLogin())
 
 	cr, err := chrome.New(ctx, opts...)

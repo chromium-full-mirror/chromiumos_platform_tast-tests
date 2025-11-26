@@ -176,14 +176,10 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.DeferLogin(),
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		// TODO(b/315829727): Remove this as a part of post-launch cleanup.
-		chrome.EnableFeatures("LocalPasswordsForConsumers"),
 		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
 		chrome.EnableFeatures("OobeAiIntro"),
 		chrome.DisableFeatures("OobePersonalizedOnboarding"),
 		chrome.DisableFeatures("OobePerksDiscovery"),
-		// TODO(b/375339793): Remove this as a part of post-launch cleanup.
-		chrome.EnableFeatures("AllowPasswordlessSetup"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
