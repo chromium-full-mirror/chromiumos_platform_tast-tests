@@ -11,11 +11,13 @@ import (
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -55,6 +57,11 @@ func SystemTrayItemsPerf(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+
 	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
 	if err != nil {
 		s.Fatal("Failed to load the top-row layout: ", err)
@@ -63,7 +70,7 @@ func SystemTrayItemsPerf(ctx context.Context, s *testing.State) {
 	// Starts full screen recording via UI.
 	screenRecordToggleButton := nodewith.HasClass("IconSliderButton").NameContaining("Screen record")
 	recordFullscreenToggleButton := nodewith.HasClass("IconSliderButton").NameContaining("Record full screen")
-	stopRecordButton := nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")
+	stopRecordButton := nodewith.HasClass("StopRecordingButtonTray").Name("Stop screen recording")
 	recordTakenLabel := nodewith.HasClass("Label").Name("Screen recording taken")
 	popupNotification := nodewith.Role(role.Window).HasClass("ash/message_center/MessagePopup")
 	notificationCenterTray := nodewith.HasClass("NotificationCenterTray")
