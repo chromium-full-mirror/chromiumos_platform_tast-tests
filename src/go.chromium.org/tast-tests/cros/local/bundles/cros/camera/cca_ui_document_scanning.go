@@ -38,10 +38,11 @@ func init() {
 			"release-health_camera",
 			"group:release-health",
 		},
-		VariantCategory:   `{"name": "Camera:BoardWithKernelnext"}`,
-		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
-		Data:         []string{"document_3264x2448.mjpeg", "ocr_one_line_3264x2448.jpg"},
-		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		VariantCategory: `{"name": "Camera:BoardWithKernelnext"}`,
+		SoftwareDeps:    []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
+		Data:            []string{"document_3264x2448.mjpeg", "ocr_one_line_3264x2448.jpg"},
+		Fixture:         "ccaTestBridgeReadyWithFakeHALCamera",
+		Timeout:         150 * time.Second, // 30 seconds * 5 subtests
 	})
 }
 
