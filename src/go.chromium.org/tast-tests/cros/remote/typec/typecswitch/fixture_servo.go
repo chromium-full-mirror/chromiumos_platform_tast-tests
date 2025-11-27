@@ -58,13 +58,17 @@ func (f *SwitchAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState)
 		s.Log("Connected to DUT")
 	}
 
+	f.servoTestConfigured = false
+
+	// If servo is present prepare a proxy for it.
 	if servoSpec, present := s.Var("servo"); present {
 		pxy, err := servo.NewProxy(ctx, servoSpec, d.KeyFile(), d.KeyDir())
 		if err != nil {
 			s.Fatal("Failed to connect to servo: ", err)
 		}
 		f.pxy = pxy
-		f.servoTestConfigured = false
+	} else {
+		s.Log("No servo specified")
 	}
 
 	return f.sw
@@ -103,8 +107,8 @@ func (f *SwitchAndServoFixture) Reset(ctx context.Context) error {
 }
 
 func (f *SwitchAndServoFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Skip the config if it was already done.
-	if f.servoTestConfigured {
+	// Skip the config if servo is not present or config was already done.
+	if f.pxy == nil || f.servoTestConfigured {
 		return
 	}
 

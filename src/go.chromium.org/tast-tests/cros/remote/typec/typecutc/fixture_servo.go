@@ -65,7 +65,9 @@ func (f *UtcAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Log("Connected to DUT")
 	}
 
-	// Configure Servo if present.
+	f.servoTestConfigured = false
+
+	// If servo is present prepare a proxy for it.
 	if servoSpec, present := s.Var("servo"); present {
 		s.Log("Servo specified, configuring it as SNK")
 		pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
@@ -73,7 +75,6 @@ func (f *UtcAndServoFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 			s.Fatal("Failed to connect to servo: ", err)
 		}
 		f.servoProxy = pxy
-		f.servoTestConfigured = false
 	} else {
 		s.Log("No servo specified, proceeding with utc only")
 	}
@@ -116,8 +117,8 @@ func (f *UtcAndServoFixture) Reset(ctx context.Context) error {
 
 // PreTest is called before each test.
 func (f *UtcAndServoFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Skip the config if it was already done.
-	if f.servoTestConfigured {
+	// Skip the config if servo is not present or config was already done.
+	if f.servoProxy == nil || f.servoTestConfigured {
 		return
 	}
 
