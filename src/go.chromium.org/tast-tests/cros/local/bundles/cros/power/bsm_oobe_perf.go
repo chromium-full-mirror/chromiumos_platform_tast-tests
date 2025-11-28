@@ -200,13 +200,11 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 
 	// Signing in.
 	testing.ContextLog(ctx, "Sign-in started")
-	signInCheckpoint := r.StartCheckpoint("signIn")
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
 		chrome.EnableFeatures(bsmFeatures...),
 		gaia)
-	r.EndCheckpoint(signInCheckpoint)
 
 	if err != nil {
 		return time.Duration(0), err
@@ -223,16 +221,12 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 
 	// Perform OOBE provisioning.
 	testing.ContextLog(ctx, "OOBE provisioning started")
-	oobeCheckpoint := r.StartCheckpoint("provisioning")
 	err = oobe.CompleteOnboardingFlow(ctx, ui)
-	r.EndCheckpoint(oobeCheckpoint)
 
 	if err != nil {
 		faillog.DumpUITree(ctx, s.OutDir(), tconn)
 		return time.Duration(0), err
 	}
-
-	postProvisionCheckpoint := r.StartCheckpoint("post_provision")
 
 	testing.ContextLog(ctx, "Waiting for provisioning metric")
 	metricValue, err := metrics.WaitForHistogram(ctx, tconn, histogramName, 3*time.Minute)
@@ -245,8 +239,6 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 	if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
-
-	r.EndCheckpoint(postProvisionCheckpoint)
 
 	timeMs, err := metricValue.Mean()
 	if err != nil {
