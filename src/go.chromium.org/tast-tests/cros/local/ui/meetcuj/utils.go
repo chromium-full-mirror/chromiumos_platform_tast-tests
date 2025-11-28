@@ -87,7 +87,7 @@ func AddBots(ctx context.Context, bc *bond.Client, numBots int, testDuration tim
 
 // ResetZoom resets the browser zoom to 100%.
 func ResetZoom(ui *uiauto.Context, kw *input.KeyboardEventWriter) uiauto.Action {
-	zoomNode := nodewith.ClassNameRegex(regexp.MustCompile("(ZoomView|PageActionView)"))
+	zoomNode := nodewith.HasClass("ZoomBubbleView").Role(role.Window)
 	return uiauto.NamedCombine(
 		"reset zoom and wait for zoom indicator to be absent",
 		ui.LeftClick(meetRootWebArea),
@@ -107,42 +107,27 @@ func AdjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWr
 		return errors.Wrap(nil, "failed to repeatedly press Ctrl+Minus to zoom out")
 	}
 
-	// Sometimes the node "ZoomView" will be "PageActionView".
-	// To verify that the browser zoom ratio is 50%, check the corresponding
-	// node according to different UI nodes "ZoomView" or "PageActionView".
-	pageActionView := nodewith.HasClass("PageActionView")
-	if err := ui.Exists(pageActionView)(ctx); err == nil {
-		browserAppMenuButton := nodewith.Name("Chrome").HasClass("BrowserAppMenuButton").First()
-		zoomMenuItem := nodewith.Name("Zoom").Role(role.MenuItem)
-		zoomValueNode := nodewith.Role(role.StaticText).Ancestor(zoomMenuItem)
-		if err := ui.LeftClickUntil(browserAppMenuButton,
-			ui.WithTimeout(3*time.Second).WaitUntilExists(zoomMenuItem),
-		)(ctx); err != nil {
-			return errors.Wrap(nil, "failed to open browser app menu")
-		}
+	browserAppMenuButton := nodewith.Name("Chrome").HasClass("BrowserAppMenuButton").First()
+	zoomMenuItem := nodewith.Name("Zoom").Role(role.MenuItem)
+	zoomValueNode := nodewith.Role(role.StaticText).Ancestor(zoomMenuItem)
+	if err := ui.LeftClickUntil(browserAppMenuButton,
+		ui.WithTimeout(3*time.Second).WaitUntilExists(zoomMenuItem),
+	)(ctx); err != nil {
+		return errors.Wrap(nil, "failed to open browser app menu")
+	}
 
-		// Get zoom value text.
-		zoomInfo, err := ui.Info(ctx, zoomValueNode)
-		if err != nil {
-			return errors.Wrap(err, "failed to find the current browser zoom")
-		}
-		if zoomInfo.Name != "50%" {
-			return errors.Wrapf(err, `unexpected zoom value: got %s; want "50%%"`, zoomInfo.Name)
-		}
-		if err := ui.LeftClickUntil(browserAppMenuButton,
-			ui.WithTimeout(3*time.Second).WaitUntilGone(zoomMenuItem),
-		)(ctx); err != nil {
-			return errors.Wrap(nil, "failed to close browser app menu")
-		}
-	} else {
-		zoomNode := nodewith.HasClass("ZoomView")
-		zoomInfo, err := ui.Info(ctx, zoomNode)
-		if err != nil {
-			return errors.Wrap(err, "failed to find the current browser zoom")
-		}
-		if zoomInfo.Name != "Zoom: 50%" {
-			return errors.Wrapf(err, `unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
-		}
+	// Get zoom value text.
+	zoomInfo, err := ui.Info(ctx, zoomValueNode)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the current browser zoom")
+	}
+	if zoomInfo.Name != "50%" {
+		return errors.Wrapf(err, `unexpected zoom value: got %s; want "50%%"`, zoomInfo.Name)
+	}
+	if err := ui.LeftClickUntil(browserAppMenuButton,
+		ui.WithTimeout(3*time.Second).WaitUntilGone(zoomMenuItem),
+	)(ctx); err != nil {
+		return errors.Wrap(nil, "failed to close browser app menu")
 	}
 
 	testing.ContextLog(ctx, "Zoomed browser window to 50%")
