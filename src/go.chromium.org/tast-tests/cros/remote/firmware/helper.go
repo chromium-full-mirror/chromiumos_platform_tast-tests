@@ -2373,9 +2373,9 @@ func isHWWPEnabled(ctx context.Context, h *Helper) (bool, error) {
 		return false, errors.Wrap(err, "failed to get write protect state")
 	}
 	switch servo.FWWPStateValue(state) {
-	case servo.FWWPStateForceOn:
+	case servo.FWWPStateOn, servo.FWWPStateForceOn:
 		return true, nil
-	case servo.FWWPStateForceOff:
+	case servo.FWWPStateOff, servo.FWWPStateForceOff:
 		return false, nil
 	default:
 		return false, errors.New("invalid FW WP state: " + state)
