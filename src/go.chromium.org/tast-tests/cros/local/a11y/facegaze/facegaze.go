@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -166,6 +167,31 @@ func maybeCloseConfirmationDialog(ctx context.Context, ui *uiauto.Context) error
 	return nil
 }
 
+// ensureFaceGazeToggleButtonOn ensures that the face control settings page is
+// open and that the FaceGaze toggle button is on, since a11y.SetFaceGazeEnabled()
+// may fail to enable FaceGaze.
+func ensureFaceGazeToggleButtonOn(ui *uiauto.Context) uiauto.Action {
+	settingsPage := nodewith.HasClass("showing-subpage").Role(role.Main)
+	accessibilitySection := nodewith.Name("Accessibility").Role(role.GenericContainer).Ancestor(settingsPage).First()
+	faceControlHeading := nodewith.Name("Face control").Role(role.Heading).Ancestor(accessibilitySection)
+	toggleButton := nodewith.Role(role.ToggleButton).Ancestor(accessibilitySection)
+	offToggleButton := toggleButton.Name("Off")
+	onToggleButton := toggleButton.Name("On")
+	return uiauto.NamedCombine("ensure FaceGaze toggle button is on",
+		ui.WaitUntilExists(faceControlHeading),
+		ui.WaitUntilAnyExists(offToggleButton, onToggleButton),
+		uiauto.IfFailThen(
+			ui.EnsureGoneFor(offToggleButton, 5*time.Second),
+			uiauto.NamedAction(
+				"toggle button on",
+				ui.DoDefaultUntil(offToggleButton,
+					ui.EnsureExistsFor(onToggleButton, 3*time.Second),
+				),
+			),
+		),
+	)
+}
+
 // SetUp executes common FaceGaze setup code and returns a driver that can be
 // used to easily drive FaceGaze tests.
 func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string) (d driver, e error) {
@@ -220,6 +246,10 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string)
 
 	if err := maybeCloseConfirmationDialog(ctx, ui); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close the FaceGaze confirmation dialog")
+	}
+
+	if err := ensureFaceGazeToggleButtonOn(ui)(ctx); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to ensure FaceGaze toggle button is on")
 	}
 
 	// When FaceGaze is enabled, it will automatically trigger an install of the
