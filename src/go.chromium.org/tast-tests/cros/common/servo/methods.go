@@ -189,8 +189,10 @@ type FWWPStateValue string
 
 // These are the string values that can be passed to the FWWPState control.
 const (
-	FWWPStateOff FWWPStateValue = "force_off"
-	FWWPStateOn  FWWPStateValue = "force_on"
+	FWWPStateForceOff FWWPStateValue = "force_off"
+	FWWPStateForceOn  FWWPStateValue = "force_on"
+	FWWPStateOff      FWWPStateValue = "off"
+	FWWPStateOn       FWWPStateValue = "on"
 )
 
 // A LidOpenValue is a string accepted by the LidOpen control.

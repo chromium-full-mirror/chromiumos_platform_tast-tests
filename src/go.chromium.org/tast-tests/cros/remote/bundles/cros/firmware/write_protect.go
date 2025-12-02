@@ -159,8 +159,8 @@ func WriteProtect(ctx context.Context, s *testing.State) {
 		}
 
 		if needsDisableWP {
-			if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
-				if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateForceOff) {
+				if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 					s.Fatal("Failed to disable firmware write protect: ", err)
 				}
 			}
@@ -276,9 +276,9 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 	}
 
 	// Make sure hardware wp is disabled for now so software wp can be disabled.
-	if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateOff) {
+	if out, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil || out != string(servo.FWWPStateForceOff) {
 		// If fw wp is enabled or unknown, disable and reboot so ap wp can be changed.
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 			return errors.Wrap(err, "failed to disable firmware write protect")
 		}
 
@@ -310,7 +310,7 @@ func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, e
 	}
 
 	if enable {
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			return errors.Wrapf(err, "failed to %s firmware write protect", enableStr)
 		}
 	}

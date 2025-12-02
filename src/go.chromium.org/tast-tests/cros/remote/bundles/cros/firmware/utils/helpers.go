@@ -389,7 +389,7 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
 	return ctx, func(s *testing.State) {
 		s.Log("Disable hardware write protect")
-		if err := servoCon.SetFWWPState(cleanupContext, servo.FWWPStateOff); err != nil {
+		if err := servoCon.SetFWWPState(cleanupContext, servo.FWWPStateForceOff); err != nil {
 			s.Error("Failed to disable hardware write protect: ", err)
 		}
 

@@ -92,7 +92,7 @@ func FpBioWash(ctx context.Context, s *testing.State) {
 
 	// Enable hardware write protect first.
 	testing.ContextLog(ctx, "Enabling hardware write protect")
-	if err := t.Servo().Servo().SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+	if err := t.Servo().Servo().SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 		s.Fatal("Failed to ensable hardware write protection: ", err)
 	}
 

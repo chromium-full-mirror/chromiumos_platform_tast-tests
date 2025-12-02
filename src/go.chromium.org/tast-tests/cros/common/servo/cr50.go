@@ -678,7 +678,7 @@ func (s *Servo) Ti50CheckPendingWPEvent(ctx context.Context, value FWWPStateValu
 	// manually track expected reboots
 	if s.ti50LastFWWPState == "" || !s.ti50WPEventPendingReboot {
 		if s.ti50LastFWWPState != value {
-			s.ti50WPEventPendingReboot = value == FWWPStateOn
+			s.ti50WPEventPendingReboot = value == FWWPStateForceOn
 			s.ti50LastFWWPState = value
 		}
 	}

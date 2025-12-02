@@ -171,7 +171,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Disabling hardware write protect")
-	err = h.Servo.SetFWWPState(ctx, servo.FWWPStateOff)
+	err = h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff)
 	if err != nil {
 		s.Fatal("Failed to disable hardware write protect: ", err)
 	}

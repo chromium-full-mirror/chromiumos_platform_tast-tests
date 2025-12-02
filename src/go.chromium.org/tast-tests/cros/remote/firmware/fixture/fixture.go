@@ -706,7 +706,7 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err := i.value.Helper.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-enable").Run(); err != nil {
 			s.Fatal("Failed to enable software write protect: ", err)
 		}
-		if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		if err := i.value.Helper.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			s.Fatal("Failed to enable write protect: ", err)
 		}
 	}
@@ -978,12 +978,12 @@ func ensureWPDisabled(ctx context.Context, h *firmware.Helper) error {
 	// Read the hardware WP state, and disable if necessary
 	if val, err := h.Servo.GetString(ctx, servo.FWWPState); err != nil {
 		return errors.Wrap(err, "failed to query write protect")
-	} else if val == "on" || val == string(servo.FWWPStateOn) {
+	} else if val == string(servo.FWWPStateOn) || val == string(servo.FWWPStateForceOn) {
 		testing.ContextLog(ctx, "Ensuring CCD open, testlab enabled, and capabilities set to factory settings")
 		if err := h.OpenCCD(ctx, true, true); err != nil {
 			return errors.Wrap(err, "failed to set CCD open")
 		}
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 			return errors.Wrap(err, "failed to disable write protect")
 		}
 		if err := h.DUT.Conn().CommandContext(ctx, "futility", "flash", "--wp-disable").Run(); err != nil {

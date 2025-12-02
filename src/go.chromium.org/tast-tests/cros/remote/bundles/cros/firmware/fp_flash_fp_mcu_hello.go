@@ -76,7 +76,7 @@ func FpFlashFpMcuHello(ctx context.Context, s *testing.State) {
 	}
 	defer servop.Close(ctx)
 
-	if err := servop.Servo().SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+	if err := servop.Servo().SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 		s.Fatal("Failed to disable hardware write protection: ", err)
 	}
 

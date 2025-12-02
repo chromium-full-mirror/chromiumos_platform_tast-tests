@@ -702,7 +702,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err := h.DUT.Conn().CommandContext(shortCtx, "futility", "flash", "--wp-enable").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to enable software write protect: ", err)
 		}
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			s.Fatal("Failed to enable hardware write protect: ", err)
 		}
 		if err := h.GSCResetAfterWPEnable(ctx, s.Features("")); err != nil {
@@ -715,7 +715,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		s.Log("Disabling write protect")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 			s.Fatal("Failed to disable hardware write protect: ", err)
 		}
 		testing.ContextLog(ctx, "Rebooting the DUT")

@@ -136,7 +136,7 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		s.Log("Reset write protect to initial state: ", initialState)
 		setInitWP := false
-		if servo.FWWPStateValue(initialState) == servo.FWWPStateOn {
+		if servo.FWWPStateValue(initialState) == servo.FWWPStateForceOn {
 			setInitWP = true
 		}
 		if err := h.SetECWriteProtect(ctx, setInitWP); err != nil {

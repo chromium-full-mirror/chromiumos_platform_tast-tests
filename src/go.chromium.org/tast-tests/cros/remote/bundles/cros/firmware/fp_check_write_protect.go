@@ -88,9 +88,9 @@ func FpCheckWriteProtect(ctx context.Context, s *testing.State) {
 func testWriteProtect(ctx context.Context, t *fingerprint.FirmwareTest, writeProtectEnabled bool) error {
 	d := t.DUT()
 
-	fwWpDesiredState := servo.FWWPStateOff
+	fwWpDesiredState := servo.FWWPStateForceOff
 	if writeProtectEnabled {
-		fwWpDesiredState = servo.FWWPStateOn
+		fwWpDesiredState = servo.FWWPStateForceOn
 	}
 
 	if err := t.Servo().Servo().SetFWWPState(ctx, fwWpDesiredState); err != nil {

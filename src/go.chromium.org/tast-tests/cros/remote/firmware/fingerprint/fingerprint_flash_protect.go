@@ -152,10 +152,10 @@ func GetFlashProtect(ctx context.Context, d *dut.DUT) (FlashProtect, error) {
 // SetHardwareWriteProtect sets the FPMCU's hardware write protection to the
 // state specified by enable.
 func SetHardwareWriteProtect(ctx context.Context, pxy *servo.Proxy, enable bool) error {
-	hardwareWriteProtectState := servo.FWWPStateOff
+	hardwareWriteProtectState := servo.FWWPStateForceOff
 
 	if enable {
-		hardwareWriteProtectState = servo.FWWPStateOn
+		hardwareWriteProtectState = servo.FWWPStateForceOn
 	}
 
 	if err := pxy.Servo().SetFWWPState(ctx, hardwareWriteProtectState); err != nil {

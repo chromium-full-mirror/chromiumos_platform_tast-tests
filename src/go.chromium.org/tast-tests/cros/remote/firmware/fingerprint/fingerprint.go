@@ -415,7 +415,7 @@ func InitializeEntropy(ctx context.Context, d *rpcdut.RPCDUT) error {
 
 // ReimageFPMCU flashes the FPMCU completely and initializes entropy.
 func ReimageFPMCU(ctx context.Context, d *rpcdut.RPCDUT, pxy *servo.Proxy, firmwareFile string, needsRebootAfterFlashing bool) error {
-	if err := pxy.Servo().SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+	if err := pxy.Servo().SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 		return errors.Wrap(err, "failed to disable HW write protect")
 	}
 	if err := FlashFirmware(ctx, d, firmwareFile, needsRebootAfterFlashing); err != nil {
@@ -429,7 +429,7 @@ func ReimageFPMCU(ctx context.Context, d *rpcdut.RPCDUT, pxy *servo.Proxy, firmw
 	if err := d.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT")
 	}
-	if err := pxy.Servo().SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+	if err := pxy.Servo().SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 		return errors.Wrap(err, "failed to enable HW write protect")
 	}
 	return nil

@@ -2373,9 +2373,9 @@ func isHWWPEnabled(ctx context.Context, h *Helper) (bool, error) {
 		return false, errors.Wrap(err, "failed to get write protect state")
 	}
 	switch servo.FWWPStateValue(state) {
-	case servo.FWWPStateOn:
+	case servo.FWWPStateForceOn:
 		return true, nil
-	case servo.FWWPStateOff:
+	case servo.FWWPStateForceOff:
 		return false, nil
 	default:
 		return false, errors.New("invalid FW WP state: " + state)
@@ -2418,7 +2418,7 @@ func (h *Helper) SetECWriteProtect(ctx context.Context, enable bool) error {
 		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
 			return errors.Wrap(err, "failed to set flashwp enable")
 		}
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			return errors.Wrap(err, "failed to enable hw write protect")
 		}
 		testing.ContextLog(ctx, "Rebooting the DUT")
@@ -2426,7 +2426,7 @@ func (h *Helper) SetECWriteProtect(ctx context.Context, enable bool) error {
 			return errors.Wrap(err, "failed to perform mode aware reboot")
 		}
 	} else { // Need to disable WP from enabled state.
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 			return errors.Wrap(err, "failed to disable hw write protect")
 		}
 		// Reboot after deasserting hardware write protect pin to deactivate

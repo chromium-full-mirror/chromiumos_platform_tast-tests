@@ -91,9 +91,9 @@ func CCDCapabilitiesOverrideWP(ctx context.Context, s *testing.State) {
 	defer func() {
 		// Convert state to a value Servo can set
 		if originalFWWPState == "off" {
-			originalFWWPState = string(servo.FWWPStateOff)
+			originalFWWPState = string(servo.FWWPStateForceOff)
 		} else if originalFWWPState == "on" {
-			originalFWWPState = string(servo.FWWPStateOn)
+			originalFWWPState = string(servo.FWWPStateForceOn)
 		}
 
 		if err := setFWWPState(ctx, s, originalFWWPState); err != nil {
@@ -218,9 +218,9 @@ func getFWWPState(ctx context.Context, s *testing.State) (bool, error) {
 
 	switch servo.FWWPStateValue(state) {
 	// Strings returned when using Servo to force FW WP on/off
-	case servo.FWWPStateOn:
+	case servo.FWWPStateForceOn:
 		return true, nil
-	case servo.FWWPStateOff:
+	case servo.FWWPStateForceOff:
 		return false, nil
 	// Strings returned when using GSC to force FW WP on/off
 	case "on":

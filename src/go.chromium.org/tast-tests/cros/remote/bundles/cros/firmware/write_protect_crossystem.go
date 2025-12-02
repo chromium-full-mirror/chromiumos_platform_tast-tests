@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/chromiumos/config/go/api"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
@@ -51,7 +51,7 @@ func init() {
 	})
 }
 
-func isDutHasAPIdle(dutFeatures *protocol.DUTFeatures) (bool) {
+func isDutHasAPIdle(dutFeatures *protocol.DUTFeatures) bool {
 	switch dutFeatures.GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
 	case api.HardwareFeatures_FormFactor_CHROMEBOX:
 		return true
@@ -83,7 +83,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 			s.Error("DUT failed to reconnect even after waiting externally: ", err)
 		}
 		s.Log("Disabling write protection")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 			s.Fatal("Failed to disable hardware WP: ", err)
 		}
 		s.Log("Rebooting DUT to ensure hardware WP disabled")
@@ -111,7 +111,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 }
 
 func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(context.Context, *firmware.Helper, fwCommon.BootMode, bool) error, fromMode fwCommon.BootMode, DutHasAPIdle bool) error {
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 		return errors.Wrap(err, "failed to disable hardware WP")
 	}
 	if err := rebootFunc(ctx, h, fromMode, DutHasAPIdle); err != nil {
@@ -123,7 +123,7 @@ func checkWPOverReboot(ctx context.Context, h *firmware.Helper, rebootFunc func(
 	if err := fwUtils.CheckCrossystemWPSW(ctx, h, 0); err != nil {
 		return errors.Wrap(err, "failed to confirm WP is off")
 	}
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 		return errors.Wrap(err, "failed to enable hardware WP")
 	}
 	if err := rebootFunc(ctx, h, fromMode, DutHasAPIdle); err != nil {

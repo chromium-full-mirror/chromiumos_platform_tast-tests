@@ -48,7 +48,7 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 		s.Fatal("Failed to turn on WP: ", err)
 	}
 

@@ -192,7 +192,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		}
 		if *hardwareWPEnabled {
 			s.Log("Disabling hardware write protect")
-			if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 				s.Fatal("Failed to disable hardware write protect: ", err)
 			}
 			s.Log("Rebooting DUT to ensure hardware WP disabled")
@@ -278,9 +278,9 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get write protect state: ", err)
 	}
-	if servo.FWWPStateValue(hardwareWP) != servo.FWWPStateOn {
+	if servo.FWWPStateValue(hardwareWP) != servo.FWWPStateForceOn {
 		s.Log("Enabling hardware write protect")
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			s.Fatal("Failed to enable hardware write protect: ", err)
 		}
 		hardwareWPEnabled = true

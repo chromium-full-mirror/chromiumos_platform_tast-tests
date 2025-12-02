@@ -141,13 +141,13 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 
 		// Change HWWP when prompted by the tester
 		changeWP := false
-		targetWPState := servo.FWWPStateOff
+		targetWPState := servo.FWWPStateForceOff
 		wpStr := "disable"
 		if strings.Contains(text, disableWPPrompt) {
 			changeWP = true
 		} else if strings.Contains(text, enableWPPrompt) {
 			changeWP = true
-			targetWPState = servo.FWWPStateOn
+			targetWPState = servo.FWWPStateForceOn
 			wpStr = "enable"
 		}
 		if changeWP {

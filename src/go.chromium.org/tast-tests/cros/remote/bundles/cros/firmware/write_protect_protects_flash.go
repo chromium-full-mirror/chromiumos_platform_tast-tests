@@ -93,7 +93,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 
 	// Hardware write protect needs to be disabled so that software write protect range can be modified
 	s.Log("Disabling hardware write protect")
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 		s.Fatal("Failed to enable hardware write protect: ", err)
 	}
 
@@ -103,7 +103,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable software write protect: ", err)
 	}
 
-	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 		s.Fatal("Failed to enable hardware write protect: ", err)
 	}
 
