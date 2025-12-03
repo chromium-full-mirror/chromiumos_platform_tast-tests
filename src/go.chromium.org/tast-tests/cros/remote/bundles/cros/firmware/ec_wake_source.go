@@ -37,17 +37,21 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECWakeSource,
-		Desc: "Test that DUT goes to G3 powerstate on shutdown",
+		Desc: "Tests various wake signals to come out of suspend",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
-		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw"},
-		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		TestBedDeps: []string{tbdep.ServoPresent},
+		Attr:        []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw"},
+		Fixture:     fixture.NormalMode,
+		HardwareDeps: hwdep.D(
+			hwdep.ChromeEC(),
+			// Some meet devices don't support suspend. b/300024874
+			hwdep.SkipOnModel("intrepid"),
+		),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      5 * time.Minute,

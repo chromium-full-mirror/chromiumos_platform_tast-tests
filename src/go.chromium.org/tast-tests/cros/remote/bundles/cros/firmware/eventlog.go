@@ -147,6 +147,10 @@ func init() {
 				Name:      "suspend_resume",
 				ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 				Fixture:   fixture.NormalMode,
+				ExtraHardwareDeps: hwdep.D(
+					// Some meet devices don't support suspend. b/300024874
+					hwdep.SkipOnModel("intrepid"),
+				),
 				Val: eventLogParams{
 					suspendResume: true,
 					requiredEventSets: [][]string{

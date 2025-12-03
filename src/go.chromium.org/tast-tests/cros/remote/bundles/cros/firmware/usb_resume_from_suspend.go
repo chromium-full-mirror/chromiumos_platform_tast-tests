@@ -35,9 +35,13 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_enabled", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.firmware.UtilsService"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Fixture:      fixture.NormalMode,
-		Timeout:      10 * time.Minute,
+		HardwareDeps: hwdep.D(
+			hwdep.ChromeEC(),
+			// Some meet devices don't support suspend. b/300024874
+			hwdep.SkipOnModel("intrepid"),
+		),
+		Fixture: fixture.NormalMode,
+		Timeout: 10 * time.Minute,
 	})
 }
 

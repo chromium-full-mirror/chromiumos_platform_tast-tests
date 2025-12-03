@@ -112,6 +112,10 @@ func init() {
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
 		Data:         []string{perfettoConfigFile, perfettoResumeConfigFile, perfettoDisplayResumeSQLFile},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(
+			// Some meet devices don't support suspend. b/300024874
+			hwdep.SkipOnModel("intrepid"),
+		),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.power.SuspendPerfService",
