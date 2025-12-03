@@ -530,11 +530,13 @@ func shouldCloseOnReset(t *Target) bool {
 		strings.HasPrefix(t.URL, "chrome-extension://fgoepimhcoialccpbmpnnblemnepkkao") || // Don't close ChromeOS xkb extension.
 		strings.HasPrefix(t.URL, "chrome-extension://jkghodnilhceideoidjikpgommlajknk") || // Don't close input methods extension.
 		strings.HasPrefix(t.URL, "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief") || // Don't close ChromeVox extension.
-		strings.HasPrefix(t.URL, "chrome://tab-strip.top-chrome/") || // Don't close the tab strip.
-		// Don't close the print preview (it will be closed automatically with the parent page).
-		// The comparison between URL and Title is needed so that the chrome://print/ opened on a new page can be closed normally.
-		// See more details in b/268483323.
-		(strings.HasPrefix(t.URL, "chrome://print/") && t.URL != t.Title)) {
+		strings.HasPrefix(t.URL, "chrome://tab-strip.top-chrome/")) { // Don't close the tab strip.
+		return false
+	}
+	// Don't close the print preview (it will be closed automatically with the parent page).
+	// The comparison between URL and Title is needed so that the chrome://print/ opened on a new page can be closed normally.
+	// See more details in b/268483323.
+	if t.Type == "page" && strings.HasPrefix(t.URL, "chrome://print/") && t.URL != t.Title {
 		return false
 	}
 	return t.Type == "page" || t.Type == "app" || t.Type == "other"
