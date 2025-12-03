@@ -20026,37 +20026,6 @@ func (p *OnPrintEnterpriseConnector) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 932. UserAgentReduction
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type UserAgentReduction struct {
-	Stat Status
-	Val  int
-}
-
-func (p *UserAgentReduction) Name() string          { return "UserAgentReduction" }
-func (p *UserAgentReduction) Scope() Scope          { return ScopeUser }
-func (p *UserAgentReduction) Status() Status        { return p.Stat }
-func (p *UserAgentReduction) UntypedV() interface{} { return p.Val }
-func (p *UserAgentReduction) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *UserAgentReduction) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *UserAgentReduction) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 933. OriginAgentClusterDefaultEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -28666,6 +28635,37 @@ func (p *EnterpriseSearchAggregatorSettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1309. TranslatorAPIAllowed
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type TranslatorAPIAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *TranslatorAPIAllowed) Name() string          { return "TranslatorAPIAllowed" }
+func (p *TranslatorAPIAllowed) Scope() Scope          { return ScopeUser }
+func (p *TranslatorAPIAllowed) Status() Status        { return p.Stat }
+func (p *TranslatorAPIAllowed) UntypedV() interface{} { return p.Val }
+func (p *TranslatorAPIAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *TranslatorAPIAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *TranslatorAPIAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // 1310. WebAudioOutputBufferingEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -31027,6 +31027,38 @@ func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Equal(iface interface{})
 }
 
 // ****************************************************************************
+// 1402. GeminiActOnWebSettings
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GeminiActOnWebSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GeminiActOnWebSettings) Name() string          { return "GeminiActOnWebSettings" }
+func (p *GeminiActOnWebSettings) Scope() Scope          { return ScopeUser }
+func (p *GeminiActOnWebSettings) Status() Status        { return p.Stat }
+func (p *GeminiActOnWebSettings) UntypedV() interface{} { return p.Val }
+func (p *GeminiActOnWebSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GeminiActOnWebSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GeminiActOnWebSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // 1403. LocalAuthFactorsComplexity
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
@@ -31061,7 +31093,6 @@ func (p *LocalAuthFactorsComplexity) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1404. ProxyOverrideRules
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ProxyOverrideRules struct {
 	Stat Status
@@ -31069,9 +31100,10 @@ type ProxyOverrideRules struct {
 }
 
 type ProxyOverrideRulesValue struct {
-	Conditions          []*ProxyOverrideRulesValueConditions `json:"Conditions,omitempty"`
-	DestinationMatchers []string                             `json:"DestinationMatchers,omitempty"`
-	ProxyList           []string                             `json:"ProxyList,omitempty"`
+	Conditions                 []*ProxyOverrideRulesValueConditions `json:"Conditions,omitempty"`
+	DestinationMatchers        []string                             `json:"DestinationMatchers,omitempty"`
+	ExcludeDestinationMatchers []string                             `json:"ExcludeDestinationMatchers,omitempty"`
+	ProxyList                  []string                             `json:"ProxyList,omitempty"`
 }
 
 type ProxyOverrideRulesValueConditions struct {
@@ -31234,29 +31266,29 @@ func (p *IdleDetectionBlockedForUrls) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1410. GeolocationAllowedForUrls
+// 1410. PreciseGeolocationAllowedForUrls
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type GeolocationAllowedForUrls struct {
+type PreciseGeolocationAllowedForUrls struct {
 	Stat Status
 	Val  []string
 }
 
-func (p *GeolocationAllowedForUrls) Name() string          { return "GeolocationAllowedForUrls" }
-func (p *GeolocationAllowedForUrls) Scope() Scope          { return ScopeUser }
-func (p *GeolocationAllowedForUrls) Status() Status        { return p.Stat }
-func (p *GeolocationAllowedForUrls) UntypedV() interface{} { return p.Val }
-func (p *GeolocationAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *PreciseGeolocationAllowedForUrls) Name() string          { return "PreciseGeolocationAllowedForUrls" }
+func (p *PreciseGeolocationAllowedForUrls) Scope() Scope          { return ScopeUser }
+func (p *PreciseGeolocationAllowedForUrls) Status() Status        { return p.Stat }
+func (p *PreciseGeolocationAllowedForUrls) UntypedV() interface{} { return p.Val }
+func (p *PreciseGeolocationAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v []string
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as []string", m)
 	}
 	return v, nil
 }
-func (p *GeolocationAllowedForUrls) SetProto(m *protoreflect.Message) {
+func (p *PreciseGeolocationAllowedForUrls) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *GeolocationAllowedForUrls) Equal(iface interface{}) bool {
+func (p *PreciseGeolocationAllowedForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -31289,6 +31321,198 @@ func (p *GeolocationBlockedForUrls) SetProto(m *protoreflect.Message) {
 }
 func (p *GeolocationBlockedForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1412. PdfXfaFormsEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PdfXfaFormsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PdfXfaFormsEnabled) Name() string          { return "PdfXfaFormsEnabled" }
+func (p *PdfXfaFormsEnabled) Scope() Scope          { return ScopeUser }
+func (p *PdfXfaFormsEnabled) Status() Status        { return p.Stat }
+func (p *PdfXfaFormsEnabled) UntypedV() interface{} { return p.Val }
+func (p *PdfXfaFormsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PdfXfaFormsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PdfXfaFormsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1413. CameraSaveLocation
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type CameraSaveLocation struct {
+	Stat Status
+	Val  string
+}
+
+func (p *CameraSaveLocation) Name() string          { return "CameraSaveLocation" }
+func (p *CameraSaveLocation) Scope() Scope          { return ScopeUser }
+func (p *CameraSaveLocation) Status() Status        { return p.Stat }
+func (p *CameraSaveLocation) UntypedV() interface{} { return p.Val }
+func (p *CameraSaveLocation) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *CameraSaveLocation) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *CameraSaveLocation) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1414. DeviceLoginScreenPreferSlowKexAlgorithms
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceLoginScreenPreferSlowKexAlgorithms struct {
+	Stat Status
+	Val  string
+}
+
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) Name() string {
+	return "DeviceLoginScreenPreferSlowKexAlgorithms"
+}
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) Status() Status        { return p.Stat }
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) UntypedV() interface{} { return p.Val }
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceLoginScreenPreferSlowKexAlgorithms", "value", p.Val)
+}
+func (p *DeviceLoginScreenPreferSlowKexAlgorithms) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1415. DeviceLoginScreenPreferSlowCiphers
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceLoginScreenPreferSlowCiphers struct {
+	Stat Status
+	Val  string
+}
+
+func (p *DeviceLoginScreenPreferSlowCiphers) Name() string {
+	return "DeviceLoginScreenPreferSlowCiphers"
+}
+func (p *DeviceLoginScreenPreferSlowCiphers) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLoginScreenPreferSlowCiphers) Status() Status        { return p.Stat }
+func (p *DeviceLoginScreenPreferSlowCiphers) UntypedV() interface{} { return p.Val }
+func (p *DeviceLoginScreenPreferSlowCiphers) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *DeviceLoginScreenPreferSlowCiphers) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceLoginScreenPreferSlowCiphers", "value", p.Val)
+}
+func (p *DeviceLoginScreenPreferSlowCiphers) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1416. SearchContentSharingSettings
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SearchContentSharingSettings struct {
+	Stat Status
+	Val  int
+}
+
+func (p *SearchContentSharingSettings) Name() string          { return "SearchContentSharingSettings" }
+func (p *SearchContentSharingSettings) Scope() Scope          { return ScopeUser }
+func (p *SearchContentSharingSettings) Status() Status        { return p.Stat }
+func (p *SearchContentSharingSettings) UntypedV() interface{} { return p.Val }
+func (p *SearchContentSharingSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *SearchContentSharingSettings) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SearchContentSharingSettings) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1417. StaticStorageQuotaEnabled
+// ****************************************************************************
+type StaticStorageQuotaEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *StaticStorageQuotaEnabled) Name() string          { return "StaticStorageQuotaEnabled" }
+func (p *StaticStorageQuotaEnabled) Scope() Scope          { return ScopeUser }
+func (p *StaticStorageQuotaEnabled) Status() Status        { return p.Stat }
+func (p *StaticStorageQuotaEnabled) UntypedV() interface{} { return p.Val }
+func (p *StaticStorageQuotaEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *StaticStorageQuotaEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *StaticStorageQuotaEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -32530,8 +32754,6 @@ func newByName(name string) (Policy, error) {
 		return &KeepFullscreenWithoutNotificationUrlAllowList{}, nil
 	case "OnPrintEnterpriseConnector":
 		return &OnPrintEnterpriseConnector{}, nil
-	case "UserAgentReduction":
-		return &UserAgentReduction{}, nil
 	case "OriginAgentClusterDefaultEnabled":
 		return &OriginAgentClusterDefaultEnabled{}, nil
 	case "ProjectorEnabled":
@@ -33058,6 +33280,8 @@ func newByName(name string) (Policy, error) {
 		return &ClassManagementEnabled{}, nil
 	case "EnterpriseSearchAggregatorSettings":
 		return &EnterpriseSearchAggregatorSettings{}, nil
+	case "TranslatorAPIAllowed":
+		return &TranslatorAPIAllowed{}, nil
 	case "WebAudioOutputBufferingEnabled":
 		return &WebAudioOutputBufferingEnabled{}, nil
 	case "NTPOutlookCardVisible":
@@ -33206,6 +33430,8 @@ func newByName(name string) (Policy, error) {
 		return &DeveloperToolsAvailabilityBlocklist{}, nil
 	case "LocalNetworkAccessRestrictionsTemporaryOptOut":
 		return &LocalNetworkAccessRestrictionsTemporaryOptOut{}, nil
+	case "GeminiActOnWebSettings":
+		return &GeminiActOnWebSettings{}, nil
 	case "LocalAuthFactorsComplexity":
 		return &LocalAuthFactorsComplexity{}, nil
 	case "ProxyOverrideRules":
@@ -33218,10 +33444,22 @@ func newByName(name string) (Policy, error) {
 		return &IdleDetectionAllowedForUrls{}, nil
 	case "IdleDetectionBlockedForUrls":
 		return &IdleDetectionBlockedForUrls{}, nil
-	case "GeolocationAllowedForUrls":
-		return &GeolocationAllowedForUrls{}, nil
+	case "PreciseGeolocationAllowedForUrls":
+		return &PreciseGeolocationAllowedForUrls{}, nil
 	case "GeolocationBlockedForUrls":
 		return &GeolocationBlockedForUrls{}, nil
+	case "PdfXfaFormsEnabled":
+		return &PdfXfaFormsEnabled{}, nil
+	case "CameraSaveLocation":
+		return &CameraSaveLocation{}, nil
+	case "DeviceLoginScreenPreferSlowKexAlgorithms":
+		return &DeviceLoginScreenPreferSlowKexAlgorithms{}, nil
+	case "DeviceLoginScreenPreferSlowCiphers":
+		return &DeviceLoginScreenPreferSlowCiphers{}, nil
+	case "SearchContentSharingSettings":
+		return &SearchContentSharingSettings{}, nil
+	case "StaticStorageQuotaEnabled":
+		return &StaticStorageQuotaEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
