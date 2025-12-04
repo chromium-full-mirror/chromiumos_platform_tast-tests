@@ -216,9 +216,16 @@ func ActivateTitleField(tconn *chrome.TestConn) action.Action {
 func ClickOnSlidesWebArea(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("click on slide web area",
+		DismissSlidesDialogs(ui),
+		ui.LeftClick(SlidesWebArea),
+	)
+}
+
+// DismissSlidesDialogs dismisses any dialogs that might appear in Google Slides.
+func DismissSlidesDialogs(ui *uiauto.Context) action.Action {
+	return uiauto.Combine("dismiss dialogs",
 		reloadSlidesIfLoadingIssueDialogAppears(ui),
 		clickGotItIfExists(ui),
-		ui.LeftClick(SlidesWebArea),
 	)
 }
 
