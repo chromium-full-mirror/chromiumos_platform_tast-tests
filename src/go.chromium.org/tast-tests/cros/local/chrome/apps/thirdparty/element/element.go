@@ -172,21 +172,21 @@ func (e *Element) loginWithGaiaAccount(creds credconfig.Creds) uiauto.Action {
 	)
 
 	continueButton := nodewith.Name("Continue").Role(role.Button)
-	allowAccessText := nodewith.Name("Allow access to your account?").Role(role.StaticText)
+	continueHeading := nodewith.Name("Continue to element://connect?").Role(role.Heading)
 	loginWithAccount := uiauto.NamedCombine("login with Gaia account",
 		setEmail,
 		setPassword,
 		e.ui.DoDefault(continueButton),
-		e.ui.WaitUntilExists(allowAccessText),
+		e.ui.WaitUntilExists(continueHeading),
 	)
 
 	return uiauto.NamedCombine("sign in with Gaia account",
 		e.waitForLoginWindowMaximized,
 		// The account information may not be cleaned during the test sequence.
-		e.ui.WaitUntilAnyExists(usernameOrEmailField, allowAccessText),
+		e.ui.WaitUntilAnyExists(usernameOrEmailField, continueHeading),
 		uiauto.IfSuccessThen(e.ui.Exists(usernameOrEmailField), loginWithAccount),
 		e.ui.DoDefaultUntil(continueButton,
-			e.ui.WaitUntilGone(allowAccessText),
+			e.ui.WaitUntilGone(continueHeading),
 		),
 	)
 }
