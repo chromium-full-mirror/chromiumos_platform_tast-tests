@@ -1,0 +1,58 @@
+metric_bundles {
+  row {
+    values {
+      double_value: 1.0
+    }
+    values {
+      double_value: 10.0
+    }
+    values {
+      double_value: 5.5
+    }
+    values {
+      double_value: 10.0
+    }
+    dimension {
+      string_value: "duration"
+    }
+  }
+  specs {
+    id: "min"
+    dimensions: "name"
+    value: "value"
+    query {
+      inner_query_id: "query"
+    }
+    polarity: LOWER_IS_BETTER
+    unit: TIME_MILLIS
+  }
+  specs {
+    id: "max"
+    dimensions: "name"
+    value: "value"
+    query {
+      inner_query_id: "query"
+    }
+    polarity: LOWER_IS_BETTER
+    unit: TIME_MILLIS
+  }
+  specs {
+    id: "avg"
+    dimensions: "name"
+    value: "value"
+    query {
+      inner_query_id: "query"
+    }
+    polarity: LOWER_IS_BETTER
+    unit: TIME_MILLIS
+  }
+  specs {
+    id: "count"
+    dimensions: "name"
+    value: "value"
+    query {
+      inner_query_id: "query"
+    }
+    unit: COUNT
+  }
+}
