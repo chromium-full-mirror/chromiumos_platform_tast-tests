@@ -264,7 +264,7 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 			testing.ContextLog(ctx, "Use google account found")
 			if err := uiauto.NamedCombine("Select Use Google Account password and click next button",
 				ui.DoDefault(useGoogleAccount),
-				ui.DoDefaultUntil(nextButton, ui.Gone(nextButton)),
+				ui.DoDefaultUntil(nextButton, ui.WithTimeout(3*time.Second).WaitUntilGone(useGoogleAccount)),
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to use google account login")
 			}
