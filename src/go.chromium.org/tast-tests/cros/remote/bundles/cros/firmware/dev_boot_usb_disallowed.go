@@ -267,8 +267,6 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 	case firmware.KeyboardDevSwitcher:
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarning,
-			fwCommon.LegacyDeveloperToNorm,
-			fwCommon.LegacyDeveloperWarning,
 			fwCommon.LegacyBlank,
 		}
 		data.logs = []string{`USB booting is disabled`}
