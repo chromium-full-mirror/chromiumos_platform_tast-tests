@@ -232,10 +232,28 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 			s.Error("Failed to detect firmware screen: ", err)
 		}
 	} else {
-		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+		s.Logf("Resetting firmware screen timeout for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+		endTime := time.Now().Add(h.Config.FirmwareScreen)
+		for time.Now().Before(endTime) {
+			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+				s.Fatal("Failed to press space key: ", err)
+			}
+			// On KeyboardDevSwitcher machines, pressing space triggers the
+			// to_norm screen. Revert to the developer screen with the
+			// esc key.
+			if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+				// GoBigSleepLint: Sleep for model specific time.
+				if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+					s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+				}
+				if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+					s.Fatal("Failed to press esc: ", err)
+				}
+			}
+			// GoBigSleepLint: Avoid hitting space too fast.
+			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
 		}
 	}
 
@@ -314,7 +332,9 @@ func DevBootInternal(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	} else {
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		// Since we might have booted from USB incorrectly, wait the USB time.
+		s.Logf("Waiting for SSH for %v (USBImageBootTimeout)", h.Config.USBImageBootTimeout)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
