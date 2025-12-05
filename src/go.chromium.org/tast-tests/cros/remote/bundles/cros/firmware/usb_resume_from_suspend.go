@@ -39,6 +39,7 @@ func init() {
 			hwdep.ChromeEC(),
 			// Some meet devices don't support suspend. b/300024874
 			hwdep.SkipOnModel("intrepid"),
+			hwdep.SkipOnModel("genesis"),
 		),
 		Fixture: fixture.NormalMode,
 		Timeout: 10 * time.Minute,

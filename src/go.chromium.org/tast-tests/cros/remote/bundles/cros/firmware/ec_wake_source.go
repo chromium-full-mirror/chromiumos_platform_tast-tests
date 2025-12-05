@@ -51,6 +51,7 @@ func init() {
 			hwdep.ChromeEC(),
 			// Some meet devices don't support suspend. b/300024874
 			hwdep.SkipOnModel("intrepid"),
+			hwdep.SkipOnModel("genesis"),
 		),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},

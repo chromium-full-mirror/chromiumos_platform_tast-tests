@@ -115,6 +115,7 @@ func init() {
 		HardwareDeps: hwdep.D(
 			// Some meet devices don't support suspend. b/300024874
 			hwdep.SkipOnModel("intrepid"),
+			hwdep.SkipOnModel("genesis"),
 		),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",

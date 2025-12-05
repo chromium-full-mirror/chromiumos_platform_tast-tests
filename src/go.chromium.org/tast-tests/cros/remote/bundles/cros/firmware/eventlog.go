@@ -150,6 +150,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(
 					// Some meet devices don't support suspend. b/300024874
 					hwdep.SkipOnModel("intrepid"),
+					hwdep.SkipOnModel("genesis"),
 				),
 				Val: eventLogParams{
 					suspendResume: true,
