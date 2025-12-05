@@ -86,12 +86,6 @@ func init() {
 			},
 			ExtraAttr: []string{"cuj_weekly"},
 			Fixture:   fixture.ChromeLoggedInWithFocusMode,
-		}, {
-			Name: "mousekeys",
-			Val: idlePerfTest{
-				testType: testTypeMouseKeys,
-			},
-			Fixture: fixture.ChromeLoggedInWithMouseKeys,
 		}},
 	})
 }
