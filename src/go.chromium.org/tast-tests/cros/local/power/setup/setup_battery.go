@@ -82,7 +82,7 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 	}
 
 	testing.ContextLog(ctx, "Setting battery to discharge. Current capacity: ", capacity, "% (", energy, "Wh), Shutdown cutoff: ", shutdownCutoff, "%, Expected maximum discharge during test: ", expectedMaxCapacityDischarge, "%")
-	if lowBatteryCutoff >= capacity {
+	if lowBatteryCutoff > capacity {
 		return nil, errors.Errorf("battery percent %.2f is too low to start discharging", capacity)
 	}
 
