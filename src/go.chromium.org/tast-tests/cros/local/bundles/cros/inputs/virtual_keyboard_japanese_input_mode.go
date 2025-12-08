@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Checks switching between Romaji and Kana mode for Japanese inputs",
 		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Fixture:      fixture.TabletVK,
 		SearchFlags:  util.SearchFlagsWithIMEAndScreenPlay([]ime.InputMethod{ime.EnglishUS}, []string{"screenplay-e9418431-29e1-4ee9-bac8-ec584383c2c0"}),
