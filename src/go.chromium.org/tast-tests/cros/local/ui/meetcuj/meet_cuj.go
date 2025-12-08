@@ -520,6 +520,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, errors.Wrap(err, "failed to turn on camera")
 	}
 
+	// Hide notifications so that they won't overlap with other UI components.
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		return pv, errors.Wrap(err, "failed to close all notifications")
+	}
+
 	if meet.Effects {
 		testing.ContextLog(ctx, "Turn on visual effects")
 		if err := SetVisualEffects(ui, BlurBackgroundFinder)(ctx); err != nil {
@@ -691,10 +696,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 		}
 
-		// Hide notifications so that they won't overlap with other UI components.
-		if err := ash.CloseNotifications(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to close all notifications")
-		}
 		shareMessage := "Share this info with people you want in the meeting"
 		if err := ui.WaitUntilExists(nodewith.Name(shareMessage).Ancestor(webview))(ctx); err == nil {
 			// "Share this code" popup appears, dismissing by close button.
@@ -713,11 +714,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 		if err := meetHelper.SetCamera(ctx, meet.Cam); err != nil {
 			return errors.Wrapf(err, "failed to set camera off-status to %t", !meet.Cam)
-		}
-
-		// Hide notifications so that they won't overlap with other UI components.
-		if err := ash.CloseNotifications(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to close all notifications")
 		}
 
 		if err := meetHelper.ChangeLayoutOption(ctx, meet.Layout); err != nil {

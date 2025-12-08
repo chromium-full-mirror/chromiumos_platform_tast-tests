@@ -139,7 +139,8 @@ func SetVisualEffects(ui *uiauto.Context, effect *nodewith.Finder) uiauto.Action
 	uiLongWait := ui.WithTimeout(time.Minute)
 	effectsItem := nodewith.Name("Backgrounds and effects").Role(role.MenuItem)
 	effectsHeading := nodewith.Name("Backgrounds and effects").Role(role.Heading).Ancestor(meetRootWebArea)
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
+	sidePanel := nodewith.Name("Side panel").Role(role.Complementary).Ancestor(meetRootWebArea)
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(sidePanel).Focusable().First()
 	openEffectsPanel := uiauto.NamedCombine("open effects panel",
 		// Open the "More options" popup, and wait until we see
 		// "Backgrounds and effects".
@@ -150,7 +151,7 @@ func SetVisualEffects(ui *uiauto.Context, effect *nodewith.Finder) uiauto.Action
 	)
 
 	return uiauto.NamedCombine(
-		fmt.Sprintf("set effect with node %v", effect),
+		fmt.Sprintf("set effect with node %v", effect.Pretty()),
 		uiauto.Retry(2, openEffectsPanel),
 		toggleEffect(ui, effect),
 		// Close the visual effects panel.
