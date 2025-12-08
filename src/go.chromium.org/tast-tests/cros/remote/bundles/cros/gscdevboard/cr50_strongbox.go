@@ -32,7 +32,7 @@ func init() {
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_h1_shield"},
+		Attr:         []string{"group:gsc", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 	})
 }
