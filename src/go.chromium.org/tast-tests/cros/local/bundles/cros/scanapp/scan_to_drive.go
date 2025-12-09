@@ -35,7 +35,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "drivefs", "gaia"},
 		// TODO(b/202847398): Skip sona devices due to abnormal failures.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona", "endeavor")),
 		Fixture:      "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
 		Data: []string{
 			scanning.SourceImage,

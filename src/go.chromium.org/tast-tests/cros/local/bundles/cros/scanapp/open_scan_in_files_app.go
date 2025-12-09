@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -38,6 +39,7 @@ func init() {
 			"paper-io_scanning",
 		},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("endeavor")),
 		Fixture:      "virtualUsbPrinterModulesLoaded",
 		Data:         []string{scanning.SourceImage},
 	})
