@@ -150,7 +150,7 @@ func init() {
 			{
 				Name:      "webxprt4",
 				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
-				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
+				Timeout:   benchmarkcuj.WebXPRT4Timeout + cujrecorder.CooldownTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldownBenchmark",
 				Val: benchmarkcuj.BenchmarkTest{
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,

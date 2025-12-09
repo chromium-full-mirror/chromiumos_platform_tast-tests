@@ -19,6 +19,9 @@ import (
 
 const webxprt4Prefix = "WebXPRT4."
 
+// WebXPRT4Timeout is the timeout value for the WebXPRT4 test run.
+var WebXPRT4Timeout = 45 * time.Minute
+
 // WebXPRT4Info contains the information for running WebXPRT4 Benchmark.
 var WebXPRT4Info = benchmarkInfo{
 	name:           "WebXPRT4",
@@ -34,7 +37,7 @@ func RunWebXPRT4(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Con
 	if err := benchmarkConn.Navigate(ctx, `http://www.principledtechnologies.com/benchmarkxprt/webxprt/2021/wx4_build_3_7_3/auto.php?testtype=1&tests=63&result=2`); err != nil {
 		return errors.Wrap(err, "failed to start WebXPRT4")
 	}
-	if err := benchmarkConn.WaitForExprWithTimeout(ctx, `document.getElementsByTagName("overallscore").length == 1`, 30*time.Minute); err != nil {
+	if err := benchmarkConn.WaitForExprWithTimeout(ctx, `document.getElementsByTagName("overallscore").length == 1`, WebXPRT4Timeout); err != nil {
 		return errors.Wrap(err, "WebXPRT4 run timed out")
 	}
 	return nil
