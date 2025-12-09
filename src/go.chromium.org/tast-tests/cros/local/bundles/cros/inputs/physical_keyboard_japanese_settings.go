@@ -128,19 +128,19 @@ func PhysicalKeyboardJapaneseSettings(ctx context.Context, s *testing.State) {
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction(",."), "，．"),
 		},
 		{
-			name:             "PunctuationStyleKutenPeriod",
+			name:             "PunctuationStyleToutenPeriod",
 			feature:          useractions.FeatureJapanesePunctuationStyle,
 			settingAction:    imesettings.SetJapaneseDropdown(ui, imesettings.JapanesePunctuationStyle, "、．"),
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction(",."), "、．"),
 		},
 		{
-			name:             "PunctuationStyleCommaTouten",
+			name:             "PunctuationStyleCommaKuten",
 			feature:          useractions.FeatureJapanesePunctuationStyle,
 			settingAction:    imesettings.SetJapaneseDropdown(ui, imesettings.JapanesePunctuationStyle, "，。"),
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction(",."), "，。"),
 		},
 		{
-			name:             "PunctuationStyleKutenTouten",
+			name:             "PunctuationStyleToutenKuten",
 			feature:          useractions.FeatureJapanesePunctuationStyle,
 			settingAction:    imesettings.SetJapaneseDropdown(ui, imesettings.JapanesePunctuationStyle, "、。"),
 			validationAction: its.ValidateInputOnField(inputField, kb.TypeAction(",."), "、。"),
