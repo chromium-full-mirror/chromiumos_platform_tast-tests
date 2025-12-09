@@ -28,14 +28,15 @@ type Prompt struct {
 }
 
 var (
-	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
-	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
-	avMeetPermPromptReg           = regexp.MustCompile("(see|hear) you in the meeting")
-	captionDialogFinder           = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
-	avMeetPermPromptFinder        = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
-	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
-	cameraPermPromptFinder        = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
-	othersSeeYouDialogFinder      = nodewith.Name("Others may see your video differently").Role(role.Dialog)
+	showNotificationsPromptFinder  = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
+	avPermPromptFinder             = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
+	avMeetPermPromptReg            = regexp.MustCompile("(see|hear) you in the meeting")
+	captionDialogFinder            = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
+	avMeetPermPromptFinder         = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
+	leaveSitePromptFinder          = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
+	cameraPermPromptFinder         = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
+	othersSeeYouDialogFinder       = nodewith.Name("Others may see your video differently").Role(role.Dialog)
+	localNetworkAccessPromptFinder = nodewith.NameContaining("Look for and connect to any device on your local network").Role(role.AlertDialog).First()
 )
 
 // General dismiss button finders for prompts.
@@ -50,6 +51,7 @@ var (
 	CloseButtonFinder   = nodewith.Name("Close").Role(role.Button)
 	GotItButtonFinder   = nodewith.Name("Got it").Role(role.Button)
 	LeaveButtonFinder   = nodewith.Name("Leave").Role(role.Button)
+	BlockButtonFinder   = nodewith.Name("Block").Role(role.Button)
 )
 
 // ShowNotificationsPrompt represents the browser prompt to request permission for allowing notification.
@@ -101,6 +103,13 @@ var OthersSeeDiffPrompt = Prompt{
 	Name:              "Others may see your video differently",
 	PromptFinder:      othersSeeYouDialogFinder,
 	ClearButtonFinder: GotItButtonFinder.Ancestor(othersSeeYouDialogFinder),
+}
+
+// BlockLocalNetworkPrompt represents the browser prompt to block local network.
+var BlockLocalNetworkPrompt = Prompt{
+	Name:              "Block local network connection",
+	PromptFinder:      localNetworkAccessPromptFinder,
+	ClearButtonFinder: BlockButtonFinder.Ancestor(localNetworkAccessPromptFinder),
 }
 
 // ClearPotentialPrompts clears one or more potential prompts disorderly.

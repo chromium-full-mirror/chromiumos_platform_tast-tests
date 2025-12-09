@@ -264,7 +264,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			return errors.Wrap(err, "failed to run video app procedure")
 		}
 
-		if err := browserActivity(ctx, conn, uiHandler, browserApp, browserTime); err != nil {
+		if err := browserActivity(ctx, tconn, conn, uiHandler, browserApp, browserTime); err != nil {
 			return errors.Wrap(err, "failed to run browser procedure")
 		}
 	}
@@ -296,7 +296,7 @@ func arrangeWindow(ctx context.Context, tconn *chrome.TestConn, appID string, wi
 // browserActivity defines test scenario of browser.
 // Open a website, browse the page and wait 12 seconds.
 // The total execution time is 6 minutes.
-func browserActivity(ctx context.Context, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
+func browserActivity(ctx context.Context, tconn *chrome.TestConn, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
 	const (
 		// chromeTabQuiescenceTimeout defines the maximum time duration to wait for a Chrome tab to achieve quiescence.
 		chromeTabQuiescenceTimeout = time.Minute
@@ -339,6 +339,7 @@ func browserActivity(ctx context.Context, conn *chrome.Conn, uiHandler cuj.UIAct
 			}
 
 			if err := uiauto.NamedCombine("swipe on webpage and wait",
+				prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.BlockLocalNetworkPrompt),
 				uiHandler.SwipeDown(),
 				// Sleep for 2 second in case there is lazy loading.
 				uiauto.Sleep(2*time.Second),
