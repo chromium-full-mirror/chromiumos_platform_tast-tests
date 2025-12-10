@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
@@ -88,6 +89,7 @@ func RoamDbus(ctx context.Context, s *testing.State) {
 
 	// Send roam command to shill, and shill will send D-Bus roam command to wpa_supplicant.
 	s.Logf("Requesting roam from %s to %s", rt.AP1BSSID(), rt.AP2BSSID())
+	roamStartTime := time.Now()
 	if err := tf.DUTWifiClient(wificell.DefaultDUT).RequestRoam(ctx, iface, rt.AP2BSSID(), 30*time.Second); err != nil {
 		s.Errorf("DUT: failed to roam from %s to %s: %v", rt.AP1BSSID(), rt.AP2BSSID(), err)
 	}
@@ -97,7 +99,8 @@ func RoamDbus(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("DUT: failed to wait for the properties, err: ", err)
 	}
-	s.Log("DUT: roamed")
+	roamDuration := time.Since(roamStartTime)
+	s.Log("DUT: successfully roamed; roam duration: ", roamDuration)
 	rt.SetRoamSucceeded(true)
 	defer func(ctx context.Context) {
 		if err := tf.CleanDisconnectDUTFromWifi(ctx, wificell.DefaultDUT); err != nil {
@@ -112,5 +115,15 @@ func RoamDbus(ctx context.Context, s *testing.State) {
 
 	if err := tf.VerifyConnection(ctx, rt.AP2()); err != nil {
 		s.Fatal("DUT: failed to verify connection: ", err)
+	}
+
+	pv := perf.NewValues()
+	pv.Set(perf.Metric{
+		Name:      "roaming_time",
+		Unit:      "seconds",
+		Direction: perf.SmallerIsBetter,
+	}, roamDuration.Seconds())
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save perf data: ", err)
 	}
 }
