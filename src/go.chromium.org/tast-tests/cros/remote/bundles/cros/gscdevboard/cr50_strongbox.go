@@ -46,6 +46,11 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CCDModeOn, ti50.FfClamshell)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
+	sbState, err := i.StrongboxState(ctx)
+	th.MustSucceed(err, "failed to get strongbox state")
+	if sbState != ti50.StrongboxUnset {
+		s.Errorf("Unexpected strongbox state %v: Strongbox set after reset", sbState)
+	}
 	// Commands should be rejected before Strongbox is enabled.
 	sbErr, response, err := utils.StrongboxCommand(ctx, tpm, utils.DeviceGetHardwareInfo, nil)
 	if err != nil {
@@ -60,6 +65,11 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 
 	th.MustSucceed(tpm.TpmvSetStrongboxState(true), "Enable Strongbox")
 
+	sbState, err = i.StrongboxState(ctx)
+	th.MustSucceed(err, "failed to get strongbox state")
+	if sbState != ti50.StrongboxEnabled {
+		s.Errorf("Unexpected strongbox state %v: Strongbox is not enabled after enable command", sbState)
+	}
 	err = utils.StrongboxHardwareInfo(ctx, tpm)
 	if err != nil {
 		s.Fatal("Failed HardwareInfo: ", err)
@@ -166,9 +176,20 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	}
 
 	th.MustSucceed(tpm.TpmvSetStrongboxState(false), "Disable Strongbox")
+	sbState, err = i.StrongboxState(ctx)
+	th.MustSucceed(err, "failed to get strongbox state")
+	if sbState != ti50.StrongboxDisabled {
+		s.Errorf("Unexpected strongbox state %v: Strongbox is not disabled after disabled command", sbState)
+	}
 	err = tpm.TpmvSetStrongboxState(true)
 	if err == nil {
 		s.Fatal("Enable after disable should fail")
+	}
+
+	sbState, err = i.StrongboxState(ctx)
+	th.MustSucceed(err, "failed to get strongbox state")
+	if sbState != ti50.StrongboxDisabled {
+		s.Errorf("Unexpected strongbox state %v: Strongbox disable was cleared", sbState)
 	}
 }
 
