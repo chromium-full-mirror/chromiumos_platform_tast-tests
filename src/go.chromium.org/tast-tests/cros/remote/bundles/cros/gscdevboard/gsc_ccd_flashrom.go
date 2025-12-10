@@ -52,7 +52,14 @@ func GSCCCDFlashrom(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
-	// Enable CCD.
+	b.Reset(ctx)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	flashInfo := b.ProbeSPIFlashChip(ctx, i)
+	flashSizeMb := float64(flashInfo.FlashSize) / 1024 / 1024
+	s.Logf("Flash name: %s", flashInfo.Name)
+	s.Logf("Flash size: %v MB", flashSizeMb)
+
+	// Reset again after ProbeSPIFlashChip, enable CCD.
 	b.ResetWithStraps(ctx, ti50.CCDModeOn)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 	b.WaitUntilCCDConnected(ctx)
@@ -64,7 +71,14 @@ func GSCCCDFlashrom(ctx context.Context, s *testing.State) {
 			Unit:      "milliseconds",
 			Direction: perf.SmallerIsBetter,
 		}, float64(duration))
+		perMb := float64(duration) / flashSizeMb
+		pv.Set(perf.Metric{
+			Name:      label + "_per_mb",
+			Unit:      "milliseconds",
+			Direction: perf.SmallerIsBetter,
+		}, perMb)
 		s.Logf("%s: %d ms", label, duration)
+		s.Logf("%s_per_mb: %v ms", label, perMb)
 	}
 
 	// Erase any previous contents.
@@ -79,6 +93,9 @@ func GSCCCDFlashrom(ctx context.Context, s *testing.State) {
 	logDuration("read", r)
 	// Check erase and read worked.
 	checkContent(s, content, 0xff)
+	if len(content) != flashInfo.FlashSize {
+		s.Errorf("Read size %d != flash size", len(content))
+	}
 
 	// Measure write time from erased (all 0xff) to all zero.
 	s.Log("Writing")
