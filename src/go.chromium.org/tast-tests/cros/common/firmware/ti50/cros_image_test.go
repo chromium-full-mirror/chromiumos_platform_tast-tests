@@ -2077,3 +2077,69 @@ func testParseCCDStateInfo(t *testing.T, input string, expected CCDStateInfo, ex
 		t.Fatalf("ccdState mismatch:\ngot %+v\nexpected %+v", ccdState, expected)
 	}
 }
+
+func TestParseBoardConfig1(t *testing.T) {
+	input := `
+properties = 0x242
+tpm board cfg = 0x0
+fc = 0x0000000000000000
+board_cfg = 0x00000000
+`
+	testParseBoardConfig(t, input, 0)
+}
+
+func TestParseBoardConfig2(t *testing.T) {
+	input := `
+properties = 0x242
+tpm board cfg = 0x0
+fc = 0x0000000000000000
+board_cfg = 0x00020000
+`
+	testParseBoardConfig(t, input, 0x20000)
+}
+
+func testParseBoardConfig(t *testing.T, input string, expected uint32) {
+	boardConfig, err := parseBoardConfig(input)
+	if err != nil {
+		t.Fatal("error processing brdprop board config input:", err)
+	}
+	if expected != boardConfig {
+		t.Fatalf("board config mismatch:\ngot      %v\nexpected %v", boardConfig, expected)
+	}
+}
+
+func TestParseStrongboxState1(t *testing.T) {
+	testParseStrongboxState(t, 0, StrongboxUnset, false)
+}
+
+func TestParseStrongboxState2(t *testing.T) {
+	testParseStrongboxState(t, 0xfffcffff, StrongboxUnset, false)
+}
+
+func TestParseStrongboxState3(t *testing.T) {
+	testParseStrongboxState(t, 0x20000, StrongboxDisabled, false)
+}
+
+func TestParseStrongboxState4(t *testing.T) {
+	testParseStrongboxState(t, 0x10000, StrongboxEnabled, false)
+}
+
+func TestParseStrongboxState5(t *testing.T) {
+	testParseStrongboxState(t, 0x30000, StrongboxUnset, true)
+}
+
+func testParseStrongboxState(t *testing.T, input uint32, expected StrongboxState, expectError bool) {
+	state, err := parseStrongboxState(input)
+	if expectError {
+		if err == nil {
+			t.Fatalf("%x did not generate a strongbox state error", input)
+		}
+		return
+	}
+	if err != nil {
+		t.Fatal("error processing strongbox state:", err)
+	}
+	if expected != state {
+		t.Fatalf("strongbox state mismatch:\ngot      %v\nexpected %v", state, expected)
+	}
+}

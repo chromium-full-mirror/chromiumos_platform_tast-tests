@@ -152,6 +152,7 @@ var (
 	// ex Cr50 output: fc = 0x0000000000001234
 	// ex Ti50 output: Factory config: 0x0000000000001234
 	factoryConfigRE = regexp.MustCompile(`(fc =|Factory config:)\s*0x(` + hexRE + `)`)
+	boardConfigRE   = regexp.MustCompile(`board_cfg =\s*0x(` + hexRE + `)`)
 	// Example ap_ro_info output.
 	// hash saved
 	//      result    : 0
@@ -1847,4 +1848,68 @@ func (i *CrOSImage) WipeTpmWithCCDOpen(ctx context.Context) error {
 		return err
 	}
 	return i.CCDResetFactory(ctx)
+}
+
+// StrongboxState is the strongbox state
+type StrongboxState uint32
+
+const (
+	// BoardConfigStrongboxEnabled is the mask for the board config StrongboxEnabled bit
+	BoardConfigStrongboxEnabled = (1 << 16)
+	// BoardConfigStrongboxDisabled is the mask for the board config StrongboxDisabled bit
+	BoardConfigStrongboxDisabled = (1 << 17)
+
+	// StrongboxUnset is the state when strongbox is not enabled or disabled
+	StrongboxUnset StrongboxState = 0
+	// StrongboxEnabled is the state when strongbox is enabled
+	StrongboxEnabled StrongboxState = 1
+	// StrongboxDisabled is the state when strongbox is disabled
+	StrongboxDisabled StrongboxState = 2
+)
+
+// parseBoardConfig converts brdprop board cfg output into the uint64 value
+func parseBoardConfig(output string) (uint32, error) {
+	match := boardConfigRE.FindStringSubmatch(output)
+	if match == nil {
+		return 0, errors.Errorf("could not find %s in %s", boardConfigRE, output)
+	}
+	config, err := strconv.ParseUint(match[1], 16, 32)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse brdprop board cfg config value from %s", match[1])
+	}
+	return uint32(config), nil
+}
+
+// BoardConfig gets the numerical board cfg value from the "brdprop" GSC command.
+func (i *CrOSImage) BoardConfig(ctx context.Context) (uint32, error) {
+	output, err := i.safeCommand(ctx, "brdprop")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
+	}
+	return parseBoardConfig(output)
+}
+
+// parseStrongboxState parses the strongbox state from the board config value
+func parseStrongboxState(boardConfig uint32) (StrongboxState, error) {
+	enabled := (boardConfig & BoardConfigStrongboxEnabled) != 0
+	disabled := (boardConfig & BoardConfigStrongboxDisabled) != 0
+	if !enabled && !disabled {
+		return StrongboxUnset, nil
+	}
+	if enabled && disabled {
+		return StrongboxUnset, errors.New("Strongbox enabled and disabled bit set")
+	}
+	if enabled {
+		return StrongboxEnabled, nil
+	}
+	return StrongboxDisabled, nil
+}
+
+// StrongboxState returns the board config strongbox state
+func (i *CrOSImage) StrongboxState(ctx context.Context) (StrongboxState, error) {
+	boardConfig, err := i.BoardConfig(ctx)
+	if err != nil {
+		return StrongboxUnset, errors.Wrap(err, "failed to get board config")
+	}
+	return parseStrongboxState(boardConfig)
 }
