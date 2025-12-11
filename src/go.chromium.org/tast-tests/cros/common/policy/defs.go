@@ -1849,7 +1849,6 @@ func (p *MaxConnectionsPerProxy) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 93. IncognitoModeAvailability
-// This policy can be modified without rebooting.
 // ****************************************************************************
 type IncognitoModeAvailability struct {
 	Stat Status
@@ -26957,37 +26956,6 @@ func (p *DirectSocketsBlockedForUrls) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1235. PrivacySandboxIpProtectionEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PrivacySandboxIpProtectionEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *PrivacySandboxIpProtectionEnabled) Name() string          { return "PrivacySandboxIpProtectionEnabled" }
-func (p *PrivacySandboxIpProtectionEnabled) Scope() Scope          { return ScopeUser }
-func (p *PrivacySandboxIpProtectionEnabled) Status() Status        { return p.Stat }
-func (p *PrivacySandboxIpProtectionEnabled) UntypedV() interface{} { return p.Val }
-func (p *PrivacySandboxIpProtectionEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *PrivacySandboxIpProtectionEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PrivacySandboxIpProtectionEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1236. OrcaEnabled
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
@@ -29270,7 +29238,6 @@ func (p *ServiceWorkerToControlSrcdocIframeEnabled) Equal(iface interface{}) boo
 // ****************************************************************************
 // 1335. GeminiSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GeminiSettings struct {
 	Stat Status
@@ -29951,39 +29918,6 @@ func (p *TLS13EarlyDataEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *TLS13EarlyDataEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1364. LocalNetworkAccessRestrictionsEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type LocalNetworkAccessRestrictionsEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *LocalNetworkAccessRestrictionsEnabled) Name() string {
-	return "LocalNetworkAccessRestrictionsEnabled"
-}
-func (p *LocalNetworkAccessRestrictionsEnabled) Scope() Scope          { return ScopeUser }
-func (p *LocalNetworkAccessRestrictionsEnabled) Status() Status        { return p.Stat }
-func (p *LocalNetworkAccessRestrictionsEnabled) UntypedV() interface{} { return p.Val }
-func (p *LocalNetworkAccessRestrictionsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *LocalNetworkAccessRestrictionsEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *LocalNetworkAccessRestrictionsEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -33176,8 +33110,6 @@ func newByName(name string) (Policy, error) {
 		return &DirectSocketsAllowedForUrls{}, nil
 	case "DirectSocketsBlockedForUrls":
 		return &DirectSocketsBlockedForUrls{}, nil
-	case "PrivacySandboxIpProtectionEnabled":
-		return &PrivacySandboxIpProtectionEnabled{}, nil
 	case "OrcaEnabled":
 		return &OrcaEnabled{}, nil
 	case "PrivacySandboxFingerprintingProtectionEnabled":
@@ -33364,8 +33296,6 @@ func newByName(name string) (Policy, error) {
 		return &PasswordManagerBlocklist{}, nil
 	case "TLS13EarlyDataEnabled":
 		return &TLS13EarlyDataEnabled{}, nil
-	case "LocalNetworkAccessRestrictionsEnabled":
-		return &LocalNetworkAccessRestrictionsEnabled{}, nil
 	case "PrefetchWithServiceWorkerEnabled":
 		return &PrefetchWithServiceWorkerEnabled{}, nil
 	case "AIModeSettings":
