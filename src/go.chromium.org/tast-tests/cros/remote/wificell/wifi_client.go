@@ -303,6 +303,47 @@ func (cli *WifiClient) WaitForConnected(ctx context.Context, ssid string, expect
 	return nil
 }
 
+// WaitForWiFiServiceStates queries a WiFi service with specified |ssid|, and
+// waits for all the provided service states to be matched within shill property
+// "ServicePropertyState".
+func (cli *WifiClient) WaitForWiFiServiceStates(ctx context.Context, ssid string, states []string) error {
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+	}
+
+	var servicePath string
+	// The service path may not be found immediately after the network is added.
+	if err := testing.Poll(ctx, func(ctx context.Context) (err error) {
+		servicePath, err = cli.GetServicePath(ctx, props)
+		return err
+	}, &testing.PollOptions{Timeout: shillconst.DefaultTimeout, Interval: time.Second}); err != nil {
+		return err
+	}
+
+	var req []*ShillProperty
+	for _, state := range states {
+		req = append(req, &ShillProperty{
+			Property:       shillconst.ServicePropertyState,
+			ExpectedValues: []interface{}{state},
+			Method:         wifi.ExpectShillPropertyRequest_CHECK_WAIT,
+		})
+	}
+
+	waitCtx, cancel := context.WithTimeout(ctx, shillconst.DefaultTimeout)
+	defer cancel()
+
+	waitServiceStates, err := cli.ExpectShillProperty(waitCtx, servicePath, req, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a property watcher")
+	}
+
+	if _, err := waitServiceStates(); err != nil {
+		return errors.Wrap(err, "failed to wait for service states")
+	}
+	return nil
+}
+
 // EAPAuthSkipped is a wrapper for the streaming gRPC call EAPAuthSkipped.
 // It returns a function that waits and verifies the EAP authentication is skipped or not in the next connection.
 func (cli *WifiClient) EAPAuthSkipped(ctx context.Context) (func() (bool, error), error) {

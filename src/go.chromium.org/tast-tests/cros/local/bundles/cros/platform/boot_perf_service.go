@@ -131,6 +131,47 @@ func (*BootPerfService) GetBootPerfMetrics(ctx context.Context, _ *empty.Empty) 
 	return out, nil
 }
 
+// GetWiFiBootPerfMetrics gathers recorded WiFi-specific timing statistics
+// during boot time. The caller is responsible for ensuring wificell testbed
+// dependencies and making sure the targeted WiFi service enters the desired
+// states, e.g. associated or ip-configured.
+// The test calculates some or all of the following metrics:
+//   - seconds_kernel_to_shill_start
+//   - seconds_kernel_to_wifi_registered
+//   - seconds_kernel_to_wifi_association
+//   - seconds_kernel_to_wifi_configuration
+//   - seconds_kernel_to_wifi_ready
+//   - seconds_kernel_to_patchpanel_start
+//   - seconds_kernel_to_patchpanel_started
+//   - seconds_kernel_to_network
+func (*BootPerfService) GetWiFiBootPerfMetrics(ctx context.Context, _ *empty.Empty) (*platform.GetBootPerfMetricsResponse, error) {
+	out := &platform.GetBootPerfMetricsResponse{
+		Metrics: make(map[string]float64),
+	}
+
+	// Perform a testing.Poll() to wait for boot/wifi perf artifacts to show up.
+	testing.ContextLog(ctx, "Wait until boot complete and wifi ready")
+	err := bootperf.WaitUntilWiFiReady(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	testing.ContextLog(ctx, "Gather boot time and wifi metrics")
+	err = bootperf.GatherWiFiTimeMetrics(ctx, out)
+	if err != nil {
+		return nil, err
+	}
+
+	// Round the seconds_* values for nicer presentation.
+	for key, value := range out.Metrics {
+		if strings.HasPrefix(key, "seconds_") {
+			out.Metrics[key] = math.Round(value*1000) / 1000
+		}
+	}
+
+	return out, nil
+}
+
 func (*BootPerfService) GetRebootMetrics(ctx context.Context, _ *empty.Empty) (*platform.GetRebootMetricsResponse, error) {
 	out := &platform.GetRebootMetricsResponse{
 		Metrics: make(map[string]float64),

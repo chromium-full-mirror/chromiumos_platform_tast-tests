@@ -51,6 +51,12 @@ const (
 	metricRequired
 )
 
+type eventMetric struct {
+	MetricName  string
+	EventName   string
+	Requirement metricRequirement
+}
+
 var (
 	// Names of metrics, their associated bootstat events, and their recommendation status.
 	// The test fails if a Required event is not found.
@@ -81,11 +87,7 @@ var (
 	//   kernel_to_patchpanel_start - The moment when patchpanel starts.
 	//   kernel_to_patchpanel_started - The moment when patchpanel finishes setup
 	//     and able to process D-Bus requests.
-	eventMetrics = []struct {
-		MetricName  string
-		EventName   string
-		Requirement metricRequirement
-	}{
+	bootEventMetrics = []eventMetric{
 		{"kernel_to_startup", "pre-startup", metricRequired},
 		{"kernel_to_startup_done", "post-startup", metricRequired},
 		{"kernel_to_splash_screen_visible", "splash-screen-visible", metricOptional},
@@ -107,6 +109,28 @@ var (
 		{"kernel_to_patchpanel_started", "patchpanel-started", metricRequired},
 	}
 
+	// Name of metrics to be collected for the first wifi connection cycle after boot and should be collected in a
+	// special wificell.
+	//   kernel_to_shill_start - The moment when shill starts.
+	//   kernel_to_wifi_registered - The moment when shill detects a WiFi device.
+	//   kernel_to_wifi_association - The moment when shill initiates a L2 WiFi connection.
+	//   kernel_to_wifi_configuration - The moment when shill initiates a L3 network connection.
+	//   kernel_to_wifi_ready - The moment when shill has successfully associated and IP provisioned.
+	//   kernel_to_wifi_online - The moment when shill has successfully connected to the Internet.
+	//   kernel_to_patchpanel_start - The moment when patchpanel starts.
+	//   kernel_to_patchpanel_started - The moment when patchpanel finishes setup
+	//     and able to process D-Bus requests.
+	wifiEventMetrics = []eventMetric{
+		{"kernel_to_shill_start", "shill-start", metricRequired},
+		{"kernel_to_wifi_registered", "network-wifi-registered", metricRecommended},
+		{"kernel_to_wifi_association", "network-wifi-association", metricRecommended},
+		{"kernel_to_wifi_configuration", "network-wifi-configuration", metricRecommended},
+		{"kernel_to_wifi_ready", "network-wifi-ready", metricRecommended},
+		{"kernel_to_wifi_online", "network-wifi-online", metricOptional},
+		{"kernel_to_patchpanel_start", "patchpanel-start", metricRequired},
+		{"kernel_to_patchpanel_started", "patchpanel-started", metricRequired},
+	}
+
 	uptimeFileGlob = filepath.Join(bootstatCurrentDir, uptimePrefix+"*")
 	diskFileGlob   = filepath.Join(bootstatCurrentDir, diskPrefix+"*")
 
@@ -121,6 +145,18 @@ var (
 // WaitUntilBootComplete is a helper function to wait until boot complete and
 // we are ready to collect boot metrics.
 func WaitUntilBootComplete(ctx context.Context) error {
+	return waitUntilBootCompleteForEvents(ctx, bootEventMetrics)
+}
+
+// WaitUntilWiFiReady is a helper function to wait until the first wifi
+// connection is complete after boot and we are ready to collect wifi-related
+// boot metrics. To use this function, caller tests are required to be run in
+// a wificell and set up saved networks for auto-connection.
+func WaitUntilWiFiReady(ctx context.Context) error {
+	return waitUntilBootCompleteForEvents(ctx, wifiEventMetrics)
+}
+
+func waitUntilBootCompleteForEvents(ctx context.Context, eventMetrics []eventMetric) error {
 	// Defines the running states of upstart jobs the test waits for.
 	upstartJobTargets := []struct {
 		JobName     string
@@ -278,7 +314,25 @@ func parseUptime(eventName, bootstatDir string, index int) (float64, error) {
 //   - seconds_kernel_to_patchpanel_start
 //   - seconds_kernel_to_patchpanel_started
 func GatherTimeMetrics(ctx context.Context, results *platform.GetBootPerfMetricsResponse) error {
-	var missingNonRequiredEvennts []string
+	return gatherTimeMetricsForEvents(ctx, bootEventMetrics, results)
+}
+
+// GatherWiFiTimeMetrics reads and reports WiFi-specific boot time metrics that
+// requires to be run in a wificell. The following metrics may be recorded:
+//   - seconds_kernel_to_shill_start
+//   - seconds_kernel_to_wifi_registered
+//   - seconds_kernel_to_wifi_association
+//   - seconds_kernel_to_wifi_configuration
+//   - seconds_kernel_to_wifi_ready
+//   - seconds_kernel_to_patchpanel_start
+//   - seconds_kernel_to_patchpanel_started
+//   - seconds_kernel_to_network
+func GatherWiFiTimeMetrics(ctx context.Context, results *platform.GetBootPerfMetricsResponse) error {
+	return gatherTimeMetricsForEvents(ctx, wifiEventMetrics, results)
+}
+
+func gatherTimeMetricsForEvents(ctx context.Context, eventMetrics []eventMetric, results *platform.GetBootPerfMetricsResponse) error {
+	var missingNonRequiredEvents []string
 	for _, k := range eventMetrics {
 		key := "seconds_" + k.MetricName
 		val, err := parseUptime(k.EventName, bootstatCurrentDir, 0)
@@ -287,13 +341,13 @@ func GatherTimeMetrics(ctx context.Context, results *platform.GetBootPerfMetrics
 				return errors.Wrapf(err, "failed in gather time for %s", k.EventName)
 			}
 			// Failed in getting a non-required metric. Log and skip.
-			missingNonRequiredEvennts = append(missingNonRequiredEvennts, k.EventName)
+			missingNonRequiredEvents = append(missingNonRequiredEvents, k.EventName)
 		} else {
 			results.Metrics[key] = val
 		}
 	}
-	if len(missingNonRequiredEvennts) != 0 {
-		testing.ContextLogf(ctx, "Skip gathering time metrics for non-required event: %s", strings.Join(missingNonRequiredEvennts, ", "))
+	if len(missingNonRequiredEvents) != 0 {
+		testing.ContextLogf(ctx, "Skip gathering time metrics for non-required event: %s", strings.Join(missingNonRequiredEvents, ", "))
 	}
 
 	// Not all 'uptime-network-*-ready' files necessarily exist; probably there's only one.
@@ -355,7 +409,7 @@ func GatherDiskMetrics(results *platform.GetBootPerfMetricsResponse) {
 	// event because Chrome (not bootstat) generates that event, and it
 	// doesn't include the disk statistics. We get around that by ignoring
 	// all errors.
-	for _, k := range eventMetrics {
+	for _, k := range bootEventMetrics {
 		key := "rdbytes_" + k.MetricName
 		val, err := parseDiskstat(k.EventName, bootstatCurrentDir, 2)
 		if err == nil {
