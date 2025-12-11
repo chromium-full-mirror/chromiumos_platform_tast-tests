@@ -52,7 +52,7 @@ func init() {
 			Val:  testParams{EnableSlowKeys: false},
 		}},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithSlowKeys",
+		Fixture:      "chromeLoggedIn",
 	})
 }
 

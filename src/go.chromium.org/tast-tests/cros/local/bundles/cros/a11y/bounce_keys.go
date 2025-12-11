@@ -32,7 +32,7 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWithBounceKeys",
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
