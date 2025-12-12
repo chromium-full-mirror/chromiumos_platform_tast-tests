@@ -443,22 +443,25 @@ func Contains(list []string, s string) bool {
 func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs *dutfs.Client) error {
 	// Get the device node.
 	cmd := fmt.Sprintf("df | grep '%s'$ | awk '{print $1}'", mountPoint)
-	deviceNode, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	output, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrapf(err, "get device node of %s", mountPoint)
 	}
-	testing.ContextLogf(ctx, "mount point: %s", mountPoint)
+	deviceNode := strings.TrimSpace(string(output))
+	testing.ContextLogf(ctx, "mount point: %s, device: %s", mountPoint, deviceNode)
 
 	// Umount device.
 	cmd = fmt.Sprintf("sudo umount %s", deviceNode)
 	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "umount %s", string(deviceNode))
+		return errors.Wrapf(err, "umount %s", deviceNode)
 	}
+	// Some DUTs fail the format with device busy if we don't wait a bit.
+	testing.Sleep(ctx, 5*time.Second)
 
 	// Format device.
 	cmd = fmt.Sprintf("sudo mkfs.vfat %s", deviceNode)
 	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "format %s", string(deviceNode))
+		return errors.Wrapf(err, "format %s", deviceNode)
 	}
 
 	// Mount device.
@@ -470,9 +473,9 @@ func FormatStorageToFAT(ctx context.Context, mountPoint string, dut *dut.DUT, fs
 		}
 	}
 
-	cmd = fmt.Sprintf("sudo mount %s \"%s\"", strings.TrimSpace(string(deviceNode)), mountPoint)
+	cmd = fmt.Sprintf("sudo mount %s \"%s\"", deviceNode, mountPoint)
 	if err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "mount %s", string(deviceNode))
+		return errors.Wrapf(err, "mount %s", deviceNode)
 	}
 	return nil
 }
