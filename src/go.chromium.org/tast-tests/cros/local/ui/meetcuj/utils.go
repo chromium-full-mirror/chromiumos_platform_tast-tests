@@ -209,15 +209,16 @@ func toggleEffect(ui *uiauto.Context, effect *nodewith.Finder) uiauto.Action {
 func WaitForParticipantInfoLoaded(ui *uiauto.Context) uiauto.Action {
 	gotItButton := nodewith.NameContaining("Got it").Role(role.Button)
 	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
+	peopleButton := nodewith.Name("People").Role(role.Button).Ancestor(meetRootWebArea)
 	participantRegex := regexp.MustCompile(`People\s*-\s*(\d+)\s*joined`)
 	participantButton := nodewith.NameRegex(participantRegex).Role(role.Button).Ancestor(meetRootWebArea)
 	return uiauto.NamedCombine("wait for the number of participants to be loaded",
 		// Some DUT models have poor performance. When joining a large conference
 		// (over 15 participants), it would take much time to render DOM elements.
 		// Set a longer timer here.
-		ui.WithTimeout(time.Minute).WaitUntilAnyExists(gotItButton, participantButton),
+		ui.WithTimeout(time.Minute).WaitUntilAnyExists(gotItButton, participantButton, peopleButton),
 		uiauto.IfSuccessThen(ui.Exists(gotItButton), ui.DoDefault(gotItButton)),
-		ui.WithTimeout(time.Minute).WaitUntilExists(participantButton),
+		ui.WithTimeout(time.Minute).WaitUntilAnyExists(participantButton, peopleButton),
 	)
 }
 
