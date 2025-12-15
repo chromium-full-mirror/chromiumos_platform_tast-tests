@@ -137,6 +137,9 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Realtek8822CPCIE: {
 		defaultRevision: "wireless/realtek/rtw88/rtw88_8822ce.ko",
 	},
+	wlan.Realtek8822CVTPCIE: {
+		defaultRevision: "wireless/realtek/rtw88/rtw88_8822ce.ko",
+	},
 	wlan.Realtek8852APCIE: {
 		defaultRevision: "wireless/realtek/rtw89/rtw89_8852ae.ko",
 	},
