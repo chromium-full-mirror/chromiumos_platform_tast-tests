@@ -208,9 +208,10 @@ const (
 
 const (
 	kmOriginGenerated        uint32 = 0
-	kmOriginImported         uint32 = 1
-	kmOriginUnknown          uint32 = 2
-	kmOriginSecurelyImported uint32 = 3
+	kmOriginDerived          uint32 = 1
+	kmOriginImported         uint32 = 2
+	kmOriginReserved         uint32 = 3
+	kmOriginSecurelyImported uint32 = 4
 )
 
 const (
@@ -403,6 +404,8 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		tags = binary.LittleEndian.AppendUint32(tags, kmPurposeSign)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
 		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
+		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2512)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagAllowWhileOnBody)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagUserID)
 		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
@@ -418,6 +421,8 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		tags = binary.LittleEndian.AppendUint32(tags, kmPurposeSign)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
 		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2256)
+		tags = binary.LittleEndian.AppendUint32(tags, kmTagDigest)
+		tags = binary.LittleEndian.AppendUint32(tags, kmDigestSha2512)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagAllowWhileOnBody)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagUserID)
 		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
@@ -500,7 +505,7 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 	}
 
 	if attestKey != nil {
-		if hwLen != 19 {
+		if hwLen != 21 {
 			err = errors.Errorf("Wrong HW len: %d", hwLen)
 			return
 		}
@@ -523,6 +528,8 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		want = binary.LittleEndian.AppendUint32(want, kmPurposeSign)
 		want = binary.LittleEndian.AppendUint32(want, kmTagDigest)
 		want = binary.LittleEndian.AppendUint32(want, kmDigestSha2256)
+		want = binary.LittleEndian.AppendUint32(want, kmTagDigest)
+		want = binary.LittleEndian.AppendUint32(want, kmDigestSha2512)
 		want = binary.LittleEndian.AppendUint32(want, kmTagNoAuthRequired)
 		if !bytes.Equal(hwTags, want) {
 			err = errors.Errorf("Wrong HW tags: want %x", want)
@@ -548,9 +555,11 @@ func StrongboxBegin(ctx context.Context, tpm *TpmHelper, blob []byte) (operation
 	var buf []byte
 	buf = binary.LittleEndian.AppendUint32(buf, kmPurposeSign)
 	buf = append(buf, blob...)
-	buf = binary.LittleEndian.AppendUint32(buf, 4)
+	buf = binary.LittleEndian.AppendUint32(buf, 6)
 	buf = appendBytesTag(buf, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
 	buf = appendBytesTag(buf, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
+	buf = binary.LittleEndian.AppendUint32(buf, kmTagDigest)
+	buf = binary.LittleEndian.AppendUint32(buf, kmDigestSha2256)
 	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceBegin, buf)
 	if err != nil {
 		return
