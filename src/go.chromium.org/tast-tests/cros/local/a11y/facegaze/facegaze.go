@@ -248,13 +248,13 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, dataPath func(string) string)
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close the FaceGaze confirmation dialog")
 	}
 
-	if err := ensureFaceGazeToggleButtonOn(ui)(ctx); err != nil {
-		return newNoOpDriver(tdh), errors.Wrap(err, "failed to ensure FaceGaze toggle button is on")
-	}
-
+	verifyFaceGazeAssetsInstalled := uiauto.NamedCombine("verify FaceGaze assets installed",
+		ensureFaceGazeToggleButtonOn(ui),
+		a11y.VerifyFaceGazeAssetsInstalled,
+	)
 	// When FaceGaze is enabled, it will automatically trigger an install of the
 	// facegaze-assets DLC, so wait for it to be installed before continuing.
-	if err := testing.Poll(ctx, a11y.VerifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+	if err := testing.Poll(ctx, verifyFaceGazeAssetsInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to wait for the facegaze-assets dlc to be installed")
 	}
 
