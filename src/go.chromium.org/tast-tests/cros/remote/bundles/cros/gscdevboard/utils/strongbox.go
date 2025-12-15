@@ -619,3 +619,188 @@ func StrongboxFinish(ctx context.Context, tpm *TpmHelper, operationID, input []b
 	testing.ContextLogf(ctx, "signature %x", signature)
 	return
 }
+
+type cborChecker struct {
+	data []byte
+}
+
+const (
+	cborMajorUint   uint8 = (0 << 5)
+	cborMajorNint   uint8 = (1 << 5)
+	cborMajorBstr   uint8 = (2 << 5)
+	cborMajorTstr   uint8 = (3 << 5)
+	cborMajorArr    uint8 = (4 << 5)
+	cborMajorMap    uint8 = (5 << 5)
+	cborMajorTag    uint8 = (6 << 5)
+	cborMajorSimple uint8 = (7 << 5)
+	cborMajorMask   uint8 = (7 << 5)
+	cborValueMask   uint8 = 0x1f
+)
+
+func (c *cborChecker) headerMajor(want uint8) error {
+	if len(c.data) == 0 {
+		return errors.New("no data left")
+	}
+	m := c.data[0] & cborMajorMask
+	if m != want {
+		return errors.Errorf("Wrong type: got %v want %v", m, want)
+	}
+	return nil
+}
+
+func (c *cborChecker) takeData(count int) []byte {
+	d := c.data[:count]
+	c.data = c.data[count:]
+	return d
+}
+
+func (c *cborChecker) headerValue() (int, error) {
+	d := c.takeData(1)[0]
+	v := int(d & cborValueMask)
+	if v < 24 {
+		return v, nil
+	}
+	if v == 24 {
+		return int(c.takeData(1)[0]), nil
+	}
+	if v == 25 {
+		return int(binary.BigEndian.Uint16(c.takeData(2))), nil
+	}
+	if v == 26 {
+		return int(binary.BigEndian.Uint32(c.takeData(4))), nil
+	}
+	if v == 27 {
+		return int(binary.BigEndian.Uint64(c.takeData(8))), nil
+	}
+	return 0, errors.Errorf("invalid header value %v", v)
+}
+
+func (c *cborChecker) array() (int, error) {
+	if err := c.headerMajor(cborMajorArr); err != nil {
+		return 0, err
+	}
+	return c.headerValue()
+}
+
+func (c *cborChecker) bytes() ([]byte, error) {
+	if err := c.headerMajor(cborMajorBstr); err != nil {
+		return nil, err
+	}
+	n, err := c.headerValue()
+	if err != nil {
+		return nil, err
+	}
+	return c.takeData(n), nil
+}
+
+func (c *cborChecker) cmap() (int, error) {
+	if err := c.headerMajor(cborMajorMap); err != nil {
+		return 0, err
+	}
+	return c.headerValue()
+}
+
+const ecdsaSigBytes int = 64
+const cborPublicKeyLen int = 13 + ecdsaSigBytes
+const sha256DigestSize int = 32
+
+// CheckMacedKeyCbor checks MacedPublicKey in COSE CBOR encoding.
+// MacedPublicKey = [  # array(4)
+//
+//	protected,      # bytes(3) (Algorithm HMAC-256 = A10105)
+//	unprotected,    # map(0)
+//	payload,        # bytes(77) (PublicKey)
+//	tag,            # bytes(32) (HMAC-256)
+//
+// ]
+func CheckMacedKeyCbor(macedKey []byte) error {
+	cb := cborChecker{macedKey}
+	n, err := cb.array()
+	if err != nil {
+		return err
+	}
+	if n != 4 {
+		return errors.Errorf("Wrong length: %v", n)
+	}
+	b, err := cb.bytes()
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x05}) {
+		return errors.Errorf("Wrong bytes: %v", b)
+	}
+	n, err = cb.cmap()
+	if err != nil {
+		return err
+	}
+	if n != 0 {
+		return errors.Errorf("Wrong length: %v", n)
+	}
+	b, err = cb.bytes()
+	if err != nil {
+		return err
+	}
+	if len(b) != cborPublicKeyLen {
+		return errors.Errorf("Wrong length: %v", len(b))
+	}
+	b, err = cb.bytes()
+	if err != nil {
+		return err
+	}
+	if len(b) != sha256DigestSize {
+		return errors.Errorf("Wrong length: %v", len(b))
+	}
+	if len(cb.data) != 0 {
+		return errors.Errorf("Extra data: %v", cb.data)
+	}
+	return nil
+}
+
+// CheckCsrCbor checks SignedData in COSE CBOR encoding.
+// SignedData = [   # array(4)
+//
+//	protected,   # bytes(3) (Algorithm ES256 = A10126)
+//	unprotected, # map(0)
+//	payload,     # bytes() ([challenge, CsrPayload])
+//	signature,   # bytes(64) (ES256)
+//
+// ]
+func CheckCsrCbor(csr []byte) error {
+	cb := cborChecker{csr}
+	n, err := cb.array()
+	if err != nil {
+		return err
+	}
+	if n != 4 {
+		return errors.Errorf("Wrong length: %v", n)
+	}
+	b, err := cb.bytes()
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x26}) {
+		return errors.Errorf("Wrong bytes: %v", b)
+	}
+	n, err = cb.cmap()
+	if err != nil {
+		return err
+	}
+	if n != 0 {
+		return errors.Errorf("Wrong length: %v", n)
+	}
+	_, err = cb.bytes()
+	if err != nil {
+		return err
+	}
+	b, err = cb.bytes()
+	if err != nil {
+		return err
+	}
+	if len(b) != ecdsaSigBytes {
+		return errors.Errorf("Wrong length: %v", len(b))
+	}
+	if len(cb.data) != 0 {
+		return errors.Errorf("Extra data: %v", cb.data)
+	}
+	return nil
+}

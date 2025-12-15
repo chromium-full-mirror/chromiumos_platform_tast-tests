@@ -97,6 +97,7 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
+	th.MustSucceed(utils.CheckMacedKeyCbor(macedKey), "Maced key CBOR")
 
 	challenge := []byte("1234567890abcdefghijklmnopqrstuv")
 	deviceInfo, _ := hex.DecodeString(
@@ -118,6 +119,7 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
+	th.MustSucceed(utils.CheckCsrCbor(csr), "CSR CBOR")
 
 	// Test without attestation key
 	_, _, err = utils.StrongboxGenerateKey(ctx, tpm, nil)
