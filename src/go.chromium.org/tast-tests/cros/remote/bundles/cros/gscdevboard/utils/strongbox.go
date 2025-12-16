@@ -7,7 +7,12 @@ package utils
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
+	"math/big"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -620,10 +625,6 @@ func StrongboxFinish(ctx context.Context, tpm *TpmHelper, operationID, input []b
 	return
 }
 
-type cborChecker struct {
-	data []byte
-}
-
 const (
 	cborMajorUint   uint8 = (0 << 5)
 	cborMajorNint   uint8 = (1 << 5)
@@ -637,13 +638,30 @@ const (
 	cborValueMask   uint8 = 0x1f
 )
 
+const ecdsaPointBytes int = 32
+const ecdsaSigBytes int = 2 * ecdsaPointBytes
+const cborPublicKeyLen int = 13 + ecdsaSigBytes
+const sha256DigestSize int = 32
+
+type cborChecker struct {
+	data       []byte
+	lastHeader []byte
+}
+
+func newCborChecker(data []byte) *cborChecker {
+	return &cborChecker{
+		data:       data,
+		lastHeader: nil,
+	}
+}
+
 func (c *cborChecker) headerMajor(want uint8) error {
 	if len(c.data) == 0 {
 		return errors.New("no data left")
 	}
 	m := c.data[0] & cborMajorMask
 	if m != want {
-		return errors.Errorf("Wrong type: got %v want %v", m, want)
+		return errors.Errorf("Wrong type: got 0x%x want 0x%x", m, want)
 	}
 	return nil
 }
@@ -654,32 +672,54 @@ func (c *cborChecker) takeData(count int) []byte {
 	return d
 }
 
+func (c *cborChecker) takeHeader(count int) []byte {
+	d := c.takeData(count)
+	c.lastHeader = append(c.lastHeader, d...)
+	return d
+}
+
 func (c *cborChecker) headerValue() (int, error) {
-	d := c.takeData(1)[0]
+	c.lastHeader = nil
+	d := c.takeHeader(1)[0]
 	v := int(d & cborValueMask)
 	if v < 24 {
 		return v, nil
 	}
 	if v == 24 {
-		return int(c.takeData(1)[0]), nil
+		return int(c.takeHeader(1)[0]), nil
 	}
 	if v == 25 {
-		return int(binary.BigEndian.Uint16(c.takeData(2))), nil
+		return int(binary.BigEndian.Uint16(c.takeHeader(2))), nil
 	}
 	if v == 26 {
-		return int(binary.BigEndian.Uint32(c.takeData(4))), nil
+		return int(binary.BigEndian.Uint32(c.takeHeader(4))), nil
 	}
 	if v == 27 {
-		return int(binary.BigEndian.Uint64(c.takeData(8))), nil
+		return int(binary.BigEndian.Uint64(c.takeHeader(8))), nil
 	}
 	return 0, errors.Errorf("invalid header value %v", v)
 }
 
-func (c *cborChecker) array() (int, error) {
-	if err := c.headerMajor(cborMajorArr); err != nil {
-		return 0, err
+func (c *cborChecker) checkHeader(major uint8, want int) error {
+	if err := c.headerMajor(major); err != nil {
+		return err
 	}
-	return c.headerValue()
+	v, err := c.headerValue()
+	if err != nil {
+		return err
+	}
+	if v != want {
+		return errors.Errorf("Wrong value: got %v want %v", v, want)
+	}
+	return nil
+}
+
+func (c *cborChecker) uint(want int) error {
+	return c.checkHeader(cborMajorUint, want)
+}
+
+func (c *cborChecker) nint(want int) error {
+	return c.checkHeader(cborMajorNint, want)
 }
 
 func (c *cborChecker) bytes() ([]byte, error) {
@@ -693,16 +733,235 @@ func (c *cborChecker) bytes() ([]byte, error) {
 	return c.takeData(n), nil
 }
 
-func (c *cborChecker) cmap() (int, error) {
-	if err := c.headerMajor(cborMajorMap); err != nil {
-		return 0, err
+func (c *cborChecker) text() ([]byte, error) {
+	if err := c.headerMajor(cborMajorTstr); err != nil {
+		return nil, err
 	}
-	return c.headerValue()
+	n, err := c.headerValue()
+	if err != nil {
+		return nil, err
+	}
+	return c.takeData(n), nil
 }
 
-const ecdsaSigBytes int = 64
-const cborPublicKeyLen int = 13 + ecdsaSigBytes
-const sha256DigestSize int = 32
+func (c *cborChecker) array(want int) error {
+	return c.checkHeader(cborMajorArr, want)
+}
+
+func (c *cborChecker) cmap(want int) error {
+	return c.checkHeader(cborMajorMap, want)
+}
+
+// checkSignedData checks SignedData in COSE CBOR encoding.
+// SignedData = [   # array(4)
+//
+//	protected,   # bytes(3) (Algorithm ES256 = A10126)
+//	unprotected, # map(0)
+//	payload,     # bytes()
+//	signature,   # bytes(64) (ES256)
+//
+// ]
+func (c *cborChecker) checkSignedData(ctx context.Context, label string, pub *ecdsa.PublicKey) ([]byte, error) {
+	if err := c.array(4); err != nil {
+		return nil, err
+	}
+	b, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x26}) {
+		return nil, errors.Errorf("Wrong bytes: %v", b)
+	}
+	if err = c.cmap(0); err != nil {
+		return nil, err
+	}
+	payload, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	h := sha256.New()
+	// Fixed prefix for signing: see Cr50 kSigStructFixedHdr.
+	sigHeader, _ := hex.DecodeString("846a5369676E61747572653143A1012640")
+	h.Write(sigHeader)
+	h.Write(c.lastHeader)
+	h.Write(payload)
+	sig, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	if len(sig) != ecdsaSigBytes {
+		return nil, errors.Errorf("Wrong length: %v", len(b))
+	}
+	err = CheckSignature(ctx, label, pub, h.Sum(nil), sig)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
+
+// checkPublicKey checks PublicKey in COSE CBOR encoding.
+// PublicKey = {  # map(6)
+//
+//	key_type:  # unsigned(1): unsigned(2)
+//	alg:       # unsigned(3): negative(6)
+//	key_ops:   # unsigned(4): array(1) [ unsigned(2) ]
+//	curve:     # negative(0): unsigned(1)
+//	x:         # negative(1): bytes(32)
+//	y:         # negative(2): bytes(32)
+//
+// }
+func (c *cborChecker) checkPublicKey(withKeyOps bool) (*ecdsa.PublicKey, error) {
+	mapSize := 5
+	if withKeyOps {
+		mapSize++
+	}
+	if err := c.cmap(mapSize); err != nil {
+		return nil, err
+	}
+	if err := c.uint(1); err != nil {
+		return nil, err
+	}
+	if err := c.uint(2); err != nil {
+		return nil, err
+	}
+	if err := c.uint(3); err != nil {
+		return nil, err
+	}
+	if err := c.nint(6); err != nil {
+		return nil, err
+	}
+	if withKeyOps {
+		if err := c.uint(4); err != nil {
+			return nil, err
+		}
+		if err := c.array(1); err != nil {
+			return nil, err
+		}
+		if err := c.uint(2); err != nil {
+			return nil, err
+		}
+	}
+	if err := c.nint(0); err != nil {
+		return nil, err
+	}
+	if err := c.uint(1); err != nil {
+		return nil, err
+	}
+	if err := c.nint(1); err != nil {
+		return nil, err
+	}
+	x, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	if len(x) != ecdsaPointBytes {
+		return nil, errors.Errorf("Wrong X length: %v", len(x))
+	}
+	if err := c.nint(2); err != nil {
+		return nil, err
+	}
+	y, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	if len(y) != ecdsaPointBytes {
+		return nil, errors.Errorf("Wrong Y length: %v", len(y))
+	}
+	pubKey := &ecdsa.PublicKey{
+		Curve: elliptic.P256(),
+		X:     new(big.Int).SetBytes(x),
+		Y:     new(big.Int).SetBytes(y),
+	}
+	return pubKey, nil
+}
+
+// checkCert checks Cert in COSE CBOR encoding.
+// Cert = {  # map(10)
+//
+//	issuer:       # unsigned(1): text()
+//	subject:      # unsigned(2): text()
+//	code_hash:    # negative(4670544): bytes()
+//	cfg_hash:     # negative(4670546): bytes()
+//	cfg_desc:     # negative(4670547): bytes()
+//	auth_hash:    # negative(4670548): bytes()
+//	mode:         # negative(4670550): bytes()
+//	subject_pk:   # negative(4670551): bytes()
+//	key_usage:    # negative(4670552): bytes()
+//	profile_name: # negative(4670553): text()
+//
+// }
+func (c *cborChecker) checkCert() (*ecdsa.PublicKey, error) {
+	if err := c.cmap(10); err != nil {
+		return nil, err
+	}
+	if err := c.uint(1); err != nil {
+		return nil, err
+	}
+	if _, err := c.text(); err != nil {
+		return nil, err
+	}
+	if err := c.uint(2); err != nil {
+		return nil, err
+	}
+	if _, err := c.text(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670544); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670546); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670547); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670548); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670550); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670551); err != nil {
+		return nil, err
+	}
+	pk, err := c.bytes()
+	if err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670552); err != nil {
+		return nil, err
+	}
+	if _, err := c.bytes(); err != nil {
+		return nil, err
+	}
+	if err := c.nint(4670553); err != nil {
+		return nil, err
+	}
+	if _, err := c.text(); err != nil {
+		return nil, err
+	}
+	cb := newCborChecker(pk)
+	pk2, err := cb.checkPublicKey(true)
+	if err != nil {
+		return nil, err
+	}
+	return pk2, nil
+}
 
 // CheckMacedKeyCbor checks MacedPublicKey in COSE CBOR encoding.
 // MacedPublicKey = [  # array(4)
@@ -714,13 +973,9 @@ const sha256DigestSize int = 32
 //
 // ]
 func CheckMacedKeyCbor(macedKey []byte) error {
-	cb := cborChecker{macedKey}
-	n, err := cb.array()
-	if err != nil {
+	cb := newCborChecker(macedKey)
+	if err := cb.array(4); err != nil {
 		return err
-	}
-	if n != 4 {
-		return errors.Errorf("Wrong length: %v", n)
 	}
 	b, err := cb.bytes()
 	if err != nil {
@@ -729,19 +984,15 @@ func CheckMacedKeyCbor(macedKey []byte) error {
 	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x05}) {
 		return errors.Errorf("Wrong bytes: %v", b)
 	}
-	n, err = cb.cmap()
+	if err := cb.cmap(0); err != nil {
+		return err
+	}
+	pubKey, err := cb.bytes()
 	if err != nil {
 		return err
 	}
-	if n != 0 {
-		return errors.Errorf("Wrong length: %v", n)
-	}
-	b, err = cb.bytes()
-	if err != nil {
-		return err
-	}
-	if len(b) != cborPublicKeyLen {
-		return errors.Errorf("Wrong length: %v", len(b))
+	if len(pubKey) != cborPublicKeyLen {
+		return errors.Errorf("Wrong length: %v", len(pubKey))
 	}
 	b, err = cb.bytes()
 	if err != nil {
@@ -753,54 +1004,81 @@ func CheckMacedKeyCbor(macedKey []byte) error {
 	if len(cb.data) != 0 {
 		return errors.Errorf("Extra data: %v", cb.data)
 	}
+	cb = newCborChecker(pubKey)
+	_, err = cb.checkPublicKey(false)
+	if err != nil {
+		return err
+	}
+	if len(cb.data) != 0 {
+		return errors.Errorf("Extra data: %v", cb.data)
+	}
 	return nil
 }
 
 // CheckCsrCbor checks SignedData in COSE CBOR encoding.
-// SignedData = [   # array(4)
-//
-//	protected,   # bytes(3) (Algorithm ES256 = A10126)
-//	unprotected, # map(0)
-//	payload,     # bytes() ([challenge, CsrPayload])
-//	signature,   # bytes(64) (ES256)
-//
-// ]
-func CheckCsrCbor(csr []byte) error {
-	cb := cborChecker{csr}
-	n, err := cb.array()
+// SignedData payload = [challenge, CsrPayload]
+func CheckCsrCbor(ctx context.Context, csr []byte, cdiPubKey *ecdsa.PublicKey) error {
+	cb := newCborChecker(csr)
+	_, err := cb.checkSignedData(ctx, "CSR", cdiPubKey)
 	if err != nil {
 		return err
-	}
-	if n != 4 {
-		return errors.Errorf("Wrong length: %v", n)
-	}
-	b, err := cb.bytes()
-	if err != nil {
-		return err
-	}
-	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x26}) {
-		return errors.Errorf("Wrong bytes: %v", b)
-	}
-	n, err = cb.cmap()
-	if err != nil {
-		return err
-	}
-	if n != 0 {
-		return errors.Errorf("Wrong length: %v", n)
-	}
-	_, err = cb.bytes()
-	if err != nil {
-		return err
-	}
-	b, err = cb.bytes()
-	if err != nil {
-		return err
-	}
-	if len(b) != ecdsaSigBytes {
-		return errors.Errorf("Wrong length: %v", len(b))
 	}
 	if len(cb.data) != 0 {
 		return errors.Errorf("Extra data: %v", cb.data)
+	}
+	return nil
+}
+
+// CheckDiceChainCbor checks DiceCertChain in COSE CBOR encoding.
+// DiceCertChain = [  # array(2)
+//
+//	pub_key,      # PublicKey
+//	cert,         # SignedData
+//
+// ]
+func CheckDiceChainCbor(ctx context.Context, diceChain []byte) (*ecdsa.PublicKey, error) {
+	cb := newCborChecker(diceChain)
+	if err := cb.array(2); err != nil {
+		return nil, err
+	}
+	udsPub, err := cb.checkPublicKey(true)
+	if err != nil {
+		return nil, err
+	}
+	cert, err := cb.checkSignedData(ctx, "DICE cert chain", udsPub)
+	if err != nil {
+		return nil, err
+	}
+	if len(cb.data) != 0 {
+		return nil, errors.Errorf("Extra data: %v", cb.data)
+	}
+	cb = newCborChecker(cert)
+	cdiPub, err := cb.checkCert()
+	if err != nil {
+		return nil, err
+	}
+	if len(cb.data) != 0 {
+		return nil, errors.Errorf("Extra data: %v", cb.data)
+	}
+
+	return cdiPub, nil
+}
+
+// CheckSignature verifies the signature of hash using the public key.
+func CheckSignature(ctx context.Context, label string, pub *ecdsa.PublicKey, hash, sig []byte) error {
+	testing.ContextLogf(ctx, "Checking %s signature", label)
+	testing.ContextLogf(ctx, "Curve: %s", pub.Curve.Params().Name)
+	testing.ContextLogf(ctx, "X: %x", pub.X.Bytes())
+	testing.ContextLogf(ctx, "Y: %x", pub.Y.Bytes())
+	testing.ContextLogf(ctx, "hash: %x", hash)
+	testing.ContextLogf(ctx, "R: %x", sig[:32])
+	testing.ContextLogf(ctx, "S: %x", sig[32:])
+	sigR := new(big.Int).SetBytes(sig[:32])
+	sigS := new(big.Int).SetBytes(sig[32:])
+	valid := ecdsa.Verify(pub, hash, sigR, sigS)
+	testing.ContextLog(ctx, "Signature valid: ", valid)
+	if !valid {
+		return errors.New("Signature is not valid")
 	}
 	return nil
 }

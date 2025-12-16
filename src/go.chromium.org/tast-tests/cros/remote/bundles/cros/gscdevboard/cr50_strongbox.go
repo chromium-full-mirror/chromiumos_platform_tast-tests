@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
-	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -88,6 +87,10 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
+	cdiPubKey, err := utils.CheckDiceChainCbor(ctx, diceChain)
+	if err != nil {
+		s.Fatal("Failed to parse dice chain: ", err)
+	}
 
 	rkpBlob, macedKey, err := utils.StrongboxRPCGenerateKey(ctx, tpm)
 	if err != nil {
@@ -119,7 +122,10 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
-	th.MustSucceed(utils.CheckCsrCbor(csr), "CSR CBOR")
+	err = utils.CheckCsrCbor(ctx, csr, cdiPubKey)
+	if err != nil {
+		s.Fatal("Failed to parse CSR: ", err)
+	}
 
 	// Test without attestation key
 	_, _, err = utils.StrongboxGenerateKey(ctx, tpm, nil)
@@ -144,9 +150,6 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if !ok {
 		s.Fatal("Public key is not an ECDSA key")
 	}
-	s.Logf("Curve: %s", pubKey.Curve.Params().Name)
-	s.Logf("X: %x", pubKey.X.Bytes())
-	s.Logf("Y: %x", pubKey.Y.Bytes())
 
 	operationID, err := utils.StrongboxBegin(ctx, tpm, blob)
 	if err != nil {
@@ -159,22 +162,14 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed update: ", err)
 	}
 
-	signature, err := utils.StrongboxFinish(ctx, tpm, operationID, nil)
+	sig, err := utils.StrongboxFinish(ctx, tpm, operationID, nil)
 	if err != nil {
 		s.Fatal("Failed finish: ", err)
 	}
-	hash := sha256.Sum256(input)
-	s.Logf("hash: %x", hash)
-	s.Logf("r: %x", signature[:32])
-	s.Logf("s: %x", signature[32:])
-	sigR := new(big.Int)
-	sigR.SetBytes(signature[:32])
-	sigS := new(big.Int)
-	sigS.SetBytes(signature[32:])
-	valid := ecdsa.Verify(pubKey, hash[:], sigR, sigS)
-	s.Log("Signature valid: ", valid)
-	if !valid {
-		s.Fatal("Signature is not valid")
+	h := sha256.Sum256(input)
+	err = utils.CheckSignature(ctx, "finish", pubKey, h[:], sig)
+	if err != nil {
+		s.Fatal("Failed finish: ", err)
 	}
 
 	th.MustSucceed(tpm.TpmvSetStrongboxState(false), "Disable Strongbox")
