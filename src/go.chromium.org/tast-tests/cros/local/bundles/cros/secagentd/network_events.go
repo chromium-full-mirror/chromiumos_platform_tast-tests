@@ -227,6 +227,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	agentPid, err := secagentdupstart.RestartSecagentd(ctx, false,
+		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS)))
