@@ -41,7 +41,6 @@ func init() {
 		Attr: []string{
 			"group:wwcb",
 			"group:pasit",
-			"pasit_storage",
 			"group:release-health",
 			"release-health_usb",
 		},
