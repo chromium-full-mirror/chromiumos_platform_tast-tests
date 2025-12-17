@@ -124,6 +124,50 @@ func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns 
 	return ConvertToStringArrayArray(ctx, iList)
 }
 
+// CaptureECCommand runs the specified command on the EC, capturing all output
+// for the specified amount of time.
+func (s *Servo) CaptureECCommand(ctx context.Context, cmd string, timeout time.Duration) (retOutput string, retErr error) {
+	closeECUART, err := s.EnableUARTCapture(ctx, ECUARTCapture)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to enable UART capture")
+	}
+	defer func() {
+		retErr = errors.Join(retErr, closeECUART(ctx))
+	}()
+
+	ecUartCtx, ecUartCtxCancel := context.WithTimeout(ctx, timeout)
+	defer ecUartCtxCancel()
+	ticker := time.NewTicker(time.Millisecond * 10)
+	defer ticker.Stop()
+
+	// Drain the UART output prior to running the command.
+	if _, err := s.GetQuotedString(ctx, ECUARTStream); err != nil {
+		return "", errors.Wrap(err, "failed to drain EC UART")
+	}
+
+	if err := s.SetString(ctx, ECUARTCmd, cmd); err != nil {
+		return "", errors.Wrapf(err, "setting ECUARTCmd to %s", cmd)
+	}
+
+	var output string
+	var lines string
+Loop:
+	for {
+		select {
+		case <-ecUartCtx.Done():
+			break Loop
+		case <-ticker.C:
+			lines, err = s.GetQuotedString(ctx, ECUARTStream)
+			if err != nil {
+				return "", errors.Wrap(err, "failed to read EC UART")
+			}
+			output += lines
+		}
+	}
+
+	return output, nil
+}
+
 func (s *Servo) runECCommandGetOutputNoConsoleLogsHelper(ctx context.Context, cmd string, patterns []string, allowRetries bool) (output [][]string, retErr error) {
 	// EC console can be extremely chatty. Log messages are liable to interrupt
 	// the console output, breaking the regex pattern. Turn off all other channels
