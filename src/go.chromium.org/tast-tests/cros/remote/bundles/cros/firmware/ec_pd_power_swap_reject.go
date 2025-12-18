@@ -20,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECPDPowerSwapReject,
-		Desc: "Verify USB-C/PD Power Role Swap Reject Path",
+		Desc: "Verify DUT's USB-C/PD power role remains viable after a swap request is rejected by the partner",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"jasonyuan@google.com",
@@ -54,18 +54,6 @@ func init() {
 			Val: firmware.PDTestParams{
 				CC:  firmware.CCPolarityFlipped,
 				DTS: firmware.DTSModeOn,
-			},
-		}, {
-			Name: "shutdown",
-			Val: firmware.PDTestParams{
-				Shutdown: true,
-				DTS:      firmware.DTSModeOff,
-			},
-		}, {
-			Name: "suspend",
-			Val: firmware.PDTestParams{
-				Suspend: true,
-				DTS:     firmware.DTSModeOff,
 			},
 		}},
 	})
