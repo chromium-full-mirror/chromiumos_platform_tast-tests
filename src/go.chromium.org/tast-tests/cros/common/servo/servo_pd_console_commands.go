@@ -469,7 +469,7 @@ func checkSequenceInConsoleLog(log string, port int, sequenceList []string) bool
 // verifyStatesInConsoleLog is a helper function which extracts all of the PD
 // state messages from servo console output and then verifies the states match
 // in exact order tp the states in the parameter sequenceList
-func verifyStatesInConsoleLog(ctx context.Context, log string, port int, sequenceList []string) bool {
+func verifyStatesInConsoleLog(ctx context.Context, log string, port int, sequenceList []string, expectedFinalState string) bool {
 	// Create a regexp object that extracts all PD state entries from the log
 	re := regexp.MustCompile(
 		fmt.Sprintf(`C%d\s+st[\d]+\s([\w]+)`, port),
@@ -478,17 +478,23 @@ func verifyStatesInConsoleLog(ctx context.Context, log string, port int, sequenc
 	states := make([]string, len(matches))
 	for idx, row := range matches {
 		states[idx] = row[1]
-		testing.ContextLogf(ctx, "act = %s <--> exp = %s", row[1], sequenceList[idx])
-		// As long as the states have matched all the expected states,
-		// then treat this as a match even if additional state messages
-		// exist beyond what was expected.
+		// Continue capturing all state names so we can check the expected final state below
 		if idx >= len(sequenceList) {
-			break
+			continue
 		}
+		testing.ContextLogf(ctx, "act = %s <--> exp = %s", row[1], sequenceList[idx])
+
 		if states[idx] != sequenceList[idx] {
 			testing.ContextLogf(ctx, "state list mismatch: %s", states)
 			return false
 		}
+	}
+
+	testing.ContextLogf(ctx, "Final state: act = %s <--> exp = %s", states[len(states)-1], expectedFinalState)
+
+	if states[len(states)-1] != expectedFinalState {
+		testing.ContextLogf(ctx, "final state mismatch: %s", states)
+		return false
 	}
 
 	return true
@@ -595,40 +601,37 @@ func (s *Servo) TriggerServoPDHardReset(ctx context.Context) error {
 	// Depending on the current power role, set the list of expected
 	// PD states following the soft reset
 	var expectedResetSequence []string
+	var expectedFinalState string
 	if pdState.PowerRole == PowerRoleSNK {
 		expectedResetSequence = []string{
 			"HARD_RESET_SEND",
 			"HARD_RESET_EXECUTE",
 			"SNK_HARD_RESET_RECOVER",
-			"SNK_DISCOVERY",
-			"SNK_REQUESTED",
-			"SNK_TRANSITION",
-			"SNK_READY",
 		}
+		expectedFinalState = "SNK_READY"
 	} else if pdState.PowerRole == PowerRoleSRC {
 		expectedResetSequence = []string{
 			"HARD_RESET_SEND",
 			"HARD_RESET_EXECUTE",
 			"SRC_HARD_RESET_RECOVER",
-			"SRC_STARTUP",
-			"SRC_DISCOVERY",
-			"SRC_NEGOCIATE", // [sic]
-			"SRC_ACCEPTED",
-			"SRC_POWERED",
-			"SRC_TRANSITION",
-			"SRC_READY",
 		}
+		expectedFinalState = "SRC_READY"
 	} else {
 		return errors.New("unknown power role state")
 	}
 
-	// Run the command
-	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 hard", []string{`(.*)(C1)\s+[\w]+:?\s([\w]+_READY)`})
+	// Capture servo output for 5 seconds. Verify that after sending the
+	// hard reset, servo progresses through the hard reset handling and
+	// that the final servo state, SNK_READY or SRC_READY is expected.
+	output, err := s.CaptureServoCommand(ctx, "pd 1 hard", 5*time.Second)
 	if err != nil {
-		return errors.Wrap(err, "could not trigger hard reset on Servo")
+		return errors.New("failed to send hard reset command to servo")
 	}
+
+	testing.ContextLog(ctx, "Hard reset output :", output)
+
 	// Verify hard reset happened and that the connection recovers as expected
-	if !verifyStatesInConsoleLog(ctx, out[0][0], 1, expectedResetSequence) {
+	if !verifyStatesInConsoleLog(ctx, output, 1, expectedResetSequence, expectedFinalState) {
 		return errors.New("expected reset state sequence not seen in Servo console output")
 	}
 

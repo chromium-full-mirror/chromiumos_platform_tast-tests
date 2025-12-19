@@ -53,6 +53,7 @@ const (
 	Type                  StringControl = "servo_type"
 	UARTCmd               StringControl = "servo_uart_cmd"
 	UARTRegexp            StringControl = "servo_uart_regexp"
+	UARTStream            StringControl = "servo_uart_stream"
 	USBArbKey             StringControl = "usb_arb_key"
 	USBArbKeyConfig       StringControl = "usb_arb_key_config"
 	USBCPolarity          StringControl = "usbc_polarity"
@@ -67,6 +68,11 @@ const (
 
 	// PDRole was previously known as V4Role ("servo_v4_role")
 	PDRole StringControl = "servo_pd_role"
+)
+
+// These controls accept only "on" and "off" as values.
+const (
+	UARTCapture OnOffControl = "servo_uart_capture"
 )
 
 // A BoolControl contains the name of a gettable/settable Control which takes a boolean value.
@@ -1348,6 +1354,50 @@ func (s *Servo) RunServoCommandGetOutput(ctx context.Context, cmd string, patter
 	}
 
 	return ConvertToStringArrayArray(ctx, iList)
+}
+
+// CaptureServoCommand runs the specified command on the servo console, capturing all output
+// for the specified amount of time.
+func (s *Servo) CaptureServoCommand(ctx context.Context, cmd string, timeout time.Duration) (retOutput string, retErr error) {
+	closeUART, err := s.EnableUARTCapture(ctx, UARTCapture)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to enable UART capture")
+	}
+	defer func() {
+		retErr = errors.Join(retErr, closeUART(ctx))
+	}()
+
+	uartCtx, uartCtxCancel := context.WithTimeout(ctx, timeout)
+	defer uartCtxCancel()
+	ticker := time.NewTicker(time.Millisecond * 10)
+	defer ticker.Stop()
+
+	// Drain the UART output prior to running the command.
+	if _, err := s.GetQuotedString(ctx, UARTStream); err != nil {
+		return "", errors.Wrap(err, "failed to drain servo UART")
+	}
+
+	if err := s.SetString(ctx, UARTCmd, cmd); err != nil {
+		return "", errors.Wrapf(err, "setting %s to %s", string(UARTCmd), cmd)
+	}
+
+	var output string
+	var lines string
+Loop:
+	for {
+		select {
+		case <-uartCtx.Done():
+			break Loop
+		case <-ticker.C:
+			lines, err = s.GetQuotedString(ctx, UARTStream)
+			if err != nil {
+				return "", errors.Wrap(err, "failed to read servo UART")
+			}
+			output += lines
+		}
+	}
+
+	return output, nil
 }
 
 // RunUSBCDPConfigCommand executes the "usbc_action dp" command with the specified args on the servo
