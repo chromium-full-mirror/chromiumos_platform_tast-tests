@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -128,49 +129,10 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	}
 
 	// Test without attestation key
-	_, _, err = utils.StrongboxGenerateKey(ctx, tpm, nil)
-	if err != nil {
-		s.Fatal("Failed GenerateKey: ", err)
-	}
+	generateAndTestKey(ctx, s, tpm, nil, "self")
 
 	// Test with attestation key
-	blob, cert, err := utils.StrongboxGenerateKey(ctx, tpm, rkpBlob)
-	if err != nil {
-		s.Fatal("Failed GenerateKey: ", err)
-	}
-	err = saveFile(ctx, "cert.der", cert)
-	if err != nil {
-		s.Fatal("Failed to save file: ", err)
-	}
-	cert2, err := x509.ParseCertificate(cert)
-	if err != nil {
-		s.Fatal("Failed to parse certificate: ", err)
-	}
-	pubKey, ok := cert2.PublicKey.(*ecdsa.PublicKey)
-	if !ok {
-		s.Fatal("Public key is not an ECDSA key")
-	}
-
-	operationID, err := utils.StrongboxBegin(ctx, tpm, blob)
-	if err != nil {
-		s.Fatal("Failed begin: ", err)
-	}
-
-	input := []byte("0123456789ABCDEF0123456789ABCDEF")
-	err = utils.StrongboxUpdate(ctx, tpm, operationID, input)
-	if err != nil {
-		s.Fatal("Failed update: ", err)
-	}
-
-	sig, err := utils.StrongboxFinish(ctx, tpm, operationID, nil)
-	if err != nil {
-		s.Fatal("Failed finish: ", err)
-	}
-	h := sha256.Sum256(input)
-	err = utils.CheckSignature(ctx, "finish", pubKey, h[:], sig)
-	if err != nil {
-		s.Fatal("Failed finish: ", err)
-	}
+	generateAndTestKey(ctx, s, tpm, rkpBlob, "attest")
 
 	th.MustSucceed(tpm.TpmvSetStrongboxState(false), "Disable Strongbox")
 	sbState, err = i.StrongboxState(ctx)
@@ -205,4 +167,44 @@ func saveFile(ctx context.Context, filename string, contents []byte) error {
 		return errors.Wrapf(err, "failed to write data to %s", path)
 	}
 	return nil
+}
+
+func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, attestKey []byte, label string) {
+	blob, cert, err := utils.StrongboxGenerateKey(ctx, tpm, attestKey)
+	if err != nil {
+		s.Fatal("Failed GenerateKey: ", err)
+	}
+	err = saveFile(ctx, fmt.Sprintf("cert_%s.der", label), cert)
+	if err != nil {
+		s.Fatal("Failed to save file: ", err)
+	}
+	cert2, err := x509.ParseCertificate(cert)
+	if err != nil {
+		s.Fatal("Failed to parse certificate: ", err)
+	}
+	pubKey, ok := cert2.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		s.Fatal("Public key is not an ECDSA key")
+	}
+
+	operationID, err := utils.StrongboxBegin(ctx, tpm, blob)
+	if err != nil {
+		s.Fatal("Failed begin: ", err)
+	}
+
+	input := []byte("0123456789ABCDEF0123456789ABCDEF")
+	err = utils.StrongboxUpdate(ctx, tpm, operationID, input)
+	if err != nil {
+		s.Fatal("Failed update: ", err)
+	}
+
+	sig, err := utils.StrongboxFinish(ctx, tpm, operationID, nil)
+	if err != nil {
+		s.Fatal("Failed finish: ", err)
+	}
+	h := sha256.Sum256(input)
+	err = utils.CheckSignature(ctx, "finish", pubKey, h[:], sig)
+	if err != nil {
+		s.Fatal("Failed finish: ", err)
+	}
 }
