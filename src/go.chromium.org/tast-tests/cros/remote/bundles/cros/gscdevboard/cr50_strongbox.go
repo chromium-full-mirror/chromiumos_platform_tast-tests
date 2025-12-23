@@ -101,7 +101,10 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
-	th.MustSucceed(utils.CheckMacedKeyCbor(macedKey), "Maced key CBOR")
+	attestPubKey, err := utils.CheckMacedKeyCbor(macedKey)
+	if err != nil {
+		s.Fatal("Failed to parse maced key: ", err)
+	}
 
 	challenge := []byte("1234567890abcdefghijklmnopqrstuv")
 	deviceInfo, _ := hex.DecodeString(
@@ -129,10 +132,10 @@ func Cr50Strongbox(ctx context.Context, s *testing.State) {
 	}
 
 	// Test without attestation key
-	generateAndTestKey(ctx, s, tpm, nil, "self")
+	generateAndTestKey(ctx, s, tpm, nil, nil, "self")
 
 	// Test with attestation key
-	generateAndTestKey(ctx, s, tpm, rkpBlob, "attest")
+	generateAndTestKey(ctx, s, tpm, rkpBlob, attestPubKey, "attest")
 
 	th.MustSucceed(tpm.TpmvSetStrongboxState(false), "Disable Strongbox")
 	sbState, err = i.StrongboxState(ctx)
@@ -169,7 +172,7 @@ func saveFile(ctx context.Context, filename string, contents []byte) error {
 	return nil
 }
 
-func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, attestKey []byte, label string) {
+func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, attestKey []byte, attestPubKey *ecdsa.PublicKey, label string) {
 	blob, cert, err := utils.StrongboxGenerateKey(ctx, tpm, attestKey)
 	if err != nil {
 		s.Fatal("Failed GenerateKey: ", err)
@@ -185,6 +188,14 @@ func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHel
 	pubKey, ok := cert2.PublicKey.(*ecdsa.PublicKey)
 	if !ok {
 		s.Fatal("Public key is not an ECDSA key")
+	}
+	if attestPubKey == nil {
+		attestPubKey = pubKey
+	}
+	h := sha256.Sum256(cert2.RawTBSCertificate)
+	valid := ecdsa.VerifyASN1(attestPubKey, h[:], cert2.Signature)
+	if !valid {
+		s.Fatal("Failed to verify certificate")
 	}
 
 	operationID, err := utils.StrongboxBegin(ctx, tpm, blob)
@@ -202,7 +213,7 @@ func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHel
 	if err != nil {
 		s.Fatal("Failed finish: ", err)
 	}
-	h := sha256.Sum256(input)
+	h = sha256.Sum256(input)
 	err = utils.CheckSignature(ctx, "finish", pubKey, h[:], sig)
 	if err != nil {
 		s.Fatal("Failed finish: ", err)

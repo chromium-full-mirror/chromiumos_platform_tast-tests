@@ -962,6 +962,9 @@ func (c *cborChecker) checkCert() (*ecdsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(cb.data) != 0 {
+		return nil, errors.Errorf("Extra data: %v", cb.data)
+	}
 	return pk2, nil
 }
 
@@ -974,47 +977,44 @@ func (c *cborChecker) checkCert() (*ecdsa.PublicKey, error) {
 //	tag,            # bytes(32) (HMAC-256)
 //
 // ]
-func CheckMacedKeyCbor(macedKey []byte) error {
+func CheckMacedKeyCbor(macedKey []byte) (*ecdsa.PublicKey, error) {
 	cb := newCborChecker(macedKey)
 	if err := cb.array(4); err != nil {
-		return err
+		return nil, err
 	}
 	b, err := cb.bytes()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !bytes.Equal(b, []byte{0xA1, 0x01, 0x05}) {
-		return errors.Errorf("Wrong bytes: %v", b)
+		return nil, errors.Errorf("Wrong bytes: %v", b)
 	}
 	if err := cb.cmap(0); err != nil {
-		return err
+		return nil, err
 	}
-	pubKey, err := cb.bytes()
+	pk, err := cb.bytes()
 	if err != nil {
-		return err
-	}
-	if len(pubKey) != cborPublicKeyLen {
-		return errors.Errorf("Wrong length: %v", len(pubKey))
+		return nil, err
 	}
 	b, err = cb.bytes()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(b) != sha256DigestSize {
-		return errors.Errorf("Wrong length: %v", len(b))
+		return nil, errors.Errorf("Wrong length: %v", len(b))
 	}
 	if len(cb.data) != 0 {
-		return errors.Errorf("Extra data: %v", cb.data)
+		return nil, errors.Errorf("Extra data: %v", cb.data)
 	}
-	cb = newCborChecker(pubKey)
-	_, err = cb.checkPublicKey(false)
+	cb = newCborChecker(pk)
+	pk2, err := cb.checkPublicKey(false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(cb.data) != 0 {
-		return errors.Errorf("Extra data: %v", cb.data)
+		return nil, errors.Errorf("Extra data: %v", cb.data)
 	}
-	return nil
+	return pk2, nil
 }
 
 // CheckCsrCbor checks SignedData in COSE CBOR encoding.
