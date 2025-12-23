@@ -560,11 +560,13 @@ func StrongboxBegin(ctx context.Context, tpm *TpmHelper, blob []byte) (operation
 	var buf []byte
 	buf = binary.LittleEndian.AppendUint32(buf, kmPurposeSign)
 	buf = append(buf, blob...)
-	buf = binary.LittleEndian.AppendUint32(buf, 6)
+	buf = binary.LittleEndian.AppendUint32(buf, 8)
 	buf = appendBytesTag(buf, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
 	buf = appendBytesTag(buf, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
 	buf = binary.LittleEndian.AppendUint32(buf, kmTagDigest)
 	buf = binary.LittleEndian.AppendUint32(buf, kmDigestSha2256)
+	buf = binary.LittleEndian.AppendUint32(buf, kmTagAlgorithm)
+	buf = binary.LittleEndian.AppendUint32(buf, kmAlgEc)
 	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceBegin, buf)
 	if err != nil {
 		return
