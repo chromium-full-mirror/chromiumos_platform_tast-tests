@@ -310,7 +310,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	// process and post events to dbus and is an educated guess.
 	// TODO(b/278252387): Convert this to poll when tast's
 	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
+	if err := testing.Sleep(ctx, 4*batchIntervalS*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
