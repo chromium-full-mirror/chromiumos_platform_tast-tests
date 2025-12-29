@@ -26988,39 +26988,6 @@ func (p *OrcaEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1240. PrivacySandboxFingerprintingProtectionEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PrivacySandboxFingerprintingProtectionEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *PrivacySandboxFingerprintingProtectionEnabled) Name() string {
-	return "PrivacySandboxFingerprintingProtectionEnabled"
-}
-func (p *PrivacySandboxFingerprintingProtectionEnabled) Scope() Scope          { return ScopeUser }
-func (p *PrivacySandboxFingerprintingProtectionEnabled) Status() Status        { return p.Stat }
-func (p *PrivacySandboxFingerprintingProtectionEnabled) UntypedV() interface{} { return p.Val }
-func (p *PrivacySandboxFingerprintingProtectionEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *PrivacySandboxFingerprintingProtectionEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PrivacySandboxFingerprintingProtectionEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1241. MultiScreenCaptureAllowedForUrls
 // ****************************************************************************
 type MultiScreenCaptureAllowedForUrls struct {
@@ -30669,30 +30636,30 @@ func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Equal(iface interfac
 }
 
 // ****************************************************************************
-// 1392. IncognitoModeBlocklist
+// 1392. IncognitoModeUrlBlocklist
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type IncognitoModeBlocklist struct {
+type IncognitoModeUrlBlocklist struct {
 	Stat Status
 	Val  []string
 }
 
-func (p *IncognitoModeBlocklist) Name() string          { return "IncognitoModeBlocklist" }
-func (p *IncognitoModeBlocklist) Scope() Scope          { return ScopeUser }
-func (p *IncognitoModeBlocklist) Status() Status        { return p.Stat }
-func (p *IncognitoModeBlocklist) UntypedV() interface{} { return p.Val }
-func (p *IncognitoModeBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *IncognitoModeUrlBlocklist) Name() string          { return "IncognitoModeUrlBlocklist" }
+func (p *IncognitoModeUrlBlocklist) Scope() Scope          { return ScopeUser }
+func (p *IncognitoModeUrlBlocklist) Status() Status        { return p.Stat }
+func (p *IncognitoModeUrlBlocklist) UntypedV() interface{} { return p.Val }
+func (p *IncognitoModeUrlBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v []string
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as []string", m)
 	}
 	return v, nil
 }
-func (p *IncognitoModeBlocklist) SetProto(m *protoreflect.Message) {
+func (p *IncognitoModeUrlBlocklist) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *IncognitoModeBlocklist) Equal(iface interface{}) bool {
+func (p *IncognitoModeUrlBlocklist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -30701,30 +30668,30 @@ func (p *IncognitoModeBlocklist) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1393. IncognitoModeAllowlist
+// 1393. IncognitoModeUrlAllowlist
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
-type IncognitoModeAllowlist struct {
+type IncognitoModeUrlAllowlist struct {
 	Stat Status
 	Val  []string
 }
 
-func (p *IncognitoModeAllowlist) Name() string          { return "IncognitoModeAllowlist" }
-func (p *IncognitoModeAllowlist) Scope() Scope          { return ScopeUser }
-func (p *IncognitoModeAllowlist) Status() Status        { return p.Stat }
-func (p *IncognitoModeAllowlist) UntypedV() interface{} { return p.Val }
-func (p *IncognitoModeAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *IncognitoModeUrlAllowlist) Name() string          { return "IncognitoModeUrlAllowlist" }
+func (p *IncognitoModeUrlAllowlist) Scope() Scope          { return ScopeUser }
+func (p *IncognitoModeUrlAllowlist) Status() Status        { return p.Stat }
+func (p *IncognitoModeUrlAllowlist) UntypedV() interface{} { return p.Val }
+func (p *IncognitoModeUrlAllowlist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v []string
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as []string", m)
 	}
 	return v, nil
 }
-func (p *IncognitoModeAllowlist) SetProto(m *protoreflect.Message) {
+func (p *IncognitoModeUrlAllowlist) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *IncognitoModeAllowlist) Equal(iface interface{}) bool {
+func (p *IncognitoModeUrlAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
 	if !ok {
 		return ok
@@ -30963,7 +30930,6 @@ func (p *LocalNetworkAccessRestrictionsTemporaryOptOut) Equal(iface interface{})
 // ****************************************************************************
 // 1402. GeminiActOnWebSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GeminiActOnWebSettings struct {
 	Stat Status
@@ -31073,6 +31039,7 @@ func (p *ProxyOverrideRules) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1405. LocalAuthFactors
+// This policy has a default value of [].
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -31447,6 +31414,70 @@ func (p *StaticStorageQuotaEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *StaticStorageQuotaEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1420. GeminiActOnWebAllowedForURLs
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GeminiActOnWebAllowedForURLs struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *GeminiActOnWebAllowedForURLs) Name() string          { return "GeminiActOnWebAllowedForURLs" }
+func (p *GeminiActOnWebAllowedForURLs) Scope() Scope          { return ScopeUser }
+func (p *GeminiActOnWebAllowedForURLs) Status() Status        { return p.Stat }
+func (p *GeminiActOnWebAllowedForURLs) UntypedV() interface{} { return p.Val }
+func (p *GeminiActOnWebAllowedForURLs) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *GeminiActOnWebAllowedForURLs) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GeminiActOnWebAllowedForURLs) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1421. GeminiActOnWebBlockedForURLs
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GeminiActOnWebBlockedForURLs struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *GeminiActOnWebBlockedForURLs) Name() string          { return "GeminiActOnWebBlockedForURLs" }
+func (p *GeminiActOnWebBlockedForURLs) Scope() Scope          { return ScopeUser }
+func (p *GeminiActOnWebBlockedForURLs) Status() Status        { return p.Stat }
+func (p *GeminiActOnWebBlockedForURLs) UntypedV() interface{} { return p.Val }
+func (p *GeminiActOnWebBlockedForURLs) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *GeminiActOnWebBlockedForURLs) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GeminiActOnWebBlockedForURLs) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
 	if !ok {
 		return ok
 	}
@@ -33112,8 +33143,6 @@ func newByName(name string) (Policy, error) {
 		return &DirectSocketsBlockedForUrls{}, nil
 	case "OrcaEnabled":
 		return &OrcaEnabled{}, nil
-	case "PrivacySandboxFingerprintingProtectionEnabled":
-		return &PrivacySandboxFingerprintingProtectionEnabled{}, nil
 	case "MultiScreenCaptureAllowedForUrls":
 		return &MultiScreenCaptureAllowedForUrls{}, nil
 	case "DeviceAuthenticationFlowAutoReloadInterval":
@@ -33342,10 +33371,10 @@ func newByName(name string) (Policy, error) {
 		return &ExtensionInstallCloudPolicyChecksEnabled{}, nil
 	case "DevToolsGoogleDeveloperProgramProfileAvailability":
 		return &DevToolsGoogleDeveloperProgramProfileAvailability{}, nil
-	case "IncognitoModeBlocklist":
-		return &IncognitoModeBlocklist{}, nil
-	case "IncognitoModeAllowlist":
-		return &IncognitoModeAllowlist{}, nil
+	case "IncognitoModeUrlBlocklist":
+		return &IncognitoModeUrlBlocklist{}, nil
+	case "IncognitoModeUrlAllowlist":
+		return &IncognitoModeUrlAllowlist{}, nil
 	case "PreferSlowKexAlgorithms":
 		return &PreferSlowKexAlgorithms{}, nil
 	case "CacheEncryptionEnabled":
@@ -33390,6 +33419,10 @@ func newByName(name string) (Policy, error) {
 		return &SearchContentSharingSettings{}, nil
 	case "StaticStorageQuotaEnabled":
 		return &StaticStorageQuotaEnabled{}, nil
+	case "GeminiActOnWebAllowedForURLs":
+		return &GeminiActOnWebAllowedForURLs{}, nil
+	case "GeminiActOnWebBlockedForURLs":
+		return &GeminiActOnWebBlockedForURLs{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
