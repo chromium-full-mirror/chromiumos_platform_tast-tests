@@ -21,7 +21,6 @@ i2cptpm
 -i2cxfer
 idle
 -panicinfo
-pinmux
 -powerbtn
 rddkeepalive
 -reboot
