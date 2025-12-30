@@ -242,11 +242,19 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	var devScreenBootSteps []func(ctx context.Context, h *firmware.Helper) error
 	switch testOpt.validBootAfterInvalidUSB {
 	case fromUSB:
-		devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
-			ctrlUWithInvalidUSB,
-			selectBack,
-			restoreAndInsertUSB,
-			ctrlUBootFromUSB,
+		if h.Config.ModeSwitcherType != firmware.MenuSwitcher {
+			devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
+				ctrlUWithInvalidUSB,
+				restoreAndInsertUSB,
+				ctrlUBootFromUSB,
+			}
+		} else {
+			devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
+				ctrlUWithInvalidUSB,
+				selectBack,
+				restoreAndInsertUSB,
+				ctrlUBootFromUSB,
+			}
 		}
 		connectionTimeout = h.Config.USBImageBootTimeout
 	case fromInternal:
