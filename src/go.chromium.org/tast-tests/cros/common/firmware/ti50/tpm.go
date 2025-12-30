@@ -91,6 +91,10 @@ const (
 	EncstatefulNvIndex tpm2.TPMHandle = 0x1800005
 	// FwmpNvIndex is the NVMem ID for the Firmware Management Parameters file
 	FwmpNvIndex tpm2.TPMHandle = 0x100100a
+	// WideVineRotIndex is the NVMem ID for extended the Widevine ROT space
+	// which could in addition to the ROT seed also contain HDCP and GSC
+	// Counter seeds.
+	WideVineRotIndex tpm2.TPMHandle = 0x013fff05
 )
 
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
