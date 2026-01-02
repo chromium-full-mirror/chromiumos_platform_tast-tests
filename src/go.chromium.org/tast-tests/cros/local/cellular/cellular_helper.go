@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/cellular"
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
@@ -894,6 +895,7 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 
 	modemType, err := GetModemType(ctx)
 
+	modemResetStart := time.Now()
 	// Device.Reset is failing on NL668 modem (mainly Zork boards are affected)
 	if err == nil && modemType != cellularconst.ModemTypeNL668 {
 		if err = h.Device.Reset(ctx); err != nil {
@@ -911,6 +913,17 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 		testing.ContextLog(ctx, "Modem reset with ResetModemWithHelper succeeded")
 	}
 
+	// Ensure that the reset takes at least 10 seconds. In some modems, the reset function
+	// returns immediately, and calling WaitForEnabledState will return true because the modem
+	// hasn't restarted yet.
+	const minResetTime = 10 * time.Second
+	elapsed := time.Since(modemResetStart)
+	if elapsed < minResetTime {
+		// GoBigSleepLint: A short sleep to ensure shill has time to process the modem removal.
+		testing.Sleep(ctx, minResetTime-elapsed)
+		testing.ContextLogf(ctx, "Ensured minimum modem reset time of %v has passed", minResetTime)
+	}
+
 	if err := h.WaitForEnabledState(ctx, true); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected enabled to become true")
 	}
@@ -920,11 +933,16 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyScanning, false, defaultTimeout); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected scanning to become false, got true")
 	}
-	// GoBigSleepLint: Sleep added as reset fibocom modem taking time for modem to register
-	// and service to refresh. Not found any state/property to wait.
-	// TODO(b/216176362) : Reset modem causes pin api calls failure if not waited 30 seconds.
-	if err := testing.Sleep(ctx, 30*time.Second); err != nil {
-		return time.Since(start), errors.Wrap(err, "failed to sleep after reset modem")
+
+	if slices.Contains([]cellularconst.ModemType{cellularconst.ModemTypeNL668, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101, cellularconst.ModemTypeFM350, cellularconst.ModemTypeRW101, cellularconst.ModemTypeRW135, cellularconst.ModemTypeRW350}, modemType) {
+		elapsed := time.Since(modemResetStart)
+		if elapsed < 30*time.Second {
+			testing.ContextLog(ctx, "Fibocom modem detected. Ensure the modem reset takes at least 30 seconds to avoid b/216176362, b/293327053")
+			// GoBigSleepLint: Sleep added as reset fibocom modem taking time for modem to register
+			// and service to refresh. Not found any state/property to wait.
+			// TODO(b/216176362) : Reset modem causes pin api calls failure if not waited 30 seconds.
+			testing.Sleep(ctx, 30*time.Second-elapsed)
+		}
 	}
 	return time.Since(start), nil
 }
