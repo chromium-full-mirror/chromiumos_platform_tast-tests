@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -200,6 +201,11 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		s.Log("Stopping AC Power")
 		if err := powercontrol.PlugUnplugCharger(ctx, h, false); err != nil {
 			s.Fatal("Failed to stop power supply: ", err)
+		}
+
+		// Restart UI to ensure no user is logged in, as this will change power state behaviour on lid close.
+		if err := h.DUT.Conn().CommandContext(ctx, "restart", "ui").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to restart ui before test: ", err)
 		}
 
 		// Skip setting the lid state for DUTs that don't have a lid, i.e. Chromeslates.
@@ -485,6 +491,7 @@ func checkECWakesFromACReconnected(ctx context.Context, h *firmware.Helper, lidO
 	// Verify that DUT is charging with power supply connected.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		ok, err := h.Servo.GetChargerAttached(ctx)
+		testing.ContextLogf(ctx, "GetChargerAttached: ok=%v err=%v", ok, err)
 		if err != nil {
 			return errors.Wrap(err, "error checking whether charger is attached")
 		}
