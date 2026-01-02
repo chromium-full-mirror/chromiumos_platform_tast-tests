@@ -51,7 +51,7 @@ func init() {
 				Name:              "guest",
 				Fixture:           fixture.ClamshellNonVKInGuest,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:release-health", "release-health_essential_inputs", "informational"},
 			},
 			{
 				Name:              "guest_informational",

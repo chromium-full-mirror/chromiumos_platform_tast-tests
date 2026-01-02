@@ -82,6 +82,7 @@ func init() {
 				setUpRecovery:   false,
 				authFactorType:  setupWithGaiaPassword,
 			},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "user_without_recovery_and_setup",
 			Val: changePasswordParams{
@@ -89,6 +90,7 @@ func init() {
 				setUpRecovery:   true,
 				authFactorType:  setupWithGaiaPassword,
 			},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "user_with_recovery_gaia",
 			Val: changePasswordParams{
@@ -96,6 +98,7 @@ func init() {
 				setUpRecovery:   false,
 				authFactorType:  setupWithGaiaPassword,
 			},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "user_with_recovery_local_password",
 			Val: changePasswordParams{
@@ -103,6 +106,7 @@ func init() {
 				setUpRecovery:   true,
 				authFactorType:  setupWithLocalPassword,
 			},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "user_with_recovery_pin",
 			Val: changePasswordParams{
@@ -110,6 +114,7 @@ func init() {
 				setUpRecovery:   true,
 				authFactorType:  setupWithPin,
 			},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

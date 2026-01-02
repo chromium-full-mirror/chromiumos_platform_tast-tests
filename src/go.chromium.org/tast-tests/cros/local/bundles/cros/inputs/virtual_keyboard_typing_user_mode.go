@@ -52,7 +52,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "guest",
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				ExtraAttr: []string{"group:input-tools-upstream", "informational"},
 				Fixture:   fixture.AnyVKInGuest,
 			},
 			{

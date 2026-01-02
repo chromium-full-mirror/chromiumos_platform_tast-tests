@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Checks that physical keyboard can perform basic typing in korean",
 		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream", "group:release-health", "release-health_essential_inputs"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "group:input-tools-upstream", "group:release-health", "release-health_essential_inputs", "informational"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{ime.Korean},

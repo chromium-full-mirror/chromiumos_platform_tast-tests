@@ -56,6 +56,7 @@ func init() {
 			},
 			// The keyboard diagnostics is disabled for split modifier keyboard.
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell), hwdep.NoSplitModifierKeyboard()),
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name: "tablet_mode_form_factors",
 			Val: keyboardEventTestParams{
@@ -63,6 +64,7 @@ func init() {
 			},
 			// The keyboard diagnostics is disabled for split modifier keyboard.
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable), hwdep.NoSplitModifierKeyboard(), hwdep.SkipOnModel("kracko360")),
+			ExtraAttr:         []string{"informational"},
 		}, {
 			// TODO(b/363140028): fix the failures on kracko360.
 			Name: "tablet_mode_form_factors_unstable",

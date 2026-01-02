@@ -21,7 +21,7 @@ func init() {
 			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1168727",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInGuest",

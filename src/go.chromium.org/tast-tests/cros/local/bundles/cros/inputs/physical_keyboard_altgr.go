@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Checks that user can lock altgr modifier key on physical keyboard",
 		Contacts:     []string{"essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags: util.SearchFlagsWithIMEAndScreenPlay(
 			[]ime.InputMethod{

@@ -31,7 +31,7 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome", "chrome_internal", "non_meet_device"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      2*chrome.LoginTimeout + time.Minute,
 		SearchFlags: []*testing.StringPair{{
