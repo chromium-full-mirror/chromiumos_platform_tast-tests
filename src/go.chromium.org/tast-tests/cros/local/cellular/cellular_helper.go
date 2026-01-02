@@ -804,13 +804,6 @@ func (h *Helper) resetShill(ctx context.Context, path string) []error {
 		errs = append(errs, errors.Wrap(err, "failed to pop all user profiles"))
 	}
 
-	// Wait until a service is connected.
-	expectProps := map[string]interface{}{
-		shillconst.ServicePropertyIsConnected: true,
-	}
-	if _, err := manager.WaitForServiceProperties(ctx, expectProps, defaultTimeout); err != nil {
-		errs = append(errs, errors.Wrap(err, "failed to wait for connected service"))
-	}
 	// Wait for 6s to allow cellular connection becomes stable. But it is NOT
 	// guaranteed it succeeds every time. Currently, 5s without registered state
 	// change is considered stable registration
