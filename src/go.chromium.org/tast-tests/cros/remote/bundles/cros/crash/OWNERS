@@ -5,7 +5,6 @@ per-file kernel_crash.go=tfiga@chromium.org
 per-file watchdog_crash.go=tfiga@chromium.org
 per-file pstore_ecc_check.go=tfiga@chromium.org, naoyatezuka@google.com
 per-file ec_crash.go=file:chromiumos/owners:v1:/firmware/OWNERS.cros_ec
-per-file ec_safe_mode.go=file:chromiumos/owners:v1:/firmware/OWNERS.cros_ec
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
