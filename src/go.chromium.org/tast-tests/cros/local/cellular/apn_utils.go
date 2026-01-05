@@ -79,6 +79,8 @@ var (
 	carrierMapping = map[carrierKeyTuple]Carrier{
 		carrierKeyTuple{"00101", ""}:      CarrierAmarisoft,
 		carrierKeyTuple{"001010", ""}:     CarrierAmarisoft,
+		carrierKeyTuple{"31001", ""}:      CarrierAmarisoft, // Roaming
+		carrierKeyTuple{"310014", ""}:     CarrierAmarisoft, // Roaming
 		carrierKeyTuple{"90170", ""}:      CarrierSysmocom,
 		carrierKeyTuple{"99970", ""}:      CarrierSysmocom,
 		carrierKeyTuple{"23415", ""}:      CarrierVodafoneUK,
