@@ -95,7 +95,8 @@ func init() {
 
 // CrosHardwareVerifier checks if component info are identical in three
 // different sources: hardware_verifier, GenericDeviceInfo in verification
-// report, and probe result of runtime_probe.
+// report, and probe result of runtime_probe. It also checks if the result
+// of hardware_verifier is compliant or not.
 func CrosHardwareVerifier(ctx context.Context, s *testing.State) {
 	fieldsMapping, err := requiredFields(ctx, s)
 	if err != nil {
@@ -114,9 +115,13 @@ func CrosHardwareVerifier(ctx context.Context, s *testing.State) {
 	}
 	s.Log("MessageFromRuntimeProbe:", messagesFromProbe)
 
-	messagesFromVerifier, err := hwVerify(ctx, s.DUT(), fieldsMapping)
+	reportFromVerifier, err := hwVerify(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Cannot get result of hardware_verifier: ", err)
+	}
+	messagesFromVerifier, err := collectFields(reportFromVerifier.GetGenericDeviceInfo(), fieldsMapping)
+	if err != nil {
+		s.Fatal("Cannot collect fields from hardware_verifier: ", err)
 	}
 	s.Log("MessageFromHwVerifier:", messagesFromVerifier)
 
@@ -136,6 +141,10 @@ func CrosHardwareVerifier(ctx context.Context, s *testing.State) {
 		s.Log("Message mismatch (-report +probe):")
 		s.Log(diff)
 		s.Error("Message mismatch between report and probe (see logs for diff)")
+	}
+
+	if !reportFromVerifier.IsCompliant {
+		s.Error("hardware_verifier returns a non-compliant result")
 	}
 }
 
@@ -352,11 +361,11 @@ func collectFields(deviceInfo *hvpb.HwVerificationReport_GenericDeviceInfo, fiel
 	return messageList, nil
 }
 
-// hwVerify returns an array of {category}.Fields messages from output
-// result of hardware_verifier binary.  This function is called before the
-// reboot in order to verify the consistency of the execution in the init
-// script /etc/init/hardware-verifier.conf.
-func hwVerify(ctx context.Context, dut *dut.DUT, fieldsMapping requiredFieldSet) (sortableMessage, error) {
+// hwVerify returns HwVerificationReport from output result of hardware_verifier
+// binary. This function is called before the reboot in order to verify the
+// consistency of the execution in the init script
+// /etc/init/hardware-verifier.conf.
+func hwVerify(ctx context.Context, dut *dut.DUT) (*hvpb.HwVerificationReport, error) {
 	args := []string{"-u", "hardware_verifier", "hardware_verifier", "--pii"}
 	output, err := dut.Conn().CommandContext(ctx, "sudo", args...).Output()
 	if err != nil {
@@ -371,7 +380,7 @@ func hwVerify(ctx context.Context, dut *dut.DUT, fieldsMapping requiredFieldSet)
 	if err := proto.Unmarshal([]byte(output), message); err != nil {
 		return nil, err
 	}
-	return collectFields(message.GetGenericDeviceInfo(), fieldsMapping)
+	return message, nil
 }
 
 // report returns an array of {category}.Fields messages from the
