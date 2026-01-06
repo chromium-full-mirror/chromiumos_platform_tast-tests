@@ -1520,6 +1520,8 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
 			chrome.DisableFeatures("PeripheralNotification"),
 			chrome.DisableFeatures("CrosSodaConchLanguages"), // b:370423420 use small SODA models to avoid downloading large models on cbx duts.
+			// TODO(b/472157982): Remove if the metric issue for TPS.Display.Smoothness is resolved.
+			chrome.DisableFeatures("PauseMutedBackgroundAudio"),
 		}
 		// Enable WPR mode. Do not use GAIA login as replay won't connect to real servers.
 		if f.wprArchive != "" {
