@@ -34,13 +34,17 @@ func init() {
 			{
 				// This test only runs on devices which do not use VPD SAR tables.
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNoVpdSar()),
-				VariantCategory:   `{"name": "All_Models_No_VPDSAR"}`,
+				// TODO(b:473882639) Change to All models when bug is fixed.
+				// VariantCategory:   `{"name": "All_Models_No_VPDSAR"}`,
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
 				// This test only runs on devices which use VPD SAR tables.
 				Name:              "vpd",
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiVpdSar()),
-				VariantCategory:   `{"name": "All_Models_VPDSAR"}`,
+				// TODO(b:473882639) Change to All models when bug is fixed.
+				// VariantCategory:   `{"name": "All_Models_VPDSAR"}`,
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})
