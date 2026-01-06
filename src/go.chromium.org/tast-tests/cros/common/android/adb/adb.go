@@ -28,6 +28,7 @@ func Command(ctx context.Context, args ...string) *testexec.Cmd {
 	cmd.Env = append(
 		os.Environ(),
 		"ADB_VENDOR_KEYS="+vendorKeyPath(),
+		"ADB_LIBUSB=1",
 		// adb expects $HOME to be writable.
 		"HOME="+adbHome)
 	return cmd
