@@ -275,6 +275,87 @@ func (t *TpmHandle) TpmvReboot(ms uint16) error {
 	return nil
 }
 
+// tpmvWrapSendRecv is a common code for vendor commands.
+//
+// Given the vendor subcommand code and the data to send, creates a proper TPM
+// packet, sends it to the TPM, validates the TPM response  and returns the
+// response payload to the caller. Both input data and response payload could be
+// empty.
+func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte) ([]byte, error) {
+	h := fmt.Sprintf("TPM vendor command 0x%04x", subcommand)
+
+	// Build up vendor command. Header size is 12 bytes.
+	size := uint32(12 + len(body))
+
+	message := []byte{0x80, 0x01}
+	message = binary.BigEndian.AppendUint32(message, size)
+	message = binary.BigEndian.AppendUint32(message, 0x20000000) // Vendor command ordinal.
+	message = binary.BigEndian.AppendUint16(message, subcommand)
+	message = append(message, body...)
+
+	response, err := t.Send(message)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not send %s", h)
+	}
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not get response for %s", h)
+	}
+
+	type TpmvResponse struct {
+		tag        uint16
+		size       uint32
+		errorCode  uint32
+		subcommand uint16
+	}
+
+	var tpmvr TpmvResponse
+
+	if len(response) < binary.Size(tpmvr) {
+		return nil, errors.Errorf("%s returned %d bytes", h, len(response))
+	}
+
+	tpmvr.tag = binary.BigEndian.Uint16(response[:2])
+	tpmvr.size = binary.BigEndian.Uint32((response[2:6]))
+	tpmvr.errorCode = binary.BigEndian.Uint32((response[6:10]))
+	tpmvr.subcommand = binary.BigEndian.Uint16(response[10:12])
+	if tpmvr.tag != 0x8001 {
+		return nil, errors.Errorf("%s return tag 0x%04x", h, tpmvr.tag)
+	}
+
+	if tpmvr.size != uint32(len(response)) {
+		return nil, errors.Errorf("%s header size %d does not match actual size %d", h, tpmvr.size, len(response))
+	}
+
+	if tpmvr.subcommand != subcommand {
+		return nil, errors.Errorf("%s header subcommand is 0x%x instead", h, tpmvr.subcommand)
+	}
+
+	if tpmvr.errorCode != 0 {
+		return nil, errors.Errorf("%s error code is %d", h, tpmvr.errorCode)
+	}
+
+	return response[binary.Size(tpmvr):], nil
+}
+
+// TpmvDrmCounter sends either read or read and increment command to retrieve
+// the GSC DRM counter.
+func (t *TpmHandle) TpmvDrmCounter(challenge [32]byte, increment bool) ([]byte, error) {
+	commandBody := append(challenge[:], byte(0)) // Hardcoded counter ID
+	if increment {
+		commandBody = append(commandBody, byte(1))
+	} else {
+		commandBody = append(commandBody, byte(0))
+	}
+
+	result, err := t.tpmvWrapSendRecv(0x50, commandBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 func getTPMVResponseStatus(buf []byte) (uint32, error) {
 	if len(buf) < 10 {
 		return 1, errors.Errorf("TPMV response not large enough: %v", buf)
@@ -623,4 +704,50 @@ func (t *TpmHandle) GetTPMProperty(prop tpm2.TPMPT) (uint32, error) {
 	}
 
 	return 0, errors.Errorf("property not found %d", prop)
+}
+
+// WvRotReadResponse - a container for data payload of the NVRead command
+// accessing Widevine ROT space.
+type WvRotReadResponse struct {
+	Data []byte
+}
+
+// ReadWidevineRot - reads the requested number of byte and the requested offset
+// of the contents of the NV ROT space,
+func (t *TpmHandle) ReadWidevineRot(size, offset uint16) (WvRotReadResponse, error) {
+	var wvResp WvRotReadResponse
+
+	attr := tpm2.TPMSNVPublic{
+		NVIndex: WideVineRotIndex,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			AuthRead: true,
+			PPRead:   true,
+		},
+		DataSize: uint16(binary.Size(wvResp)),
+	}
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		return wvResp, errors.Wrap(err, "failed to build NVName for Widevine ROT NVMEM")
+	}
+
+	nvHandle := tpm2.NamedHandle{
+		Handle: WideVineRotIndex,
+		Name:   *nvName,
+	}
+	read := tpm2.NVRead{
+		AuthHandle: RootPlatformHandle,
+		NVIndex:    nvHandle,
+		Size:       size,
+		Offset:     offset,
+	}
+
+	response, err := read.Execute(t)
+	if err != nil {
+		return wvResp, errors.Wrap(err, "failed to read Widevine ROT NVMEM")
+	}
+	wvResp.Data = response.Data.Buffer
+
+	return wvResp, nil
 }
