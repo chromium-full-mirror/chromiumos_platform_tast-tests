@@ -1137,11 +1137,6 @@ func EcStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 
-	// Cache crashes so we know if a new crash occurred
-	if err := h.UpdateECCrashCache(ctx); err != nil {
-		s.Fatal("Failed to cache ec crashes before starting")
-	}
-
 	// Collect the current boot ID to detect reboots
 	if bootID, err := h.Reporter.BootID(ctx); err != nil {
 		s.Fatal("Failed to get boot id: ", err)
@@ -1271,28 +1266,6 @@ func EcStress(ctx context.Context, s *testing.State) {
 		s.Error("DUT rebooted unexpectedly")
 	}
 
-	ecCrashes, err := h.GetNewECCrashes(ctx)
-	if err != nil {
-		s.Fatal("Failed to check for new ec crashes")
-	}
-	// Cache crashes so we don't fail EC crash check in fixture
-	if err := h.UpdateECCrashCache(ctx); err != nil {
-		s.Fatal("Failed to cache ec crashes after test")
-	}
-	if len(ecCrashes) == 0 {
-		return
-	}
-	for crashName := range ecCrashes {
-		logPath := firmware.ECCrashBaseDir + crashName + ".eccrash"
-		out, err := h.Reporter.CatFile(ctx, logPath)
-		if err != nil {
-			s.Fatalf("Failed to read .eccrash file %s", logPath)
-		}
-		// Ignore watchdog warnings
-		if strings.Contains(strings.ToLower(out), "dead6668") {
-			s.Log("Found watchdog warning (dead6668), ignoring")
-			continue
-		}
-		s.Fatalf("EC crash detected: %s", string(out))
-	}
+	// The firmware fixture will check for EC crashes and
+	// fail the test if a crash is detected.
 }
