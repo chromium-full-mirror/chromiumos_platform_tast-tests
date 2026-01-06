@@ -7,14 +7,11 @@ package gscdevboard
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"time"
 
-	"github.com/google/go-tpm/tpm2"
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -38,36 +35,31 @@ func init() {
 	})
 }
 
-type wvRotReadResponse struct {
-	DataSize uint16
-	Data     []byte
-}
-
-func (w *wvRotReadResponse) getRotField(s *testing.State, index uint32) ([32]byte, error) {
-	var rot [32]byte
+func getRotField(s *testing.State, w ti50.WvRotReadResponse, index uint32) [32]byte {
+	var field [32]byte
 
 	if index > 2 {
 		s.Fatal("Invalid Widevine ROT field index: ", index)
 	}
 
-	if w.DataSize != 96 {
-		return rot, errors.Errorf("unexpected Widevine ROT size: got %d, want 96", w.DataSize)
+	if len(w.Data) != 96 {
+		s.Fatalf("Unexpected Widevine ROT size: got %d, want 96", len(w.Data))
 	}
 
-	copy(rot[:], w.Data[index*32:(index+1)*32])
-	return rot, nil
+	copy(field[:], w.Data[index*32:(index+1)*32])
+	return field
 }
 
-func (w *wvRotReadResponse) getRotSeed(s *testing.State) ([32]byte, error) {
-	return w.getRotField(s, 0)
+func getRotSeed(s *testing.State, w ti50.WvRotReadResponse) [32]byte {
+	return getRotField(s, w, 0)
 }
 
-func (w *wvRotReadResponse) getHdcpSeed(s *testing.State) ([32]byte, error) {
-	return w.getRotField(s, 1)
+func getHdcpSeed(s *testing.State, w ti50.WvRotReadResponse) [32]byte {
+	return getRotField(s, w, 1)
 }
 
-func (w *wvRotReadResponse) getGscCounterSeed(s *testing.State) ([32]byte, error) {
-	return w.getRotField(s, 2)
+func getGscCounterSeed(s *testing.State, w ti50.WvRotReadResponse) [32]byte {
+	return getRotField(s, w, 2)
 }
 
 type wvRotFields struct {
@@ -76,50 +68,10 @@ type wvRotFields struct {
 	GscCounterSeed [32]byte
 }
 
-func (f *wvRotFields) init(s *testing.State, r wvRotReadResponse) {
-	f.RotSeed, _ = r.getRotSeed(s)
-	f.HdcpSeed, _ = r.getHdcpSeed(s)
-	f.GscCounterSeed, _ = r.getGscCounterSeed(s)
-}
-
-func readWidevineRot(s *testing.State, tpm *utils.TpmHelper, size, offset uint16) (wvRotReadResponse, error) {
-	var wvResp wvRotReadResponse
-	attr := tpm2.TPMSNVPublic{
-		NVIndex: ti50.WideVineRotIndex,
-		NameAlg: tpm2.TPMAlgSHA1,
-		Attributes: tpm2.TPMANV{
-			AuthRead: true,
-			PPRead:   true,
-		},
-		DataSize: uint16(binary.Size(wvResp)),
-	}
-
-	nvName, err := tpm2.NVName(&attr)
-	if err != nil {
-		s.Fatal("Failed to build NVName for WideVine ROT NVMEM: ", err)
-	}
-
-	nvHandle := tpm2.NamedHandle{
-		Handle: ti50.WideVineRotIndex,
-		Name:   *nvName,
-	}
-	read := tpm2.NVRead{
-		AuthHandle: ti50.RootPlatformHandle,
-		NVIndex:    nvHandle,
-		Size:       size,
-		Offset:     offset,
-	}
-
-	response, err := read.Execute(tpm)
-	if err != nil {
-		s.Fatal("Failed to read Widevine ROT NVMEM: ", err)
-	}
-
-	// Copy Response into the response structure.
-	wvResp.DataSize = size
-	wvResp.Data = response.Data.Buffer
-
-	return wvResp, nil
+func (f *wvRotFields) init(s *testing.State, w ti50.WvRotReadResponse) {
+	f.RotSeed = getRotSeed(s, w)
+	f.HdcpSeed = getHdcpSeed(s, w)
+	f.GscCounterSeed = getGscCounterSeed(s, w)
 }
 
 func WidevineRot(ctx context.Context, s *testing.State) {
@@ -131,11 +83,11 @@ func WidevineRot(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 
 	// Let's read the Widevine ROT space twice
-	wvResp0, err0 := readWidevineRot(s, tpm, 0x60, 0)
+	wvResp0, err0 := tpm.ReadWidevineRot(0x60, 0)
 	if err0 != nil {
 		s.Fatal("Failed to read Widevine ROT NVMEM: ", err0)
 	}
-	wvResp1, err1 := readWidevineRot(s, tpm, 0x60, 0)
+	wvResp1, err1 := tpm.ReadWidevineRot(0x60, 0)
 	if err1 != nil {
 		s.Fatal("Failed to read Widevine ROT NVMEM for the second time: ", err1)
 	}
@@ -146,7 +98,7 @@ func WidevineRot(ctx context.Context, s *testing.State) {
 	}
 
 	// Let's read the Widevine ROT again, ROT and HDCP seeds should be different now
-	wvResp2, err2 := readWidevineRot(s, tpm, 0x60, 0)
+	wvResp2, err2 := tpm.ReadWidevineRot(0x60, 0)
 	if err2 != nil {
 		s.Fatal("Failed to read Widevine ROT NVMEM after PCR extend: ", err2)
 	}
@@ -154,14 +106,14 @@ func WidevineRot(ctx context.Context, s *testing.State) {
 	b.SimulateApS3(ctx, s, tpm)
 
 	// Read Widevine ROT again, GSC counter seed should be different now
-	wvResp3, err3 := readWidevineRot(s, tpm, 0x60, 0)
+	wvResp3, err3 := tpm.ReadWidevineRot(0x60, 0)
 	if err3 != nil {
 		s.Fatal("Failed to read Widevine ROT NVMEM after PLT_RST_L toggle: ", err3)
 	}
 
 	// Finally reset the GSC and read Widevine ROT again.
 	tpm = b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
-	wvResp4, err4 := readWidevineRot(s, tpm, 0x60, 0)
+	wvResp4, err4 := tpm.ReadWidevineRot(0x60, 0)
 	if err4 != nil {
 		s.Fatal("Failed to read Widevine ROT NVMEM after GSC reset: ", err4)
 	}
@@ -221,12 +173,13 @@ func WidevineRot(ctx context.Context, s *testing.State) {
 	ranges := [][]uint16{
 		{1, 1},       // ROT seed, first 1 byte
 		{0x13, 0x10}, // Span between ROT seed and HDCP seed
+		{0x20, 0x20}, // HDCP seed exactly
 		{0x27, 0x15}, // Span between HDCP seed and GSC counter seed
 		{0x11, 0x45}, // Cross all fields
 	}
 
 	for _, r := range ranges {
-		wvResp, err := readWidevineRot(s, tpm, r[1], r[0])
+		wvResp, err := tpm.ReadWidevineRot(r[1], r[0])
 		if err != nil {
 			s.Fatalf("Failed to read Widevine ROT NVMEM for the range of %v, %v", r, err)
 		}
