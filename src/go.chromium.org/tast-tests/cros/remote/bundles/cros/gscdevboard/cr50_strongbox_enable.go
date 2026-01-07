@@ -56,23 +56,7 @@ func Cr50StrongboxEnable(ctx context.Context, s *testing.State) {
 	checkStrongboxEnable(ctx, s, b, i, tpm, ti50.StrongboxDisabled, "Reject strongbox enable")
 
 	// Simulate S3 reset with SUState
-	shutdown := tpm2.Shutdown{
-		ShutdownType: tpm2.TPMSUState,
-	}
-	if _, err := shutdown.Execute(tpm); err != nil {
-		s.Fatal("Shutdown SUState failed: ", err)
-	}
-
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.WaitForTpm(ctx, tpm)
-
-	startup := tpm2.Startup{
-		StartupType: tpm2.TPMSUState,
-	}
-	if _, err := startup.Execute(tpm); err != nil {
-		s.Fatal("TPM startup SUState error: ", err)
-	}
+	b.SimulateApS3(ctx, s, tpm)
 
 	err = tpm.TpmvSetStrongboxState(true)
 	if err == nil {
@@ -81,7 +65,7 @@ func Cr50StrongboxEnable(ctx context.Context, s *testing.State) {
 	checkStrongboxEnable(ctx, s, b, i, tpm, ti50.StrongboxDisabled, "Reject enable after S3 resume")
 
 	// Send invalid SUClear command
-	startup = tpm2.Startup{
+	startup := tpm2.Startup{
 		StartupType: tpm2.TPMSUClear,
 	}
 	if _, err := startup.Execute(tpm); err == nil {
@@ -95,7 +79,7 @@ func Cr50StrongboxEnable(ctx context.Context, s *testing.State) {
 	checkStrongboxEnable(ctx, s, b, i, tpm, ti50.StrongboxDisabled, "Reject enable after invalid SUClear")
 
 	// Send valid SUClear sequence
-	shutdown = tpm2.Shutdown{
+	shutdown := tpm2.Shutdown{
 		ShutdownType: tpm2.TPMSUClear,
 	}
 	if _, err := shutdown.Execute(tpm); err != nil {
