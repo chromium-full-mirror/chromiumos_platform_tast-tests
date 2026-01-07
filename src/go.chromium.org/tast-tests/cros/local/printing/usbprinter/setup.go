@@ -284,7 +284,7 @@ func launchPrinter(ctx context.Context, op config) (cmd *testexec.Cmd, err error
 // virtual-usb-printer process.
 func Start(ctx context.Context, opts ...Option) (pr *Printer, err error) {
 	// Reset CUPS to make sure everything is working properly.
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
+	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
 		return nil, errors.Wrap(err, "failed to reset cupsd")
 	}
 

@@ -77,7 +77,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx, false /*usePrintscanmgr*/); err != nil {
+	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
