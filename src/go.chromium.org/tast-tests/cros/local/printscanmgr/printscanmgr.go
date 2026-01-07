@@ -85,6 +85,27 @@ func (p *Printscanmgr) CupsAddManuallyConfiguredPrinter(ctx context.Context, req
 	return response, nil
 }
 
+// CupsRemovePrinter calls the
+// printscanmgr.CupsRemovePrinter D-Bus method.
+func (p *Printscanmgr) CupsRemovePrinter(ctx context.Context, request *ppb.CupsRemovePrinterRequest) (*ppb.CupsRemovePrinterResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal CupsRemovePrinterRequest")
+	}
+
+	var buf []byte
+	if err := p.obj.CallWithContext(ctx, dbusInterface+".CupsRemovePrinter", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call CupsRemovePrinter")
+	}
+
+	response := &ppb.CupsRemovePrinterResponse{}
+	if err = proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal CupsRemovePrinterResponse")
+	}
+
+	return response, nil
+}
+
 // PrintscanDebugSetCategories calls the
 // printscanmgr.PrintscanDebugSetCategories D-Bus method.
 func (p *Printscanmgr) PrintscanDebugSetCategories(ctx context.Context, request *ppb.PrintscanDebugSetCategoriesRequest) (*ppb.PrintscanDebugSetCategoriesResponse, error) {

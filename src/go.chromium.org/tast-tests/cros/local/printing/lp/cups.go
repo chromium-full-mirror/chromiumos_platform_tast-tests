@@ -12,8 +12,10 @@ import (
 	"regexp"
 	"strings"
 
+	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/debugd"
+	"go.chromium.org/tast-tests/cros/local/printscanmgr"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -60,14 +62,19 @@ func CupsAddPrinter(ctx context.Context, printerName, uri, ppd string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to read PPD file")
 	}
-	d, err := debugd.New(ctx)
+	p, err := printscanmgr.New(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to debugd")
+		return errors.Wrap(err, "failed to connect to printscanmgr")
 	}
-	testing.ContextLog(ctx, "Adding driverless printer to CUPS using ", uri)
-	if result, err := d.CupsAddManuallyConfiguredPrinter(ctx, printerName, uri, ppdContents); err != nil {
-		return errors.Wrap(err, "debugd.CupsAddManuallyConfiguredPrinter failed")
-	} else if result != debugd.CUPSSuccess {
+	testing.ContextLog(ctx, "Adding printer to CUPS using ", uri)
+	if result, err := p.CupsAddManuallyConfiguredPrinter(
+		ctx,
+		&ppb.CupsAddManuallyConfiguredPrinterRequest{
+			Name:        printerName,
+			Uri:         uri,
+			PpdContents: ppdContents}); err != nil {
+		return errors.Wrap(err, "printscanmgr.CupsAddManuallyConfiguredPrinter failed")
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_SUCCESS {
 		return errors.Errorf("could not set up a printer: %v", result)
 	}
 	return nil
@@ -75,11 +82,15 @@ func CupsAddPrinter(ctx context.Context, printerName, uri, ppd string) error {
 
 // CupsRemovePrinter removes the printer that was configured for testing.
 func CupsRemovePrinter(ctx context.Context, printerName string) error {
-	d, err := debugd.New(ctx)
+	p, err := printscanmgr.New(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to debugd")
+		return errors.Wrap(err, "failed to connect to printscanmgr")
 	}
-	return d.CupsRemovePrinter(ctx, printerName)
+	_, err = p.CupsRemovePrinter(
+		ctx,
+		&ppb.CupsRemovePrinterRequest{
+			Name: printerName})
+	return err
 }
 
 // CupsStartPrintJob starts a new print job for the file toPrint. This function
