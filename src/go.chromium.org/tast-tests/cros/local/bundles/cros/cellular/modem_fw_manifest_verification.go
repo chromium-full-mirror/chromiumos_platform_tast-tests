@@ -8,8 +8,10 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -60,6 +62,24 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to get board: %s", err)
 	}
 
+	// Create a map of all the files in the firmware files. This map will be
+	// used to check if any files are unused during the entire script run. The
+	// value is set to true when the file is found to be used.
+	pathsToFindUnusedFiles := make(map[string]bool)
+	setFwPathAsUsed := func(file string) {
+		for key := range pathsToFindUnusedFiles {
+			// Mark full path matches, or directory names that match.
+			if strings.HasPrefix(key, file+"/") || key == file {
+				pathsToFindUnusedFiles[key] = true
+			}
+		}
+	}
+
+	fileExistsAndSetFwPathAsUsed := func(file string) bool {
+		setFwPathAsUsed(file)
+		return fileExists(file)
+	}
+
 	missingFiles := make(map[string]bool)
 	var mainFirmwares map[string]bool
 	dlcCounter := 0
@@ -106,7 +126,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		for _, firmwarePath := range modemFirmwarePaths {
 			modemFirmwarePath := firmwarePath
 			tmpDecodePath := filepath.Join("/tmp", firmwarePath)
-			if fileExists(filepath.Join(modemFirmwarePath, "patch_manifest.textproto")) {
+			if fileExistsAndSetFwPathAsUsed(filepath.Join(modemFirmwarePath, "patch_manifest.textproto")) {
 				defer os.RemoveAll(tmpDecodePath)
 				if !fileExists(tmpDecodePath) {
 					os.MkdirAll(tmpDecodePath, 0755)
@@ -120,6 +140,14 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 				// The remainder of this test should use the reconstructed directory
 				modemFirmwarePath = tmpDecodePath
 			}
+			// Add paths to pathsToFindUnusedFiles if they don't already exist.
+			for _, path := range getAllFilesInDir(s, modemFirmwarePath) {
+				if _, ok := pathsToFindUnusedFiles[path]; !ok {
+					pathsToFindUnusedFiles[path] = false // Default is unused
+				}
+			}
+			setFwPathAsUsed(cellular.GetModemFirmwareManifestPath())
+
 			s.Logf("Firmware path location for variant %q: %q", device.Variant, modemFirmwarePath)
 			// Verify that we don't have repeated main FWs.
 			mainFirmwares = make(map[string]bool)
@@ -132,19 +160,19 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			// Verify that all files exist.
 			for _, mainFW := range device.MainFirmware {
 				fullPath := filepath.Join(modemFirmwarePath, mainFW.Filename)
-				if !fileExists(fullPath) {
+				if !fileExistsAndSetFwPathAsUsed(fullPath) {
 					missingFiles[fullPath] = true
 				}
 				for _, associatedFW := range mainFW.AssocFirmware {
 					fullPath := filepath.Join(modemFirmwarePath, associatedFW.Filename)
-					if !fileExists(fullPath) {
+					if !fileExistsAndSetFwPathAsUsed(fullPath) {
 						missingFiles[fullPath] = true
 					}
 				}
 			}
 			for _, oemFW := range device.OemFirmware {
 				fullPath := filepath.Join(modemFirmwarePath, oemFW.Filename)
-				if !fileExists(fullPath) {
+				if !fileExistsAndSetFwPathAsUsed(fullPath) {
 					missingFiles[fullPath] = true
 				}
 				// Verify if main FWs used by OEM FW exist.
@@ -156,7 +184,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			}
 			for _, carrierFW := range device.CarrierFirmware {
 				fullPath := filepath.Join(modemFirmwarePath, carrierFW.Filename)
-				if !fileExists(fullPath) {
+				if !fileExistsAndSetFwPathAsUsed(fullPath) {
 					missingFiles[fullPath] = true
 				}
 				// Verify if main FWs used by carrier FW exist.
@@ -173,7 +201,8 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			}
 			// Verify recovery on FM101
 			if modemType == cellularconst.ModemTypeFM101 {
-				recoveryFileList, err := getFM101RecoveryFileList(modemFirmwarePath, device.Variant)
+				recoveryFileList, recoveryDirPath, err := getFM101RecoveryFileList(modemFirmwarePath, device.Variant)
+				setFwPathAsUsed(recoveryDirPath)
 				if err != nil {
 					s.Fatal("Failed to get recovery file list: ", err)
 				}
@@ -186,7 +215,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			// Verify optional recovery_directory entry for this device is valid
 			if device.GetRecoveryDirectory() != nil {
 				recoveryPath := filepath.Join(modemFirmwarePath, device.GetRecoveryDirectory().GetFilename())
-				if !fileExists(recoveryPath) {
+				if !fileExistsAndSetFwPathAsUsed(recoveryPath) {
 					missingFiles[recoveryPath] = true
 				}
 			}
@@ -212,6 +241,15 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		}
 		s.Fatalf("The following firmware files are specified in the manifest, but don't exist: %q", keys)
 	}
+	var unusedFiles []string
+	for k, v := range pathsToFindUnusedFiles {
+		if v == false {
+			unusedFiles = append(unusedFiles, k)
+		}
+	}
+	if len(unusedFiles) > 0 {
+		s.Fatalf("The following firmware files are not used in any devices: %q", unusedFiles)
+	}
 
 	if dlcCounter > 0 && dlcCounter != len(manifest.Device) {
 		s.Fatal("There is an unequal number of variants and DLCs")
@@ -223,7 +261,24 @@ func fileExists(file string) bool {
 	return !os.IsNotExist(err)
 }
 
-func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, error) {
+func getAllFilesInDir(s *testing.State, dirPath string) []string {
+	var files []string
+	err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		s.Fatal("Failed to walk the dir: ", err)
+	}
+	return files
+}
+
+func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, string, error) {
 	type recoveryData struct {
 		XMLName xml.Name `xml:"data"`
 		Text    string   `xml:"chardata"`
@@ -253,18 +308,18 @@ func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, error) {
 	if !fileExists(recoveryDirPath) {
 		recoveryDirPath = filepath.Join(firmwarePath, "fm101", "download_agent")
 		if !fileExists(recoveryDirPath) {
-			return nil, errors.New("missing download_agent")
+			return nil, "", errors.New("missing download_agent")
 		}
 	}
 
 	recoveryPath := filepath.Join(recoveryDirPath, "rawprogram_nand_p2K_b128K.xml")
 	b, err := os.ReadFile(recoveryPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read recovery xml")
+		return nil, "", errors.Wrap(err, "failed to read recovery xml")
 	}
 	var data recoveryData
 	if err := xml.Unmarshal(b, &data); err != nil {
-		return nil, errors.Wrap(err, "failed to parse gtest XML report")
+		return nil, "", errors.Wrap(err, "failed to unmarshal recovery xml")
 	}
 	var ret []string
 	for i := 0; i < len(data.Program); i++ {
@@ -278,7 +333,7 @@ func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, error) {
 		fullPath := filepath.Join(recoveryDirPath, file)
 		ret = append(ret, fullPath)
 	}
-	return ret, nil
+	return ret, recoveryDirPath, nil
 }
 
 type dlcSpecs struct {
