@@ -28,15 +28,17 @@ type Prompt struct {
 }
 
 var (
-	showNotificationsPromptFinder  = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
-	avPermPromptFinder             = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
-	avMeetPermPromptReg            = regexp.MustCompile("(see|hear) you in the meeting")
-	captionDialogFinder            = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
-	avMeetPermPromptFinder         = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
-	leaveSitePromptFinder          = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
-	cameraPermPromptFinder         = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
-	othersSeeYouDialogFinder       = nodewith.Name("Others may see your video differently").Role(role.Dialog)
-	localNetworkAccessPromptFinder = nodewith.NameContaining("Look for and connect to any device on your local network").Role(role.AlertDialog).First()
+	showNotificationsPromptFinder    = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
+	avPermPromptFinder               = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
+	avMeetPermPromptReg              = regexp.MustCompile("(see|hear) you in the meeting")
+	captionDialogFinder              = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
+	avMeetPermPromptFinder           = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
+	leaveSitePromptFinder            = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
+	cameraPermPromptFinder           = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
+	othersSeeYouDialogFinder         = nodewith.Name("Others may see your video differently").Role(role.Dialog)
+	localNetworkAccessPromptFinder   = nodewith.NameContaining("Look for and connect to any device on your local network").Role(role.AlertDialog).First()
+	newMeetPromptFinder              = nodewith.Name("New Meet calling on web").Role(role.Dialog)
+	receiveNotificationsPromptFinder = nodewith.Name("Receive desktop notifications from Meet").Role(role.Dialog)
 )
 
 // General dismiss button finders for prompts.
@@ -52,6 +54,7 @@ var (
 	GotItButtonFinder   = nodewith.Name("Got it").Role(role.Button)
 	LeaveButtonFinder   = nodewith.Name("Leave").Role(role.Button)
 	BlockButtonFinder   = nodewith.Name("Block").Role(role.Button)
+	NotNowButtonFinder  = nodewith.Name("Not now").Role(role.Button)
 )
 
 // ShowNotificationsPrompt represents the browser prompt to request permission for allowing notification.
@@ -110,6 +113,21 @@ var BlockLocalNetworkPrompt = Prompt{
 	Name:              "Block local network connection",
 	PromptFinder:      localNetworkAccessPromptFinder,
 	ClearButtonFinder: BlockButtonFinder.Ancestor(localNetworkAccessPromptFinder),
+}
+
+// NewMeetPrompt represents the browser prompt to notify new meet calling on web.
+var NewMeetPrompt = Prompt{
+	Name:              "New meet calling on web",
+	PromptFinder:      newMeetPromptFinder,
+	ClearButtonFinder: GotItButtonFinder.Ancestor(newMeetPromptFinder),
+}
+
+// ReceiveNotificationsPrompt represents the browser prompt to notify receiving
+// desktop notifications from Meet.
+var ReceiveNotificationsPrompt = Prompt{
+	Name:              "Receive desktop notifications from Meet",
+	PromptFinder:      receiveNotificationsPromptFinder,
+	ClearButtonFinder: NotNowButtonFinder.Ancestor(receiveNotificationsPromptFinder),
 }
 
 // ClearPotentialPrompts clears one or more potential prompts disorderly.

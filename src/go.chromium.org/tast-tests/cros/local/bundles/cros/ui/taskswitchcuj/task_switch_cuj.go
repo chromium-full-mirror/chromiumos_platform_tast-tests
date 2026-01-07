@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -22,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
@@ -327,28 +329,47 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 					}
 				}
 
-				// Try to scroll down and up by pressing the down and up
-				// arrow key. This gives us some input latency metrics
-				// while delaying between each task switch. This also
-				// helps increase memory pressure, because it forces Chrome
-				// to load more of the page.
-				for _, key := range []string{"Down", "Up"} {
-					if err := inputsimulations.RepeatKeyPress(ctx, kw, key, 100*time.Millisecond, 3); err != nil {
-						return errors.Wrapf(err, "failed to repeatedly press %q in between task switches", key)
+				ui := uiauto.New(tconn)
+				if strings.Contains(activeWindow.Title, "status:open status:closed - Chromium") {
+					searchIssuesCombox := nodewith.Name("Search issues").Role(role.TextFieldWithComboBox)
+					if err := typeTextForKeypressMetric(ui, kw, searchIssuesCombox, "test")(ctx); err != nil {
+						return errors.Wrap(err, "failed to type text in Chromium issue")
 					}
+				} else if strings.Contains(activeWindow.Title, "Google Meet") {
+					meetTextField := nodewith.Name("Enter a code or link").Role(role.TextField)
+					if err := typeTextForKeypressMetric(ui, kw, meetTextField, "test1")(ctx); err != nil {
+						return errors.Wrap(err, "failed to type text in Google Meet")
+					}
+				} else {
+					if strings.Contains(activeWindow.Title, "WebGL Aquarium") {
+						advancedText := nodewith.Name("Advanced").Role(role.StaticText)
+						speedSlider := nodewith.HasClass("ui-slider-handle").Role(role.Link).First()
+						if err := uiauto.Combine("focus on speed slider",
+							uiauto.IfSuccessThen(ui.Gone(speedSlider),
+								ui.DoDefaultUntil(advancedText,
+									ui.WithTimeout(5*time.Second).WaitUntilExists(speedSlider))),
+							ui.DoDefaultUntil(speedSlider,
+								ui.WithTimeout(5*time.Second).WaitUntilExists(speedSlider.Focused())),
+						)(ctx); err != nil {
+							return errors.Wrap(err, "failed to focus on speed slider")
+						}
+					}
+					if err := scrollDownAndUpForKeypressMetric(ctx, kw, 3); err != nil {
+						return errors.Wrapf(err, "failed to scroll down and up on %s window", activeWindow.Title)
+					}
+				}
 
-					if isTablet {
-						// Since tablets are unable to scroll with the mouse,
-						// scroll again with the keyboard. Avoid swiping on
-						// the screen, to limit unintentionally tapping on
-						// links within each window.
-						if err := inputsimulations.RepeatKeyPress(ctx, kw, key, 50*time.Millisecond, 20); err != nil {
-							return errors.Wrapf(err, "failed to repeatedly and rapidly press %q in between task switches", key)
-						}
-					} else {
-						if err := inputsimulations.RepeatMouseScroll(ctx, mw, key == "Down", 50*time.Millisecond, 20); err != nil {
-							return errors.Wrapf(err, "failed to repeatedly mouse scroll %s", key)
-						}
+				if isTablet {
+					// Since tablets are unable to scroll with the mouse,
+					// scroll again with the keyboard. Avoid swiping on
+					// the screen, to limit unintentionally tapping on
+					// links within each window.
+					if err := scrollDownAndUpForKeypressMetric(ctx, kw, 20); err != nil {
+						return errors.Wrapf(err, "failed to scroll down and up on %s window", activeWindow.Title)
+					}
+				} else {
+					if err := scrollDownAndUpForMouseMetric(ctx, mw, 20); err != nil {
+						return errors.Wrapf(err, "failed to scroll down and up on %s window", activeWindow.Title)
 					}
 				}
 
@@ -445,4 +466,52 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 		return errors.Wrap(err, "failed to store values")
 	}
 	return nil
+}
+
+// scrollDownAndUpForKeypressMetric tries to scroll down and up by pressing
+// the down and up arrow key. This provides input latency metrics while
+// delaying between each task switch, and also helps increase memory pressure
+// by forcing Chrome to load more of the page.
+func scrollDownAndUpForKeypressMetric(ctx context.Context, kw *input.KeyboardEventWriter, totalCount int) error {
+	for count := 0; count < totalCount; count++ {
+		for _, key := range []string{"Down", "Up"} {
+			if err := kw.AccelAction(key)(ctx); err != nil {
+				return errors.Wrapf(err, "failed to press %q", key)
+			}
+		}
+	}
+	return nil
+}
+
+// scrollDownAndUpForMouseMetric tries to scroll down and up by using the mouse
+// scroll wheel.
+func scrollDownAndUpForMouseMetric(ctx context.Context, mw *input.MouseEventWriter, totalCount int) error {
+	for count := 0; count < totalCount; count++ {
+		for _, scroll := range [](func() error){
+			mw.ScrollDown,
+			mw.ScrollUp,
+		} {
+			if err := scroll(); err != nil {
+				return errors.Wrap(err, "failed to scroll")
+			}
+			// GoBigSleepLint: Sleep during scrolling operation.
+			if err := testing.Sleep(ctx, 50*time.Millisecond); err != nil {
+				return errors.Wrap(err, "failed to sleep")
+			}
+		}
+	}
+	return nil
+}
+
+// typeTextForKeypressMetric types text into the target text field to ensure
+// that the keypress event metric is collected.
+func typeTextForKeypressMetric(ui *uiauto.Context, kw *input.KeyboardEventWriter,
+	target *nodewith.Finder, text string) action.Action {
+	return uiauto.Combine("type text into text field",
+		ui.DoDefaultUntil(
+			target,
+			ui.WithTimeout(5*time.Second).WaitUntilExists(target.Focused())),
+		kw.AccelAction("Ctrl+A"),
+		kw.TypeAction(text),
+	)
 }

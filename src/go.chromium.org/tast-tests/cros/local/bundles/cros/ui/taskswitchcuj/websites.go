@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -23,7 +24,7 @@ import (
 // 1. Chromium issue tracker -- considerable amount of elements.
 // 2. About Version -- lightweight website.
 var simpleWebsites = []string{
-	"https://bugs.chromium.org/p/chromium/issues/list",
+	"https://issues.chromium.org/issues?q=status:open%20status:closed",
 	"https://chromium.org/Home",
 }
 
@@ -118,6 +119,14 @@ func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (fu
 		duration := time.Since(startTime)
 		testing.ContextLogf(ctx, "Install of %s PWA completed in %v", nameInSettingsApp, duration)
 	}
+
+	if err := prompts.ClearPotentialPrompts(tconn, 5*time.Second,
+		prompts.NewMeetPrompt,
+		prompts.ReceiveNotificationsPrompt,
+	)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to dismiss Google Meet prompts")
+	}
+
 	return func(ctx context.Context) error {
 		return ossettings.UninstallApp(ctx, tconn, cr, nameInSettingsApp, appID)
 	}, nil
