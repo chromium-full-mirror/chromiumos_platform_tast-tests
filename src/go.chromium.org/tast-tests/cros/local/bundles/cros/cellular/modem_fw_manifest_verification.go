@@ -200,11 +200,17 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
 			// Verify recovery on FM101
-			if modemType == cellularconst.ModemTypeFM101 {
-				recoveryFileList, recoveryDirPath, err := getFM101RecoveryFileList(modemFirmwarePath, device.Variant)
+			if modemType == cellularconst.ModemTypeFM101 || modemType == cellularconst.ModemTypeRW101 {
+				var modemName string
+				if modemType == cellularconst.ModemTypeFM101 {
+					modemName = "fm101"
+				} else {
+					modemName = "rw101"
+				}
+				recoveryFileList, recoveryDirPath, err := getXX101RecoveryFileList(modemFirmwarePath, device.Variant, modemName)
 				setFwPathAsUsed(recoveryDirPath)
 				if err != nil {
-					s.Fatal("Failed to get recovery file list: ", err)
+					s.Fatalf("Failed to get recovery file list for variant %q: %s", device.Variant, err)
 				}
 				for _, fullPath := range recoveryFileList {
 					if !fileExists(fullPath) {
@@ -278,7 +284,7 @@ func getAllFilesInDir(s *testing.State, dirPath string) []string {
 	return files
 }
 
-func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, string, error) {
+func getXX101RecoveryFileList(firmwarePath, variant, modemType string) ([]string, string, error) {
 	type recoveryData struct {
 		XMLName xml.Name `xml:"data"`
 		Text    string   `xml:"chardata"`
@@ -304,9 +310,9 @@ func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, string, e
 		} `xml:"program"`
 	}
 
-	recoveryDirPath := filepath.Join(firmwarePath, "fm101", "download_agent"+"_"+variant)
+	recoveryDirPath := filepath.Join(firmwarePath, modemType, "download_agent"+"_"+variant)
 	if !fileExists(recoveryDirPath) {
-		recoveryDirPath = filepath.Join(firmwarePath, "fm101", "download_agent")
+		recoveryDirPath = filepath.Join(firmwarePath, modemType, "download_agent")
 		if !fileExists(recoveryDirPath) {
 			return nil, "", errors.New("missing download_agent")
 		}
@@ -324,7 +330,7 @@ func getFM101RecoveryFileList(firmwarePath, variant string) ([]string, string, e
 	var ret []string
 	for i := 0; i < len(data.Program); i++ {
 		if data.Program[i].Filename != "" {
-			fullPath := filepath.Join(firmwarePath, "fm101", data.Program[i].Filename)
+			fullPath := filepath.Join(firmwarePath, modemType, data.Program[i].Filename)
 			ret = append(ret, fullPath)
 		}
 	}
