@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -48,6 +49,28 @@ type CPUUsageSource struct {
 	// reportCPUUsage indicates whether this data source should include per-cpu
 	// usage metrics.
 	reportCPUUsage bool
+	// allCPUs is the list of all cpus on the system.
+	allCPUs []string
+}
+
+const cpusDir = "/sys/devices/system/cpu"
+
+func getCPUList() ([]string, error) {
+	files, err := os.ReadDir(cpusDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %s", cpusDir)
+	}
+	cpuRegExp := regexp.MustCompile(`^cpu[0-9]+$`)
+	var cpuList []string
+	for _, file := range files {
+		if file.IsDir() && cpuRegExp.MatchString(file.Name()) {
+			cpuList = append(cpuList, file.Name())
+		}
+	}
+	if len(cpuList) == 0 {
+		return nil, errors.New("no CPU found")
+	}
+	return cpuList, nil
 }
 
 func cpuUtilization(prev, time cpu.TimesStat) float64 {
@@ -76,7 +99,7 @@ func cpuUtilization(prev, time cpu.TimesStat) float64 {
 // `max`, `min` or `cur`.
 func cpuFreq(cpuName, freqType string) (float64, error) {
 	data, err := os.ReadFile(filepath.Join(
-		"/sys/devices/system/cpu", cpuName, "cpufreq", fmt.Sprintf("cpuinfo_%s_freq", freqType)))
+		cpusDir, cpuName, "cpufreq", fmt.Sprintf("cpuinfo_%s_freq", freqType)))
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +116,7 @@ func cpuFreq(cpuName, freqType string) (float64, error) {
 // `max`, `min` or `cur`.
 func CPUScalingFreq(cpuName, freqType string) (float64, error) {
 	data, err := os.ReadFile(filepath.Join(
-		"/sys/devices/system/cpu", cpuName, "cpufreq", fmt.Sprintf("scaling_%s_freq", freqType)))
+		cpusDir, cpuName, "cpufreq", fmt.Sprintf("scaling_%s_freq", freqType)))
 	if err != nil {
 		return 0, err
 	}
@@ -108,7 +131,7 @@ func CPUScalingFreq(cpuName, freqType string) (float64, error) {
 
 func cpuCapacity(cpuName string) (float64, error) {
 	data, err := os.ReadFile(filepath.Join(
-		"/sys/devices/system/cpu", cpuName, "cpu_capacity"))
+		cpusDir, cpuName, "cpu_capacity"))
 	if err != nil {
 		return 0, err
 	}
@@ -135,7 +158,7 @@ func cpuTimeInState(cpuName string) (map[int64]float64, error) {
 	// 3000000 67
 	// 2800000 172488
 	file, err := os.Open(filepath.Join(
-		"/sys/devices/system/cpu", cpuName, "cpufreq/stats/time_in_state"))
+		cpusDir, cpuName, "cpufreq/stats/time_in_state"))
 	if err != nil {
 		return timeInState, err
 	}
@@ -204,12 +227,15 @@ func (s *CPUUsageSource) Start(ctx context.Context) error {
 	}
 	for _, time := range times {
 		s.prevStats[time.CPU] = time
-		if capacity, err := cpuCapacity(time.CPU); err == nil {
-			s.cpuCapacities[time.CPU] = capacity
-			s.totalCPUCapacity += capacity
-		}
-		if state, err := cpuTimeInState(time.CPU); err == nil {
-			s.prevTimeInState[time.CPU] = state
+	}
+
+	s.allCPUs, err = getCPUList()
+	if err != nil {
+		return err
+	}
+	for _, cpuName := range s.allCPUs {
+		if state, err := cpuTimeInState(cpuName); err == nil {
+			s.prevTimeInState[cpuName] = state
 		}
 	}
 
@@ -223,25 +249,60 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		return err
 	}
 
-	busyPercentages := map[string]float64{}
+	stats := map[string]cpu.TimesStat{}
+	s.totalCPUCapacity = 0
 	for _, time := range times {
-		busyPercentages[time.CPU] = cpuUtilization(s.prevStats[time.CPU], time) / 100
+		stats[time.CPU] = time
+
+		// Calculate capacity again in case there are CPU brought online/offline during the test.
+		if capacity, err := cpuCapacity(time.CPU); err == nil {
+			s.cpuCapacities[time.CPU] = capacity
+			s.totalCPUCapacity += capacity
+		}
 	}
 	armCPUUsage := 0.0
 
+	busyPercentages := map[string]float64{}
 	var totalPercent float64
-	for _, time := range times {
-		var percent float64
-		var prevTime cpu.TimesStat
-		if pt, ok := s.prevStats[time.CPU]; ok {
-			prevTime = pt
+	for _, cpuName := range s.allCPUs {
+		percent := 0.0
+		freq := 0.0
+		maxFreq := 0.0
+		maxScalingFreq := 0.0
+		if time, ok := stats[cpuName]; ok {
+			var prevTime cpu.TimesStat
+			if pt, ok := s.prevStats[cpuName]; ok {
+				prevTime = pt
+			} else {
+				prevTime = cpu.TimesStat{}
+			}
+			percent = cpuUtilization(prevTime, time)
+			busyPercentages[cpuName] = percent / 100
+			s.prevStats[cpuName] = time
+
+			if freq, err = cpuFreq(cpuName, "cur"); err != nil {
+				// `cpuinfo_cur_freq` is expected to be the frequency the hardware actually
+				// runs at. If that frequency cannot be determined, this attribute should
+				// not be present. In this case we use scaling_cur_freq instead.
+				if freq, err = CPUScalingFreq(cpuName, "cur"); err != nil {
+					return err
+				}
+			}
+			maxFreq, err = cpuFreq(cpuName, "max")
+			if err != nil {
+				return errors.Wrap(err, "failed to get max freq")
+			}
+			maxScalingFreq, err = CPUScalingFreq(cpuName, "max")
+			if err != nil {
+				return errors.Wrap(err, "failed to get max scaling frequency")
+			}
 		} else {
-			prevTime = cpu.TimesStat{}
+			s.prevStats[cpuName] = cpu.TimesStat{}
 		}
-		percent = cpuUtilization(prevTime, time)
+
 		if s.reportCPUUsage {
 			values.Append(perf.Metric{
-				Name:      s.name + "." + time.CPU,
+				Name:      s.name + "." + cpuName,
 				Variant:   "usage",
 				Multiple:  true,
 				Unit:      power.CPUUsageMetricTypeUnit,
@@ -250,43 +311,25 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			}, percent)
 		}
 		totalPercent += percent
-		s.prevStats[time.CPU] = time
-		freq, err := cpuFreq(time.CPU, "cur")
-		if err != nil {
-			// `cpuinfo_cur_freq` is expected to be the frequency the hardware actually
-			// runs at. If that frequency cannot be determined, this attribute should
-			// not be present. In this case we use scaling_cur_freq instead.
-			if freq, err = CPUScalingFreq(time.CPU, "cur"); err != nil {
-				return err
-			}
-		}
+
 		values.Append(perf.Metric{
-			Name:      s.name + "." + time.CPU + ".Frequency",
+			Name:      s.name + "." + cpuName + ".Frequency",
 			Multiple:  true,
 			Unit:      power.CPUFreqMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
 			Interval:  s.intervalName,
 		}, freq/1000)
 
-		maxFreq, err := cpuFreq(time.CPU, "max")
-		if err != nil {
-			return errors.Wrap(err, "failed to get max freq")
-		}
-
 		values.Append(perf.Metric{
-			Name:      s.name + "." + time.CPU + ".MaxFrequency",
+			Name:      s.name + "." + cpuName + ".MaxFrequency",
 			Multiple:  true,
 			Unit:      power.CPUFreqMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
 			Interval:  s.intervalName,
 		}, maxFreq/1000)
 
-		maxScalingFreq, err := CPUScalingFreq(time.CPU, "max")
-		if err != nil {
-			return errors.Wrap(err, "failed to get max scaling frequency")
-		}
 		values.Set(perf.Metric{
-			Name:      s.name + "." + time.CPU + ".MaxScalingFrequency",
+			Name:      s.name + "." + cpuName + ".MaxScalingFrequency",
 			Multiple:  true,
 			Unit:      power.CPUFreqMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
@@ -296,17 +339,23 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 		// For non-ARM devices, there might not be `cpu_capacity` files
 		// thus `totalCPUCapacity` would be 0 in that case.
 		if s.totalCPUCapacity != 0 {
-			curTimeInState, err := cpuTimeInState(time.CPU)
+			curTimeInState, err := cpuTimeInState(cpuName)
 			if err != nil {
 				return err
 			}
-			prevTimeInState := s.prevTimeInState[time.CPU]
+			prevTimeInState := s.prevTimeInState[cpuName]
+			s.prevTimeInState[cpuName] = curTimeInState
+
+			// Skip CPU usage calculation for offline CPUs, or if the CPU was offline
+			// in the previous snapshot.
+			if _, ok := stats[cpuName]; !ok || len(prevTimeInState) == 0 {
+				continue
+			}
 
 			diffTimeInState, err := diffTimeInState(curTimeInState, prevTimeInState)
 			if err != nil {
-				return errors.Wrapf(err, "time_in_state for %s has been changed", time.CPU)
+				return errors.Wrapf(err, "time_in_state for %s has been changed", cpuName)
 			}
-			s.prevTimeInState[time.CPU] = curTimeInState
 
 			totalTime := 0.0
 			for _, time := range diffTimeInState {
@@ -324,7 +373,7 @@ func (s *CPUUsageSource) Snapshot(ctx context.Context, values *perf.Values) erro
 			// from `time_in_state` is also in kHz.
 			freqPct := averageFreq / maxFreq
 
-			armCPUUsage += freqPct * busyPercentages[time.CPU] * s.cpuCapacities[time.CPU]
+			armCPUUsage += freqPct * busyPercentages[cpuName] * s.cpuCapacities[cpuName]
 		}
 	}
 
