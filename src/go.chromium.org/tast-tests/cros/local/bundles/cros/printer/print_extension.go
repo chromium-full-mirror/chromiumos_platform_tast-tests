@@ -166,9 +166,14 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Registering chrome.printing.onJobStatusChanged listener")
-	if err := tconn.Eval(ctx, "var events = []; chrome.printing.onJobStatusChanged.addListener((id,status)=>events.push({id: id, status: status}))", nil); err != nil {
+	if err := tconn.Eval(ctx, "var events = []; function printEventCallback(id,status) { events.push({id: id, status: status}); }; chrome.printing.onJobStatusChanged.addListener(printEventCallback)", nil); err != nil {
 		s.Fatal("Failed to register onJobStatusChanged observer: ", err)
 	}
+	defer func() {
+		if err := tconn.Eval(ctx, "chrome.printing.onJobStatusChanged.removeListener(printEventCallback)", nil); err != nil {
+			s.Fatal("chrome.printing.onJobStatusChanged.removeListener() failed: ", err)
+		}
+	}()
 
 	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", "printing.printing_api_extensions_whitelist", []string{chrome.TestExtensionID}); err != nil {
 		s.Fatal("Failed to set printing.printing_api_extensions_whitelist: ", err)
