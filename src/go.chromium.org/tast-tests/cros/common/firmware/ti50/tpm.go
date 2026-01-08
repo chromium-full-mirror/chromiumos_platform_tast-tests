@@ -97,6 +97,31 @@ const (
 	WideVineRotIndex tpm2.TPMHandle = 0x013fff05
 )
 
+func mapSubcommand(subcommand uint16) string {
+	subcommandMap := map[uint16]string{
+		0x13: "Reboot",
+		0x14: "InvalidateInactiveRw",
+		0x15: "CommitNvmem",
+		0x18: "TurnUpdateOn",
+		0x1a: "SetBoardID",
+		0x20: "FactoryModeDisable",
+		0x29: "SetSNBits",
+		0x34: "GetBootMode",
+		0x39: "GetApRoVerificationStatus",
+		0x44: "GetFactoryConfig",
+		0x45: "SetFactoryConfig",
+		0x50: "StrongboxState",
+		0x51: "DrmCounter",
+	}
+
+	val, ok := subcommandMap[subcommand]
+
+	if !ok {
+		val = fmt.Sprintf("0x%04x", subcommand)
+	}
+	return fmt.Sprintf("Subcommand %s", val)
+}
+
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
 type TpmHandle struct {
 	b   DevBoard
@@ -107,6 +132,10 @@ type TpmHandle struct {
 // NewTpmHandle create a new TpmHandle that can be used with tpm2 library
 func NewTpmHandle(ctx context.Context, b DevBoard, bus TpmBus) *TpmHandle {
 	return &TpmHandle{b: b, Ctx: ctx, Bus: bus}
+}
+
+func sizeMismatchStr(subcommand uint16, expected, real int) string {
+	return fmt.Sprintf("%s returned incorrect number of bytes, %d instead of %d", mapSubcommand(0x34), real, expected)
 }
 
 // OpenTitanToolTpmCommand runs one of the OpenTitanTool TPM subcommands (read-register or execute-command).
@@ -159,130 +188,59 @@ func (t *TpmHandle) NvUndefineSpace(p tpm2.TPMSNVPublic) error {
 
 // TpmvInvalidateInactiveRW invalidates the gsc image in the inactive RW.
 func (t *TpmHandle) TpmvInvalidateInactiveRW() error {
-	var tpmvInvalidateInactiveRW, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0014") // subcommand: InvalidateInactiveRW
+	_, err := t.tpmvWrapSendRecv(0x14, []byte{}, 0)
 
-	response, err := t.Send(tpmvInvalidateInactiveRW)
 	if err != nil {
 		return err
 	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("InvalidateInactiveRW command returned error: 0x%x", errorCode)
-	}
+
 	return nil
 }
 
 // TpmvGetBootMode reads boot mode via TPM GetBootMode vendor command.
 func (t *TpmHandle) TpmvGetBootMode() (byte, error) {
-	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0034") // subcommand: GetBootMode
+	r, err := t.tpmvWrapSendRecv(0x34, []byte{}, 1)
 
-	response, err := t.Send(tpmvGetBootMode)
 	if err != nil {
 		return 0, err
 	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return 0, err
-	}
-	if errorCode != 0 {
-		return 0, errors.Errorf("GetBootMode command returned error: 0x%x", errorCode)
-	}
-	mode := response[12]
-	return mode, nil
+	return r[0], nil
 }
 
 // TpmvGetApRoVerificationStatus reads AP RO Verification status via vendor
 // command.
 func (t *TpmHandle) TpmvGetApRoVerificationStatus() (APROResultCode, error) {
-	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0039") // subcommand: GetApRoVerificationStatus
-
-	response, err := t.Send(tpmvGetBootMode)
+	r, err := t.tpmvWrapSendRecv(0x39, []byte{}, 1)
 	if err != nil {
 		return ApRoV2Unknown, err
 	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return ApRoV2Unknown, err
-	}
-	if errorCode != 0 {
-		return ApRoV2Unknown, errors.Errorf("GetApRoVerificationStatus command returned error: %d", errorCode)
-	}
-	mode := response[12]
-	return APROResultCode(mode), nil
+	return APROResultCode(r[0]), nil
 }
 
 // TpmvCommitNvmem sends the CommitNvmem vendor command.
 func (t *TpmHandle) TpmvCommitNvmem() error {
-	tpmvCommitNvmem, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0015") // subcommand: CommitNvmem
-	if err != nil {
-		return err
-	}
-
-	response, err := t.Send(tpmvCommitNvmem)
-	if err != nil {
-		return err
-	}
-
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("CommitNvmem returned error: 0x%x", errorCode)
-	}
-	return nil
+	_, err := t.tpmvWrapSendRecv(0x15, []byte{}, 0)
+	return err
 }
 
 // TpmvReboot sends the reboot vendor command for the specified number of ms.
 func (t *TpmHandle) TpmvReboot(ms uint16) error {
-	msStr := fmt.Sprintf("%04x", ms)
-	tpmvReboot, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000e" + // size
-		"20000000" + // ordinal: vendor
-		"0013" + // subcommand: ImmediateReset
-		msStr)
-	if err != nil {
-		return err
-	}
+	_, err := t.tpmvWrapSendRecv(0x13, binary.BigEndian.AppendUint16([]byte{}, ms), 0)
 
-	response, err := t.Send(tpmvReboot)
-	if err != nil {
-		return err
-	}
-
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("Reboot command returned error: 0x%x", errorCode)
-	}
-	return nil
+	return err
 }
 
-// tpmvWrapSendRecv is a common code for vendor commands.
+// tpmvWrapSendRecvIgnoreErrorCode is a common code for vendor commands.
 //
 // Given the vendor subcommand code and the data to send, creates a proper TPM
 // packet, sends it to the TPM, validates the TPM response  and returns the
-// response payload to the caller. Both input data and response payload could be
-// empty.
-func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte) ([]byte, error) {
-	h := fmt.Sprintf("TPM vendor command 0x%04x", subcommand)
+// response payload to the caller. TPM error code is not examined and is
+// returned to the caller, as certain vendor command users want to have access
+// to the it.
+//
+// Both input data and response payload could be empty.
+func (t *TpmHandle) tpmvWrapSendRecvIgnoreErrorCode(subcommand uint16, body []byte, expRespSize int) ([]byte, uint32, error) {
+	h := mapSubcommand(subcommand)
 
 	// Build up vendor command. Header size is 12 bytes.
 	size := uint32(12 + len(body))
@@ -295,11 +253,11 @@ func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte) ([]byte, er
 
 	response, err := t.Send(message)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not send %s", h)
+		return nil, 1, errors.Wrapf(err, "could not send %s", h)
 	}
 
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not get response for %s", h)
+		return nil, 1, errors.Wrapf(err, "could not get response for %s", h)
 	}
 
 	type TpmvResponse struct {
@@ -312,7 +270,7 @@ func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte) ([]byte, er
 	var tpmvr TpmvResponse
 
 	if len(response) < binary.Size(tpmvr) {
-		return nil, errors.Errorf("%s returned %d bytes", h, len(response))
+		return nil, 1, errors.Errorf("TPMV response not large enough: %v", response)
 	}
 
 	tpmvr.tag = binary.BigEndian.Uint16(response[:2])
@@ -320,22 +278,40 @@ func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte) ([]byte, er
 	tpmvr.errorCode = binary.BigEndian.Uint32((response[6:10]))
 	tpmvr.subcommand = binary.BigEndian.Uint16(response[10:12])
 	if tpmvr.tag != 0x8001 {
-		return nil, errors.Errorf("%s return tag 0x%04x", h, tpmvr.tag)
+		return nil, 1, errors.Errorf("%s return tag 0x%04x", h, tpmvr.tag)
 	}
 
 	if tpmvr.size != uint32(len(response)) {
-		return nil, errors.Errorf("%s header size %d does not match actual size %d", h, tpmvr.size, len(response))
+		return nil, 1, errors.Errorf("%s header size %d does not match actual size %d", h, tpmvr.size, len(response))
 	}
 
 	if tpmvr.subcommand != subcommand {
-		return nil, errors.Errorf("%s header subcommand is 0x%x instead", h, tpmvr.subcommand)
+		return nil, 1, errors.Errorf("%s header subcommand is 0x%x instead", h, tpmvr.subcommand)
 	}
 
-	if tpmvr.errorCode != 0 {
-		return nil, errors.Errorf("%s error code is %d", h, tpmvr.errorCode)
+	respSize := len(response) - binary.Size(tpmvr)
+
+	if respSize != expRespSize {
+		return nil, 1, errors.Errorf("Subcommand %s returned incorrect number of bytes, %d instead of %d", mapSubcommand(subcommand), respSize, expRespSize)
+
+	}
+	return response[binary.Size(tpmvr):], tpmvr.errorCode, nil
+}
+
+// tpmvWrapSendRecv adds TPM error code check, the majority vendor command
+// handlers do not want to see responses with nonzero error code.
+func (t *TpmHandle) tpmvWrapSendRecv(subcommand uint16, body []byte, expRespSize int) ([]byte, error) {
+	result, errorCode, err := t.tpmvWrapSendRecvIgnoreErrorCode(subcommand, body, expRespSize)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return response[binary.Size(tpmvr):], nil
+	if errorCode != 0 {
+		return nil, errors.Errorf("%s error code is 0x%x", mapSubcommand(subcommand), errorCode)
+	}
+
+	return result, err
 }
 
 // TpmvDrmCounter sends either read or read and increment command to retrieve
@@ -348,19 +324,12 @@ func (t *TpmHandle) TpmvDrmCounter(challenge [32]byte, increment bool) ([]byte, 
 		commandBody = append(commandBody, byte(0))
 	}
 
-	result, err := t.tpmvWrapSendRecv(0x50, commandBody)
+	r, err := t.tpmvWrapSendRecv(0x51, commandBody, 72)
 	if err != nil {
-		return nil, err
+		return []byte{}, err
 	}
 
-	return result, nil
-}
-
-func getTPMVResponseStatus(buf []byte) (uint32, error) {
-	if len(buf) < 10 {
-		return 1, errors.Errorf("TPMV response not large enough: %v", buf)
-	}
-	return binary.BigEndian.Uint32(buf[6:10]), nil
+	return r, nil
 }
 
 // KernelAttr generates the public area for the kernel NV index.
@@ -423,69 +392,31 @@ func EmptyPassword() tpm2.TPM2BAuth {
 
 // TpmvSetBoardID sets the board id.
 func (t *TpmHandle) TpmvSetBoardID(boardIDType, boardIDFlags BIDField) error {
-	boardIDTypeStr := fmt.Sprintf("%08x", boardIDType)
-	boardIDFlagsStr := fmt.Sprintf("%08x", boardIDFlags)
+	commandBody := binary.BigEndian.AppendUint32([]byte{}, uint32(boardIDType))
+	commandBody = binary.BigEndian.AppendUint32(commandBody, uint32(boardIDFlags))
 
-	var tpmvSetBoardID, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"00000014" + // size
-		"20000000" + // ordinal: vendor
-		"001a" + // subcommand: SetBoardID
-		boardIDTypeStr +
-		boardIDFlagsStr)
+	// Set board ID returns both a byte of data and a result code, the
+	// returned data could be safely ignored.
+	_, err := t.tpmvWrapSendRecv(0x1a, commandBody, 1)
 
-	response, err := t.Send(tpmvSetBoardID)
-	if err != nil {
-		return err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("SetBoardID command returned error: 0x%x", errorCode)
-	}
-	return nil
+	return err
 }
 
 // TpmvGetFactoryConfig reads the factory config via vendor command.
 func (t *TpmHandle) TpmvGetFactoryConfig() (uint64, error) {
-	var tpmvSetFactoryConfig, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0044") // subcommand: SetFactoryConfig
+	r, err := t.tpmvWrapSendRecv(0x44, []byte{}, 8)
 
-	response, err := t.Send(tpmvSetFactoryConfig)
 	if err != nil {
 		return 0, err
 	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return 0, err
-	}
-	if errorCode != 0 {
-		return 0, errors.Errorf("GetFactoryConfig command returned error: 0x%x", errorCode)
-	}
 
-	if len(response) < 20 {
-		return 0, errors.Errorf("GetFactoryConfig response not large enough: %v", response)
-	}
-	return binary.BigEndian.Uint64(response[12:20]), nil
+	return binary.BigEndian.Uint64(r[:8]), nil
 }
 
 // TpmvSetFactoryConfig reads the factory config via vendor command.
 func (t *TpmHandle) TpmvSetFactoryConfig(config uint64) (uint32, error) {
-	configStr := fmt.Sprintf("%016x", config)
-	var tpmvSetFactoryConfig, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"00000014" + // size
-		"20000000" + // ordinal: vendor
-		"0045" + // subcommand: SetFactoryConfig
-		configStr)
+	_, errorCode, err := t.tpmvWrapSendRecvIgnoreErrorCode(0x45, binary.BigEndian.AppendUint64([]byte{}, config), 0)
 
-	response, err := t.Send(tpmvSetFactoryConfig)
-	if err != nil {
-		return 0, err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
 	if err != nil {
 		return 0, err
 	}
@@ -494,99 +425,36 @@ func (t *TpmHandle) TpmvSetFactoryConfig(config uint64) (uint32, error) {
 
 // TpmvTurnUpdateOn sends the vendor command to turn on the pending update.
 func (t *TpmHandle) TpmvTurnUpdateOn(delay uint16) error {
-	delayStr := fmt.Sprintf("%04x", delay)
-	var tpmvTurnUpdateOn, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000e" + // size
-		"20000000" + // ordinal: vendor
-		"0018" + // subcommand: TurnUpdateOn
-		delayStr)
+	_, err := t.tpmvWrapSendRecv(0x18, binary.BigEndian.AppendUint16([]byte{}, delay), 0)
 
-	response, err := t.Send(tpmvTurnUpdateOn)
-	if err != nil {
-		return err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("TurnUpdateOn command returned error: 0x%x", errorCode)
-	}
-	return nil
+	return err
 }
 
 // TpmvSetSNBits sets the GSC serial number.
 func (t *TpmHandle) TpmvSetSNBits(sn []byte) error {
-	sizeStr := fmt.Sprintf("%08x", 12+len(sn))
-	var setSNBitsHeader, err = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		sizeStr +
-		"20000000" + // ordinal vendor
-		"0029") // subcommand: set SN_BITS
-	if err != nil {
-		return err
-	}
-	tpmvSetSNBits := append(setSNBitsHeader, sn...)
-	response, err := t.Send(tpmvSetSNBits)
-	if err != nil {
-		return err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("SetSNBits command returned error: 0x%x", errorCode)
-	}
-	return nil
+	// Set SN bits returns both a byte of data and a result code, the
+	// returned data could be safely ignored.
+	_, err := t.tpmvWrapSendRecv(0x29, sn, 1)
+
+	return err
 }
 
 // TpmvFactoryModeDisable sends the vendor command to disable factory mode
 func (t *TpmHandle) TpmvFactoryModeDisable() error {
-	var tpmvFactoryDisable, err = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" +
-		"20000000" + // ordinal vendor
-		"0020") // subcommand: Factory Disable
-	if err != nil {
-		return err
-	}
-	response, err := t.Send(tpmvFactoryDisable)
-	if err != nil {
-		return err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("FactoryModeDisable command returned error: 0x%x", errorCode)
-	}
-	return nil
+	_, err := t.tpmvWrapSendRecv(0x20, []byte{}, 0)
+
+	return err
 }
 
 // TpmvSetStrongboxState sends the vendor command to enable or disable Strongbox.
 func (t *TpmHandle) TpmvSetStrongboxState(enable bool) error {
-	enableStr := "00"
+	enabler := []byte{0}
 	if enable {
-		enableStr = "01"
+		enabler = []byte{1}
 	}
-	var tpmvSetStrongboxState, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000d" + // size
-		"20000000" + // ordinal: vendor
-		"0050" + // subcommand: SetStrongboxState
-		enableStr)
+	_, err := t.tpmvWrapSendRecv(0x50, enabler, 0)
 
-	response, err := t.Send(tpmvSetStrongboxState)
-	if err != nil {
-		return err
-	}
-	errorCode, err := getTPMVResponseStatus(response)
-	if err != nil {
-		return err
-	}
-	if errorCode != 0 {
-		return errors.Errorf("SetStrongboxState command returned error: 0x%x", errorCode)
-	}
-	return nil
+	return err
 }
 
 const (
