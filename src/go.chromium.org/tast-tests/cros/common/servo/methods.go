@@ -1086,6 +1086,18 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	default:
 		// Do nothing
 	}
+
+	// TODO:(b/474614687) - servod power_state:cold_reset is flaky on ti50 if the WP has changed
+	if s.hasCCD && value == PowerStateReset {
+		testing.ContextLog(ctx, "Resetting EC via GSC console")
+		if err := s.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
+			return errors.Wrap(err, "ecrst pulse failed")
+		}
+		if err := s.WaitForCCDState(ctx, true, 30*time.Second); err != nil {
+			return errors.Wrap(err, "wait for ccd failed")
+		}
+		return nil
+	}
 	testing.ContextLogf(ctx, "Setting %q to %q", PowerState, value)
 	return s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
 }
