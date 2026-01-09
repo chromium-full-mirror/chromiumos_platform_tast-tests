@@ -57,6 +57,8 @@ func CheckHWID(ctx context.Context, s *testing.State) {
 			mcu = "stm32f412"
 		} else if strings.HasPrefix(mcu, "stm32h7") {
 			mcu = "stm32h7x3"
+		} else if strings.HasPrefix(mcu, "npcx9mfp") {
+			mcu = "NPCX99FP"
 		}
 	}
 
