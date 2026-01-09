@@ -117,7 +117,10 @@ func init() {
 				}},
 				helperTimeout: 15,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("deku", "kanix", "karis", "uldrenite", "uldrenite360", "uldrino")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(
+				// ec_component doesn't work properly in sandbox on the following models (see b/434803079).
+				"deku", "kaladin", "kanix", "karis", "pujjolo", "uldrenite", "uldrenite360", "uldrino",
+			)),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
