@@ -398,9 +398,16 @@ func appendBytesTag(tags []byte, tag uint32, bytes []byte) []byte {
 
 // StrongboxGenerateKey sends DeviceGenerateKey.
 func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte) (blob, cert []byte, err error) {
+	// Issuer is ASN1:
+	// SEQUENCE 0x30 <size = 0x1f>
+	// SET 0x31 <size = 0x1d>
+	// SEQUENCE 0x30 <size = 0x1b>
+	// OBJECT 0x06 <size = 0x03> 0x55 0x04 0x03 (:commonName)
+	// PRINTABLESTRING 0x13 <size = 0x14> "Android Keystore Key"
+	issuer, _ := hex.DecodeString("301f311d301b06035504031314416e64726f6964204b657973746f7265204b6579")
 	var tags []byte
-	attestKey2 := attestKey
-	if attestKey == nil {
+	haveAttestKey := attestKey != nil
+	if !haveAttestKey {
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagAlgorithm)
 		tags = binary.LittleEndian.AppendUint32(tags, kmAlgEc)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagKeySize)
@@ -416,7 +423,7 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
 		tags = appendBytesTag(tags, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
 		tags = appendBytesTag(tags, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
-		attestKey2 = make([]byte, 12)
+		attestKey = binary.LittleEndian.AppendUint32(attestKey, 0)
 	} else {
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagAlgorithm)
 		tags = binary.LittleEndian.AppendUint32(tags, kmAlgEc)
@@ -431,7 +438,7 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagAllowWhileOnBody)
 		tags = binary.LittleEndian.AppendUint32(tags, kmTagUserID)
 		tags = binary.LittleEndian.AppendUint32(tags, 0xf00)
-		tags = appendBytesTag(tags, kmTagCertificateSubject, []byte("gECC"))
+		tags = appendBytesTag(tags, kmTagCertificateSubject, issuer)
 		tags = appendBytesTag(tags, kmTagCertificateSerial, []byte("\x01\x23\x45\x67\x89\xab\xcd\xef01234567"))
 		tags = appendBytesTag(tags, kmTagApplicationID, []byte("\xaa\xaa\xaa\xaa"))
 		tags = appendBytesTag(tags, kmTagApplicationData, []byte("\xbb\xbb\xbb\xbb"))
@@ -448,7 +455,8 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 	var buf []byte
 	buf = binary.LittleEndian.AppendUint32(buf, uint32(len(tags)/4))
 	buf = append(buf, tags...)
-	buf = append(buf, attestKey2...)
+	buf = append(buf, attestKey...)
+	buf = appendAlignedBytes(buf, issuer)
 	sbErr, response, err := StrongboxCommand(ctx, tpm, DeviceGenerateKey, buf)
 	if err != nil {
 		return
@@ -509,7 +517,7 @@ func StrongboxGenerateKey(ctx context.Context, tpm *TpmHelper, attestKey []byte)
 		return
 	}
 
-	if attestKey != nil {
+	if haveAttestKey {
 		if hwLen != 21 {
 			err = errors.Errorf("Wrong HW len: %d", hwLen)
 			return
