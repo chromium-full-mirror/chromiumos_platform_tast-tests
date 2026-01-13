@@ -196,7 +196,12 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		duplex: { type: "NO_DUPLEX" },
 		page_orientation: { type: "PORTRAIT" },
 		copies: { copies: 2 },
-		margins: { top_microns: 1, right_microns: 1, bottom_microns: 1, left_microns: 1 },
+		margins: {
+			top_microns: 12700,
+			right_microns: 6350,
+			bottom_microns: 12700,
+			left_microns: 6350
+		},
 		dpi: { horizontal_dpi: 600, vertical_dpi: 600 },
 		media_size: { width_microns: 210000, height_microns: 297000, vendor_id: "iso_a4_210x297mm" },
 		collate: { collate: false }
