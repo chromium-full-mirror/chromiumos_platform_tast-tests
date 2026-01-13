@@ -199,15 +199,9 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
-			// Verify recovery on FM101
-			if modemType == cellularconst.ModemTypeFM101 || modemType == cellularconst.ModemTypeRW101 {
-				var modemName string
-				if modemType == cellularconst.ModemTypeFM101 {
-					modemName = "fm101"
-				} else {
-					modemName = "rw101"
-				}
-				recoveryFileList, recoveryDirPath, err := getXX101RecoveryFileList(modemFirmwarePath, device.Variant, modemName)
+			// Verify recovery on FM101, RW101, RW135
+			if modemType == cellularconst.ModemTypeFM101 || modemType == cellularconst.ModemTypeRW101 || modemType == cellularconst.ModemTypeRW135 {
+				recoveryFileList, recoveryDirPath, err := getRecoveryFileList(modemFirmwarePath, device.Variant, modemType)
 				setFwPathAsUsed(recoveryDirPath)
 				if err != nil {
 					s.Fatalf("Failed to get recovery file list for variant %q: %s", device.Variant, err)
@@ -284,7 +278,7 @@ func getAllFilesInDir(s *testing.State, dirPath string) []string {
 	return files
 }
 
-func getXX101RecoveryFileList(firmwarePath, variant, modemType string) ([]string, string, error) {
+func getRecoveryFileList(firmwarePath, variant string, modemType cellularconst.ModemType) ([]string, string, error) {
 	type recoveryData struct {
 		XMLName xml.Name `xml:"data"`
 		Text    string   `xml:"chardata"`
@@ -310,9 +304,20 @@ func getXX101RecoveryFileList(firmwarePath, variant, modemType string) ([]string
 		} `xml:"program"`
 	}
 
-	recoveryDirPath := filepath.Join(firmwarePath, modemType, "download_agent"+"_"+variant)
+	var modemName string
+	if modemType == cellularconst.ModemTypeFM101 {
+		modemName = "fm101"
+	} else if modemType == cellularconst.ModemTypeRW135 {
+		modemName = "rw135"
+	} else if modemType == cellularconst.ModemTypeRW101 {
+		modemName = "rw101"
+	} else {
+		return nil, "", errors.New("invalid modem type")
+	}
+
+	recoveryDirPath := filepath.Join(firmwarePath, modemName, "download_agent"+"_"+variant)
 	if !fileExists(recoveryDirPath) {
-		recoveryDirPath = filepath.Join(firmwarePath, modemType, "download_agent")
+		recoveryDirPath = filepath.Join(firmwarePath, modemName, "download_agent")
 		if !fileExists(recoveryDirPath) {
 			return nil, "", errors.New("missing download_agent")
 		}
@@ -330,11 +335,18 @@ func getXX101RecoveryFileList(firmwarePath, variant, modemType string) ([]string
 	var ret []string
 	for i := 0; i < len(data.Program); i++ {
 		if data.Program[i].Filename != "" {
-			fullPath := filepath.Join(firmwarePath, modemType, data.Program[i].Filename)
+			fullPath := filepath.Join(firmwarePath, modemName, data.Program[i].Filename)
 			ret = append(ret, fullPath)
 		}
 	}
-	fileList := []string{"prog_nand_firehose_9x55.mbn", "patch_p2K_b128K.xml"}
+	var fileList []string
+	if modemType == cellularconst.ModemTypeFM101 || modemType == cellularconst.ModemTypeRW101 {
+		fileList = []string{"prog_nand_firehose_9x55.mbn", "patch_p2K_b128K.xml"}
+	} else if modemType == cellularconst.ModemTypeRW135 {
+		fileList = []string{"patch_p2K_b128K.xml"}
+	} else {
+		return nil, "", errors.New("invalid modem type")
+	}
 	for _, file := range fileList {
 		fullPath := filepath.Join(recoveryDirPath, file)
 		ret = append(ret, fullPath)
