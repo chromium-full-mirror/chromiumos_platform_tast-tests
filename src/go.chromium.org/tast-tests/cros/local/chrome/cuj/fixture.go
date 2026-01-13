@@ -706,6 +706,9 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("--enable-field-trial-config"),
+				// TODO: (b/359374171) Remove this once the "ArcVmGki" feature
+				// is removed from fieldtrial_testing_config.json.
+				chrome.DisableFeatures("ArcVmGki"),
 			},
 			arcSupported: true,
 		},
