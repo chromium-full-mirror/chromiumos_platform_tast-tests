@@ -36,7 +36,7 @@ var (
 	leaveSitePromptFinder            = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 	cameraPermPromptFinder           = nodewith.NameStartingWith("storage.googleapis.com wants to").First()
 	othersSeeYouDialogFinder         = nodewith.Name("Others may see your video differently").Role(role.Dialog)
-	localNetworkAccessPromptFinder   = nodewith.NameContaining("Look for and connect to any device on your local network").Role(role.AlertDialog).First()
+	localNetworkAccessPromptFinder   = nodewith.NameContaining("Access other devices on your local network").Role(role.AlertDialog).First()
 	newMeetPromptFinder              = nodewith.Name("New Meet calling on web").Role(role.Dialog)
 	receiveNotificationsPromptFinder = nodewith.Name("Receive desktop notifications from Meet").Role(role.Dialog)
 )
