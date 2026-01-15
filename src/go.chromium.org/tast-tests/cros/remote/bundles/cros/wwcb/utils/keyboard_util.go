@@ -360,32 +360,48 @@ func CheckTopRowkeys(ctx context.Context, s *testing.State, device string) error
 
 // GetDeviceEventKbd retrieves keyboards info from dev folder.
 func GetDeviceEventKbd(ctx context.Context, dut *dut.DUT) ([]string, error) {
-	lsInfo, err := dut.Conn().CommandContext(ctx, "ls", "/dev/input/by-id").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get devices event kbd info")
-	}
 	var kbdList []string
-	for _, str := range strings.Split(strings.TrimSpace(string(lsInfo)), "\n") {
-		if strings.Contains(strings.ToLower(str), "usb-www.wch.cn_wch_uart_to_kb-ms") && strings.Contains(str, "kbd") && !strings.Contains(str, "if01") {
-			kbdList = append(kbdList, str)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsInfo, err := dut.Conn().CommandContext(ctx, "ls", "/dev/input/by-id").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "unable to get devices event kbd info")
 		}
+		for _, str := range strings.Split(strings.TrimSpace(string(lsInfo)), "\n") {
+			if strings.Contains(strings.ToLower(str), "usb-www.wch.cn_wch_uart_to_kb-ms") && strings.Contains(str, "kbd") && !strings.Contains(str, "if01") {
+				kbdList = append(kbdList, str)
+			}
+		}
+		if len(kbdList) == 0 {
+			return errors.New("keyboard not found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	return kbdList, err
+	return kbdList, nil
 }
 
 // GetDeviceEventMouse retrieves mice info from dev folder.
 func GetDeviceEventMouse(ctx context.Context, dut *dut.DUT) ([]string, error) {
-	lsInfo, err := dut.Conn().CommandContext(ctx, "ls", "/dev/input/by-id").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get devices event mouse info")
-	}
 	var mouseList []string
-	for _, str := range strings.Split(strings.TrimSpace(string(lsInfo)), "\n") {
-		if strings.Contains(str, "event-mouse") {
-			mouseList = append(mouseList, str)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsInfo, err := dut.Conn().CommandContext(ctx, "ls", "/dev/input/by-id").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "unable to get devices event mouse info")
 		}
+		for _, str := range strings.Split(strings.TrimSpace(string(lsInfo)), "\n") {
+			if strings.Contains(str, "event-mouse") {
+				mouseList = append(mouseList, str)
+			}
+		}
+		if len(mouseList) == 0 {
+			return errors.New("mouse not found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to find mouse")
 	}
-	return mouseList, err
+	return mouseList, nil
 }
 
 // LaunchCroshApp launch the crosh app.
