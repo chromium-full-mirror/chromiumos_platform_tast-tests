@@ -197,6 +197,11 @@ func (r *Router) RouterName() string {
 	return r.name
 }
 
+// RouterIwr returns the iw runner of the router.
+func (r *Router) RouterIwr() *iw.Runner {
+	return r.iwr
+}
+
 // StartReboot initiates a reboot of the router host.
 //
 // This method is not supported for Legacy routers.

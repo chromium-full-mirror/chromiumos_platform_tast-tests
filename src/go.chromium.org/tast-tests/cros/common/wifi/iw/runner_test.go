@@ -39,10 +39,10 @@ func (r *stubCmdRunner) Output(ctx context.Context, cmd string, args ...string) 
 }
 
 // CreateCmd is a mock function which does nothing.
-func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) { }
+func (r *stubCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...string) {}
 
 // SetStdOut is a mock function which does nothing.
-func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) { }
+func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) {}
 
 // StdinPipe is a stub function which always returns nil.
 func (r *stubCmdRunner) StdinPipe() (io.WriteCloser, error) {
@@ -80,7 +80,7 @@ func (r *stubCmdRunner) ReleaseProcess() error {
 }
 
 // ResetCmd is a mock function which does nothing.
-func (r *stubCmdRunner) ResetCmd() { }
+func (r *stubCmdRunner) ResetCmd() {}
 
 func TestAllLinkKeys(t *testing.T) {
 	const testStr = `Connected to 74:e5:43:10:4f:c0 (on wlan0)
@@ -1084,5 +1084,59 @@ func TestIsSetTxPowerSupported(t *testing.T) {
 		if isSupported != tc.supported {
 			t.Errorf("case#%d, got isSupported: %t, expected: %t", i, isSupported, tc.supported)
 		}
+	}
+}
+
+func TestParseWiFiSignalLevelAllChains(t *testing.T) {
+	tests := []struct {
+		name     string
+		content  string
+		expected []int
+		wantErr  bool
+	}{
+		{
+			name:     "three-chain signal",
+			content:  "-40 [-45, -42, -48] dBm",
+			expected: []int{-45, -42, -48},
+			wantErr:  false,
+		},
+		{
+			name:     "two-chain signal",
+			content:  "-36 [-34, -36] dBm",
+			expected: []int{-34, -36},
+			wantErr:  false,
+		},
+		{
+			name:     "single chain signal",
+			content:  "-50 [-52] dBm",
+			expected: []int{-52},
+			wantErr:  false,
+		},
+		{
+			name:     "malformed signal data",
+			content:  "-40 [not, a, number]",
+			expected: nil,
+			wantErr:  true,
+		},
+		{
+			name:     "missing chain data",
+			content:  "-40 dBm",
+			expected: nil,
+			wantErr:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := parseWiFiSignalLevelAllChains(context.Background(), tc.content)
+
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("wantErr is %v, but got error: %v", tc.wantErr, err)
+			}
+
+			if !reflect.DeepEqual(res, tc.expected) {
+				t.Errorf("unexpected result: got %v, want %v", res, tc.expected)
+			}
+		})
 	}
 }

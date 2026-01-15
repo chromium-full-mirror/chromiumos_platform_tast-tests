@@ -864,19 +864,19 @@ func (r *Runner) GetAntennaBitmap(ctx context.Context, phy string) (int, int, er
 func parseBitmap(ctx context.Context, iwOut string) (int, int, error) {
 	bitmapRegexp := regexp.MustCompile(`\s*Configured Antennas: TX (\S+) RX (\S+)`)
 	bitmapMatches := bitmapRegexp.FindStringSubmatch(iwOut)
-	var txBitmap, rxBitmap int
+	var txBitmap, rxBitmap int64
 	var err error
 	if bitmapMatches != nil {
-		txBitmap, err = strconv.Atoi(bitmapMatches[1])
+		txBitmap, err = strconv.ParseInt(bitmapMatches[1], 0, 0)
 		if err != nil {
 			return 0, 0, errors.New("could not parse txBitmap")
 		}
-		rxBitmap, err = strconv.Atoi(bitmapMatches[2])
+		rxBitmap, err = strconv.ParseInt(bitmapMatches[2], 0, 0)
 		if err != nil {
 			return 0, 0, errors.New("could not parse rxBitmap")
 		}
 	}
-	return txBitmap, rxBitmap, nil
+	return int(txBitmap), int(rxBitmap), nil
 }
 
 // SetAntennaBitmap sets the antenna chain mask on given phy (radio).
@@ -888,6 +888,22 @@ func (r *Runner) SetAntennaBitmap(ctx context.Context, phy string, txBitmap, rxB
 		if err := r.cmd.Run(ctx, "iw", "phy", phy, "set", "antenna", strconv.Itoa(txBitmap),
 			strconv.Itoa(rxBitmap)); err != nil {
 			return errors.Wrap(err, "failed to set Antenna bitmap")
+		}
+	}
+	return nil
+}
+
+// DisableAntennasExcept disable all antennas except those specified in |antennas|.
+func (r *Runner) DisableAntennasExcept(ctx context.Context, antennas int) error {
+	phys, _, err := r.ListPhys(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to list phys")
+	}
+	for _, phy := range phys {
+		txAntenna := antennas & phy.TxAntenna
+		rxAntenna := antennas & phy.RxAntenna
+		if err := r.SetAntennaBitmap(ctx, phy.Name, txAntenna, rxAntenna); err != nil {
+			return errors.Wrapf(err, "failed to set antenna bitmap for phy %s", phy.Name)
 		}
 	}
 	return nil
@@ -929,6 +945,48 @@ func parseWiFiSignalLevel(ctx context.Context, iwOut string) (string, error) {
 		return "", errors.New("could not parse the singal level")
 	}
 	return signalLevelMatches[1], nil
+}
+
+// WifiInterfaceSignalLevelAllChains get the signal level for each chain of an interface.
+func (r *Runner) WifiInterfaceSignalLevelAllChains(ctx context.Context, iface string) ([]int, error) {
+	info, err := r.AllStationInformation(ctx, iface)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get station info for %s", iface)
+	}
+	signalStr, ok := info["signal"]
+	if !ok {
+		return nil, errors.New("signal key not found in station information")
+	}
+
+	return parseWiFiSignalLevelAllChains(ctx, signalStr)
+}
+
+func parseWiFiSignalLevelAllChains(ctx context.Context, signalStr string) ([]int, error) {
+	re := regexp.MustCompile(`\[(.*)\]`)
+	match := re.FindStringSubmatch(signalStr)
+	if len(match) < 2 {
+		return nil, errors.Errorf("no per-chain signal data found in string: %q", signalStr)
+	}
+
+	parts := strings.Split(match[1], ",")
+	var levels []int
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed == "" {
+			continue
+		}
+		level, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse signal level")
+		}
+		levels = append(levels, level)
+	}
+
+	if len(levels) == 0 {
+		return nil, errors.New("parsed output but found no valid signal levels for any chain")
+	}
+
+	return levels, nil
 }
 
 // determineSecurity determines the security level of a connection based on the
