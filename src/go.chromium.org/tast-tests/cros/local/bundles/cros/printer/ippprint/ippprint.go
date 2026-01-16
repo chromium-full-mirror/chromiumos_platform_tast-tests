@@ -45,9 +45,9 @@ func WithResolution(res string) string {
 }
 
 // Run executes the main test logic with p.Options included in the lp command.
-func Run(ctx context.Context, s *testing.State, p *Params, usePrintscanmgr bool) {
+func Run(ctx context.Context, s *testing.State, p *Params) {
 	run(ctx, s, p, func(ctx context.Context) ([]byte, error) {
-		return lpprint.Run(ctx, s.DataPath(p.PPDFile), s.DataPath(p.PrintFile), strings.Join(p.Options, " "), usePrintscanmgr)
+		return lpprint.Run(ctx, s.DataPath(p.PPDFile), s.DataPath(p.PrintFile), strings.Join(p.Options, " "))
 	})
 }
 

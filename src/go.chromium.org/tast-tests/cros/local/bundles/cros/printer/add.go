@@ -682,5 +682,5 @@ func init() {
 }
 
 func Add(ctx context.Context, s *testing.State) {
-	ippprint.Run(ctx, s, s.Param().(*ippprint.Params), true)
+	ippprint.Run(ctx, s, s.Param().(*ippprint.Params))
 }

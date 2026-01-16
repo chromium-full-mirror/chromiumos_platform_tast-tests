@@ -49,7 +49,7 @@ func AddHTTPPrinterPrintscanmgr(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read PPD file: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/true); err != nil {
+	if err := printer.ResetCups(ctx); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

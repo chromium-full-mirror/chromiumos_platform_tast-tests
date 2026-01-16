@@ -185,7 +185,7 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
+	if err := printer.ResetCups(ctx); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

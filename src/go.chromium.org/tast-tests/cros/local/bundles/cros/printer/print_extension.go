@@ -74,7 +74,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read golden file: ", err)
 	}
 
-	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
+	if err := printer.ResetCups(ctx); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

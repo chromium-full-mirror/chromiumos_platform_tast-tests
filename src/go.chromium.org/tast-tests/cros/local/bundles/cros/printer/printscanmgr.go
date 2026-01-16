@@ -62,7 +62,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to printscanmgr: ", err)
 	}
 
-	if err := printer.ResetCups(ctx /*usePrintscanmgr=*/, true); err != nil {
+	if err := printer.ResetCups(ctx); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

@@ -76,7 +76,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	fsutil.CopyFile(s.DataPath("localhost.key"), filepath.Join(tmpDir, "localhost.key"))
 
 	s.Log("Installing printer")
-	if err := printer.ResetCups(ctx, true /*usePrintscanmgr*/); err != nil {
+	if err := printer.ResetCups(ctx); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 
