@@ -43,7 +43,7 @@ func init() {
 		Func: MajorVersionPinningE2E,
 		Desc: "Configures a milestone to pin to and verifies a pinned major version value on a device",
 		Contacts: []string{
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1031231",

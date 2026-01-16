@@ -27,7 +27,7 @@ func init() {
 		Desc: "Test for device local account policy propagation",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 		},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		SoftwareDeps: []string{"reboot", "chrome"},

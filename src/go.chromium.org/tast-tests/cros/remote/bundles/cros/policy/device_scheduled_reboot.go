@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 		},
 		Attr: []string{
 			// Disabled by TORA. See: b/318082620

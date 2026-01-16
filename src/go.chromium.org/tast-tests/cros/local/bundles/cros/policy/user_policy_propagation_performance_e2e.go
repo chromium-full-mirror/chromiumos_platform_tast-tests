@@ -26,9 +26,7 @@ func init() {
 		Desc: "E2E test for user policy propagation performance",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"vsavu@google.com",      // Test author
-			"artyomchen@google.com", // Original remote test author
-
+			"vsavu@google.com", // Test author
 		},
 		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		SoftwareDeps: []string{"chrome", "gaia"},

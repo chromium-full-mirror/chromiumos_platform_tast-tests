@@ -39,7 +39,7 @@ func init() {
 		Func: AutoUpdateDisabledInvalidation,
 		Desc: "Verifies that the update engine invalidates completed pending updates if updates are disabled by policy",
 		Contacts: []string{
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Fixture:      fixture.Autoupdate,

@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtendedAutoUpdateOptIn,
 		Desc:         "Triggers extended auto update consumer opt in UI, opts in through the UI, and verifies the correct flag is sent on update request",
-		Contacts:     []string{"mpolzer@google.com", "artyomchen@google.com"},
+		Contacts:     []string{"mpolzer@google.com", "vsavu@google.com"},
 		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Attr:         []string{"group:mainline", "informational", "group:release-health"},
 		SoftwareDeps: []string{"chrome"},

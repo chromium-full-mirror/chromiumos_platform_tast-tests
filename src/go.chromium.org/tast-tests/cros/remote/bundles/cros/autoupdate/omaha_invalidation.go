@@ -45,12 +45,12 @@ func init() {
 		Func: OmahaInvalidation,
 		Desc: "Verifies that the update engine invalidates installed updates if Omaha issues an invalidation",
 		Contacts: []string{
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Fixture:      fixture.Autoupdate,
 		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
-		Attr:         []string{
+		Attr: []string{
 			"group:autoupdate",
 			"group:release-health",
 			"release-health_autoupdate",

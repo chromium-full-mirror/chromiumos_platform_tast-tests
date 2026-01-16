@@ -36,7 +36,7 @@ func init() {
 		Desc: "Verifies RebootAfterUpdate policy by setting the policy, updating in-place and checking if the device reboots",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"artyomchen@google.com", // Test author
+			"vsavu@google.com", // Test owner
 		},
 		Fixture:      fixture.Autoupdate, // Cleans the updates and ensures the original image is restored.
 		BugComponent: "b:1031231",        // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
