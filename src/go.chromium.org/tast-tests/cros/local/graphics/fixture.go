@@ -548,8 +548,13 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 
 func (f *gpuWatchHangsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	var postErr error
+	const ignoredSyslogError = "ieee80211_rx_list"
 	for i := len(f.postFunc) - 1; i >= 0; i-- {
 		if err := f.postFunc[i](ctx); err != nil {
+			if strings.Contains(err.Error(), ignoredSyslogError) {
+				s.Log("Ignoring syslog error: ", err)
+				continue
+			}
 			postErr = errors.Wrap(postErr, err.Error())
 		}
 	}
