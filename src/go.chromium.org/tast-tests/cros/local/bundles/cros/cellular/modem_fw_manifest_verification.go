@@ -207,8 +207,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					s.Fatalf("Failed to get recovery file list for variant %q: %s", device.Variant, err)
 				}
 				for _, fullPath := range recoveryFileList {
-					// Skip devicepack.ubi on RW101 until b/474346068 is fixed
-					if !fileExists(fullPath) && !(board == "nissa" && modemType == cellularconst.ModemTypeRW101 && strings.HasSuffix(fullPath, "devicepack.ubi")) {
+					if !fileExists(fullPath) {
 						missingFiles[fullPath] = true
 					}
 				}
