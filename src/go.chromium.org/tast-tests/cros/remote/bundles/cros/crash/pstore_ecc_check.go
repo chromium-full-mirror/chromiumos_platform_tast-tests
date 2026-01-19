@@ -37,9 +37,6 @@ func init() {
 const (
 	systemCrashDir     = "/var/spool/crash"
 	consoleRamoopsFile = "/sys/fs/pstore/console-ramoops-0"
-
-	// Defined in chrome/browser/metrics/per_user_state_manager_chromeos.cc.
-	bootConsentFile = "/home/chronos/boot-collect-consent"
 )
 
 var (
@@ -113,20 +110,6 @@ func PstoreECCCheck(ctx context.Context, s *testing.State) {
 			}
 		}
 	}()
-
-	// Check boot consent. If it's disabled, kernel crash won't be collected.
-	// TODO(b/454524809): Remove the boot consent file after confirming that
-	// it's the root casuse of the test failures.
-	bootConsentOut, err := d.Conn().CommandContext(ctx, "cat", bootConsentFile).CombinedOutput()
-	bootConsent := string(bootConsentOut)
-	if err != nil {
-		if !strings.Contains(bootConsent, "No such file or directory") {
-			s.Fatalf("Failed to read %s: %v", bootConsentFile, err)
-		}
-		// It's fine that it's absent. The mock consent will be used in this case.
-	} else if bootConsent != "1" {
-		s.Fatal("Boot consent is not enabled: output: ", bootConsent)
-	}
 
 	// Force all cached file system data to be written to disk.
 	// Otherwise kernel panic might discard this data, resulting in unexpected file corruption
