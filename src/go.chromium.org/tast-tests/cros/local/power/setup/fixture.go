@@ -1055,6 +1055,9 @@ func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
 	// user2:pass2
 	// user3:pass3
 	for _, n := range names {
+		if n == "" {
+			continue
+		}
 		loginPool += fmt.Sprintf("%s:%s", n, password) + "\n"
 	}
 
