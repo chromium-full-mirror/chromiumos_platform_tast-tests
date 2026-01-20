@@ -7,6 +7,7 @@ package drivefs
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -199,6 +200,7 @@ func init() {
 				&policy.ScreenCaptureLocation{Val: "${google_drive}"},
 				&policy.DriveDisabled{Val: false},
 			},
+			cameraSaveDrive: true,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -221,6 +223,7 @@ func init() {
 				&policy.ScreenCaptureLocation{Val: "${google_drive}"},
 				&policy.DriveDisabled{Val: false},
 			},
+			cameraSaveDrive: true,
 		},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -251,6 +254,9 @@ type FixtureData struct {
 
 	// FakeDMS is the running DMS server if any policies are set.
 	FakeDMS *fakedms.FakeDMS
+
+	// CameraFolder is the folder name where camera images are saved on Drive.
+	CameraFolder string
 }
 
 type fixture struct {
@@ -266,6 +272,8 @@ type fixture struct {
 	accountPool       string
 	policies          []policy.Policy
 	fdms              *fakedms.FakeDMS
+	// Whether camera save location should be set to Drive.
+	cameraSaveDrive bool
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -275,6 +283,8 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	var cameraFolder string
 
 	// If mountPath exists and API client is not nil, check if Drive has stabilized and return early if it has.
 	if f.mountPath != "" && f.APIClient != nil {
@@ -287,12 +297,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			f.driveFs = dfs
 			f.mountPath = f.driveFs.MountPath()
 			return &FixtureData{
-				Chrome:      f.cr,
-				MountPath:   f.mountPath,
-				TestAPIConn: f.tconn,
-				APIClient:   f.APIClient,
-				DriveFs:     f.driveFs,
-				FakeDMS:     f.fdms,
+				Chrome:       f.cr,
+				MountPath:    f.mountPath,
+				TestAPIConn:  f.tconn,
+				APIClient:    f.APIClient,
+				DriveFs:      f.driveFs,
+				FakeDMS:      f.fdms,
+				CameraFolder: cameraFolder,
 			}
 		}
 	}
@@ -327,6 +338,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		)
 		if f.enableBulkPinning {
 			opts = append(opts, chrome.EnableFeatures("FeatureManagementDriveFsBulkPinning"))
+		}
+		if f.cameraSaveDrive {
+			cameraFolder = fmt.Sprintf("Camera_%d", rand.Intn(1000000))
+			// Set CameraSaveLocation policy with the value set to the
+			// cameraFolder in Drive root, denoted by ${google_drive} variable.
+			// See https://www.chromium.org/administrators/policy-list-3/user-data-directory-variables/
+			f.policies = append(f.policies, &policy.CameraSaveLocation{Val: "${google_drive}/" + cameraFolder})
 		}
 		if len(f.policies) > 0 {
 			f.fdms, err = policyutil.SetUpFakePolicyServer(s.FixtContext(), s.OutDir(), username, f.policies)
@@ -393,12 +411,13 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	shouldClose = false
 
 	return &FixtureData{
-		Chrome:      f.cr,
-		MountPath:   f.mountPath,
-		TestAPIConn: f.tconn,
-		APIClient:   f.APIClient,
-		DriveFs:     f.driveFs,
-		FakeDMS:     f.fdms,
+		Chrome:       f.cr,
+		MountPath:    f.mountPath,
+		TestAPIConn:  f.tconn,
+		APIClient:    f.APIClient,
+		DriveFs:      f.driveFs,
+		FakeDMS:      f.fdms,
+		CameraFolder: cameraFolder,
 	}
 }
 

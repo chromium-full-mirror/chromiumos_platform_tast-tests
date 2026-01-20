@@ -6,6 +6,8 @@ package onedrive
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -96,6 +98,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         "onedriveManagedWithSkyVaultForCamera",
+		Desc:         "Enterprise variant of onedrive with CameraSaveLocation and corresponding policies set to 'allowed' and enabled SkyVault",
+		Contacts:     []string{"poromov@google.com", "chromeos-camera-app-eng@google.com"},
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
+		Impl: &onedriveFixture{
+			chromeOptions:         append(opts, chrome.EnableFeatures("SkyVault"), chrome.DisableFeatures("WelcomeExperience")),
+			provider:              filesconsts.OneDrive,
+			cameraSaveOnedrive:    true,
+			skipDownloadSubFolder: true,
+		},
+		Parent:          fixture.FakeDMS,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:         "onedriveManagedWithSkyVaultGA",
 		Desc:         "Enterprise variant of onedrive with the corresponding policies set to 'allowed' and enabled SkyVault and SkyVaultV2",
 		Contacts:     []string{"poromov@google.com", "cros-commercial-clippy-eng@google.com"},
@@ -161,6 +182,9 @@ type FixtureData struct {
 
 	// FakeDMS is the running DMS server if any.
 	fakeDMS *fakedms.FakeDMS
+
+	// CameraFolder is the folder name where camera images are saved on OneDrive.
+	CameraFolder string
 }
 
 // FakeDMS implements the HasFakeDMS interface.
@@ -185,6 +209,10 @@ type onedriveFixture struct {
 	// Used to share the path between SetUp() and PreTest().
 	srcFiles map[string]string
 	fdms     *fakedms.FakeDMS
+	// Whether camera save location should be set to OneDrive.
+	cameraSaveOnedrive bool
+	// Whether to skip preparing the download sub-folder.
+	skipDownloadSubFolder bool
 }
 
 // prepareOfficeFile copies the test file to a sub-folder of downloads with a unique name.
@@ -210,6 +238,7 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	var err error
 	var driveFsClient *drivefs.DriveFs
 	var driveAPIClient *drivefs.APIClient
+	var cameraFolder string
 
 	if f.provider == filesconsts.DriveFs {
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
@@ -233,11 +262,19 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 			pb := policy.NewBlob()
 			pb.PolicyUser = fixtures.Username
-			pb.AddPolicies([]policy.Policy{
+			policies := []policy.Policy{
 				&policy.MicrosoftOneDriveMount{Val: "allowed"},
 				&policy.MicrosoftOfficeCloudUpload{Val: "allowed"},
 				&policy.MicrosoftOneDriveAccountRestrictions{Val: []string{"common"}},
-			})
+			}
+			if f.cameraSaveOnedrive {
+				// Set CameraSaveLocation policy with the value set to the
+				// cameraFolder in OneDrive root, denoted by ${microsoft_onedrive} variable.
+				// See https://www.chromium.org/administrators/policy-list-3/user-data-directory-variables/
+				cameraFolder = fmt.Sprintf("Camera_%d", rand.Intn(1000000))
+				policies = append(policies, &policy.CameraSaveLocation{Val: "${microsoft_onedrive}/" + cameraFolder})
+			}
+			pb.AddPolicies(policies)
 			if err := fdms.WritePolicyBlob(pb); err != nil {
 				s.Fatal("Failed to write policies to FakeDMS: ", err)
 			}
@@ -265,26 +302,27 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.cr = cr
 
-	// Prepare folder to receive files for tests.
-	targetBaseName := "odfs_files"
-	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to retrieve user's MyFiles path: ", err)
+	targetFolder := ""
+	if !f.skipDownloadSubFolder {
+		// Prepare folder to receive files for tests.
+		targetBaseName := "odfs_files"
+		myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
+		if err != nil {
+			s.Fatal("Failed to retrieve user's MyFiles path: ", err)
+		}
+		targetFolder = filepath.Join(myFilesPath, targetBaseName)
+		if err := os.MkdirAll(targetFolder, 0755); err != nil {
+			s.Fatal("Failed to create target dir: ", err, targetFolder)
+		}
+		if err := os.Chown(targetFolder, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+			s.Fatal("Failed to chown the test folder: ", err, targetFolder)
+		}
+		f.downloadSubFolder = targetFolder
+		f.srcFiles = make(map[string]string)
+		f.srcFiles["docx"] = s.DataPath("Sample_DOCX_file_20230704.docx")
+		f.srcFiles["pptx"] = s.DataPath("Sample_PPTX_file_20230704.pptx")
+		f.srcFiles["xlsx"] = s.DataPath("Sample_XLSX_file_20230724.xlsx")
 	}
-	targetFolder := filepath.Join(myFilesPath, targetBaseName)
-	if err := os.MkdirAll(targetFolder, 0755); err != nil {
-		s.Fatal("Failed to create target dir: ", err, targetFolder)
-	}
-	if err := os.Chown(targetFolder, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
-		s.Fatal("Failed to chown the test folder: ", err, targetFolder)
-	}
-	f.downloadSubFolder = targetFolder
-
-	f.srcFiles = make(map[string]string)
-
-	f.srcFiles["docx"] = s.DataPath("Sample_DOCX_file_20230704.docx")
-	f.srcFiles["pptx"] = s.DataPath("Sample_PPTX_file_20230704.pptx")
-	f.srcFiles["xlsx"] = s.DataPath("Sample_XLSX_file_20230724.xlsx")
 
 	f.data = &FixtureData{
 		Chrome:         cr,
@@ -293,6 +331,7 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		DriveFs:        driveFsClient,
 		DriveAPIClient: driveAPIClient,
 		fakeDMS:        f.fdms,
+		CameraFolder:   cameraFolder,
 	}
 	return f.data
 }
@@ -326,24 +365,29 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 		f.screenRecorder = recorder
 	}
 
-	// Copy the docx, pptx and xlsx to MyFiles to be used in the tests.
-	var docx, pptx, xlsx TestFile
 	var generatedFiles []TestFile
+	if !f.skipDownloadSubFolder {
+		// Copy the docx, pptx and xlsx to MyFiles to be used in the tests.
+		var docx, pptx, xlsx TestFile
 
-	if docx, err = prepareOfficeFile(f.srcFiles["docx"], f.downloadSubFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
+		if docx, err = prepareOfficeFile(f.srcFiles["docx"], f.downloadSubFolder); err != nil {
+			s.Fatal("Failed to prepare file: ", err)
+		}
+		if pptx, err = prepareOfficeFile(f.srcFiles["pptx"], f.downloadSubFolder); err != nil {
+			s.Fatal("Failed to prepare file: ", err)
+		}
+		if xlsx, err = prepareOfficeFile(f.srcFiles["xlsx"], f.downloadSubFolder); err != nil {
+			s.Fatal("Failed to prepare file: ", err)
+		}
+		generatedFiles = []TestFile{
+			docx,
+			pptx,
+			xlsx,
+		}
+	} else {
+		generatedFiles = []TestFile{}
 	}
-	if pptx, err = prepareOfficeFile(f.srcFiles["pptx"], f.downloadSubFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
-	}
-	if xlsx, err = prepareOfficeFile(f.srcFiles["xlsx"], f.downloadSubFolder); err != nil {
-		s.Fatal("Failed to prepare file: ", err)
-	}
-	generatedFiles = []TestFile{
-		docx,
-		pptx,
-		xlsx,
-	}
+
 	f.data.GeneratedFiles = generatedFiles
 
 	fi, err := filesinternals.Start(ctx, f.tconn, f.cr)
@@ -378,16 +422,18 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 
 // PostTests makes a best effort attempt to restore the state to where it was pretest.
 func (f *onedriveFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// Local Files.
-	dirEntries, err := os.ReadDir(f.downloadSubFolder)
-	if err != nil {
-		s.Logf("Failed to list local directory: %q - %v", f.downloadSubFolder, err)
-	} else {
-		for _, e := range dirEntries {
-			info, err := e.Info()
-			if (err == nil) && info.Mode().IsRegular() {
-				if err := os.Remove(filepath.Join(f.downloadSubFolder, info.Name())); err != nil {
-					s.Logf("Failed to remove local file: %q - %v", info.Name(), err)
+	if !f.skipDownloadSubFolder {
+		// Local Files.
+		dirEntries, err := os.ReadDir(f.downloadSubFolder)
+		if err != nil {
+			s.Logf("Failed to list local directory: %q - %v", f.downloadSubFolder, err)
+		} else {
+			for _, e := range dirEntries {
+				info, err := e.Info()
+				if (err == nil) && info.Mode().IsRegular() {
+					if err := os.Remove(filepath.Join(f.downloadSubFolder, info.Name())); err != nil {
+						s.Logf("Failed to remove local file: %q - %v", info.Name(), err)
+					}
 				}
 			}
 		}

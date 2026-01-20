@@ -66,7 +66,7 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_google_drive")
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "screenshot_google_drive")
 	s.AttachErrorHandlers(handler, handler)
 
 	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, fixt.Chrome)
