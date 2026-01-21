@@ -29,8 +29,8 @@ func init() {
 		// ChromeOS > Platform > Enablement > Serviceability > Diagnostic & Health
 		BugComponent: "b:982097",
 		Contacts: []string{
-			"cros-tdm-tpe-eng@google.com",
-			"menghuan@google.comcom",
+			"lt-diagnostics@google.com",
+			"menghuan@google.com",
 		},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
