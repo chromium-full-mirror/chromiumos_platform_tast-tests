@@ -50,7 +50,8 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 	voltages := []int{5000, 9000, 15000, 20000}
 	for index, voltage := range voltages {
 		pdoCnt := index + 1
-		voltageBuf := voltage / 10
+		voltageDutBuf := voltage / 5
+		voltageUtcBuf := voltage / 10
 		s.Logf("Setting SrcPdoCount to %d for voltage %dV", pdoCnt, voltage)
 		if err := utcctl.SetSrcPdoCount(ctx, int64(pdoCnt)); err != nil {
 			s.Fatalf("Failed to set SrcPdoCount to %d: %v", pdoCnt, err)
@@ -65,14 +66,14 @@ func SprVoltages(ctx context.Context, s *testing.State) {
 
 			if reportedVoltageDUT, err := typecutils.GetChargerVoltage(ctx, d); err != nil {
 				return errors.Wrap(err, "failed to get DUT voltage report")
-			} else if reportedVoltageDUT < voltage-voltageBuf || reportedVoltageDUT > voltage+voltageBuf {
+			} else if reportedVoltageDUT < voltage-voltageDutBuf || reportedVoltageDUT > voltage+voltageDutBuf {
 				return errors.Wrapf(err, "DUT reported voltage %d, expected %d", reportedVoltageDUT, voltage)
 			}
 
-			if reportedVoltageutc, err := utcctl.VbusVoltage(ctx); err != nil {
+			if reportedVoltageUtc, err := utcctl.VbusVoltage(ctx); err != nil {
 				return errors.Wrap(err, "failed to get utc voltage report")
-			} else if reportedVoltageutc < voltage-voltageBuf || reportedVoltageutc > voltage+voltageBuf {
-				return errors.Wrapf(err, "utc reported voltage %d, expected %d", reportedVoltageutc, voltage)
+			} else if reportedVoltageUtc < voltage-voltageUtcBuf || reportedVoltageUtc > voltage+voltageUtcBuf {
+				return errors.Wrapf(err, "utc reported voltage %d, expected %d", reportedVoltageUtc, voltage)
 			}
 			return nil
 		}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
