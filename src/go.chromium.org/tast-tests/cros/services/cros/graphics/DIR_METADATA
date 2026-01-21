@@ -9,13 +9,18 @@
 chromeos {
   cq {
     source_test_plans {
-      # Graphics libs should be tested on additional boards with borealis, so
-      # require an additional custom test plan. See b/201586405#comment2 for
-      # background.
       test_plan_starlark_files {
         host: "chrome-internal.googlesource.com"
         project: "chromeos/config-internal"
-        path: "test/plans/v2/ctpv1_compatible/borealis.star"
+        path: "test/plans/v2/ctpv1_compatible/templated/tast_categories.star"
+        template_parameters {
+          suite_name: "bvt-tast-cq-cft-graphics"
+          tag_criteria {
+            tags: "group:mainline"
+            tag_excludes: "informational"
+            test_names: "tast.graphics.*"
+          }
+        }
       }
     }
   }
