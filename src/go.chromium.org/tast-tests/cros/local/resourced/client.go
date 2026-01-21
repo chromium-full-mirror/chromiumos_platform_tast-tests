@@ -27,8 +27,8 @@ const (
 	// GameModeOff means no component managed by Resource Manager is in game
 	// mode.
 	GameModeOff = 0
-	// GameModeBorealis means borealis is in game mode.
-	GameModeBorealis = 1
+	// GameModeVM means VM is in game mode.
+	GameModeVM = 1
 
 	// ChromePressureLevelNone means no reduction of memory in chrome is needed.
 	ChromePressureLevelNone = 0

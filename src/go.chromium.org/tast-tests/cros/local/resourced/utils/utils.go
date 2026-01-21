@@ -44,10 +44,10 @@ func readTHP(ctx context.Context, thpFile string) (string, error) {
 }
 
 // validateSwappiness checks swappiness is tuned correctly:
-//  1. for borealis game, tuned to 30;
+//  1. for VM game, tuned to 30;
 //  2. for others, not tuned.
 func validateSwappiness(ctx context.Context, newGameMode uint8) error {
-	const BorealisSwappiness = 30
+	const VMSwappiness = 30
 	const DefaultSwappiness = 60
 	// GoBigSleepLint: add a sleep to avoid possible flakiness that can
 	// be caused by the async modification of swappiness.
@@ -56,9 +56,9 @@ func validateSwappiness(ctx context.Context, newGameMode uint8) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to read swappiness")
 	}
-	if newGameMode == resourced.GameModeBorealis {
-		// For borealis Game, swappiness should be 30.
-		if swappinessVal != BorealisSwappiness {
+	if newGameMode == resourced.GameModeVM {
+		// For VM Game, swappiness should be 30.
+		if swappinessVal != VMSwappiness {
 			return errors.Errorf("swappiness value should be 30, but get %d", swappinessVal)
 		}
 	} else {
@@ -72,10 +72,10 @@ func validateSwappiness(ctx context.Context, newGameMode uint8) error {
 }
 
 // validateTHP checks if transparent huage page is tuned correctly:
-//  1. for borealis game, tuned to always mode;
+//  1. for VM game, tuned to always mode;
 //  2. for others, not tuned.
 func validateTHP(ctx context.Context, newGameMode uint8) error {
-	const BorealisTHP = "always"
+	const VMTHP = "always"
 	const DefaultTHP = "madvise"
 
 	const thpFile = "/sys/kernel/mm/transparent_hugepage/enabled"
@@ -97,9 +97,9 @@ func validateTHP(ctx context.Context, newGameMode uint8) error {
 		return nil
 	}
 
-	if newGameMode == resourced.GameModeBorealis {
-		// For borealis Game, THP should be always mode.
-		if thp != BorealisTHP {
+	if newGameMode == resourced.GameModeVM {
+		// For VM Game, THP should be always mode.
+		if thp != VMTHP {
 			return errors.Errorf("THP mode should be always, but got %s", thp)
 		}
 	} else {
@@ -171,7 +171,7 @@ func CheckSetGameMode(ctx context.Context, rm *resourced.Client, checkSwappiness
 // We will check the tuning of swappiness along with the change of game mode if checkSwappinessTuning is true;
 // and we will check the tuning of transparent huge pages along with the change of game mode if checkTHPTuning is true.
 func CheckSetGameModeWithTimeout(ctx context.Context, rm *resourced.Client, checkSwappinessTuning, checkTHPTuning bool) (resErr error) {
-	var newGameMode uint8 = resourced.GameModeBorealis
+	var newGameMode uint8 = resourced.GameModeVM
 	if err := rm.SetGameModeWithTimeout(ctx, newGameMode, 1); err != nil {
 		return errors.Wrap(err, "failed to set game mode state")
 	}
