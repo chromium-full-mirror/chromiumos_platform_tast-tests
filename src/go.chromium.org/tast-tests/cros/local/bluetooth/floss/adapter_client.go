@@ -6,6 +6,7 @@ package floss
 
 import (
 	"context"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 
@@ -56,7 +57,15 @@ func (c *AdapterClient) RegisterCallbackObserver(ctx context.Context, name strin
 		if err := c.exportedBluetoothCallback.Export(c.dbus.Conn()); err != nil {
 			return errors.Wrap(err, "failed to export bluetooth callbacks")
 		}
-		if err := c.dbus.Call(ctx, "RegisterCallback", c.exportedBluetoothCallback.DBusObjectPath()).Err; err != nil {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := c.dbus.Call(ctx, "RegisterCallback", c.exportedBluetoothCallback.DBusObjectPath()).Err; err != nil {
+				if err.Error() == "Path, Interface, or Method does not exist" {
+					return err
+				}
+				return testing.PollBreak(err)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {
 			return errors.Wrapf(err, "failed to call RegisterCallback for exportedBluetoothCallback with path %s", c.exportedBluetoothCallback.DBusObjectPath())
 		}
 	}
