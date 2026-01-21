@@ -43,12 +43,6 @@ func (app *App) ShortName() string {
 
 // App IDs can be found at chrome://app-service-internals.
 
-// Borealis App represents the installer/launcher for the borealis.
-var Borealis = App{
-	ID:   "dkecggknbdokeipkgnhifhiokailichf",
-	Name: "Borealis",
-}
-
 // Chat App has details about the Google Chat app.
 var Chat = App{
 	ID:   "mhihbbhgcjldimhaopinoigbbglkihll",

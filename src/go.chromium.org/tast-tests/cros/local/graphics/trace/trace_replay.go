@@ -50,9 +50,7 @@ const (
 	defaultMaxBufferSize = 32 << 20 // 32 MB
 )
 
-var unwantedBoardSuffixes = []string{
-	"-borealis",
-}
+var unwantedBoardSuffixes = []string{}
 
 type guestLogEntry struct {
 	entryName   string

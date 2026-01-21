@@ -30,8 +30,6 @@ type runnerEnvironment string
 var (
 	// Host is running deqprunner in host environment.
 	Host runnerEnvironment = ""
-	// Borealis is running deqprunner in borealis environment.
-	Borealis runnerEnvironment = "-borealis"
 )
 
 // CaseListFilters contain lists on their tests based on expectations
@@ -146,18 +144,6 @@ func GetCaseListFilters(ctx context.Context, category runnerCategory, environmen
 		return CaseListFilters{}, errors.Wrap(err, "failed to get hardware probe result")
 	}
 	targetGPU := probeResult.GPUInfo[0].Family
-	// TODO(pwang): host may have two or more GPU (e.g. dGPU). Figure out the best action to handle multi-GPU cases.
-	// Prefer NVIDIA GPU if we are testing borealis.
-	if environment == Borealis {
-		for _, gpuInfo := range probeResult.GPUInfo {
-			if gpuInfo.Vendor == "nvidia" {
-				targetGPU = gpuInfo.Family
-				testing.ContextLogf(ctx, "Found NVIDIA GPU for testing borealis, loading %v expectations", targetGPU)
-				break
-			}
-		}
-	}
-
 	skips, err := readExpectations(ctx, category, targetGPU, environment, "-skips.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up skips expectations")
