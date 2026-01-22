@@ -26,6 +26,9 @@ var StableModels = []string{
 	"cyan",
 	// Top VK usage models in 2020 -- convertible, ARM.
 	"hana",
+	// Some hana devices appear as maple / sycamore360
+	"maple",
+	"sycamore360",
 	"krane",
 	"kukui",
 	// Another top model -- convertible, x64.
