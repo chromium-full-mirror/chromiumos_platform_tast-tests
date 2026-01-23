@@ -18,7 +18,6 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type verifySandboxTestParams struct {
@@ -117,10 +116,6 @@ func init() {
 				}},
 				helperTimeout: 15,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(
-				// ec_component doesn't work properly in sandbox on the following models (see b/434803079).
-				"deku", "kaladin", "kanix", "karis", "pujjolo", "uldrenite", "uldrenite360", "uldrino",
-			)),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
