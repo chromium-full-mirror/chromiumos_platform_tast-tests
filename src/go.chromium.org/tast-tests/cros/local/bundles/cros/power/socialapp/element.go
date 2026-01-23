@@ -100,11 +100,11 @@ func ParseElementAPKURL(ctx context.Context, testCaseVar func(string) (string, b
 }
 
 // NewElement returns a new Element object.
-func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, creds credconfig.Creds, apkURL string) *Element {
+func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, apkURL string) *Element {
 	return &Element{
-		ele:   element.New(tconn, kb, a, d, apkURL),
+		ele:   element.New(tconn, kb, a, d, cr, apkURL),
 		tconn: tconn,
-		creds: creds,
+		creds: cr.Creds(),
 	}
 }
 

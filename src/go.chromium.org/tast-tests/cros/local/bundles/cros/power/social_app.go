@@ -104,7 +104,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		// the app from Play Store in this case.
 		s.Log("Failed to parse Element APK URL: ", err)
 	}
-	app := socialapp.NewElement(tconn, kb, a, d, cr.Creds(), apkURL)
+	app := socialapp.NewElement(tconn, kb, a, d, cr, apkURL)
 
 	batteryCleanup, err := setup.Battery(ctx, socialAppOperatingTimeout, discharge)
 	if err != nil {

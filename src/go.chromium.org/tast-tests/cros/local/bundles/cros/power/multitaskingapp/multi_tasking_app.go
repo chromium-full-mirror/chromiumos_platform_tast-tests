@@ -126,7 +126,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		}
 	}(cleanupCtx)
 
-	socialApp := socialapp.NewElement(tconn, kb, a, d, cr.Creds(), elementAPKURL)
+	socialApp := socialapp.NewElement(tconn, kb, a, d, cr, elementAPKURL)
 	if err := socialApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install social app")
 	}
