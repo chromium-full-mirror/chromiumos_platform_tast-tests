@@ -30,7 +30,7 @@ func SetGameMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Resource Manager client: ", err)
 	}
 
-	if err := utils.CheckSetGameMode(ctx, rm, false, false); err != nil {
+	if err := utils.CheckSetGameMode(ctx, rm); err != nil {
 		s.Fatal("Checking SetGameMode failed: ", err)
 	}
 }

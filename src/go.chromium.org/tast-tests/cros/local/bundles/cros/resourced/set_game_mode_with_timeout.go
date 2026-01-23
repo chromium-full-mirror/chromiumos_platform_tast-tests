@@ -30,7 +30,7 @@ func SetGameModeWithTimeout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Resource Manager client: ", err)
 	}
 
-	if err := utils.CheckSetGameModeWithTimeout(ctx, rm, false, false); err != nil {
+	if err := utils.CheckSetGameModeWithTimeout(ctx, rm); err != nil {
 		s.Fatal("Checking SetGameModeWithTimeout failed: ", err)
 	}
 }

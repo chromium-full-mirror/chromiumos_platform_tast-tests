@@ -26,9 +26,9 @@ const (
 
 	// GameModeOff means no component managed by Resource Manager is in game
 	// mode.
-	GameModeOff = 0
-	// GameModeVM means VM is in game mode.
-	GameModeVM = 1
+	GameModeOff uint8 = 0
+	// GameModeARCVM means ARCVM is in game mode.
+	GameModeARCVM uint8 = 2
 
 	// ChromePressureLevelNone means no reduction of memory in chrome is needed.
 	ChromePressureLevelNone = 0
