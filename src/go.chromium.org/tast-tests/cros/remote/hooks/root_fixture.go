@@ -82,6 +82,7 @@ var hooks map[string]*Hook
 // is added to this list.
 var orderedHooks []string = []string{
 	"servoHook",
+	"kdumpHook",
 	"diskThrottler",
 	"cleanupChecksHook",
 	"actionLoggerHook",
