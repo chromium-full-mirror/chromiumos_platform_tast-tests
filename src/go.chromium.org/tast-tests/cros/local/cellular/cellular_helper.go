@@ -340,9 +340,20 @@ func (h *Helper) EnsureDefaultService(ctx context.Context) (*shill.Service, erro
 		if err = h.WaitForEnabledState(ctx, true); err != nil {
 			return nil, errors.Wrap(err, "cellular not enabled after modem reset while waiting for default cellular service")
 		}
-		service, err = h.FindServiceForDevice(ctx)
+		// Use polling with FindServiceForDevice since a service might not be available right after
+		// the modem was reset and the modem reached enabled state.
+		testing.Poll(ctx, func(ctxPoll context.Context) error {
+			service, err = h.FindServiceForDevice(ctx)
+			if err != nil {
+				return errors.Wrap(err, "unable to find a default cellular service")
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  5 * time.Second,
+			Interval: 200 * time.Millisecond,
+		})
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to find a default cellular service")
+			return nil, errors.Wrap(err, "failed to poll for a default cellular service")
 		}
 	}
 	return service, nil
