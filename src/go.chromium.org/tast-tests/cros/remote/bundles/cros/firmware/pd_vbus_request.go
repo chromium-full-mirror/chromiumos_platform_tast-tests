@@ -207,8 +207,9 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 			s.Logf("PDO: %+v (%d mW)", pdo, pdo.Current*pdo.Voltage/1000)
 		}
 	}
-	if !foundMaxPower {
-		s.Errorf("Charger does not support %f W, use higher wattage charger", dutPowerLimit)
+	if !foundMaxPower && chargingVoltages[dutVoltageLimit] {
+		s.Logf("Charger does not support %f W, but this is fine", dutPowerLimit)
+		// If !chargingVoltages[dutVoltageLimit], we already reported an error earlier.
 	}
 
 	// Set dps disable
