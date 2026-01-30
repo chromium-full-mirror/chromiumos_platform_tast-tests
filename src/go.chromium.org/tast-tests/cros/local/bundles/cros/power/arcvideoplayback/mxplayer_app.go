@@ -442,3 +442,9 @@ func (m *MxPlayerApp) grantStoragePermission(ctx context.Context) error {
 			cuj.FindAndClick(allowBtn, defaultUITimeout)),
 	)(ctx)
 }
+
+// Pause pauses the video.
+// TODO(b:466252049): This is a no-op. The function returns directly because MxPlayerApp is not used anywhere.
+func (m *MxPlayerApp) Pause(ctx context.Context) error {
+	return nil
+}

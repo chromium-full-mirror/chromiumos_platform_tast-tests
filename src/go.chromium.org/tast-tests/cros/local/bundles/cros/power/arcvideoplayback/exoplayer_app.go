@@ -274,3 +274,36 @@ func (e *ExoPlayerApp) CloseVideo(ctx context.Context) error {
 		cuj.WaitUntilGone(playerView, defaultUITimeout),
 	)(ctx)
 }
+
+// Pause pauses the video.
+func (e *ExoPlayerApp) Pause(ctx context.Context) error {
+	if err := e.d.PressKeyCode(ctx, androidui.KEYCODE_MEDIA_PAUSE, 0); err != nil {
+		return errors.Wrap(err, "failed to pause video")
+	}
+	if err := e.waitUntilPaused(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait until video is paused")
+	}
+	return nil
+}
+
+// waitUntilPaused waits until the video is paused by checking the logcat events.
+func (e *ExoPlayerApp) waitUntilPaused(ctx context.Context) error {
+	stateReg := regexp.MustCompile(`(?i)isPlaying.*?(true|false)`)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		output, err := e.a.Command(ctx, "logcat", "-t", "100", "-s", "ExoPlayerImpl", "EventLogger").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the logcat of ExoPlayerImpl")
+		}
+		matches := stateReg.FindAllStringSubmatch(string(output), -1)
+		if len(matches) == 0 {
+			return errors.New("no player state logs found")
+		}
+
+		lastMatch := matches[len(matches)-1]
+		state := strings.ToLower(lastMatch[1])
+		if state == "false" {
+			return nil
+		}
+		return errors.New("video is still playing")
+	}, &testing.PollOptions{Timeout: defaultUITimeout})
+}

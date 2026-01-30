@@ -19,4 +19,5 @@ type VideoApp interface {
 	CopyFileToFolder(ctx context.Context, videoPath string) (cleanup func() error, retErr error)
 	PlayVideoInFullScreen(video string) uiauto.Action
 	Close(ctx context.Context) error
+	Pause(ctx context.Context) error
 }

@@ -407,6 +407,7 @@ func videoAppActivity(ctx context.Context, uiHandler cuj.UIActionHandler, isFirs
 		dismissPrompt,
 		videoApp.EnsurePlaying,
 		uiauto.Sleep(videoPlayTime),
+		videoApp.Pause,
 		videoApp.CloseVideo,
 	)(ctx)
 }

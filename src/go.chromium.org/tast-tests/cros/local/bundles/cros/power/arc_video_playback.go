@@ -410,6 +410,11 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	if err := videoApp.PlayVideoInFullScreen(fileName)(ctx); err != nil {
 		s.Fatal("Failed to enter full screen and play video: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := videoApp.Pause(ctx); err != nil {
+			s.Log("Failed to pause video: ", err)
+		}
+	}(cleanupCtx)
 
 	s.Logf("Run test testName: %s, video: %q", s.TestName(), fileName)
 	if err := recorder.Start(ctx); err != nil {
