@@ -186,9 +186,8 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to shut down DUT: ", err)
 		}
 	case longPowerButtonPress:
-		// servo.DurLongPress is usually 8.5s unless overridden in the servo_xxx_overlay.xml file.
-		s.Log("Long press power button")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurLongPress); err != nil {
+		s.Log("Long press power button for ", h.Config.HoldPwrButtonNoPowerdShutdown)
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonNoPowerdShutdown)); err != nil {
 			s.Fatal("Failed to power off DUT with long press of the power button: ", err)
 		}
 	case powerStateOff:

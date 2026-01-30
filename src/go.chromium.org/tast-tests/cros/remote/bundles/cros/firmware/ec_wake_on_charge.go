@@ -270,8 +270,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 				}
 				durToWakeToS0 := servo.DurTab
 				if h.Config.Platform == "kukui" {
-					// Long press the power button to boot the device to S0.
-					durToWakeToS0 = servo.DurLongPress
+					durToWakeToS0 = servo.Dur(h.Config.HoldPwrButtonPowerOn)
 				}
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, durToWakeToS0); err != nil {
 					s.Fatal("Failed to press power button: ", err)
