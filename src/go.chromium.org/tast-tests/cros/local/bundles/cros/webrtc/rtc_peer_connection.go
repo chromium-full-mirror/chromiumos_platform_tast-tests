@@ -308,43 +308,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeTabCapture",
 		}, {
-			Name: "h264_capture_monitor_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "H264",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureMonitor,
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyScreenCapture",
-		}, {
-			Name: "h264_capture_window_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "H264",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureWindow,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyWindowCapture",
-		}, {
-			Name: "h264_capture_tab_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "H264",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureTab,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyTabCapture",
-		}, {
 			Name: "h264_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
@@ -644,43 +607,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "proprietary_codecs"},
 			Fixture:           "chromeTabCapture",
-		}, {
-			Name: "av1_capture_monitor_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "AV1",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureMonitor,
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyScreenCapture",
-		}, {
-			Name: "av1_capture_window_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "AV1",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureWindow,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyWindowCapture",
-		}, {
-			Name: "av1_capture_tab_zero_copy_verify_hw_enc",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
-				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-				Profile:           "AV1",
-				StreamWidth:       screenRTCStreamWidth,
-				StreamHeight:      screenRTCStreamHeight,
-				DisplayMediaType:  peerconnection.CaptureTab,
-			},
-			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "proprietary_codecs"},
-			Fixture:           "chromeZeroCopyTabCapture",
 		}, {
 			// This is a 2 temporal layers test.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.

@@ -52,19 +52,6 @@ func init() {
 			Name:    "tab",
 			Val:     getDisplayMediaTestParams{surfaceType: "browser"},
 			Fixture: "chromeTabCapture",
-		}, {
-			Name:              "monitor_zero_copy",
-			Val:               getDisplayMediaTestParams{surfaceType: "monitor"},
-			Fixture:           "chromeZeroCopyScreenCapture",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-		}, {
-			Name:    "window_zero_copy",
-			Val:     getDisplayMediaTestParams{surfaceType: "window"},
-			Fixture: "chromeZeroCopyWindowCapture",
-		}, {
-			Name:    "tab_zero_copy",
-			Val:     getDisplayMediaTestParams{surfaceType: "browser"},
-			Fixture: "chromeZeroCopyTabCapture",
 		}},
 	})
 }

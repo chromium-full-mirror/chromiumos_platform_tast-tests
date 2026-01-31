@@ -1039,20 +1039,6 @@ func init() {
 				Fixture:           "chromeTabCapture",
 			},
 			{
-				Name: "h264_1080p_tab_zero_copy_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "H264",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					DisplayMediaType:  peerconnection.CaptureTab,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeZeroCopyTabCapture",
-			},
-			{
 				Name: "h264_1080p_window_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1065,20 +1051,6 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
 				Fixture:           "chromeWindowCapture",
-			},
-			{
-				Name: "h264_1080p_window_zero_copy_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "H264",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					DisplayMediaType:  peerconnection.CaptureWindow,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeZeroCopyWindowCapture",
 			},
 			{
 				Name: "h264_1080p_monitor_hw_enc_hw_dec",
@@ -1096,21 +1068,6 @@ func init() {
 				Fixture:           "chromeScreenCapture",
 			},
 			{
-				Name: "h264_1080p_monitor_zero_copy_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "H264",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					DisplayMediaType:  peerconnection.CaptureMonitor,
-					TraceChromeEvents: false,
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeZeroCopyScreenCapture",
-			},
-			{
 				Name: "vp8_1080p_tab_l1t3_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1124,21 +1081,6 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
 				Fixture:           "chromeTabCapture",
-			},
-			{
-				Name: "vp8_1080p_tab_zero_copy_l1t3_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "VP8",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					Svc:               "L1T3",
-					DisplayMediaType:  peerconnection.CaptureTab,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeZeroCopyTabCapture",
 			},
 			{
 				Name: "vp8_1080p_window_l1t3_hw_enc_hw_dec",
@@ -1156,21 +1098,6 @@ func init() {
 				Fixture:           "chromeWindowCapture",
 			},
 			{
-				Name: "vp8_1080p_window_zero_copy_l1t3_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "VP8",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					Svc:               "L1T3",
-					DisplayMediaType:  peerconnection.CaptureWindow,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeZeroCopyWindowCapture",
-			},
-			{
 				Name: "vp8_1080p_monitor_l1t3_hw_enc_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -1185,50 +1112,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
 				Fixture:           "chromeScreenCapture",
-			},
-			{
-				Name: "vp8_1080p_monitor_zero_copy_l1t3_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "VP8",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					Svc:               "L1T3",
-					DisplayMediaType:  peerconnection.CaptureMonitor,
-					TraceChromeEvents: false,
-				},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeZeroCopyScreenCapture",
-			},
-			{
-				Name: "av1_1080p_tab_zero_copy_sw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
-					Profile:           "AV1",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					DisplayMediaType:  peerconnection.CaptureTab,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
-				Fixture:           "chromeZeroCopyTabCaptureAndSWEncoding",
-			},
-			{
-				Name: "av1_1080p_tab_zero_copy_hw_enc_hw_dec",
-				Val: peerconnection.RTCTestParams{
-					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
-					Profile:           "AV1",
-					StreamWidth:       1920,
-					StreamHeight:      1080,
-					DisplayMediaType:  peerconnection.CaptureTab,
-					TraceChromeEvents: false,
-				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
-				Fixture:           "chromeZeroCopyTabCapture",
 			},
 			{
 				Name: "h264_720p_hw_oopve_hw_dec",
