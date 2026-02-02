@@ -337,8 +337,13 @@ func (h *Helper) EnsureDefaultService(ctx context.Context) (*shill.Service, erro
 		if _, err = h.ResetModem(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to reset modem waiting for default cellular service")
 		}
-		if err = h.WaitForEnabledState(ctx, true); err != nil {
-			return nil, errors.Wrap(err, "cellular not enabled after modem reset while waiting for default cellular service")
+		modem, err := modemmanager.NewModem(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get new modem")
+		}
+
+		if err = modem.EnsureEnabled(ctx); err != nil {
+			return nil, errors.Wrap(err, "modem not enabled after modem reset while waiting for default cellular service")
 		}
 		// Use polling with FindServiceForDevice since a service might not be available right after
 		// the modem was reset and the modem reached enabled state.
