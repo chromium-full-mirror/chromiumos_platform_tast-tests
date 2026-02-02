@@ -28,7 +28,7 @@ import (
 
 // List of extension IDs and URLs.
 const (
-	AccessibilityCommonExtensionURL = "chrome-extension://egfdjlfmgnehecnclamagfafdccgfndp/accessibility_common/mv2/background.html"
+	AccessibilityCommonExtensionURL = "chrome-extension://egfdjlfmgnehecnclamagfafdccgfndp/accessibility_common/accessibility_common_loader.js"
 	ChromeVoxExtensionURL           = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/mv2/background/background.html"
 	SelectToSpeakExtensionURL       = "chrome-extension://klbcgckkldhdhonijdbnhhaiedfkllef/select_to_speak/mv2/background.html"
 )
