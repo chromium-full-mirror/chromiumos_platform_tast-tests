@@ -303,7 +303,7 @@ func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion
 		return ModemFwFilterFM350MR1.IsMatch(modemType, fwVersion) ||
 			strings.HasPrefix(fwVersion, "81600.0000.00.29.21.21") || // MR2
 			strings.HasPrefix(fwVersion, "81600.0000.00.29.21.24") || // MR3
-			strings.HasPrefix(fwVersion, "81600.0000.00.29.21.27") // MR3 Softbank
+			strings.HasPrefix(fwVersion, "81600.0000.00.29.23.27") // MR3 Softbank
 	case ModemFwFilterFM350MR4:
 		if modemType != cellularconst.ModemTypeFM350 {
 			return false
