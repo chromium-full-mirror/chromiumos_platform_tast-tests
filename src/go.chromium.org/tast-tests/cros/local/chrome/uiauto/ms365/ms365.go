@@ -256,8 +256,8 @@ func (ms *Ms365) waitForMicrosoft365EditorWindowAndClose(tconn *chrome.TestConn,
 			return errors.Wrap(err, "failed to wait for the MS365 window")
 		}
 
-		// Check that MS365 is showing the editor. The "Saved" or "Saved to OneDrive" indicator next to the title is only present after the file has finished loading, in editing mode.
-		if err := ms.ui.WaitUntilExists(nodewith.Role(role.GenericContainer).NameContaining("Saved"))(ctx); err != nil {
+		// Check that MS365 is showing the editor.
+		if err := ms.ui.WaitUntilExists(nodewith.Attribute("htmlId", "EditorContainer"))(ctx); err != nil {
 			return errors.Wrap(err, "failed to find 'Saved' indicator")
 		}
 		if err := closeMicrosoft365Window(ctx, tconn, fileName); err != nil {
