@@ -84,6 +84,7 @@ func init() {
 					sensors: false,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "pd",
@@ -125,6 +126,7 @@ func init() {
 					sensors: false,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "flash_pd",
@@ -166,6 +168,7 @@ func init() {
 					sensors: false,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "keyscan_sensors",
@@ -176,7 +179,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_suspend",
@@ -187,6 +190,7 @@ func init() {
 					sensors: false,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "pd_sensors",
@@ -229,6 +233,7 @@ func init() {
 					sensors: false,
 					suspend: false,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "flash_keyscan_sensors",
@@ -239,7 +244,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_suspend",
@@ -250,6 +255,7 @@ func init() {
 					sensors: false,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "flash_pd_sensors",
@@ -292,7 +298,7 @@ func init() {
 					sensors: true,
 					suspend: false,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "keyscan_pd_suspend",
@@ -303,6 +309,7 @@ func init() {
 					sensors: false,
 					suspend: true,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "keyscan_sensors_suspend",
@@ -313,7 +320,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "pd_sensors_suspend",
@@ -336,7 +343,7 @@ func init() {
 					suspend: false,
 				},
 				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_pd_suspend",
@@ -347,7 +354,8 @@ func init() {
 					sensors: false,
 					suspend: true,
 				},
-				ExtraAttr: []string{"group:firmware", "firmware_stress"},
+				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
 			},
 			{
 				Name: "flash_keyscan_sensors_suspend",
@@ -359,7 +367,7 @@ func init() {
 					suspend: true,
 				},
 				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_pd_sensors_suspend",
@@ -383,7 +391,7 @@ func init() {
 					suspend: true,
 				},
 				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "flash_keyscan_pd_sensors_suspend",
@@ -395,7 +403,7 @@ func init() {
 					suspend: true,
 				},
 				ExtraAttr:         []string{"group:firmware", "firmware_stress"},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 			{
 				Name: "all",
@@ -406,7 +414,7 @@ func init() {
 					sensors: true,
 					suspend: true,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.MotionSensor()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.MotionSensor()),
 			},
 		},
 	})
