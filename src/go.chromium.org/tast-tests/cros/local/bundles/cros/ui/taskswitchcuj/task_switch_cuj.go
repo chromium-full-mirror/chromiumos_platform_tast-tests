@@ -97,10 +97,10 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 	}
 	defer recorder.Close(closeCtx)
 
-	// Take a screenshot every 2 minutes up to a maximum of 5
+	// Take a screenshot every 2 minutes up to a maximum of 10
 	// screenshots, to try to capture at least 2 screenshots in each
 	// of the task switching workflows.
-	if err := recorder.AddScreenshotRecorder(ctx, 2*time.Minute, 5); err != nil {
+	if err := recorder.AddScreenshotRecorder(ctx, 2*time.Minute, 10); err != nil {
 		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
@@ -202,9 +202,29 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 
 	testing.ContextLog(ctx, "Installing packages")
 	packages := getPackages(ctx, tconn, d)
+
+	// TODO(b/359374171): Take a screenshot every 2 minutes to help troubleshoot
+	// package installation issues. Remove screenshots once the issue is resolved.
+	screenshotCtx, stopScreenshot := context.WithCancel(ctx)
+	defer stopScreenshot()
+
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(2 * time.Minute)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				recorder.CustomScreenshot(ctx)
+			}
+		}
+	}(screenshotCtx)
 	if err := installPackages(ctx, tconn, a, d, packages); err != nil {
 		return errors.Wrap(err, "failed to install packages")
 	}
+	stopScreenshot()
 
 	// Launch packages before launching Chrome tabs, to mitigate
 	// flakiness when opening applications. When a lot of tabs are
