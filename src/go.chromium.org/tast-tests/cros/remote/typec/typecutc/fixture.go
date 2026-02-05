@@ -24,9 +24,9 @@ func init() {
 		// ChromeOS > Platform > Connectivity > USB
 		BugComponent:    "b:958036",
 		Impl:            &UtcFixture{},
-		SetUpTimeout:    20 * time.Second, // For utc initialization.
-		ResetTimeout:    15 * time.Second, // For utc state reset.
-		TearDownTimeout: 15 * time.Second, // For closing the utc connection.
+		SetUpTimeout:    3 * time.Minute, // For utc initialization.
+		ResetTimeout:    3 * time.Minute, // For utc state reset.
+		TearDownTimeout: 3 * time.Minute, // For closing the utc connection.
 		Vars: []string{
 			"typec.UtcUri",    // Required: URI for the utc device.
 			"typec.UtcSerial", // Optional: The utc device serial.
