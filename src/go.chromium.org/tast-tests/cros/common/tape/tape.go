@@ -753,8 +753,6 @@ const (
 	CommandTypeCaptureLogs = 9
 	// CommandTypeFetchCrdAvailabilityInfo is the enum to fetch CRD availability from the device.
 	CommandTypeFetchCrdAvailabilityInfo = 10
-	// CommandTypeFetchSupportPacket is the enum to trigger remote log upload on the device.
-	CommandTypeFetchSupportPacket = 11
 )
 
 // RemoteCommand is a struct describing a remote command used in IssueCommand.
