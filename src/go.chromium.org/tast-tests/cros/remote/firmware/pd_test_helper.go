@@ -164,19 +164,9 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outD
 		testing.ContextLogf(ctx, "battery capacity at test start: %s", cs["batt.state_of_charge"])
 	}
 
-	// Set DTS mode on the servo
-	var dts servo.OnOffValue
-	switch testParams.DTS {
-	case DTSModeOn:
-		dts = servo.On
-	case DTSModeOff:
-		dts = servo.Off
-	default:
-		panic("Invalid DTS Mode setting")
-	}
-	testing.ContextLogf(ctx, "Setting DTS Mode to %q", dts)
-	if err := h.Servo.SetOnOff(ctx, servo.DTSMode, dts); err != nil {
-		return errors.Wrap(err, "failed to set Servo DTS mode")
+	// Changing CC without cc off seems to break things sometimes.
+	if err := h.Servo.ServoCcOff(ctx); err != nil {
+		return errors.Wrap(err, "cannot force CC off on Servo")
 	}
 
 	// Set USB-PD CC line polarity.
@@ -192,6 +182,21 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outD
 	testing.ContextLogf(ctx, "Setting CC polarity to %s", cc)
 	if err := h.Servo.SetString(ctx, servo.USBCPolarity, cc); err != nil {
 		return errors.Wrap(err, "failed to set Servo USBC CC polarity")
+	}
+
+	// Set DTS mode on the servo
+	var dts servo.OnOffValue
+	switch testParams.DTS {
+	case DTSModeOn:
+		dts = servo.On
+	case DTSModeOff:
+		dts = servo.Off
+	default:
+		panic("Invalid DTS Mode setting")
+	}
+	testing.ContextLogf(ctx, "Setting DTS Mode to %q", dts)
+	if err := h.Servo.SetOnOff(ctx, servo.DTSMode, dts); err != nil {
+		return errors.Wrap(err, "failed to set Servo DTS mode")
 	}
 
 	// Modifying CC and DTS settings causes the Servo DUT port to reset. Wait a bit until
