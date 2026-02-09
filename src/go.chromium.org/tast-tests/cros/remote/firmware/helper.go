@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -139,6 +140,9 @@ type Helper struct {
 
 	// CheckECCrash holds a value that a test can set to false to skip checking for ec crashes.
 	CheckECCrash bool
+
+	// CheckWatchdogInfo holds a value that a test can set to false to skip checking for watchdog info.
+	CheckWatchdogInfo bool
 
 	// HasAPFwState indicates that the DUT firmware version supports reading firmware screen IDs from the EC console.
 	HasAPFwState bool
@@ -2630,6 +2634,39 @@ func checkECCrashType(crashLog string, crashIDs ...string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// ResetWatchdogInfo resets the watchdog info stats on the EC.
+func (h *Helper) ResetWatchdogInfo(ctx context.Context) error {
+	ec := NewECTool(h.DUT, ECToolNameMain)
+	if _, err := ec.WatchdogInfo(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to reset watchdog info")
+	}
+	return nil
+}
+
+// LogWatchdogInfo gets the watchdog info from the EC and saves it to results-chart.json.
+func (h *Helper) LogWatchdogInfo(ctx context.Context, s ErrorHandler) {
+	if !h.CheckWatchdogInfo {
+		return
+	}
+	ec := NewECTool(h.DUT, ECToolNameMain)
+	info, err := ec.WatchdogInfo(ctx, false)
+	if err != nil {
+		// Log error but don't fail test if command is not supported or fails.
+		// Old firmware or non-CrosEC might not support it.
+		testing.ContextLog(ctx, "Failed to get watchdog info: ", err)
+		return
+	}
+
+	p := perf.NewValues()
+	p.Set(perf.Metric{Name: "watchdog_reload_period_average", Unit: "ms", Direction: perf.SmallerIsBetter}, float64(info.ReloadPeriodAverage))
+	p.Set(perf.Metric{Name: "watchdog_reload_period_max", Unit: "ms", Direction: perf.SmallerIsBetter}, float64(info.ReloadPeriodMax))
+	p.Set(perf.Metric{Name: "watchdog_reload_period_max_timestamp", Unit: "ms", Direction: perf.SmallerIsBetter}, info.ReloadPeriodMaxTime*1000)
+
+	if err := p.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save watchdog info to results-chart.json: ", err)
+	}
 }
 
 // SupportAPFwState checks whether DUT supports the host command EC_CMD_AP_FW_STATE. Sets h.HasAPFwState to true if supported.

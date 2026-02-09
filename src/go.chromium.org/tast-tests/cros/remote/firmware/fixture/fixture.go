@@ -304,6 +304,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	i.initHelper(ctx, s)
 
 	i.value.Helper.CheckECCrash = true
+	i.value.Helper.CheckWatchdogInfo = true
 
 	return i.value
 }
@@ -454,6 +455,7 @@ func (i *impl) Reset(ctx context.Context) error {
 	i.value.Helper.CloseRPCConnection(ctx)
 	// Reset after every test to retry for next test.
 	i.value.Helper.CheckECCrash = true
+	i.value.Helper.CheckWatchdogInfo = true
 	return nil
 }
 
@@ -569,6 +571,22 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 				i.value.Helper.CheckECCrash = false
 			}
 
+		}
+	}
+
+	// Check watchdog info if allowed.
+	if !i.disallowSSH && supportCrosEC == "yes" && i.value.Helper.CheckWatchdogInfo {
+		connectTimeout, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+			s.Log("Failed to connect to dut before test to reset watchdog info: ", err)
+			i.value.Helper.CheckWatchdogInfo = false
+		} else {
+			s.Logf("Resetting watchdog info before test %s", s.TestName())
+			if err := i.value.Helper.ResetWatchdogInfo(ctx); err != nil {
+				s.Log("Failed to reset watchdog info: ", err)
+				i.value.Helper.CheckWatchdogInfo = false
+			}
 		}
 	}
 
@@ -727,6 +745,11 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if !i.disallowSSH && supportCrosEC == "yes" && i.value.Helper.CheckECCrash {
 		checkAndLogECCrashes(ctx, s, i)
 	}
+
+	// Check watchdog info if allowed.
+	if !i.disallowSSH && supportCrosEC == "yes" && i.value.Helper.CheckWatchdogInfo {
+		checkAndLogWatchdogInfo(ctx, s, i)
+	}
 }
 
 func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl) {
@@ -751,6 +774,18 @@ func checkAndLogECCrashes(ctx context.Context, s *testing.FixtTestState, i *impl
 	for crashName, listOfCrashFiles := range crashLogs {
 		i.value.Helper.SaveECCrash(ctx, crashName, listOfCrashFiles, s)
 	}
+}
+
+func checkAndLogWatchdogInfo(ctx context.Context, s *testing.FixtTestState, i *impl) {
+	connectTimeout, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+		s.Log("Failed to reconnect to dut to check watchdog info after test: ", err)
+		// If no ssh connection available to DUT, skip check.
+		return
+	}
+
+	i.value.Helper.LogWatchdogInfo(ctx, s)
 }
 
 // PostTest is called by the framework after each test to tear down changes PreTest made.
