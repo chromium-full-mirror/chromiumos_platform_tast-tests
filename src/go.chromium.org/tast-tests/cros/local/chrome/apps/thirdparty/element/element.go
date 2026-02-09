@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
@@ -185,8 +184,6 @@ func (e *Element) loginWithGaiaAccount(creds credconfig.Creds) uiauto.Action {
 
 	return uiauto.NamedCombine("sign in with Gaia account",
 		e.waitForLoginWindowMaximized,
-		// TODO(b:478044130): Remove this workaround once the app is updated.
-		e.navigateToNewLoginWebsite,
 		// The account information may not be cleaned during the test sequence.
 		e.ui.WaitUntilAnyExists(usernameOrEmailField, continueHeading),
 		uiauto.IfSuccessThen(e.ui.Exists(usernameOrEmailField), loginWithAccount),
@@ -194,32 +191,6 @@ func (e *Element) loginWithGaiaAccount(creds credconfig.Creds) uiauto.Action {
 			e.ui.WaitUntilGone(continueHeading),
 		),
 	)
-}
-
-// navigateToNewLoginWebsite navigates to the correct login website.
-func (e *Element) navigateToNewLoginWebsite(ctx context.Context) error {
-	loginURLPrefix := "https://matrix-client.matrix.org"
-	conn, err := e.cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(loginURLPrefix))
-	if err != nil {
-		return errors.Wrap(err, "failed getting connection to new target")
-	}
-	defer conn.Close()
-
-	var url string
-	if err := conn.Eval(ctx, "window.location.href", &url); err != nil {
-		return errors.Wrap(err, "failed to get URL")
-	}
-
-	if strings.Contains(url, "LOGIN") {
-		newURL := strings.Replace(url, "LOGIN", "login", 1)
-		if err := conn.Navigate(ctx, newURL); err != nil {
-			return errors.Wrap(err, "failed to navigate")
-		}
-		if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to wait for the page loaded")
-		}
-	}
-	return nil
 }
 
 // waitForLoginWindowMaximized activates and maximizes the login window.
@@ -281,7 +252,7 @@ func (e *Element) createAccount(username string) uiauto.Action {
 // dismissEncryptionAlertIfExists dismisses the encryption alert if it exists.
 func (e *Element) dismissEncryptionAlertIfExists() uiauto.Action {
 	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
-	elementWindow := nodewith.Name("Element").Role(role.Window).HasClass("Widget")
+	elementWindow := nodewith.Name(apps.Element.Name).Role(role.Window).HasClass("Widget")
 	backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(elementWindow)
 	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(ElementPackage))
 	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",

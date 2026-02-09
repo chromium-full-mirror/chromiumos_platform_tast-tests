@@ -33,10 +33,10 @@ const (
 	elementX86APKVarName    = "power.element_x86_apk_url"
 	elementX86_64APKVarName = "power.element_x86_64_apk_url"
 	// defaultApkURLBase is the URL base for the Element APKs with the
-	// default version 1.6.6 on the github.
+	// default version 1.6.50 on the github.
 	// The full links can be found under the Assets
-	// on https://github.com/vector-im/element-android/releases/tag/v1.6.6.
-	defaultApkURLBase = "https://github.com/element-hq/element-android/releases/download/v1.6.32/vector-gplay-"
+	// on https://github.com/vector-im/element-android/releases/tag/v1.6.50.
+	defaultApkURLBase = "https://github.com/element-hq/element-android/releases/download/v1.6.50/vector-gplay-"
 )
 
 var (
@@ -51,7 +51,7 @@ var (
 		elementX86_64APKVarName,
 	}
 
-	// Default to install the apk with version "1.6.6".
+	// Default to install the apk with version "1.6.50".
 	defaultElementApkURLs = map[string]string{
 		elementArmAPKVarName:    defaultApkURLBase + "armeabi-v7a-release-signed.apk",
 		elementArm64APKVarName:  defaultApkURLBase + "arm64-v8a-release-signed.apk",

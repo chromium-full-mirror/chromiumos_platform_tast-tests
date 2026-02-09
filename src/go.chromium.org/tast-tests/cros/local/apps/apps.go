@@ -120,7 +120,7 @@ var Duo = App{
 // Element has details about the Element app.
 var Element = App{
 	ID:   "ldkimphifgfeohfgodpbhdlcgegcllbp",
-	Name: "Element",
+	Name: "Element Classic",
 }
 
 // FamilyLink has details about the Family Link app.
