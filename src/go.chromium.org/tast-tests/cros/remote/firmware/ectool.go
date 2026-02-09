@@ -59,6 +59,13 @@ var (
 	reSensorTemp          = regexp.MustCompile(`\S+\s+([0-9]+) K`)
 	reBatteryInfo         = regexp.MustCompile(`\s*(\S[^\r\n]+)(:|\s)\s+(\S[^\r\n]+)`)
 	reIsAdapterSufficient = regexp.MustCompile(`(\d+)\s+\((0x[0-9a-fA-F]+)\)\s+#\s+(.*)`)
+	reWatchdogPeriod      = regexp.MustCompile(`Watchdog Period:\s*(\d+)\s*ms`)
+	reWatchdogWarnPeriod  = regexp.MustCompile(`Watchdog Warning Period:\s*(\d+)\s*ms`)
+	reWatchdogNominal     = regexp.MustCompile(`Watchdog Reload Period Nominal:\s*(\d+)\s*ms`)
+	reWatchdogStatsTime   = regexp.MustCompile(`Watchdog Stats Elapsed Time:\s*(\d+\.\d+)\s*s`)
+	reWatchdogCount       = regexp.MustCompile(`Watchdog Reload Count:\s*(\d+)`)
+	reWatchdogMax         = regexp.MustCompile(`Watchdog Reload Period Max:\s*(\d+)\s*ms\s*@\s*(\d+\.\d+)\s*s`)
+	reWatchdogAvg         = regexp.MustCompile(`Watchdog Reload Period Average:\s*(\d+)\s*ms`)
 )
 
 // Command return the prebuilt ssh Command with options and args applied.
@@ -339,7 +346,7 @@ func (ec *ECTool) CBI(ctx context.Context, cmd CBICmd, args ...string) (string, 
 		if strings.Contains(string(out), "EC result 3 (INVALID_PARAM)") {
 			return "", errors.Wrapf(err, "no value for 'ectool %s' on DUT", strings.Join(cmdAndArgs, " "))
 		}
-		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error:\n%s", strings.Join(cmdAndArgs, " "), string(out))
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error: %s", strings.Join(cmdAndArgs, " "), string(out))
 	}
 	return string(out), nil
 }
@@ -386,7 +393,7 @@ func (ec *ECTool) BCFG(ctx context.Context, cmd BCFGCmd, args ...string) (string
 		if strings.Contains(string(out), "EC result 3 (INVALID_PARAM)") {
 			return "", errors.Wrapf(err, "no value for 'ectool %s' on DUT", strings.Join(cmdAndArgs, " "))
 		}
-		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error:\n%s", strings.Join(cmdAndArgs, " "), string(out))
+		return "", errors.Wrapf(err, "running 'ectool %s' on DUT, error: %s", strings.Join(cmdAndArgs, " "), string(out))
 	}
 	return string(out), nil
 }
@@ -651,4 +658,56 @@ func (ec *ECTool) IsAdapterSufficient(ctx context.Context) (int, error) {
 	}
 
 	return -1, errors.Wrap(err, "failed to run ectool chargestate param")
+}
+
+// WatchdogInfo represents the output of 'ectool watchdoginfo'.
+type WatchdogInfo struct {
+	Period              int
+	WarningPeriod       int
+	ReloadPeriodNominal int
+	StatsElapsedTime    float64
+	ReloadCount         int
+	ReloadPeriodMax     int
+	ReloadPeriodMaxTime float64
+	ReloadPeriodAverage int
+}
+
+// WatchdogInfo retrieves the watchdog info from the ectool watchdoginfo command.
+func (ec *ECTool) WatchdogInfo(ctx context.Context, resetStats bool) (*WatchdogInfo, error) {
+	args := []string{"watchdoginfo"}
+	if resetStats {
+		args = append(args, "reset_stats")
+	}
+	out, err := ec.Command(ctx, args...).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrapf(err, "running 'ectool %s' on DUT", strings.Join(args, " "))
+	}
+
+	outstr := string(out)
+	info := &WatchdogInfo{}
+
+	if match := reWatchdogPeriod.FindStringSubmatch(outstr); match != nil {
+		info.Period, _ = strconv.Atoi(match[1])
+	}
+	if match := reWatchdogWarnPeriod.FindStringSubmatch(outstr); match != nil {
+		info.WarningPeriod, _ = strconv.Atoi(match[1])
+	}
+	if match := reWatchdogNominal.FindStringSubmatch(outstr); match != nil {
+		info.ReloadPeriodNominal, _ = strconv.Atoi(match[1])
+	}
+	if match := reWatchdogStatsTime.FindStringSubmatch(outstr); match != nil {
+		info.StatsElapsedTime, _ = strconv.ParseFloat(match[1], 64)
+	}
+	if match := reWatchdogCount.FindStringSubmatch(outstr); match != nil {
+		info.ReloadCount, _ = strconv.Atoi(match[1])
+	}
+	if match := reWatchdogMax.FindStringSubmatch(outstr); match != nil {
+		info.ReloadPeriodMax, _ = strconv.Atoi(match[1])
+		info.ReloadPeriodMaxTime, _ = strconv.ParseFloat(match[2], 64)
+	}
+	if match := reWatchdogAvg.FindStringSubmatch(outstr); match != nil {
+		info.ReloadPeriodAverage, _ = strconv.Atoi(match[1])
+	}
+
+	return info, nil
 }
