@@ -1263,6 +1263,11 @@ func (s *Servo) SetOnOff(ctx context.Context, ctrl OnOffControl, value OnOffValu
 	return s.SetString(ctx, StringControl(ctrl), string(value))
 }
 
+// SetOnOffTimeout sets an OnOffControl setting to the specified value.
+func (s *Servo) SetOnOffTimeout(ctx context.Context, ctrl OnOffControl, value OnOffValue, timeout time.Duration) error {
+	return s.SetStringTimeout(ctx, StringControl(ctrl), string(value), timeout)
+}
+
 // ToggleOffOn turns a switch off and on again.
 func (s *Servo) ToggleOffOn(ctx context.Context, ctrl OnOffControl) error {
 	if err := s.SetString(ctx, StringControl(ctrl), string(Off)); err != nil {

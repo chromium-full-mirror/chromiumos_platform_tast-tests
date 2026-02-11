@@ -123,14 +123,14 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 
 	s.Log("Reading fw image over CCD")
 	h.DisconnectDUT(ctx) // Some of the dutControl commands will reboot
-	if err := h.Servo.SetOnOff(ctx, servoSPIControl, servo.On); err != nil {
+	if err := h.Servo.SetOnOffTimeout(ctx, servoSPIControl, servo.On, 30*time.Second); err != nil {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
 	img, err := bios.NewRemoteImage(ctx, h.ServoProxy, programmer, commonbios.GBBImageSection, nil)
 	if err != nil {
 		s.Error("Could not read firmware: ", err)
 	}
-	if err := h.Servo.SetOnOff(ctx, servoSPIControl, servo.Off); err != nil {
+	if err := h.Servo.SetOnOffTimeout(ctx, servoSPIControl, servo.Off, 30*time.Second); err != nil {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
 	if img == nil {
