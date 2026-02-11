@@ -169,6 +169,11 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outD
 		return errors.Wrap(err, "cannot force CC off on Servo")
 	}
 
+	// GoBigSleepLint: Wait for the PD stack to settle down before turning it back on again.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "sleep failed")
+	}
+
 	// Set USB-PD CC line polarity.
 	var cc string
 	switch testParams.CC {
