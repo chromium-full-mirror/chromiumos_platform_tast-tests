@@ -33,9 +33,9 @@ func init() {
 			"paper-io_scanning",
 			"group:cq-medium",
 		},
-		SoftwareDeps: []string{"chrome", "drivefs", "gaia"},
+		SoftwareDeps: []string{"chrome", "drivefs", "gaia", "non_meet_device"},
 		// TODO(b/202847398): Skip sona devices due to abnormal failures.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona", "endeavor")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("sona")),
 		Fixture:      "virtualUsbPrinterModulesLoadedWithDriveFsStarted",
 		Data: []string{
 			scanning.SourceImage,

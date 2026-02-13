@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,8 +36,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_scanning",
 		},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("endeavor")),
+		SoftwareDeps: []string{"chrome", "non_meet_device"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})
 }

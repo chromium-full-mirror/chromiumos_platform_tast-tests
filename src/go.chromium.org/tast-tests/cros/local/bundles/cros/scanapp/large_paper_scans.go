@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/scanapp"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,8 +28,7 @@ func init() {
 			"paper-io_scanning",
 		},
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"cups", "chrome"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("endeavor")),
+		SoftwareDeps: []string{"cups", "chrome", "non_meet_device"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 		Data: []string{
 			scanning.SourceImage,
