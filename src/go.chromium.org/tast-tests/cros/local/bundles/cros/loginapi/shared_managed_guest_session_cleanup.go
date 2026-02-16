@@ -242,10 +242,19 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	} else if !pinned {
 		s.Fatalf("App %q should have been pinned", cameraAppID)
 	}
-	if pinned, err := isAppPinned(ctx, tConn, testAppID); err != nil {
-		s.Fatalf("Failed to check if app %q is pinned: %v", testAppID, err)
-	} else if !pinned {
-		s.Fatalf("App %q should have been pinned", testAppID)
+	// Wait for the policy-pinned app to be pinned. It might take a while for the
+	// policy to be applied.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pinned, err := isAppPinned(ctx, tConn, testAppID)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if !pinned {
+			return errors.New("app not pinned yet")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		s.Fatalf("App %q should have been pinned: %v", testAppID, err)
 	}
 
 	// The unload popup only shows up if there was user interaction on the page
@@ -328,11 +337,19 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	} else if pinned {
 		s.Fatalf("App %q should have been unpinned", cameraAppID)
 	}
-	// Check that policy-pinned app is still pinned.
-	if pinned, err := isAppPinned(ctx, tConn, testAppID); err != nil {
-		s.Fatalf("Failed to check if app %q is pinned: %v", testAppID, err)
-	} else if !pinned {
-		s.Fatalf("App %q should have remained pinned", testAppID)
+	// Check that policy-pinned app is still pinned. It might take a while for the
+	// policy to be reapplied.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pinned, err := isAppPinned(ctx, tConn, testAppID)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if !pinned {
+			return errors.New("app not pinned yet")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		s.Fatalf("App %q should have remained pinned: %v", testAppID, err)
 	}
 
 	// Check the inSessionConn is still alive. This indicates that the
