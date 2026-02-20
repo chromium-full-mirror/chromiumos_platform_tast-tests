@@ -38,6 +38,8 @@ type Servo struct {
 
 	// For PD tests, this caches the information about the PD port on the DUT.
 	dutPDInfo *DUTPDInfo
+
+	ecChanMasks map[ECChannelName]int64
 }
 
 const (
