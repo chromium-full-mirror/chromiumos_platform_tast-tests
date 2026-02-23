@@ -43,6 +43,8 @@ import (
 const (
 	subjectOrgForDeviceCert = "TestCompanyNameForDevice"
 	subjectOrgForUserCert   = "TestCompanyNameForUser"
+	// TODO(b/486823783): Remove the disabling after the problem with OobeAutoEnrollmentCheckForced is fixed.
+	commonChromeFlags = "--disable-features=OobeAutoEnrollmentCheckForced"
 )
 
 type testParams struct {
@@ -95,6 +97,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningTesting,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "CEA312B8-39AA-4ACE-B7B3-C67D8F3E2FD9",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -114,6 +117,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningTesting,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "CEA312B8-39AA-4ACE-B7B3-C67D8F3E2FD9",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -134,6 +138,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -154,6 +159,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "3d1c4060-7018-4af6-9240-30d3de469a8b",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -174,6 +180,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting5,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "be201149-9176-48bc-be86-d12e7cd254e0",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -192,6 +199,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting5,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "be201149-9176-48bc-be86-d12e7cd254e0",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -210,6 +218,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting6,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "9fcf3bd8-2fbf-4ac4-9155-7a9cae2f8b24",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -228,6 +237,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting6,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "9fcf3bd8-2fbf-4ac4-9155-7a9cae2f8b24",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -247,7 +257,8 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting7,
 					},
-					chromeFlags:     "--enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
+					chromeFlags: commonChromeFlags + " --enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
+
 					deviceProfileID: "188adb44-6b18-47b5-86a5-b3f23615d650",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -267,7 +278,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting7,
 					},
-					chromeFlags:     "--enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
+					chromeFlags:     commonChromeFlags + " --enable-features=CertProvisioningUseOnlyInvalidationsForTesting",
 					deviceProfileID: "188adb44-6b18-47b5-86a5-b3f23615d650",
 				},
 				// TODO b/346725308 Refactor to use utility and known dependency list.
@@ -286,6 +297,7 @@ func init() {
 						DMServer: policy.DMServerAlphaURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting8,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "b8712124-d5e8-4025-bca9-c43142773324",
 				},
 
@@ -305,6 +317,7 @@ func init() {
 						DMServer: policy.DMServerProdURL,
 						PoolID:   tape.BuiltInCertProvisioningAPITesting8,
 					},
+					chromeFlags:     commonChromeFlags,
 					deviceProfileID: "b8712124-d5e8-4025-bca9-c43142773324",
 				},
 

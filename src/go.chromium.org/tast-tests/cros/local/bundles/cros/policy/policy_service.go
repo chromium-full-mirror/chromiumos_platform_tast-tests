@@ -181,7 +181,7 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.DMSPolicy(req.DmserverURL),
-		chrome.ExtraArgs(req.ExtraArgs),
+		chrome.ExtraArgs(strings.Fields(req.ExtraArgs)...),
 	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
