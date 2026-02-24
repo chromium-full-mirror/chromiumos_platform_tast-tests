@@ -32,7 +32,6 @@ const (
 	DUTUSB3EnV4p1         StringControl = "servo_v4p1_dut_usb3_en"
 	DUTVoltageMV          StringControl = "dut_voltage_mv"
 	Devices               StringControl = "devices"
-	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
 	FWWPState             StringControl = "fw_wp_state"
 	GSCFWWPAtBootState    StringControl = "gsc_fw_wp_atboot_state"

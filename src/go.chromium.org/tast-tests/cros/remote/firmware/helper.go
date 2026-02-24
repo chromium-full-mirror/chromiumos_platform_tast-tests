@@ -679,7 +679,7 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 		testImageURL := fmt.Sprintf("%s/extract/%s/chromiumos_test_image.tar.xz?file=chromiumos_test_image.bin", devserver, strings.TrimPrefix(artifactsURL, "gs://"))
 
 		testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", testImageURL)
-		if err := h.Servo.SetStringTimeout(ctx, servo.DownloadImageToUSBDev, testImageURL, 2*time.Hour); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, true, "image_downloader", "--device="+usbdev, "--image_path="+testImageURL); err != nil {
 			if strings.Contains(string(err.Error()), "Read-only file system") {
 				modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
 				if err != nil {
