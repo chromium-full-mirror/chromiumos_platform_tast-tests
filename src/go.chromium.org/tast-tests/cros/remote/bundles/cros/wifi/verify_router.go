@@ -6,7 +6,10 @@ package wifi
 
 import (
 	"context"
+	"fmt"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -24,6 +27,10 @@ const (
 )
 
 type verifyRouterParams struct {
+	isConductive bool
+}
+
+type bandConfig struct {
 	name  string
 	apOps []hostapd.Option
 }
@@ -45,29 +52,19 @@ func init() {
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
-				Name: "2g",
+				Name: "ota",
 				Val: verifyRouterParams{
-					name: "2G",
-					apOps: []hostapd.Option{
-						hostapd.Mode(hostapd.Mode80211nPure),
-						hostapd.Channel(6),
-						hostapd.HTCaps(hostapd.HTCapHT40),
-					},
+					isConductive: false,
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
+				Fixture: wificell.FixtureID(wificell.TFFeaturesRouters),
 			},
 			{
-				Name: "5g",
+				Name: "conductive",
 				Val: verifyRouterParams{
-					name: "5G",
-					apOps: []hostapd.Option{
-						hostapd.Mode(hostapd.Mode80211acPure),
-						hostapd.Channel(48),
-						hostapd.HTCaps(hostapd.HTCapHT40),
-						hostapd.VHTChWidth(hostapd.VHTChWidth20Or40),
-					},
+					isConductive: true,
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraTestBedDeps: []string{tbdep.Conductive},
+				Fixture:          wificell.FixtureID(wificell.TFFeaturesRouters),
 			},
 		},
 	})
@@ -88,34 +85,82 @@ func VerifyRouter(ctx context.Context, s *testing.State) {
 
 	dutiwr := remoteiw.NewRemoteRunner(s.DUT().Conn())
 
-	var aps []*wificell.APIface
-	for i := 0; i < 2; i++ {
-		ap, err := tf.ConfigureAP(ctx, params.apOps, nil)
-		if err != nil {
-			s.Fatalf("Failed to configure AP%d: %v", i+1, err)
-		}
-		aps = append(aps, ap)
+	bands := []bandConfig{
+		{
+			name: "2G",
+			apOps: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(6),
+				hostapd.HTCaps(hostapd.HTCapHT40),
+			},
+		},
+		{
+			name: "5G",
+			apOps: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211acPure),
+				hostapd.Channel(48),
+				hostapd.HTCaps(hostapd.HTCapHT40),
+				hostapd.VHTChWidth(hostapd.VHTChWidth20Or40),
+			},
+		},
 	}
-	defer tf.DeconfigAllAPs(cleanupCtx)
 
-	for i, ap := range aps {
-		if _, err := tf.ConnectWifiAP(ctx, ap); err != nil {
-			s.Fatalf("Failed to connect to AP%d: %v", i+1, err)
-		}
+	// Pcap will act as the second router if provided.
+	for rIdx := 0; rIdx < tf.ConfiguredRouterCount(); rIdx++ {
+		routerIdx := wificell.RouterIdx(rIdx)
+		routerTarget := tf.RouterByID(routerIdx)
 
-		if err := verifySignalLevels(ctx, dutiwr, clientIface); err != nil {
-			s.Fatalf("Signal check failed for AP%d: %v", i+1, err)
-		}
+		for _, band := range bands {
+			func(ctx context.Context) {
+				var aps []*wificell.APIface
+				for i := 0; i < 2; i++ {
+					ap, err := tf.ConfigureAPOnRouterID(ctx, routerIdx, band.apOps, nil, false, false)
+					if err != nil {
+						s.Fatalf("Failed to configure %s AP%d on Router%d: %v", band.name, i+1, rIdx+1, err)
+					}
+					aps = append(aps, ap)
+				}
+				defer tf.DeconfigAllAPs(cleanupCtx)
 
-		// Avoid automatically reconnecting to the AP.
-		if err := tf.CleanDisconnectWifi(ctx); err != nil {
-			s.Fatal("Failed to disconnect: ", err)
+				for i, ap := range aps {
+					s.Run(ctx, fmt.Sprintf("Router%d_AP%d_%s", rIdx+1, i+1, band.name), func(ctx context.Context, s *testing.State) {
+						if _, err := tf.ConnectWifiAP(ctx, ap); err != nil {
+							s.Fatal("Failed to connect: ", err)
+						}
+
+						if err := verifySignalLevels(ctx, dutiwr, clientIface, routerTarget.RouterModel(), params.isConductive); err != nil {
+							s.Fatal("Signal check failed: ", err)
+						}
+
+						if err := tf.CleanDisconnectWifi(ctx); err != nil {
+							s.Fatal("Failed to disconnect: ", err)
+						}
+					})
+				}
+			}(ctx)
 		}
 	}
 }
 
 // verifySignalLevels checks the signal strength on the DUT against thresholds.
-func verifySignalLevels(ctx context.Context, iwr *remoteiw.Runner, clientIface string) error {
+func verifySignalLevels(ctx context.Context, iwr *remoteiw.Runner, clientIface, model string, isConductive bool) error {
+	signalLevelStr, err := iwr.WifiInterfaceSignalLevel(ctx, clientIface)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve signal info from device")
+	}
+	signalLevel, err := strconv.Atoi(strings.TrimSpace(signalLevelStr))
+	if err != nil {
+		return errors.Wrap(err, "failed to parse signal level")
+	}
+	if signalLevel < signalThreshold {
+		return errors.Errorf("signal too weak (%d dBm)", signalLevel)
+	}
+
+	// Skip chain variance check for OTA or Gale.
+	if !isConductive || model == "gale" {
+		return nil
+	}
+
 	signalLevels, err := iwr.WifiInterfaceSignalLevelAllChains(ctx, clientIface)
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve chain signal info from device")
@@ -128,12 +173,8 @@ func verifySignalLevels(ctx context.Context, iwr *remoteiw.Runner, clientIface s
 	maxSignal := slices.Max(signalLevels)
 	minSignal := slices.Min(signalLevels)
 
-	if minSignal < signalThreshold {
-		return errors.Errorf("signal too weak on at least one antenna (%v dBm)", signalLevels)
-	}
 	if maxSignal-minSignal > varianceThreshold {
 		return errors.Errorf("Antenna signals vary significantly (%v dBm)", signalLevels)
 	}
-
 	return nil
 }
