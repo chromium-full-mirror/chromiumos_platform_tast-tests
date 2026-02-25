@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -117,8 +118,8 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Shutting down the AP")
 	powerOffCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	if err := dut.Conn().CommandContext(powerOffCtx, "shutdown", "-h", "now").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		s.Fatal("Failed to execute shutdown command: ", err)
+	if err := dut.Conn().CommandContext(powerOffCtx, "shutdown", "-h", "now").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, &ssh.ExitMissingError{}) {
+		s.Log("(Ignored) Failed to execute shutdown command: ", err)
 	}
 
 	testing.ContextLog(ctx, "Waiting for AP to shutdown")
