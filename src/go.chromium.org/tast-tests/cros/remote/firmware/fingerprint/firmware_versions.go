@@ -51,14 +51,6 @@ var firmwareVersionMap = map[fingerprint.BoardName]map[string]firmwareMetadata{
 			keyID:     "257a0aa3ac9e81aa4bc3aabdb6d3d079117c5799",
 		},
 	},
-	fingerprint.BoardNameGwendolin: {
-		"gwendolin_v2.0.27079-f272542298.bin": {
-			sha256sum: "96b168f60fb7d601e394280ff1c18b28c002c4a61407e92a3feaf44e1bf07cf2",
-			roVersion: "gwendolin_v2.0.27079-f272542298",
-			rwVersion: "gwendolin_v2.0.27079-f272542298",
-			keyID:     "1a6cb4aaf9e68488b4e92a36bfd532d0774dffd1",
-		},
-	},
 	fingerprint.BoardNameHelipilot: {
 		"helipilot_v2.0.24337-2726e9f149-RO_v2.0.29519-02e4ab90d0-RW.bin": {
 			sha256sum: "2a1367953558a01b0347c40db7c6dfb1d15dd3c8e69a01a877660d6b53573e18",

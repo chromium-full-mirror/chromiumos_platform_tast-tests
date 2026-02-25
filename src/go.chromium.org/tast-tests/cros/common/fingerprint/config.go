@@ -19,7 +19,6 @@ const (
 	BoardNameNocturne     BoardName = "nocturne_fp"
 	BoardNameNami         BoardName = "nami_fp"
 	BoardNameHelipilot    BoardName = "helipilot"
-	BoardNameGwendolin    BoardName = "gwendolin"
 	BoardNameRosalia      BoardName = "rosalia"
 )
 
@@ -32,7 +31,6 @@ func (b BoardName) IsValid() bool {
 		BoardNameNocturne,
 		BoardNameNami,
 		BoardNameHelipilot,
-		BoardNameGwendolin,
 		BoardNameRosalia:
 		return true
 	default:
