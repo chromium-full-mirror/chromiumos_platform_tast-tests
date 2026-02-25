@@ -144,7 +144,7 @@ func BsmOobePerf(ctx context.Context, s *testing.State) {
 
 	// Using the power recorder to profile the resource usage of OOBE. The power
 	// consumption is not the focus in this test.
-	r := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 
 	if err := r.Start(ctx); err != nil {
