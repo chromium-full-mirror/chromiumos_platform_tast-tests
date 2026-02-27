@@ -430,6 +430,9 @@ type monitorStartOutput struct {
 
 // GpioMonitorStart starts monitoring the specified gpio values
 func (h DevboardHelper) GpioMonitorStart(ctx context.Context, gpios ...ti50.GpioName) (session GpioMonitorSession) {
+	if h.TestbedType == ti50.GscHostEmulation {
+		return
+	}
 	args := make([]string, len(gpios)+2)
 	args[0] = "monitoring"
 	args[1] = "start"
@@ -476,6 +479,9 @@ type monitorFinishOutput struct {
 // GpioMonitorRead retrieves the list of events so far the specified gpio monitoring session, the
 // monitoring continues, and must be eventually stopped by a call to GpioMonitorFinish.
 func (h DevboardHelper) GpioMonitorRead(ctx context.Context, session GpioMonitorSession) (events GpioEvents) {
+	if h.TestbedType == ti50.GscHostEmulation {
+		return
+	}
 	return h.gpioMonitorRead(ctx, session, false)
 }
 
@@ -511,6 +517,9 @@ func (h DevboardHelper) GpioMonitorWait(ctx context.Context, session GpioMonitor
 
 // GpioMonitorFinish finishes gpio monitoring for the specified session
 func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonitorSession) (events GpioEvents) {
+	if h.TestbedType == ti50.GscHostEmulation {
+		return
+	}
 	return h.gpioMonitorRead(ctx, session, true)
 }
 
@@ -567,6 +576,9 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 // WaitForTpm wait until GSC responds with the correct DID VID. Prefer the
 // WaitForTpmStartup version if you don't need to explicitly call Startup.
 func (h DevboardHelper) WaitForTpm(ctx context.Context, tpmHandle *TpmHelper) {
+	if h.TestbedType == ti50.GscHostEmulation {
+		return
+	}
 	// Try reading DidVid a few times until Ti50 or Cr50 is ready.
 	const maxDidVidAttempts = 6
 	expectedDidVidValue := h.GscProperties().ExpectedDidVidValue()
@@ -634,8 +646,15 @@ func (h DevboardHelper) WaitForTpmStartup(ctx context.Context, tpmHandle *TpmHel
 	startup := tpm2.Startup{
 		StartupType: tpm2.TPMSUClear,
 	}
-	if _, err := startup.Execute(tpmHandle); err != nil {
-		h.Fatalf("TPM startup error: %v", err)
+	// Retries for host_emulation (uses TPM_RC_RETRY when TPM app is not yet ready).
+	for i := 0; i < 10; i++ {
+		_, err := startup.Execute(tpmHandle)
+		if err == nil {
+			return
+		}
+		if !(h.TestbedType == ti50.GscHostEmulation && strings.Contains(err.Error(), "TPM_RC_RETRY")) {
+			h.Fatalf("TPM startup error: %v", err)
+		}
 	}
 }
 
