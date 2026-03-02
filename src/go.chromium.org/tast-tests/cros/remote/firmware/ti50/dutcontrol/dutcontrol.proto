@@ -87,7 +87,7 @@ message CommandArg {
   }
 }
 
-// CommandRequest runs an OpenTitanTool or gsctool command.
+// CommandRequest runs a tool's sub-command.
 message CommandRequest {
   string command = 1;
   repeated CommandArg args = 2;
@@ -383,6 +383,9 @@ service DutControl {
 
   // Run a generic flashrom command.
   rpc FlashromCommand(CommandRequest) returns (CommandResponse);
+
+  // Run a boot_param_test command.
+  rpc BootParamTestCommand(CommandRequest) returns (CommandResponse);
 
   // Query the nature and capabilities of this testbed.
   rpc Query(QueryRequest) returns (QueryResponse);

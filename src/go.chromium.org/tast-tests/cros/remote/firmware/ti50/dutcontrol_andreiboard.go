@@ -722,3 +722,29 @@ func (a *DUTControlAndreiboard) GscUsbSpiBridge(ctx context.Context, operation c
 	_, err := a.client.GscUsbApSpiBridge(ctx, req)
 	return err
 }
+
+// BootParamTest runs the boot param test.
+func (a *DUTControlAndreiboard) BootParamTest(ctx context.Context, binBytes []byte, outputDice, verbose bool) (stdout, dice []byte, durationMs uint32, err error) {
+	var cArgs []*dutcontrol.CommandArg
+	if verbose {
+		cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "--verbose"}})
+	}
+	if outputDice {
+		cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_ResponseFile{ResponseFile: "next_dice"}})
+	}
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_File{File: binBytes}})
+	req := &dutcontrol.CommandRequest{Args: cArgs}
+	resp, err := a.client.BootParamTestCommand(ctx, req)
+	if err != nil {
+		return nil, nil, 0, errors.Wrap(err, "BootParamTest request")
+	}
+	if resp.Err != "" {
+		return nil, nil, 0, errors.Errorf("BootParamTest response: %s, stdout: %s, stderr: %s", resp.Err, resp.Output, resp.ErrOutput)
+	}
+
+	if outputDice {
+		return resp.Output, resp.Files[0], resp.DurationMs, nil
+	}
+
+	return resp.Output, nil, resp.DurationMs, nil
+}
