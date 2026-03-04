@@ -30,7 +30,7 @@ func init() {
 			"group:mainline",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "non_flex_device"},
 		Fixture:      fixture.TelemetryExtensionSkipOEMNameCheck,
 	})
 }
