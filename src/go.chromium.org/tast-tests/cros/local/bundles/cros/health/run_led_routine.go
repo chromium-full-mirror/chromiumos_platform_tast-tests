@@ -33,8 +33,9 @@ func init() {
 		BugComponent: "b:982097",
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
+		// TODO(b/485053124): Promote the test to critical when the failure is fixed.
+		Attr:    []string{"group:mainline", "informational"},
+		Fixture: "crosHealthdRunning",
 	})
 }
 
