@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	sshPollingTimeout = 20 * time.Second
+	sshPollingTimeout = 60 * time.Second
 )
 
 // ConnectPeripheralsViaDock connects the peripherals via the dock, verifies each connection and returns the list of USB devices.

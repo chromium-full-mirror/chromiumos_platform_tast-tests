@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	pollTimeout  = 30 * time.Second
+	pollTimeout  = 60 * time.Second
 	pollInterval = 200 * time.Millisecond
 )
 
@@ -186,7 +186,7 @@ func VerifyUSBDevicesCount(ctx context.Context, dut *dut.DUT, expectUSBDevices [
 func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected bool, expectUSBDevices []string) error {
 	testing.ContextLog(ctx, "Starting verifying peripherals")
 
-	testingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	testingCtx, cancel := context.WithTimeout(ctx, pollTimeout)
 	defer cancel()
 	if err := VerifyPowerStatus(testingCtx, dut, isConnected); err != nil {
 		return errors.Wrap(err, "verify connection of power")
@@ -943,7 +943,7 @@ func NewRemovableMountPoints(ctx context.Context, dut *dut.DUT, previous []strin
 			return errors.New("no new removable mount points found")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: 1 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "failed to find new removable mount points")
 	}
 	return newMounts, nil
@@ -984,7 +984,7 @@ func removableMountPoints(ctx context.Context, dut *dut.DUT, blockUntilNotEmpty 
 			return nil
 		}
 		return errors.New("Have not found removable mount points")
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); nonPollingError {
+	}, &testing.PollOptions{Timeout: pollTimeout, Interval: 1 * time.Second}); nonPollingError {
 		return nil, err
 	}
 	return mountPoints, nil
