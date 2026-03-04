@@ -596,7 +596,7 @@ func waitPoliciesPersisted(ctx context.Context, deviceLocalAccounts []policy.Dev
 		// We can't match accountDirs to deviceLocalAccounts, so just check the number of policy files
 		// is what we expect.
 		if len(accountDirs) != len(deviceLocalAccounts) {
-			return errors.Errorf("found %q entries in %q, expected %q", len(accountDirs), policyDir, len(deviceLocalAccounts))
+			return errors.Errorf("found %v entries in %q, expected %v", len(accountDirs), policyDir, len(deviceLocalAccounts))
 		}
 		for _, accountDir := range accountDirs {
 			file := fmt.Sprintf("%v/%v/policy/policy", policyDir, accountDir.Name())

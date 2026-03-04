@@ -163,7 +163,7 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 				if resultPv, err := proxyManager.ManualConfigContent(ctx, resources.tconn, pv.Protocol); err != nil {
 					s.Fatalf("Failed to get proxy value for %q: %v", pv.Protocol.Name(), err)
 				} else if !reflect.DeepEqual(resultPv, pv) {
-					s.Fatalf("Failed to verify proxy value for %q: got %q, want %q", pv.Protocol.Name(), resultPv, pv)
+					s.Fatalf("Failed to verify proxy value for %q: got %v, want %v", pv.Protocol.Name(), resultPv, pv)
 				}
 			}
 		}()

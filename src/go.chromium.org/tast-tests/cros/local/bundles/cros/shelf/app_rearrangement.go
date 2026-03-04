@@ -232,7 +232,7 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 		}
 
 		if len(fakeApps) != 2 {
-			s.Fatalf("Failed to find all fake apps: want 2; got %q: ", len(fakeApps))
+			s.Fatalf("Failed to find all fake apps: want 2; got %v: ", len(fakeApps))
 		}
 
 		appIDsToPin = []string{apps.Settings.ID, fakeApps[1].AppID, fakeApps[0].AppID}
@@ -247,7 +247,7 @@ func AppRearrangement(ctx context.Context, s *testing.State) {
 		}
 
 		if len(fakeApps) != 2 {
-			s.Fatalf("Failed to find all fake apps: want 2; got %q: ", len(fakeApps))
+			s.Fatalf("Failed to find all fake apps: want 2; got %v: ", len(fakeApps))
 		}
 
 		appIDsToPin = []string{apps.Settings.ID, fakeApps[1].AppID, apps.FilesSWA.ID}

@@ -26,7 +26,7 @@ func Test_DumpFmap_ContextDeadlineExceeded(t *testing.T) {
 
 	fmapSections, out, err := i.DumpFmap(context.Background(), "inFile", nil)
 	if len(fmapSections) > 0 {
-		t.Errorf("no FlashMAP sections expected, got: %q", fmapSections)
+		t.Errorf("no FlashMAP sections expected, got: %v", fmapSections)
 	}
 	if len(strings.TrimSpace(string(out))) != 0 {
 		t.Errorf("unexpected command output: %q", string(out))
@@ -41,7 +41,7 @@ func Test_DumpFmap_NoInputFile(t *testing.T) {
 
 	fmapSections, out, err := i.DumpFmap(context.Background(), "", nil)
 	if len(fmapSections) > 0 {
-		t.Errorf("no FlashMAP sections expected, got: %q", fmapSections)
+		t.Errorf("no FlashMAP sections expected, got: %v", fmapSections)
 	}
 	if len(strings.TrimSpace(string(out))) > 0 {
 		t.Errorf("command output not expected, got: %q", string(out))
@@ -56,7 +56,7 @@ func Test_DumpFmap_NoFutilityOutput(t *testing.T) {
 
 	fmapSections, out, err := i.DumpFmap(context.Background(), "input.bin", nil)
 	if len(fmapSections) > 0 {
-		t.Errorf("no FlashMAP sections expected, got: %q", fmapSections)
+		t.Errorf("no FlashMAP sections expected, got: %v", fmapSections)
 	}
 	if len(strings.TrimSpace(string(out))) > 0 {
 		t.Errorf("command output not expected, got: %q", string(out))
@@ -86,7 +86,7 @@ func Test_DumpFmap_ParseDataOK(t *testing.T) {
 
 	fmapSections, out, err := i.DumpFmap(context.Background(), "input.bin", nil)
 	if !reflect.DeepEqual(fmapSections, expectedFields) {
-		t.Errorf("incorrect FlashMAP sections returned, expected %q, got %q", expectedFields, fmapSections)
+		t.Errorf("incorrect FlashMAP sections returned, expected %v, got %v", expectedFields, fmapSections)
 	}
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Error("expected command output, got nothing")
@@ -114,7 +114,7 @@ func Test_DumpFmap_ParseDataInvalid(t *testing.T) {
 
 		fmapSections, out, err := i.DumpFmap(context.Background(), "input.bin", nil)
 		if len(fmapSections) > 0 {
-			t.Errorf("no FlashMAP sections expected, got: %q", fmapSections)
+			t.Errorf("no FlashMAP sections expected, got: %v", fmapSections)
 		}
 		if len(strings.TrimSpace(string(out))) == 0 {
 			t.Error("expected command output, got nothing")
@@ -145,7 +145,7 @@ func Test_DumpFmap_ParseDataSelective(t *testing.T) {
 
 	fmapSections, out, err := i.DumpFmap(context.Background(), "input.bin", []string{"area1", "area3"})
 	if !reflect.DeepEqual(fmapSections, expectedFields) {
-		t.Errorf("incorrect FlashMAP sections returned, expected %q but got %q", expectedFields, fmapSections)
+		t.Errorf("incorrect FlashMAP sections returned, expected %v but got %v", expectedFields, fmapSections)
 	}
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Error("expected command output, got nothing.")

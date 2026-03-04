@@ -35,7 +35,7 @@ func Test_GetGBB_BasicValues(t *testing.T) {
 
 	gbb, out, err := i.GetGBB(context.Background(), opts)
 	if !reflect.DeepEqual(gbb, expected) {
-		t.Errorf("Invalid GBB returned, expected %q, got %q", expected, gbb)
+		t.Errorf("Invalid GBB returned, expected %v, got %v", expected, gbb)
 	}
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Error("expected command output, got nothing")
@@ -94,7 +94,7 @@ func Test_GetGBB_Servo(t *testing.T) {
 
 	gbb, out, err := i.GetGBB(context.Background(), opts)
 	if !reflect.DeepEqual(gbb, expected) {
-		t.Errorf("invalid GBB returned, expected %q, got %q", expected, gbb)
+		t.Errorf("invalid GBB returned, expected %v, got %v", expected, gbb)
 	}
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Error("expected command output, got nothing")
@@ -124,7 +124,7 @@ func Test_GetGBB_Flash(t *testing.T) {
 
 	gbb, out, err := i.GetGBB(context.Background(), opts)
 	if !reflect.DeepEqual(gbb, expected) {
-		t.Errorf("invalid GBB returned, expected %q, got %q", expected, gbb)
+		t.Errorf("invalid GBB returned, expected %v, got %v", expected, gbb)
 	}
 	if len(strings.TrimSpace(string(out))) == 0 {
 		t.Error("expected command output, got nothing")

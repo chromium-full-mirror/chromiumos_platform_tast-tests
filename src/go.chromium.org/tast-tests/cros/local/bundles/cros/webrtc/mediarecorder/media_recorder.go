@@ -322,7 +322,7 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 	testing.Sleep(ctx, 2*time.Second)
 
 	if err := conn.Call(ctx, nil, "startRecordingForResult", codecMeme, resolution.Width, resolution.Height, recordTime.Milliseconds()); err != nil {
-		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", profile, recordTime.Milliseconds())
+		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%v, %d)", profile, recordTime.Milliseconds())
 	}
 
 	if err := checkCodecAndImplementation(ctx, tconn, initHistogram, profile, true); err != nil {

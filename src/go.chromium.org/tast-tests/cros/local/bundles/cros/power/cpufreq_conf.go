@@ -96,7 +96,7 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to read battery status")
 		}
 		if (status != metrics.BatteryStatusDischarging) == charging {
-			s.Logf("Charging status %q doesn't match charging=%t; not checking governor %q", status, charging, expectedGovernor)
+			s.Logf("Charging status %v doesn't match charging=%t; not checking governor %q", status, charging, expectedGovernor)
 			return nil
 		}
 		return testGovernor(expectedGovernor)

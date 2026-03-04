@@ -307,7 +307,7 @@ func verifyProxySettingsAvailability(ctx context.Context, cr *chrome.Chrome, tco
 		if resultPv, err := manager.ManualConfigContent(ctx, tconn, pv.Protocol); err != nil {
 			return errors.Wrapf(err, "failed to get proxy value for %q", pv.Protocol.Name())
 		} else if !reflect.DeepEqual(resultPv, pv) {
-			return errors.Errorf("failed to verify proxy value for %q: got %q, want %q", pv.Protocol.Name(), resultPv, pv)
+			return errors.Errorf("failed to verify proxy value for %q: got %v, want %v", pv.Protocol.Name(), resultPv, pv)
 		}
 	}
 

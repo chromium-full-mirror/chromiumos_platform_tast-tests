@@ -49,7 +49,7 @@ func CalculatePercentileData(ctx context.Context, data []float64) (map[int]float
 	for _, p := range percentile {
 		value, err := hpsutil.PercentileForSortedData(data, p)
 		if err != nil {
-			return m, errors.Wrapf(err, "error calculating %q percentile", p)
+			return m, errors.Wrapf(err, "error calculating %v percentile", p)
 		}
 		m[p] = value
 	}

@@ -211,7 +211,7 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 	}(cleanupCtx)
 
 	if p2pGroupSSID != string(ssid) || p2pGroupPassphrase != string(key) || p2pFrequency != p2p.Freq(ops...) {
-		return "", -1, errors.Errorf("P2P Group brought up with a different parameters, got (%q/%q/%q), want (%q/%q/%q)",
+		return "", -1, errors.Errorf("P2P Group brought up with a different parameters, got (%q/%q/%v), want (%q/%q/%v)",
 			p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, string(ssid), string(key), p2p.Freq(ops...))
 	}
 

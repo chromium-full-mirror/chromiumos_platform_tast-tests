@@ -54,7 +54,7 @@ func TestCreateRollbackBytes(t *testing.T) {
 	} {
 		actualBytes := createRollbackBytes(tc.rollbackValue)
 		if !bytes.Equal(actualBytes, tc.expectedBytes) {
-			t.Errorf("createRollbackBytes(%q) returned %q; want %q", tc.rollbackValue, actualBytes, tc.expectedBytes)
+			t.Errorf("createRollbackBytes(%v) returned %v; want %v", tc.rollbackValue, actualBytes, tc.expectedBytes)
 		}
 	}
 }

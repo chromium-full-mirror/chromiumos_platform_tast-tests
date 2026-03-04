@@ -588,7 +588,7 @@ func CheckRollbackState(ctx context.Context, d *rpcdut.RPCDUT, expected Rollback
 	}
 
 	if actual != expected {
-		return errors.Errorf("Rollback not set correctly, expected: %q, actual: %q", expected, actual)
+		return errors.Errorf("Rollback not set correctly, expected: %v, actual: %v", expected, actual)
 	}
 
 	return nil

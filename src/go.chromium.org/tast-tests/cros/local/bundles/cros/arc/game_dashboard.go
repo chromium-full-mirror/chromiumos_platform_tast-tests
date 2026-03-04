@@ -108,7 +108,7 @@ func GameDashboard(ctx context.Context, s *testing.State) {
 			return errors.New("failed to find any matches")
 		}
 		if len(matches) != 1 {
-			return errors.Errorf("expected 1 match in Downloads folder, got %q matches", len(matches))
+			return errors.Errorf("expected 1 match in Downloads folder, got %v matches", len(matches))
 		}
 
 		// Verify positive file size.
@@ -118,7 +118,7 @@ func GameDashboard(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open recording file")
 		}
 		if f.Size() <= 0 {
-			return errors.Errorf("expected positive file size, got %q file size", f.Size())
+			return errors.Errorf("expected positive file size, got %v file size", f.Size())
 		}
 
 		return nil

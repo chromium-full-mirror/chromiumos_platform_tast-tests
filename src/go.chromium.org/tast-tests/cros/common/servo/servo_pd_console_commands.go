@@ -78,7 +78,7 @@ func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType,
 		return reply, nil
 	}
 
-	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
+	return PDCtrlReserved, errors.Errorf("unknown PD control message value %v", replyValue)
 }
 
 // ServoSetDataSwapReject sets servo policy of acceptance of Data Role Swap Requests
@@ -120,7 +120,7 @@ func (s *Servo) ServoSendPowerSwapRequest(ctx context.Context) (pdControlMsgType
 		return reply, nil
 	}
 
-	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
+	return PDCtrlReserved, errors.Errorf("unknown PD control message value %v", replyValue)
 }
 
 // ServoGetDualRoleState accepts a port ID and checks for the PD DRP status of this port.

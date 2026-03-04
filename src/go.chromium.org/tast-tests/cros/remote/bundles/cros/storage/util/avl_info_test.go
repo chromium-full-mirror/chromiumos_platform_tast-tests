@@ -96,13 +96,13 @@ func TestAvlInfoFromStorageInfo(t *testing.T) {
 			bytes := []byte(strings.Join(tc.storageInfo, "\n"))
 			got, gotErr := avlInfoFromStorageInfo(bytes, tc.diskType)
 			if gotErr != nil && !tc.wantErr {
-				tt.Errorf("avlInfoFromStorageInfo(bytes, %q) returned error, expected no error", tc.diskType)
+				tt.Errorf("avlInfoFromStorageInfo(bytes, %v) returned error, expected no error", tc.diskType)
 			}
 			if gotErr == nil && tc.wantErr {
-				tt.Errorf("avlInfoFromStorageInfo(bytes, %q) returned no error, expected error", tc.diskType)
+				tt.Errorf("avlInfoFromStorageInfo(bytes, %v) returned no error, expected error", tc.diskType)
 			}
 			if got != tc.want {
-				tt.Errorf("avlInfoFromStorageInfo(bytes, %q): got %+v, want %+v", tc.diskType, got, tc.want)
+				tt.Errorf("avlInfoFromStorageInfo(bytes, %v): got %+v, want %+v", tc.diskType, got, tc.want)
 			}
 		})
 	}

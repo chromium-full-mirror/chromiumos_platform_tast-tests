@@ -166,22 +166,22 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 
 	// Check the distance between the home button and the screen left side when isUnderRTL is false.
 	if !isUnderRTL && homeButtonBounds.Left-dispBounds.Left > gapUpperBound {
-		s.Fatalf("Expected the distance between homeButtonBounds.Left and dispBounds.Left is not greater than %q when the shelf alignment is ShelfAlignmentBottom; the actual gap is %q", gapUpperBound, homeButtonBounds.Left-dispBounds.Left)
+		s.Fatalf("Expected the distance between homeButtonBounds.Left and dispBounds.Left is not greater than %v when the shelf alignment is ShelfAlignmentBottom; the actual gap is %v", gapUpperBound, homeButtonBounds.Left-dispBounds.Left)
 	}
 
 	// Check the distance between the home button and the screen right side when isUnderRTL is true.
 	if isUnderRTL && dispBounds.Right()-homeButtonBounds.Right() > gapUpperBound {
-		s.Fatalf("Expected the distance between dispBounds.Right() and homeButtonBounds.Right() under RTL is not greater than %q when the shelf alignment is ShelfAlignmentBottom; the actual gap is %q", gapUpperBound, dispBounds.Right()-homeButtonBounds.Right())
+		s.Fatalf("Expected the distance between dispBounds.Right() and homeButtonBounds.Right() under RTL is not greater than %v when the shelf alignment is ShelfAlignmentBottom; the actual gap is %v", gapUpperBound, dispBounds.Right()-homeButtonBounds.Right())
 	}
 
 	// Check the distance between the system tray view and the screen right side when isUnderRTL is false.
 	if !isUnderRTL && dispBounds.Right()-systemTrayBounds.Right() > gapUpperBound {
-		s.Fatalf("Expected the distance between dispBounds.Right() and systemTrayBounds.Right() is not greater than %q when the shelf alignment is ShelfAlignmentBottom; the actual gap is %q", gapUpperBound, dispBounds.Right()-systemTrayBounds.Right())
+		s.Fatalf("Expected the distance between dispBounds.Right() and systemTrayBounds.Right() is not greater than %v when the shelf alignment is ShelfAlignmentBottom; the actual gap is %v", gapUpperBound, dispBounds.Right()-systemTrayBounds.Right())
 	}
 
 	// Check the distance between the system tray view and the screen left side when isUnderRTL is true.
 	if isUnderRTL && systemTrayBounds.Left-dispBounds.Left > gapUpperBound {
-		s.Fatalf("Expected the distance between systemTrayBounds.Left and dispBounds.Left is not greater than %q when the shelf alignment is ShelfAlignmentBottom; the actual gap is %q", gapUpperBound, systemTrayBounds.Left-dispBounds.Left)
+		s.Fatalf("Expected the distance between systemTrayBounds.Left and dispBounds.Left is not greater than %v when the shelf alignment is ShelfAlignmentBottom; the actual gap is %v", gapUpperBound, systemTrayBounds.Left-dispBounds.Left)
 	}
 
 	if err := ash.VerifyShelfAppAlignment(ctx, tconn, ash.ShelfAlignmentBottom); err != nil {
@@ -218,7 +218,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the home button with the left shelf: ", err)
 	}
 	if homeButtonBounds.Top-dispBounds.Top > gapUpperBound {
-		s.Fatalf("Expected the distance between homeButtonBounds.Top and dispBounds.Top is not greater than %q when the shelf alignment is ShelfAlignmentLeft; the actual gap is %q", gapUpperBound, homeButtonBounds.Top-dispBounds.Top)
+		s.Fatalf("Expected the distance between homeButtonBounds.Top and dispBounds.Top is not greater than %v when the shelf alignment is ShelfAlignmentLeft; the actual gap is %v", gapUpperBound, homeButtonBounds.Top-dispBounds.Top)
 	}
 
 	systemTrayBounds, err = ui.Location(ctx, systemTray)
@@ -227,7 +227,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	if dispBounds.Bottom()-systemTrayBounds.Bottom() > gapUpperBound {
-		s.Fatalf("Expected the distance between dispBounds.Bottom() and systemTrayBounds.Bottom() is not greater than %q when the shelf alignment is ShelfAlignmentLeft; the actual gap is %q", gapUpperBound, dispBounds.Bottom()-systemTrayBounds.Bottom())
+		s.Fatalf("Expected the distance between dispBounds.Bottom() and systemTrayBounds.Bottom() is not greater than %v when the shelf alignment is ShelfAlignmentLeft; the actual gap is %v", gapUpperBound, dispBounds.Bottom()-systemTrayBounds.Bottom())
 	}
 
 	if err := ash.VerifyShelfAppAlignment(ctx, tconn, ash.ShelfAlignmentLeft); err != nil {
@@ -263,7 +263,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the home button with the right shelf: ", err)
 	}
 	if homeButtonBounds.Top-dispBounds.Top > gapUpperBound {
-		s.Fatalf("Expected the distance between homeButtonBounds.Top and dispBounds.Top is not greater than %q when the shelf alignment is ShelfAlignmentRight; the actual gap is %q", gapUpperBound, homeButtonBounds.Top-dispBounds.Top)
+		s.Fatalf("Expected the distance between homeButtonBounds.Top and dispBounds.Top is not greater than %v when the shelf alignment is ShelfAlignmentRight; the actual gap is %v", gapUpperBound, homeButtonBounds.Top-dispBounds.Top)
 	}
 
 	systemTrayBounds, err = ui.Location(ctx, systemTray)
@@ -271,7 +271,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the system tray view with the right shelf: ", err)
 	}
 	if dispBounds.Bottom()-systemTrayBounds.Bottom() > gapUpperBound {
-		s.Fatalf("Expected the distance between dispBounds.Bottom() and systemTrayBounds.Bottom() is not greater than %q when the shelf alignment is ShelfAlignmentRight; the actual gap is %q", gapUpperBound, dispBounds.Bottom()-systemTrayBounds.Bottom())
+		s.Fatalf("Expected the distance between dispBounds.Bottom() and systemTrayBounds.Bottom() is not greater than %v when the shelf alignment is ShelfAlignmentRight; the actual gap is %v", gapUpperBound, dispBounds.Bottom()-systemTrayBounds.Bottom())
 	}
 
 	if err := ash.VerifyShelfAppAlignment(ctx, tconn, ash.ShelfAlignmentRight); err != nil {

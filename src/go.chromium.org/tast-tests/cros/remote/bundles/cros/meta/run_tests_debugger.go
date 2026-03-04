@@ -124,7 +124,7 @@ func RunTestsDebugger(ctx context.Context, s *testing.State) {
 					portString := line[idx+len(debuggerWaitString):]
 					port, err := strconv.Atoi(portString)
 					if err != nil || port != debuggerPort {
-						s.Fatalf("Waiting for debugger on incorrect port: got %q, want %q", portString, debuggerPort)
+						s.Fatalf("Waiting for debugger on incorrect port: got %v, want %v", portString, debuggerPort)
 					}
 					currentState = waitForDebugger
 				} else if currentState == waitForDebugger {

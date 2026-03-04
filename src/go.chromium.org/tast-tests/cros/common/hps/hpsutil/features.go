@@ -62,7 +62,7 @@ func WaitForNPresenceOps(hctx *HpsContext, numOps int, feature string) ([]int, e
 		return result, errors.Wrap(err, "failed wait for new inference")
 	}
 	if len(result) != int(numOps) {
-		return result, errors.Errorf("Wrong number of presence results: Expected %q Got %q (%q)", numOps, len(result), result)
+		return result, errors.Errorf("Wrong number of presence results: Expected %v Got %v (%v)", numOps, len(result), result)
 	}
 	return result, nil
 }

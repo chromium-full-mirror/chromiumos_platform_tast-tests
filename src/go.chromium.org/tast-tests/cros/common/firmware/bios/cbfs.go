@@ -288,7 +288,7 @@ func binaryToAttributes(data []byte) ([]CBFSFileAttribute, error) {
 		}
 
 		if attributeHeader.Len < CBFSFileAttributeHeaderSize || int(attributeHeader.Len) > len(data)-offset {
-			return nil, errors.Errorf("file attribute with incorrect size %q at offset %q", attributeHeader.Len, offset)
+			return nil, errors.Errorf("file attribute with incorrect size %v at offset %v", attributeHeader.Len, offset)
 		}
 
 		// Reset offset.

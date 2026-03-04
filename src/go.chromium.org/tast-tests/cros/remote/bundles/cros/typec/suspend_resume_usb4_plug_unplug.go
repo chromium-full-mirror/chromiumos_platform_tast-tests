@@ -251,7 +251,7 @@ func SuspendResumeUSB4PlugUnplug(ctx context.Context, s *testing.State) {
 		}
 
 		if slpOpSetPre == slpOpSetPost1 {
-			s.Fatalf("Failed: SLP counter value %q should be different from the one before suspend %q", slpOpSetPost1, slpOpSetPre)
+			s.Fatalf("Failed: SLP counter value %v should be different from the one before suspend %v", slpOpSetPost1, slpOpSetPre)
 		}
 
 		if slpOpSetPost1 == 0 {
@@ -308,7 +308,7 @@ func SuspendResumeUSB4PlugUnplug(ctx context.Context, s *testing.State) {
 		}
 
 		if slpOpSetPost1 == slpOpSetPost2 {
-			s.Fatalf("Failed: SLP counter value %q should be different from the one before suspend %q", slpOpSetPost2, slpOpSetPost1)
+			s.Fatalf("Failed: SLP counter value %v should be different from the one before suspend %v", slpOpSetPost2, slpOpSetPost1)
 		}
 
 		if slpOpSetPost2 == 0 {

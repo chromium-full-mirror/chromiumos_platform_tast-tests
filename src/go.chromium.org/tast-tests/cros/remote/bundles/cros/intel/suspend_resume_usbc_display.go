@@ -169,7 +169,7 @@ func SuspendResumeUSBCDisplay(ctx context.Context, s *testing.State) {
 	}
 
 	if slpOpSetPre == slpOpSetPost {
-		s.Fatalf("Failed: SLP counter value %q should be different from the one before suspend %q", slpOpSetPost, slpOpSetPre)
+		s.Fatalf("Failed: SLP counter value %v should be different from the one before suspend %v", slpOpSetPost, slpOpSetPre)
 	}
 
 	if slpOpSetPost == 0 {

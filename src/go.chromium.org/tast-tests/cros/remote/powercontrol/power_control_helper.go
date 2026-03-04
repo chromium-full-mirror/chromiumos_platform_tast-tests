@@ -283,11 +283,11 @@ func SlpAndC10PackageValues(ctx context.Context, dut *dut.DUT) (int, string, err
 // value before Suspend.
 func AssertSLPAndC10(slpOpSetPre, slpOpSetPost int, pkgOpSetPre, pkgOpSetPost string) error {
 	if slpOpSetPre == slpOpSetPost {
-		return errors.Errorf("failed: SLP counter value %q should be different from the one before suspend %q", slpOpSetPost, slpOpSetPre)
+		return errors.Errorf("failed: SLP counter value %v should be different from the one before suspend %v", slpOpSetPost, slpOpSetPre)
 	}
 
 	if slpOpSetPost == 0 {
-		return errors.Errorf("failed SLP counter value must be non-zero, got: %q", slpOpSetPost)
+		return errors.Errorf("failed SLP counter value must be non-zero, got: %v", slpOpSetPost)
 	}
 
 	if pkgOpSetPre == pkgOpSetPost {
