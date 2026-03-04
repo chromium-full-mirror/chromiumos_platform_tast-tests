@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	cf "go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	cp "go.chromium.org/tast-tests/cros/common/power"
@@ -46,8 +47,9 @@ const (
 	PowerOobe              = "powerOobe"
 
 	// UI
-	PowerAsh    = "powerAsh"
-	PowerAshARC = "powerAshARC"
+	PowerAsh                     = "powerAsh"
+	PowerAshARC                  = "powerAshARC"
+	PowerAshARCWithTuwunelServer = "powerAshARCWithTuwunelServer"
 
 	// Keyboard backlight
 	PowerAshKbbl = "powerAshKbbl"
@@ -431,6 +433,30 @@ func init() {
 			EnableGAIALogin: true,
 			EnableARC:       true,
 		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + minCapacityChargeTimeout + SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshARCWithTuwunelServer,
+		Desc:         "Keyboard backlight off with ARC enabled and Tuwunel server setup, recommended for testing feature power",
+		BugComponent: "b:1361410",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			EnableGAIALogin: true,
+			EnableARC:       true,
+		}),
+		Parent:          fixture.TuwunelServerSetup,
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + minCapacityChargeTimeout + SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,

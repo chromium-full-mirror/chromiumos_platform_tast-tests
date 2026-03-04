@@ -46,7 +46,7 @@ func init() {
 		Timeout:      socialAppTimeout + setup.BatteryPreparationTimeout,
 		Params: []testing.Param{{
 			Name:    "element_ash",
-			Fixture: "powerAshARC",
+			Fixture: setup.PowerAshARCWithTuwunelServer,
 			ExtraAttr: []string{
 				"group:power",
 				"power_regression",
@@ -104,7 +104,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 		// the app from Play Store in this case.
 		s.Log("Failed to parse Element APK URL: ", err)
 	}
-	app := socialapp.NewElement(tconn, kb, a, d, cr, apkURL)
+	app := socialapp.NewElement(ctx, tconn, kb, a, d, cr.Creds(), apkURL)
 
 	batteryCleanup, err := setup.Battery(ctx, socialAppOperatingTimeout, discharge)
 	if err != nil {

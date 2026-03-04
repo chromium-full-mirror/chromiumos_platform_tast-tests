@@ -8,19 +8,15 @@ package element
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
@@ -44,7 +40,7 @@ const (
 	createChatButtonID = elementIDPrefix + "newLayoutCreateChatButton"
 	messageFieldID     = elementIDPrefix + "composerEditText"
 	actionTitleID      = elementIDPrefix + "actionTitle"
-	roomNameFieldID    = elementIDPrefix + "formTextInputTextInputEditText"
+	textInputFieldID   = elementIDPrefix + "formTextInputTextInputEditText"
 	searchFieldID      = elementIDPrefix + "search_src_text"
 	roomNameID         = elementIDPrefix + "roomNameView"
 
@@ -70,19 +66,17 @@ type Element struct {
 	kb     *input.KeyboardEventWriter
 	a      *arc.ARC
 	d      *ui.Device
-	cr     *chrome.Chrome
 	apkURL string
 }
 
 // New returns a new Element object.
-func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, apkURL string) *Element {
+func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, apkURL string) *Element {
 	return &Element{
 		tconn:  tconn,
 		ui:     uiauto.New(tconn),
 		kb:     kb,
 		a:      a,
 		d:      d,
-		cr:     cr,
 		apkURL: apkURL,
 	}
 }
@@ -112,158 +106,40 @@ func (e *Element) Close(ctx context.Context) error {
 	return util.CloseApp(ctx, e.tconn, ElementPackage)
 }
 
-// Login logs in to Element app with Google account.
-// It will create an account if the account has not been created.
-func (e *Element) Login(ctx context.Context, creds credconfig.Creds) error {
-	haveAccountButton := e.d.Object(ui.Text("SIGN IN"), ui.ResourceID(elementIDPrefix+"loginSplashAlreadyHaveAccount"))
-	continueButton := e.d.Object(ui.Text("Continue"), ui.ClassName(buttonClass))
-	if err := uiauto.NamedCombine("login to Element app",
-		apputil.FindAndClick(haveAccountButton, defaultUITimeout),
-		// It might take long time to show the login screen.
-		// Use loadTimeout to click the continueButton.
-		apputil.FindAndClick(continueButton, loadTimeout),
-	)(ctx); err != nil {
-		return err
-	}
-
-	if err := e.loginWithGaiaAccount(creds)(ctx); err != nil {
-		return errors.Wrap(err, "failed to login with Gaia account")
-	}
-
-	const waitingStatusTextID = elementIDPrefix + "waitingStatusText"
+// Login creates a new account and logs in to the local server.
+func (e *Element) Login(server string) uiauto.Action {
 	notNowButton := e.d.Object(ui.Text("NOT NOW"), ui.ResourceID(elementIDPrefix+"later"))
-	waitingStatusText := e.d.Object(ui.ResourceID(waitingStatusTextID), ui.ClassName(textClass))
-	return uiauto.NamedCombine("skip splash",
+	return uiauto.NamedCombine("create account and login",
+		e.createAccount(server),
 		// The |notNowButton| might take more time to appear on low-end devices.
 		apputil.ClickIfExist(notNowButton, longUITimeout),
-		// Wait for the app finishes syncing the account data with the server.
-		// 1. If the account only joins a few rooms, the text would immediately disappear
-		// after being shown, and the UI might fail to capture it.
-		// 2. If the account joins many rooms, the data sync might take a long time to finish.
-		uiauto.IfSuccessThen(
-			apputil.WaitForExists(waitingStatusText, defaultUITimeout),
-			apputil.WaitUntilGone(waitingStatusText, syncTimeout),
-		),
-		e.dismissEncryptionAlertIfExists(),
-	)(ctx)
-}
-
-// loginWithGaiaAccount completes the login flow with Gaia account.
-func (e *Element) loginWithGaiaAccount(creds credconfig.Creds) uiauto.Action {
-	email := creds.User
-	usernameOrEmailField := nodewith.Name("Username or Email").Role(role.TextField)
-	emailText := nodewith.Name(email).Role(role.StaticText).Ancestor(usernameOrEmailField)
-	setEmail := uiauto.NamedCombine("set email as "+email,
-		e.ui.DoDefaultUntil(usernameOrEmailField,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(usernameOrEmailField.Focused()),
-		),
-		e.kb.TypeAction(email),
-		e.ui.WaitUntilExists(emailText),
-	)
-
-	password := creds.Pass
-	passwordField := nodewith.Name("Password").Role(role.TextField)
-	hiddenPassword := strings.Repeat("•", len(password))
-	passwordText := nodewith.Name(hiddenPassword).Role(role.StaticText).Ancestor(passwordField)
-	setPassword := uiauto.NamedCombine("set password",
-		e.ui.DoDefaultUntil(passwordField,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(passwordField.Focused()),
-		),
-		e.kb.TypeAction(password),
-		e.ui.WaitUntilExists(passwordText),
-	)
-
-	continueButton := nodewith.Name("Continue").Role(role.Button)
-	continueHeading := nodewith.Name("Continue to element://connect?").Role(role.Heading)
-	loginWithAccount := uiauto.NamedCombine("login with Gaia account",
-		setEmail,
-		setPassword,
-		e.ui.DoDefault(continueButton),
-		e.ui.WaitUntilExists(continueHeading),
-	)
-
-	return uiauto.NamedCombine("sign in with Gaia account",
-		e.waitForLoginWindowMaximized,
-		// The account information may not be cleaned during the test sequence.
-		e.ui.WaitUntilAnyExists(usernameOrEmailField, continueHeading),
-		uiauto.IfSuccessThen(e.ui.Exists(usernameOrEmailField), loginWithAccount),
-		e.ui.DoDefaultUntil(continueButton,
-			e.ui.WaitUntilGone(continueHeading),
-		),
 	)
 }
 
-// waitForLoginWindowMaximized activates and maximizes the login window.
-func (e *Element) waitForLoginWindowMaximized(ctx context.Context) error {
-	const windowTitle = "Chrome"
-	// The window title might be displayed in different languages,
-	// and "Chrome" is the only common text in the title.
-	// Wait for any window with "Chrome" in the title to find the login window.
-	loginWindow, err := ash.WaitForAnyWindowWithTitle(ctx, e.tconn, windowTitle)
-	if err != nil {
-		return errors.Wrap(err, "failed to find the login window")
-	}
-
-	if err := loginWindow.ActivateWindow(ctx, e.tconn); err != nil {
-		return errors.Wrap(err, "failed to activate the login window")
-	}
-	if err := ash.SetWindowStateAndWait(ctx, e.tconn, loginWindow.ID, ash.WindowStateMaximized); err != nil {
-		return errors.Wrap(err, "failed to maximized the login window")
-	}
-	return nil
-}
-
-// createAccount creates a new Element account with Google account.
-// It assumes the create account page is already opened.
-func (e *Element) createAccount(username string) uiauto.Action {
-	usernameField := nodewith.Name("Username").Role(role.TextField)
-	usernameText := nodewith.Name(username).Role(role.StaticText).Ancestor(usernameField)
-	checkingText := nodewith.NameContaining("Checking").Role(role.StaticText)
-	setUsername := uiauto.NamedCombine("set username as "+username,
-		e.ui.DoDefaultUntil(usernameField,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(usernameField.Focused()),
-		),
-		e.kb.TypeAction(username),
-		e.ui.WaitUntilExists(usernameText),
-		// The website would show "Checking if username is available ..."
-		// when validating the username.
-		// Wait for the website to finish the validation.
-		e.ui.WaitUntilGone(checkingText),
+// createAccount creates a new account on the local server.
+func (e *Element) createAccount(server string) uiauto.Action {
+	editButton := e.d.Object(ui.Text("EDIT"), ui.ResourceID(elementIDPrefix+"editServerButton"))
+	serverSubmitButton := e.d.Object(ui.Text("NEXT"), ui.ResourceID(elementIDPrefix+"chooseServerSubmit"))
+	editServer := uiauto.NamedCombine("edit server to "+server,
+		apputil.FindAndClick(editButton, defaultUITimeout),
+		e.typeText(server, ui.ClassName("android.widget.EditText"), ui.PackageName(ElementPackage)),
+		apputil.FindAndClick(serverSubmitButton, defaultUITimeout),
 	)
 
-	agreeTermsCheckBox := nodewith.Name("I agree to the Terms and Conditions").Role(role.CheckBox)
-	agreeTerms := uiauto.NamedAction("agree terms",
-		e.ui.DoDefaultUntil(agreeTermsCheckBox,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(agreeTermsCheckBox, true),
-		),
-	)
-	createAccountButton := nodewith.Name("Create Account").Role(role.Button)
-	continueButton := nodewith.Name("Continue").Role(role.Button)
-	return uiauto.NamedCombine("create account",
-		setUsername,
-		agreeTerms,
-		e.ui.DoDefaultUntil(createAccountButton,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilExists(continueButton),
-		),
-		e.ui.DoDefault(continueButton),
-	)
-}
-
-// dismissEncryptionAlertIfExists dismisses the encryption alert if it exists.
-func (e *Element) dismissEncryptionAlertIfExists() uiauto.Action {
-	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
-	elementWindow := nodewith.Name(apps.Element.Name).Role(role.Window).HasClass("Widget")
-	backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(elementWindow)
-	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.PackageName(ElementPackage))
-	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",
-		apputil.FindAndClick(alert, defaultUITimeout),
-		apputil.WaitUntilGone(alert, defaultUITimeout),
-		e.ui.LeftClick(backButton),
-		uiauto.Retry(3, apputil.ClickIfExist(skipButton, defaultUITimeout)),
-	)
-	return uiauto.IfSuccessThen(
-		alert.Exists,
-		dismissAlert,
+	createAccountButton := e.d.Object(ui.Text("CREATE ACCOUNT"), ui.ResourceID(elementIDPrefix+"loginSplashSubmit"))
+	skipButton := e.d.Object(ui.TextContains("Skip"), ui.ResourceID(elementIDPrefix+"useCaseSkip"))
+	accountSubmitButton := e.d.Object(ui.Text("NEXT"), ui.ResourceID(elementIDPrefix+"createAccountSubmit"), ui.Enabled(true))
+	notNowButton := e.d.Object(ui.Text("Not now"), ui.ResourceID("android:id/autofill_save_no"))
+	takeMeHomeButton := e.d.Object(ui.Text("TAKE ME HOME"), ui.ResourceID(elementIDPrefix+"accountCreatedTakeMeHome"))
+	return uiauto.NamedCombine("create an account to Element app",
+		apputil.FindAndClick(createAccountButton, defaultUITimeout),
+		apputil.FindAndClick(skipButton, defaultUITimeout),
+		editServer,
+		e.typeText("powerTestUser", ui.ResourceID(elementIDPrefix+"createAccountEditText")),
+		e.typeText("powerTestPassword", ui.ResourceID(elementIDPrefix+"createAccountPassword")),
+		apputil.FindAndClick(accountSubmitButton, defaultUITimeout),
+		apputil.FindAndClick(notNowButton, defaultUITimeout),
+		apputil.FindAndClick(takeMeHomeButton, defaultUITimeout),
 	)
 }
 
@@ -310,8 +186,18 @@ func (e *Element) SignOut() uiauto.Action {
 	)
 }
 
-// CreateRoom creates a new room in the Element app.
-func (e *Element) CreateRoom(roomName string) uiauto.Action {
+// CreatePublicRoom creates a new public room in the Element app.
+func (e *Element) CreatePublicRoom(ctx context.Context, roomName, roomID string) error {
+	return e.createRoom(ctx, roomName, roomID, true /* isPublic */)
+}
+
+// CreatePrivateRoom creates a new private room in the Element app.
+func (e *Element) CreatePrivateRoom(ctx context.Context, roomName string) error {
+	return e.createRoom(ctx, roomName, "" /* roomID */, false /* isPublic */)
+}
+
+func (e *Element) createRoom(ctx context.Context, roomName, roomID string, isPublic bool) error {
+	const settingTextID = elementIDPrefix + "settings_section_title_text"
 	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	createRoomText := e.d.Object(ui.Text("Create Room"), ui.ResourceID(elementIDPrefix+"create_room"))
 	enterRoomCreationPage := uiauto.NamedCombine("enter room creation page",
@@ -319,19 +205,38 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 		apputil.FindAndClick(createRoomText, defaultUITimeout),
 	)
 
-	roomAccessText := e.d.Object(ui.Text("Room access"), ui.ResourceID(elementIDPrefix+"settings_section_title_text"))
-	roomNameFieldWithText := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameFieldID))
+	roomAccessText := e.d.Object(ui.Text("Room access"), ui.ResourceID(settingTextID))
+	roomNameFieldWithText := e.d.Object(ui.Text(roomName), ui.ResourceID(textInputFieldID))
 	createButton := e.d.Object(ui.Text("CREATE"), ui.ResourceID(elementIDPrefix+"form_submit_button"))
+	if err := uiauto.NamedCombine("set room name as "+roomName,
+		enterRoomCreationPage,
+		e.typeText(roomName, ui.ResourceID(textInputFieldID)),
+		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
+	)(ctx); err != nil {
+		return err
+	}
+
+	if isPublic {
+		// Private is the default access level.
+		privateActionTitle := e.d.Object(ui.Text("Private"), ui.ResourceID(actionTitleID))
+		publicActionTitle := e.d.Object(ui.Text("Public"), ui.ResourceID(actionTitleID))
+		roomSettingText := e.d.Object(ui.Text("Room settings"), ui.ResourceID(settingTextID))
+		if err := uiauto.NamedCombine("set room access as public",
+			apputil.FindAndClick(privateActionTitle, defaultUITimeout),
+			apputil.FindAndClick(publicActionTitle, defaultUITimeout),
+			e.swipeToShowObject(roomSettingText, roomAccessText, createButton, swipeDuration),
+			e.typeText(roomID, ui.TextContains("New published address"), ui.ResourceID(textInputFieldID)),
+		)(ctx); err != nil {
+			return err
+		}
+	}
+
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
 	return uiauto.NamedCombine("create room",
-		e.dismissEncryptionAlertIfExists(),
-		enterRoomCreationPage,
-		e.typeText(roomNameFieldID, roomName),
-		e.swipeToShowObject(roomAccessText, roomNameFieldWithText, createButton, swipeDuration),
 		apputil.FindAndClick(createButton, defaultUITimeout),
 		uiauto.NamedAction("wait for room title "+roomName,
 			apputil.WaitForExists(roomTitle, longLoadTimeout)),
-	)
+	)(ctx)
 }
 
 // LeaveRoom leaves the current room.
@@ -361,7 +266,7 @@ func (e *Element) SetUIDevice(d *ui.Device) {
 // SendTextMessage sends a text message to the current room.
 func (e *Element) SendTextMessage(message string) uiauto.Action {
 	return uiauto.NamedCombine("send text message",
-		e.typeText(messageFieldID, message),
+		e.typeText(message, ui.ResourceID(messageFieldID)),
 		e.sendMessageAndWait(message),
 	)
 }
@@ -369,7 +274,7 @@ func (e *Element) SendTextMessage(message string) uiauto.Action {
 // SendEmojiMessage sends a message contains emojis to the current room.
 func (e *Element) SendEmojiMessage(textMessage string, emojis ...Emoji) uiauto.Action {
 	sendEmojiActions := []uiauto.Action{
-		e.typeText(messageFieldID, textMessage),
+		e.typeText(textMessage, ui.ResourceID(messageFieldID)),
 	}
 	for _, emoji := range emojis {
 		sendEmojiActions = append(sendEmojiActions, e.addEmoji(emoji))
@@ -422,7 +327,6 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 	moreOptionsButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("More options"), ui.Clickable(true))
 	return uiauto.NamedCombine("rename current room as "+newRoomName,
 		e.navigateUpToObject(moreOptionsButton),
-		e.dismissEncryptionAlertIfExists(),
 		e.openSettingsPage(),
 		// Sometimes the save button does not appear.
 		// Retry to ensure the room is renamed.
@@ -478,7 +382,7 @@ func (e *Element) setRoomNameAndSave(newRoomName string) uiauto.Action {
 		saveButton := e.d.Object(ui.Text("SAVE"), ui.ResourceID(elementIDPrefix+"roomSettingsSaveAction"))
 		newToolbarTitle := e.d.Object(ui.Text(newRoomName), ui.ResourceID(elementIDPrefix+"roomSettingsToolbarTitleView"))
 		return uiauto.NamedCombine("set room name and save",
-			e.typeText(roomNameFieldID, newRoomName),
+			e.typeText(newRoomName, ui.ResourceID(textInputFieldID)),
 			apputil.FindAndClick(saveButton, defaultUITimeout),
 			apputil.WaitUntilGone(saveButton, longUITimeout),
 			apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
@@ -488,16 +392,16 @@ func (e *Element) setRoomNameAndSave(newRoomName string) uiauto.Action {
 
 // SearchPublicRoom searches the existing public room with the ID and the name.
 func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
+	roomID = "#" + roomID
 	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	exploreRoomsText := e.d.Object(ui.Text("Explore Rooms"), ui.ResourceID(elementIDPrefix+"explore_rooms"))
 	publicRoomText := fmt.Sprintf("(%s|%s)", roomID, roomName)
 	publicRoom := e.d.Object(ui.TextMatches(publicRoomText), ui.ClassName(textClass))
 	return uiauto.NamedCombine("explore public room with ID "+roomID,
 		e.navigateUpToObject(createRoomButton),
-		e.dismissEncryptionAlertIfExists(),
 		apputil.FindAndClick(createRoomButton, defaultUITimeout),
 		apputil.FindAndClick(exploreRoomsText, defaultUITimeout),
-		e.typeText(searchFieldID, roomID),
+		e.typeText(roomID, ui.ResourceID(searchFieldID)),
 		uiauto.NamedAction("wait for public room "+roomName,
 			apputil.WaitForExists(publicRoom, longUITimeout)),
 	)
@@ -509,14 +413,13 @@ func (e *Element) JoinRoom(roomName string) uiauto.Action {
 	room := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameID))
 	roomTitle := e.d.Object(ui.Text(roomName), ui.ResourceID(elementIDPrefix+"roomToolbarTitleView"))
 	enterRoom := uiauto.NamedCombine("search room and join",
-		e.typeText(searchFieldID, roomName),
+		e.typeText(roomName, ui.ResourceID(searchFieldID)),
 		apputil.FindAndClick(room, defaultUITimeout),
 		apputil.WaitUntilGone(room, defaultUITimeout),
 		apputil.WaitForExists(roomTitle, defaultUITimeout),
 	)
 	return uiauto.NamedCombine(fmt.Sprintf("join %q room from home page", roomName),
 		e.navigateUpToObject(roomFilter),
-		e.dismissEncryptionAlertIfExists(),
 		apputil.FindAndClick(roomFilter, defaultUITimeout),
 		uiauto.Retry(retryTimes, enterRoom),
 	)
@@ -530,11 +433,11 @@ func (e *Element) CheckUserInRoom(roomName string) uiauto.Action {
 	)
 }
 
-// typeText types the text in the given field.
-func (e *Element) typeText(fieldID, text string) uiauto.Action {
-	textField := e.d.Object(ui.ResourceID(fieldID))
-	textFieldFocused := e.d.Object(ui.ResourceID(fieldID), ui.Focused(true))
-	textFieldWithText := e.d.Object(ui.TextContains(text), ui.ResourceID(fieldID))
+// typeText types text in the text field with the given selectors.
+func (e *Element) typeText(text string, selectors ...ui.SelectorOption) uiauto.Action {
+	textField := e.d.Object(selectors...)
+	textFieldFocused := e.d.Object(append(selectors, ui.Focused(true))...)
+	textFieldWithText := e.d.Object(append(selectors, ui.TextContains(text))...)
 	return uiauto.NamedCombine(fmt.Sprintf("type text %s", text),
 		apputil.FindAndClick(textField, defaultUITimeout),
 		apputil.WaitForExists(textFieldFocused, defaultUITimeout),
@@ -551,7 +454,6 @@ func (e *Element) typeText(fieldID, text string) uiauto.Action {
 func (e *Element) navigateUpToObject(expectedObject *ui.Object) uiauto.Action {
 	navigateUpButton := e.d.Object(ui.PackageName(ElementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 	return uiauto.NamedCombine(fmt.Sprintf("navigate up to %v", expectedObject),
-		e.dismissEncryptionAlertIfExists(),
 		uiauto.IfFailThen(
 			expectedObject.Exists,
 			e.ui.WithTimeout(longUITimeout).RetryUntil(
@@ -583,4 +485,14 @@ func (e *Element) swipeToShowObject(startObject, endObject, expectedObject *ui.O
 			apputil.WaitForExists(expectedObject, shortUITimeout),
 		)(ctx)
 	}
+}
+
+// ReverseTCPForLocalServer reverses the TCP port to connect to the local server.
+func (e *Element) ReverseTCPForLocalServer(ctx context.Context) (string, func(context.Context) error, error) {
+	port, err := e.a.ReverseTCP(ctx, power.TuwunelServerDefaultPort)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "failed to get reverse TCP port")
+	}
+	server := fmt.Sprintf("http://localhost:%d", port)
+	return server, func(ctx context.Context) error { return e.a.RemoveReverseTCP(ctx, port) }, nil
 }

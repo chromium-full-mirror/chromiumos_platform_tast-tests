@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	testRoomID   = "#power_test:matrix.org"
+	testRoomID   = "power_test"
 	testRoomName = "Power test room"
 
 	// There are different APK urls according to the system architecture.
@@ -62,10 +62,11 @@ var (
 
 // Element implements the SocialApp interface with the Element app.
 type Element struct {
-	ele      *element.Element
-	tconn    *chrome.TestConn
-	creds    credconfig.Creds
-	roomName string
+	ele        *element.Element
+	tconn      *chrome.TestConn
+	creds      credconfig.Creds
+	tcpCleanup func(context.Context) error
+	roomName   string
 }
 
 // ParseElementAPKURL returns the element APK URL corresponding to the DUT architecture.
@@ -99,12 +100,14 @@ func ParseElementAPKURL(ctx context.Context, testCaseVar func(string) (string, b
 	return url, nil
 }
 
-// NewElement returns a new Element object.
-func NewElement(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, cr *chrome.Chrome, apkURL string) *Element {
+// NewElement sets up a reverse TCP proxy to the local server
+// and returns a new Element object.
+func NewElement(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *ui.Device, creds credconfig.Creds, apkURL string) *Element {
 	return &Element{
-		ele:   element.New(tconn, kb, a, d, cr, apkURL),
-		tconn: tconn,
-		creds: cr.Creds(),
+		ele:        element.New(tconn, kb, a, d, apkURL),
+		tconn:      tconn,
+		creds:      creds,
+		tcpCleanup: func(context.Context) error { return nil },
 	}
 }
 
@@ -133,26 +136,36 @@ func (e *Element) SetUp(ctx context.Context) error {
 	if err := apputil.DismissMobilePrompt(ctx, e.tconn); err != nil {
 		return errors.Wrap(err, "failed to dismiss mobile prompt")
 	}
-	if err := e.ele.Login(ctx, e.creds); err != nil {
+	server, tcpCleanup, err := e.ele.ReverseTCPForLocalServer(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to set up reverse TCP proxy")
+	}
+	e.tcpCleanup = tcpCleanup
+	if err := e.ele.Login(server)(ctx); err != nil {
 		return errors.Wrap(err, "failed to login to the Element app")
 	}
 
+	// Create a public room for the SearchPublicRoom action.
+	if err := e.ele.CreatePublicRoom(ctx, testRoomName, testRoomID); err != nil {
+		return errors.Wrap(err, "failed to create public room")
+	}
+	if err := e.ele.LeaveRoom(testRoomName)(ctx); err != nil {
+		return errors.Wrap(err, "failed to leave public room")
+	}
+
 	roomName := fmt.Sprintf("Power test %d", time.Now().Nanosecond())
-	if err := e.ele.CreateRoom(roomName)(ctx); err != nil {
+	if err := e.ele.CreatePrivateRoom(ctx, roomName); err != nil {
 		return errors.Wrap(err, "failed to create room")
 	}
 	e.roomName = roomName
 	return nil
 }
 
-// CleanUp leaves the created room and signs out.
+// CleanUp signs out and removes reverse tcp.
 func (e *Element) CleanUp(ctx context.Context) error {
-	return uiauto.NamedCombine("leave room and sign out",
-		// Ensure the user is inside the room before leaving.
-		e.EnsureInRoom(),
-		// Leaving the room as the last member would trigger an automatic room deletion.
-		e.ele.LeaveRoom(e.roomName),
+	return uiauto.NamedCombine("sign out and remove reverse tcp",
 		e.ele.SignOut(),
+		e.tcpCleanup,
 	)(ctx)
 }
 

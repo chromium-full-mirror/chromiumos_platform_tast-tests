@@ -66,10 +66,10 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.MinStorage(17)), // 16Gb devices may not have enough space to install all the testing apps.
 		Data:         []string{multitaskingapp.VideoSrc, arcvideoplayback.ExoPlayerAPKFileName},
 		Vars:         socialapp.ElementApkURLVars, // Optional. The URL of the APK file of Element app.
+		Fixture:      setup.PowerAshARCWithTuwunelServer,
 		Params: []testing.Param{
 			{
 				Name:    "ash",
-				Fixture: "powerAshARC",
 				Timeout: multiTaskingAppTimeout + setup.BatteryPreparationTimeout,
 				ExtraAttr: []string{
 					"group:power",
@@ -81,7 +81,6 @@ func init() {
 			},
 			{
 				Name:    "ash_short",
-				Fixture: "powerAshARC",
 				Timeout: multiTaskingAppShortTimeout + setup.BatteryPreparationTimeout,
 				ExtraAttr: []string{
 					"group:power",
