@@ -661,10 +661,10 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 // getFWVersionsFromManifest reads the firmware versions from the firmware manifest file
 func getFWVersionsFromManifest(ctx context.Context, s *testing.State, h *firmware.Helper, firmwarePathVal, apFirmwareFile string) *versions {
 	s.Log("Reading manifest from downloaded firmware file")
-	futilityInstance, _ := futility.NewRemoteBuilder(h.ServoProxy).Build()
-	flashOpts := futility.NewUpdateOptions(apFirmwareFile).
-		WithManifest(true)
-	out, err := futilityInstance.Update(ctx, flashOpts)
+
+	// Read the firmware manifest file from the Servo without passing the servo_port flag to futility.
+	// Example command: futility update --image=/tmp/image-deku.bin --manifest
+	out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "update", fmt.Sprintf("--image=%s", apFirmwareFile), "--manifest")
 	if err != nil {
 		s.Fatal("Failed to read manifest file: ", err, "\nOutput:\n", string(out))
 	}
