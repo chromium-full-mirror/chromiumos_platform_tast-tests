@@ -7,6 +7,7 @@ package hooks
 
 import (
 	"context"
+	"strings"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -36,12 +37,27 @@ type kdumpHook struct {
 	cleanup func(ctx context.Context) error
 }
 
+// isKdumpSupported checks if kdump feature is supported by the device.
+// Kdump is supported on devices with x86 architecture (b/451780016).
+func isKdumpSupported(ctx context.Context, d *dut.DUT) (bool, error) {
+	arch, err := d.Conn().CommandContext(ctx, "uname", "-m").Output()
+	if err != nil {
+		return false, err
+	}
+	return strings.HasPrefix(string(arch), "x86"), nil
+}
+
 // SetUp enables kdump if the corresponding var is set.
 func (h *kdumpHook) SetUp(ctx context.Context, s *HookState) error {
 	if kdumpEnable.Value() != "true" {
 		return nil
 	}
 	h.dut = s.DUT()
+	if supported, err := isKdumpSupported(ctx, h.dut); err != nil {
+		return errors.Wrap(err, "failed to check whether kdump is supported")
+	} else if !supported {
+		return nil
+	}
 	cleanup, err := kdump.EnableKdump(ctx, h.dut)
 	if err != nil {
 		return errors.Wrap(err, "failed to enable kdump")
