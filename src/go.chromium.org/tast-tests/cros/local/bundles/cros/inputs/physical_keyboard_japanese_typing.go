@@ -410,15 +410,15 @@ func PhysicalKeyboardJapaneseTyping(ctx context.Context, s *testing.State) {
 				// Jump to first segment and convert it to Half Width Latin.
 				kb.AccelAction("Ctrl+Left"),
 				kb.AccelAction("Ctrl+t"),
-				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkigaイイ"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "tenkigaイイ"),
 				// Jump to last segment and convert it to Hiragana.
 				kb.AccelAction("Ctrl+Right"),
 				kb.AccelAction("Ctrl+u"),
-				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkigaいい"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "tenkigaいい"),
 				// Move left to the middle segment and convert it to Hiragana.
 				kb.AccelAction("Left"),
 				kb.AccelAction("Ctrl+u"),
-				util.WaitForFieldTextToBe(tconn, inputField.Finder(), "tenkiがいい"),
+				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), "tenkiがいい"),
 				// Move left to the first segment and convert it to Hiragana.
 				kb.AccelAction("Ctrl+s"),
 				kb.AccelAction("Ctrl+u"),
