@@ -216,8 +216,7 @@ func init() {
 			},
 		}, {
 			// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
-			Name:      "noarc_2windows_bsm",
-			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Name: "noarc_2windows_bsm",
 			Val: loginPerfTestParam{
 				2,          // windows
 				noarc,      // arcMode
@@ -229,7 +228,6 @@ func init() {
 		}, {
 			// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
 			Name:              "2windows_bsm",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"arc"},
 			Val: loginPerfTestParam{
 				2,          // windows
