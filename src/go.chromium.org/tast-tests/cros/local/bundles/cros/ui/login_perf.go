@@ -92,9 +92,6 @@ const (
 	deferARC = "DeferArcActivationUntilUserSessionStartUpTaskCompletion"
 	// Alias for deferring ARC with the parameters which force to defer ARC.
 	deferARCForceEnabled = "DeferArcActivationUntilUserSessionStartUpTaskCompletion:history_window/0/history_threshold/1"
-
-	// Alias for deferring concierge startup
-	deferConciergeStartup = "DeferConciergeStartup"
 )
 
 const loginPerfOptinTimeout = 10 * time.Minute
@@ -216,32 +213,6 @@ func init() {
 				false,      // autoSessionRestore
 				[]string{}, // disabledFeatures
 				[]string{}, // enabledFeatures
-			},
-		}, {
-			// TODO(b/353431869): Remove after the experiment is finished.
-			Name:              "2windows_defer_concierge",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"arc"},
-			Val: loginPerfTestParam{
-				2,                               // windows
-				arcenabled,                      // arcMode
-				false,                           // tabletMode
-				true,                            // autoSessionRestore
-				[]string{deferARC},              // disabledFeatures
-				[]string{deferConciergeStartup}, // enabledFeatures
-			},
-		}, {
-			// TODO(b/353431869): Remove after the experiment is finished.
-			Name:              "2windows_defer_concierge_arc",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"arc"},
-			Val: loginPerfTestParam{
-				2,          // windows
-				arcenabled, // arcMode
-				false,      // tabletMode
-				true,       // autoSessionRestore
-				[]string{}, // disabledFeatures
-				[]string{deferConciergeStartup, deferARCForceEnabled}, // enabledFeatures
 			},
 		}, {
 			// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
