@@ -38,7 +38,7 @@ struct TestFeatureState {
 };
 
 void LogTestFeatureState(const TestFeatureState& feature_state) {
-  base::Value::Dict root_dict;
+  base::DictValue root_dict;
 
   root_dict.Set("FeatureName", feature_state.feature_name);
   root_dict.Set("EnabledCallbackEnabledResult",
@@ -55,7 +55,7 @@ void LogTestFeatureState(const TestFeatureState& feature_state) {
   root_dict.Set("ParamsCallbackFeatureName", std::move(name));
   root_dict.Set("ParamsCallbackEnabledResult", feature.enabled);
 
-  base::Value::Dict params;
+  base::DictValue params;
   for (const auto& [key, value] : feature.params) {
     params.Set(key, value);
   }
