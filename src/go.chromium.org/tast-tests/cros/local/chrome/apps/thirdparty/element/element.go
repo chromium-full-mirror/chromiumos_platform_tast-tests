@@ -126,19 +126,24 @@ func (e *Element) createAccount(server string) uiauto.Action {
 		apputil.FindAndClick(serverSubmitButton, defaultUITimeout),
 	)
 
+	// The database will not be reset between Tast retries.
+	// Add a timestamp to the username to ensure it is unique.
+	userName := fmt.Sprintf("powerTestUser_%d", time.Now().UnixNano())
 	createAccountButton := e.d.Object(ui.Text("CREATE ACCOUNT"), ui.ResourceID(elementIDPrefix+"loginSplashSubmit"))
 	skipButton := e.d.Object(ui.TextContains("Skip"), ui.ResourceID(elementIDPrefix+"useCaseSkip"))
 	accountSubmitButton := e.d.Object(ui.Text("NEXT"), ui.ResourceID(elementIDPrefix+"createAccountSubmit"), ui.Enabled(true))
-	notNowButton := e.d.Object(ui.Text("Not now"), ui.ResourceID("android:id/autofill_save_no"))
+	// There are 2 possible texts of the no save button, "Not now" and "Never".
+	// Use resource ID to correctly click the object.
+	noSaveButton := e.d.Object(ui.ResourceID("android:id/autofill_save_no"))
 	takeMeHomeButton := e.d.Object(ui.Text("TAKE ME HOME"), ui.ResourceID(elementIDPrefix+"accountCreatedTakeMeHome"))
 	return uiauto.NamedCombine("create an account to Element app",
 		apputil.FindAndClick(createAccountButton, defaultUITimeout),
 		apputil.FindAndClick(skipButton, defaultUITimeout),
 		editServer,
-		e.typeText("powerTestUser", ui.ResourceID(elementIDPrefix+"createAccountEditText")),
+		e.typeText(userName, ui.ResourceID(elementIDPrefix+"createAccountEditText")),
 		e.typeText("powerTestPassword", ui.ResourceID(elementIDPrefix+"createAccountPassword")),
 		apputil.FindAndClick(accountSubmitButton, defaultUITimeout),
-		apputil.FindAndClick(notNowButton, defaultUITimeout),
+		apputil.FindAndClick(noSaveButton, defaultUITimeout),
 		apputil.FindAndClick(takeMeHomeButton, defaultUITimeout),
 	)
 }
