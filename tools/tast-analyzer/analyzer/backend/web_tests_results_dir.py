@@ -114,10 +114,11 @@ def _load_results_from_web_tests_dir(
     all_results = test_result.TestResults()
     for path in paths:
         path_parts = path.parts
-        run_timestamp = path_parts[-8]
-        if run_timestamp == "latest":
+        global_timestamp = path_parts[-8]
+        if global_timestamp == "latest":
             # Skip the "latest" symlink, it's pointing to one of the other dirs.
             continue
+        run_timestamp = path_parts[-5]
         run_iteration = path_parts[-3]
         test_name = path_parts[-7]
         run_id = run_timestamp + "_" + run_iteration
