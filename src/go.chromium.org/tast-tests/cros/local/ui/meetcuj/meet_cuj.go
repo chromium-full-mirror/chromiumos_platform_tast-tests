@@ -707,6 +707,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				return err
 			}
 		}
+		clearPromptsChannel := make(chan error)
+		dismissPromptIfExists(ctx, tconn, clearPromptsChannel)
 
 		if err := meetHelper.SetMicrophone(ctx, true); err != nil {
 			return errors.Wrap(err, "failed to turn on microphone")
@@ -740,7 +742,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 				isPresenting = false
 			}
 		}(presentingCleanupCtx)
-		clearPromptsChannel := make(chan error)
+
 		if meet.Present {
 			if !meet.Docs {
 				return errors.New("need a Google Docs tab to present")
