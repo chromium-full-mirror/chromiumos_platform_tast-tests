@@ -155,7 +155,7 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	powerOnAndWait := func(ctx context.Context) {
 		// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
 		// But you can't press the power button too soon, or it will be ignored.
-		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Pre-power button sleep failed: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
