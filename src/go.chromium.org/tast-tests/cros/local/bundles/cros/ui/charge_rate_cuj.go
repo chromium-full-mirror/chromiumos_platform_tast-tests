@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:cuj", "cuj_chargerate"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Fixture:      "chromeLoggedIn",
 		Timeout:      setup.BatteryPreparationTimeout + chargeTimeout,
