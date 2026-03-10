@@ -111,6 +111,7 @@ func init() {
 				//Nirva,
 				"craaskyu2",
 				"ruken",
+				"rynar",
 				"telithn50",
 				"telticn50",
 				// Nissa
