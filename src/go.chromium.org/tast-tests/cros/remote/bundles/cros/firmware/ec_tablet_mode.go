@@ -187,6 +187,9 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
+	val, err := s.DUT().Conn().CommandContext(ctx, "cros_config", "/keyboard", "disable-power-button-in-tablet-mode").Output()
+	powerButtonDisabled := err == nil && string(val) == "true"
+
 	// The checkPowerMenu function will check whether the power menu is present
 	// after holding the power button for about one second.
 	powerMenuService := ui.NewPowerMenuServiceClient(h.RPCClient.Conn)
@@ -195,7 +198,10 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to check power menu")
 		}
-		if !res.IsMenuPresent {
+		if powerButtonDisabled && res.IsMenuPresent {
+			return errors.New("power menu incorrectly triggered")
+		}
+		if !powerButtonDisabled && !res.IsMenuPresent {
 			return errors.New("power menu does not exist")
 		}
 		return nil
@@ -209,8 +215,14 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	turnDisplayOffAndOn := func(ctx context.Context) error {
+		expectedState := []bool{false, true}
+		if powerButtonDisabled {
+			// Power button has no function, the display will stay on
+			expectedState = []bool{true, true}
+		}
+
 		s.Log("Turn display off then on, and check that display behaves as expected")
-		for _, turnOn := range []bool{false, true} {
+		for _, turnOn := range expectedState {
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
 					return errors.Wrap(err, "error pressing power_key:tab")

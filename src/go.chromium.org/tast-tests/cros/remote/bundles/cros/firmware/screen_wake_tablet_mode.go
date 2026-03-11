@@ -480,11 +480,14 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
+	val, err := s.DUT().Conn().CommandContext(ctx, "cros_config", "/keyboard", "disable-power-button-in-tablet-mode").Output()
+	powerButtonDisabled := err == nil && string(val) == "true"
+
 	powerBtnPollOptions := testing.PollOptions{
 		Timeout:  40 * time.Second,
 		Interval: 1 * time.Second,
 	}
-	turnDisplayOffWithPower := func(ctx context.Context) error {
+	turnDisplayOffByPowerButton := func(ctx context.Context) error {
 		// On Stainless, sometimes a short press on the power button did not turn off
 		// the display. Increment the press duration by 100 milliseconds during each
 		// retry, starting from 200 milliseconds, till a total of 1 second is reached.
@@ -510,6 +513,30 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			return nil
 		}, &powerBtnPollOptions)
 	}
+	turnDisplayOffByIdle := func(ctx context.Context) error {
+		if err := s.DUT().Conn().CommandContext(ctx, "set_short_powerd_timeouts").Run(); err != nil {
+			return errors.Wrap(err, "set_short_powerd_timeouts failed")
+		}
+		// GoBigSleepLint: Display turns off after idle for 15 seconds
+		if err := testing.Sleep(ctx, 16*time.Second); err != nil {
+			return errors.Wrap(err, "error in sleeping for 16 second")
+		}
+		return nil
+	}
+	defer func() {
+		if !powerButtonDisabled {
+			return
+		}
+		if err := s.DUT().Conn().CommandContext(ctx, "set_short_powerd_timeouts", "--reset").Run(); err != nil {
+			s.Fatal("Failed to run powerd timeout reset: ", err)
+		}
+	}()
+	turnDisplayOff := func(ctx context.Context) error {
+		if powerButtonDisabled {
+			return turnDisplayOffByIdle(ctx)
+		}
+		return turnDisplayOffByPowerButton(ctx)
+	}
 
 	// The screenWake function attempts one of the screenWakeTrigger options to wake the screen.
 	screenWake := func(ctx context.Context, option screenWakeTrigger) error {
@@ -518,7 +545,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
 			if screenIsOn {
 				s.Log("Turn off DUT's screen before testing a screen wake trigger")
-				if err := turnDisplayOffWithPower(ctx); err != nil {
+				if err := turnDisplayOff(ctx); err != nil {
 					return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
 				}
 			}
@@ -583,7 +610,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 
 			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
 			s.Log("Turn off DUT's screen before testing a screen wake trigger")
-			if err := turnDisplayOffWithPower(ctx); err != nil {
+			if err := turnDisplayOff(ctx); err != nil {
 				return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
 			}
 
@@ -602,7 +629,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			// Ensure that DUT's screen is off before sending a trigger to wake the screen.
 			if screenIsOn {
 				s.Log("Turn off DUT's screen before testing a screen wake trigger")
-				if err := turnDisplayOffWithPower(ctx); err != nil {
+				if err := turnDisplayOff(ctx); err != nil {
 					return errors.Wrapf(err, "while attempting to turn off the screen before screenWakeTrigger: %q", option)
 				}
 			}
@@ -808,7 +835,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Tab power button to turn display off")
-	if err := turnDisplayOffWithPower(ctx); err != nil {
+	if err := turnDisplayOff(ctx); err != nil {
 		s.Log("Verifying a servo press on power is detectable")
 		validatePressOnPwr := func() bool {
 			scannPowerBtn, err := deviceScanner(ctx, evPowerButton)
