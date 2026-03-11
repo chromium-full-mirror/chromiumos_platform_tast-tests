@@ -25,7 +25,7 @@ func testVolumeRename(ctx context.Context, cd *crosdisks.CrosDisks, ld *crosdisk
 		return err
 	}
 
-	const newName = "NEWNAME"
+	const newName = "- NewName -"
 
 	// Verify the originally name was different.
 	props, err := cd.GetDeviceProperties(ctx, ld.DevicePath())
