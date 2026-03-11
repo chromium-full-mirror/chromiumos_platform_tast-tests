@@ -249,7 +249,16 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	}
 
 	// Watchdog panic test
-	watchdogDelay := h.Config.ECWatchdogPeriod * 2
+	// On some older platforms, the EC watchdog time gets locked by the
+	// RO code when the device shipped. To workaround this, some EC builds
+	// reload the watchdog on the first warning, effectively doubling the
+	// hardware watchdog timeout.
+	//
+	// There's no harm in waiting longer for a watchdog, so wait 4 times
+	// the EC's configured watchdog period.
+	watchdogDelay := h.Config.ECWatchdogPeriod * 4
+	s.Log("HW watchdog waiting period ", watchdogDelay)
+
 	cmd = fmt.Sprintf("waitms %d", watchdogDelay.Milliseconds())
 	s.Logf("Trigger watchdog event %q", cmd)
 	err = h.Servo.RunECCommand(ctx, cmd)
