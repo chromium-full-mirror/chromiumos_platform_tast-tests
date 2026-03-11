@@ -364,6 +364,16 @@ message ServiceVersionResponse {
   string container_version = 2;
 }
 
+message EmulatorWriteFileRequest {
+  File source = 1;
+  string dest_name = 2;
+}
+
+message EmulatorWriteFileResponse {
+  // Empty indicates no error.
+  string err = 1;
+}
+
 /// One service for a DUT (which is a Suzy and hyperdebug pair)
 service DutControl {
   // Console allows stream access to a serial interface.
@@ -435,4 +445,8 @@ service DutControl {
 
   // Returns the Service version information of the currently running image
   rpc ServiceVersion(ServiceVersionRequest) returns (ServiceVersionResponse);
+
+  // Copies a file to the emulation runtime dir
+  rpc EmulatorWriteFile(EmulatorWriteFileRequest)
+      returns (EmulatorWriteFileResponse);
 }

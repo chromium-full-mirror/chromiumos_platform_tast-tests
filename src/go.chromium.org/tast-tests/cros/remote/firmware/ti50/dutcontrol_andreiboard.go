@@ -748,3 +748,22 @@ func (a *DUTControlAndreiboard) BootParamTest(ctx context.Context, binBytes []by
 
 	return resp.Output, nil, resp.DurationMs, nil
 }
+
+// EmulatorWriteFile copies a file to the emulation runtime dir.
+func (a *DUTControlAndreiboard) EmulatorWriteFile(ctx context.Context, source, dest string) error {
+	req := &dutcontrol.EmulatorWriteFileRequest{}
+	sourceBytes, err := os.ReadFile(source)
+	if err != nil {
+		return errors.Wrapf(err, "reading source file %q", source)
+	}
+	req.Source = &dutcontrol.File{FileName: source, Contents: sourceBytes}
+	req.DestName = dest
+	rsp, err := a.client.EmulatorWriteFile(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "EmulatorWriteFile")
+	}
+	if rsp.Err != "" {
+		return errors.Errorf("EmulatorWriteFile failed: %s", rsp.Err)
+	}
+	return nil
+}
