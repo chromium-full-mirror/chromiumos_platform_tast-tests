@@ -703,7 +703,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	// Ensure that the primary SIM slot has a valid SIM.
-	if !(f.useTestESIM || f.restartMM || f.sf != nil) {
+	if !(f.useTestESIM || f.sf != nil) {
 		if modem, err = modem.EnsureValidSIM(ctx, false); err != nil {
 			s.Fatal("Failed to ensure valid SIM: ", err)
 		}
@@ -913,10 +913,6 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	if f.restartMM {
-		modem, err := modem.EnsureValidSIM(ctx, false)
-		if err != nil {
-			s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
-		}
 		if err := modem.Enable(ctx); err != nil {
 			s.Fatal("Modem enable failed with: ", err)
 		}
