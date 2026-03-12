@@ -30,6 +30,12 @@ const (
 	imageTypeRW      imageType = iota
 	imageTypeRO      imageType = iota
 	maxFlashAttempts           = 2
+
+	// servod related
+	servoDataServer = "servo.data.grpc_server.grpc_server_setup"
+	grpcCorePort    = "50052"
+	grpcDataPort    = "50051"
+	servodPort      = "9999"
 )
 
 // dragonclaw regexes
@@ -313,9 +319,32 @@ func getFpmcuBoardName(testName string) string {
 	return strings.Split(testName, "/")[0]
 }
 
+// setupServodData sets up grpc server, needed by servod post hdctools-fission-2025
+func setupServodData(ctx context.Context) (*testexec.Cmd, error) {
+	checkServodData := testexec.CommandContext(ctx, "python", "-c", "import "+servoDataServer)
+	err := checkServodData.Run()
+	if err != nil {
+		// Pre hdctools-fission-2025 takes this code path
+		testing.ContextLog(ctx, "grpc_server not working, skip startup: ", err)
+		return nil, nil
+	}
+	args := []string{"-m", servoDataServer, "--grpc-core-port", grpcCorePort, "--grpc-data-port", grpcDataPort, "--grpc-core-host", "localhost", "--logs", "/var/log/servo_" + servodPort}
+	cmdServodData := testexec.CommandContext(ctx, "python", args...)
+	testing.ContextLogf(ctx, "Starting command: %q", shutil.EscapeSlice(cmdServodData.Args))
+	if err := cmdServodData.Start(); err != nil {
+		return nil, errors.Wrapf(err, "%q failed", shutil.EscapeSlice(cmdServodData.Args))
+	}
+	return cmdServodData, nil
+}
+
 // setupServo sets up a servo host connected to FPMCU.
-func setupServo(ctx context.Context, testName string) (*testexec.Cmd, error) {
-	cmdServod := testexec.CommandContext(ctx, "servod", "-p=9999", "--board="+getFpmcuBoardName(testName))
+func setupServo(ctx context.Context, testName string, useDataServer bool) (*testexec.Cmd, error) {
+	args := []string{"-p", servodPort, "--board", getFpmcuBoardName(testName)}
+	// Only post hdctools-fission-2025 servod uses grpc data server, prior versions do not use these options.
+	if useDataServer {
+		args = append(args, "--grpc-core-port", grpcCorePort, "--grpc-data-port", grpcDataPort, "--grpc-data-host", "localhost")
+	}
+	cmdServod := testexec.CommandContext(ctx, "servod", args...)
 	testing.ContextLogf(ctx, "Starting command: %q", shutil.EscapeSlice(cmdServod.Args))
 	if err := cmdServod.Start(); err != nil {
 		return nil, errors.Wrapf(err, "%q failed", shutil.EscapeSlice(cmdServod.Args))
@@ -488,7 +517,16 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 		s.Logf("Derived test bin: %s", metadata.name)
 	}
 
-	cmdServod, err := setupServo(ctx, metadata.name)
+	// Pre hdctools-fission-2025 servod returns nil for cmdServodData.
+	cmdServodData, err := setupServodData(ctx)
+	if cmdServodData != nil {
+		defer cmdServodData.Wait(testexec.DumpLogOnError)
+		defer cmdServodData.Signal(unix.SIGINT)
+	}
+	if err != nil {
+		s.Log("Servod data server failed, setupServo will skip data server: ", err)
+	}
+	cmdServod, err := setupServo(ctx, metadata.name, cmdServodData != nil)
 	if cmdServod != nil {
 		defer cmdServod.Wait(testexec.DumpLogOnError)
 		defer cmdServod.Signal(unix.SIGINT)
