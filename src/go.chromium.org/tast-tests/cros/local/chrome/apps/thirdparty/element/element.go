@@ -143,7 +143,7 @@ func (e *Element) createAccount(server string) uiauto.Action {
 		e.typeText(userName, ui.ResourceID(elementIDPrefix+"createAccountEditText")),
 		e.typeText("powerTestPassword", ui.ResourceID(elementIDPrefix+"createAccountPassword")),
 		apputil.FindAndClick(accountSubmitButton, defaultUITimeout),
-		apputil.FindAndClick(noSaveButton, defaultUITimeout),
+		apputil.ClickIfExist(noSaveButton, shortUITimeout),
 		apputil.FindAndClick(takeMeHomeButton, defaultUITimeout),
 	)
 }
