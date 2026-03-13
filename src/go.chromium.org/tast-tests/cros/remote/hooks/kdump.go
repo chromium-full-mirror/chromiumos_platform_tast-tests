@@ -8,6 +8,7 @@ package hooks
 import (
 	"context"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -52,7 +53,19 @@ func (h *kdumpHook) SetUp(ctx context.Context, s *HookState) error {
 	if kdumpEnable.Value() != "true" {
 		return nil
 	}
+
 	h.dut = s.DUT()
+
+	// If this hook runs right after the DUT boot, it's possible that the
+	// following shell commands will fail directly because the connection may
+	// not be stabilized. Check and wait for a health connection at first to
+	// reduce the chance of failures. See b/451777272#comment29 for details.
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if err := h.dut.WaitConnect(waitCtx); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT connection ready")
+	}
+
 	if supported, err := isKdumpSupported(ctx, h.dut); err != nil {
 		return errors.Wrap(err, "failed to check whether kdump is supported")
 	} else if !supported {
