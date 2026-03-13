@@ -70,7 +70,7 @@ const (
 	Ti50QualBranch string = "ti50qual"
 
 	// Remote image paths
-	latestQualFile = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
+	latestQualFile = "chromeos-localmirror-private/distfiles/%s-%s-QUAL_VERSION"
 	// DevGSCImageBucket is the bucket where node locked GSC test images are stored.
 	DevGSCImageBucket  = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/"
 	debugImageTemplate = "*.dbg%s.0x%s_0x%s.bin.*"
@@ -173,7 +173,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			testing.ContextLogf(ctx, "Found image: %s, config: %s for %s", fullGlob, jsonGlob, inputURL)
 			inputURL = jsonGlob
 		} else if strings.HasSuffix(branch, "qual") {
-			inputURL, err = lookupLatestGSCQualTarball(ctx, testbedProperties.TestbedType)
+			inputURL, err = lookupLatestGSCQualTarball(ctx, testbedProperties.TestbedType, strings.Contains(branch, "ti50a"))
 			if err != nil {
 				return nil, err
 			}
@@ -553,13 +553,17 @@ func LookupGSCReleaseTarball(ctx context.Context, version, fwName string) (strin
 }
 
 // lookupLatestGSCQualTarball downloads the image binary indicated in the qual file.
-func lookupLatestGSCQualTarball(ctx context.Context, t ti50.TestbedType) (string, error) {
+func lookupLatestGSCQualTarball(ctx context.Context, t ti50.TestbedType, isTi50a bool) (string, error) {
 	fwName := FindFwName(t)
 	qualFilePart := fwName
 	if GetFwAndDevicePrefix(t) == "ti50-nt" {
 		qualFilePart = "ti50-nt"
 	}
-	gsURL := gsPrefix + fmt.Sprintf(latestQualFile, qualFilePart)
+	qualTarget := "chromeos"
+	if isTi50a {
+		qualTarget = "ti50a"
+	}
+	gsURL := gsPrefix + fmt.Sprintf(latestQualFile, qualTarget, qualFilePart)
 	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsURL)
 	if err != nil {
 		return "", err
