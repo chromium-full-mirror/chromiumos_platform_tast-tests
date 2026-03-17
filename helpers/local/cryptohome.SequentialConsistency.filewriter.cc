@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include <base/containers/span.h>
 #include <base/files/file.h>
 #include <base/files/file_path.h>
 #include <base/logging.h>
@@ -51,19 +52,22 @@ bool createFile(const base::FilePath &path, int file_num, bool slowly = false) {
   if (slowly) {
     for (int i = 0; i < phrase.length(); i++) {
       char c = phrase[i];
-      int result = f.WriteAtCurrentPos(&c, 1);
-      if (result != 1) {
+      auto result = f.WriteAtCurrentPos(base::byte_span_from_ref(c));
+      if (!result.has_value() || *result != 1u) {
         LOG(ERROR) << file_path.value() << " WriteAtCurrentPos() returned "
-                   << result << ": "
+                   << (result.has_value() ? static_cast<long long>(*result)
+                                          : -1)
+                   << ": "
                    << base::File::ErrorToString(base::File::GetLastFileError());
         return false;
       }
     }
   } else {
-    int result = f.WriteAtCurrentPos(phrase.c_str(), phrase.length());
-    if (result != phrase.length()) {
+    auto result = f.WriteAtCurrentPos(base::as_byte_span(phrase));
+    if (!result.has_value() || *result != phrase.size()) {
       LOG(ERROR) << file_path.value() << " WriteAtCurrentPos() returned "
-                 << result << ": "
+                 << (result.has_value() ? static_cast<long long>(*result) : -1)
+                 << ": "
                  << base::File::ErrorToString(base::File::GetLastFileError());
       return false;
     }
