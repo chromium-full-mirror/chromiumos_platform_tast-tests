@@ -115,23 +115,23 @@ func LaunchIWA(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	createSocketConnButton := nodewith.Name("Create new socket connection").Role(role.Button)
 	sendMessageTextField := nodewith.Name("Send a message").Role(role.TextField)
-	naMessage := nodewith.Name("Na?").Role(role.InlineTextBox)
-	najaMessage := nodewith.Name("na ja!").Role(role.InlineTextBox)
+	sendButton := nodewith.Name("Send").Role(role.Button)
 
 	if err := uiauto.Combine("Interact with Kitchen Sink IWA UI",
-		// Wait till the IWA is launched and the Create Socket button appears.
-		ui.WithTimeout(30*time.Second).WaitUntilExists(createSocketConnButton),
 		// Create a new socket connection.
 		ui.LeftClick(createSocketConnButton),
 		ui.WaitUntilExists(sendMessageTextField.Nth(1)),
 		// Send messages to the TCP Server.
 		ui.LeftClickUntil(sendMessageTextField.First(), ui.Exists(sendMessageTextField.Focused())),
-		kb.TypeAction("Na?\n"),
-		ui.WaitUntilExists(naMessage),
+		kb.TypeAction("Na?"),
+		ui.LeftClick(sendButton.First()),
+		ui.WaitUntilExists(nodewith.NameContaining("Na?").First()),
+
 		// Send a message from the TCP Server.
 		ui.LeftClickUntil(sendMessageTextField.Nth(1), ui.Exists(sendMessageTextField.Focused())),
-		kb.TypeAction("na ja!\n"),
-		ui.WaitUntilExists(najaMessage),
+		kb.TypeAction("na ja!"),
+		ui.LeftClick(sendButton.Nth(1)),
+		ui.WaitUntilExists(nodewith.NameContaining("na ja!").First()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to interact with the Kitchen Sink IWA: ", err)
 	}
