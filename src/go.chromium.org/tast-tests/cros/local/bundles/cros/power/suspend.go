@@ -33,16 +33,6 @@ var (
 	// suspending the device. b/319036849
 	nofwupdFilteredModels = []string{"tentacool", "tentacruel", "elm", "hana", "homestar", "quackingstick", "wormdingler", "kingoftown", "lazor", "limozeen", "pazquel", "pompom"}
 
-	// These nami models are filtered out because Nami/sona seems to be unstable
-	// when suspending. b/324533891
-	namiFilteredModels = []string{"sona"}
-
-	// These octopus models are filtered out because they have a touchpad issue
-	// on kernel-upstream (b/329161200)
-	octopusFilteredModels = []string{"foob", "foob360"}
-
-	allFilteredModels = append(append(nofwupdFilteredModels, namiFilteredModels...), octopusFilteredModels...)
-
 	// For Intel S0ix debugging
 	substateRequirementsPath = "/sys/kernel/debug/pmc_core/substate_requirements"
 )
@@ -73,11 +63,11 @@ func init() {
 		// versions of this test and also remove the hwdeps - this should be run on all devices
 		Params: []testing.Param{
 			{
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(nofwupdFilteredModels...)),
 				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
 			}, {
 				Name:              "twice",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(nofwupdFilteredModels...)),
 				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 2},
 				ExtraAttr: []string{
 					"informational",
@@ -86,7 +76,7 @@ func init() {
 				},
 			}, {
 				Name:              "unstable",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(allFilteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(nofwupdFilteredModels...)),
 				Val:               suspendConfig{Fwupd: fwupdNoChange, Iterations: 1},
 				ExtraAttr: []string{
 					"informational",
