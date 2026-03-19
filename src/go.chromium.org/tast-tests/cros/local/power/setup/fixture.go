@@ -826,7 +826,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:         PowerAshMahiAndSimplify,
-		Desc:         "Fixture with mahi and pompano flags (for simplify feature) enabled",
+		Desc:         "Fixture with mahi flag (for simplify feature) enabled",
 		BugComponent: "b:1673015",
 		Contacts: []string{
 			"alanlxl@google.com",
@@ -839,7 +839,6 @@ func init() {
 		}, PowerFixtureOptions{
 			BrowserExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("Mahi"),
-				chrome.EnableFeatures("Pompano"),
 			},
 			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 				return []chrome.Option{
