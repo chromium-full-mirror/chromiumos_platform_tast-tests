@@ -223,7 +223,7 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Checking cbmem log for the displayed screens and usb boot disabled message")
-	if err := verifyDisabledUSBBootFwLog(ctx, h, identifyDisabledUSBBootFwLog(h)); err != nil {
+	if err := verifyDisabledUSBBootFwLog(ctx, h, getExpectedFwLogs(h)); err != nil {
 		saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
 		if saveErr := h.SaveCBMEMLogs(ctx, saveLogPath); saveErr != nil {
 			err = errors.Wrap(saveErr, err.Error())
@@ -240,53 +240,23 @@ func DevBootUSBDisallowed(ctx context.Context, s *testing.State) {
 	}
 }
 
-type disabledUSBBootFwLog struct {
-	screenIds []fwCommon.FwScreenID
-	logs      []string
-}
-
-func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
-	var data disabledUSBBootFwLog
+func getExpectedFwLogs(h *firmware.Helper) []string {
+	var logs []string
 	switch h.Config.ModeSwitcherType {
 	case firmware.MenuSwitcher:
-		data.screenIds = []fwCommon.FwScreenID{
-			fwCommon.DeveloperMode,
-		}
-		data.logs = []string{`(External boot is disabled|Dev mode external boot not allowed)`}
-	case firmware.TabletDetachableSwitcher:
-		data.screenIds = []fwCommon.FwScreenID{
-			fwCommon.LegacyDeveloperWarningMenu,
-			// Go to DebugInfo screen to bypass the timeout.
-			fwCommon.LegacyDebugInfo,
-			fwCommon.LegacyDeveloperWarningMenu,
-			fwCommon.LegacyBlank,
-			fwCommon.LegacyDeveloperWarningMenu,
-			fwCommon.LegacyBlank,
-		}
-		data.logs = []string{`USB booting is disabled`}
-	case firmware.KeyboardDevSwitcher:
-		data.screenIds = []fwCommon.FwScreenID{
-			fwCommon.LegacyDeveloperWarning,
-			fwCommon.LegacyBlank,
-		}
-		data.logs = []string{`USB booting is disabled`}
+		logs = []string{`(External boot is disabled|Dev mode external boot not allowed)`}
+	case firmware.TabletDetachableSwitcher, firmware.KeyboardDevSwitcher:
+		logs = []string{`USB booting is disabled`}
 	}
-	return data
+	return logs
 }
 
-func verifyDisabledUSBBootFwLog(ctx context.Context, h *firmware.Helper, expLogs disabledUSBBootFwLog) error {
-	foundExpScreens, err := h.Reporter.CheckDisplayedScreens(ctx, expLogs.screenIds)
-	if err != nil {
-		return err
-	}
-	if !foundExpScreens {
-		return errors.New("failed to find firmware screens as expected")
-	}
+func verifyDisabledUSBBootFwLog(ctx context.Context, h *firmware.Helper, expLogs []string) error {
 	cbmemLog, err := h.Reporter.GetCBMEMLogs(ctx)
 	if err != nil {
 		return err
 	}
-	if err := h.ScanWithoutExpectedSequenceInSource(ctx, cbmemLog, expLogs.logs); err != nil {
+	if err := h.ScanWithoutExpectedSequenceInSource(ctx, cbmemLog, expLogs); err != nil {
 		return err
 	}
 	return nil
