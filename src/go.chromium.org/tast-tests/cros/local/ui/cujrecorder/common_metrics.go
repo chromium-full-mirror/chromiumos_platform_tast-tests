@@ -130,6 +130,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewDistributionMetricConfig("EventLatency.MouseReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.MouseWheel.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("EventLatency.GesturePinchUpdate.Touchpad.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
 
 		// Smoothness.
 		NewSmoothnessMetricConfig("Chrome.Tabs.AnimationSmoothness.TabLoading"),
@@ -144,12 +145,17 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		// Startup Latency.
 		NewCustomMetricConfig("Startup.FirstWebContents.NonEmptyPaint3", "ms", perf.SmallerIsBetter),
 
-		// Other metrics to monitor.
-		NewDistributionMetricConfig("EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Media.Video.Roughness.60fps", "ms", perf.SmallerIsBetter),
+		// Graphics Smoothness.
+		// TODO(vincentchiang): Remove version 3 metrics in M150
 		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllInteractions", "percent", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.CompositorThread.Video", "percent", perf.SmallerIsBetter),
 		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames3.AllSequences", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames4.AllInteractions", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames4.CompositorThread.Video", "percent", perf.SmallerIsBetter),
+		NewDistributionMetricConfig("Graphics.Smoothness.PercentDroppedFrames4.AllSequences", "percent", perf.SmallerIsBetter),
+
+		// Other metrics to monitor.
+		NewCustomMetricConfig("Media.Video.Roughness.60fps", "ms", perf.SmallerIsBetter),
 	}
 }
 
