@@ -3,9 +3,6 @@
 # found in the LICENSE file.
 set noparent
 
-# ChromeOS Connectivity (Connectivity Health)
-stevenjb@chromium.org
-
 # ChromeOS Connectivity (Platform WiFi)
 include chromiumos/owners:v1:/wifi/OWNERS.tests
 
