@@ -59,9 +59,24 @@ func DevicePlaybackRecord(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	// Stop UI in advance for this test to avoid the node being selected by UI.
+	if err := upstart.StopJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to stop ui: ", err)
+	}
+	defer upstart.EnsureJobRunning(ctx, "ui")
+
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to cras: ", err)
+	}
+
+	// Select internal mic and internal speaker explicitly to prevent mixer control issues.
+	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+		s.Fatal("Failed to set internal mic active: ", err)
+	}
+
+	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+		s.Fatal("Failed to set internal speaker active: ", err)
 	}
 
 	outputDev, err := cras.GetNodeByMatcher(ctx, nodematch.Type("INTERNAL_SPEAKER"))
