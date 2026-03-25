@@ -224,7 +224,7 @@ func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams, outD
 		}
 
 		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 2345 * time.Millisecond, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for Servo DUT port to be ready")
 	}
 
