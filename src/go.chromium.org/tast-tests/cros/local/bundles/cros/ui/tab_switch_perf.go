@@ -6,9 +6,11 @@ package ui
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchperf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/testing"
@@ -27,15 +29,28 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile, tabswitchperf.WPRArchiveName},
 		Timeout:      15*time.Minute + cujrecorder.CooldownTimeout,
-		Vars: []string{
-			"mute",
-		},
-		Fixture: "tabSwitchPerfWPRAsh",
+		Vars:         []string{"ui.TabSwitchPerf.mute"},
+		Fixture:      "tabSwitchPerfWPRAsh",
 	})
 }
 
 func TabSwitchPerf(ctx context.Context, s *testing.State) {
 	cuj.WriteMetadataFile(ctx, s.TestName())
 
-	tabswitchperf.Run(ctx, s)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	outDir := s.OutDir()
+	perfettoConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+
+	mute := false
+	if val, ok := s.Var("ui.TabSwitchPerf.mute"); ok {
+		boolVal, err := strconv.ParseBool(val)
+		if err != nil {
+			s.Fatal("Cannot parse argument mute: ", err)
+		}
+		mute = boolVal
+	}
+
+	if err := tabswitchperf.Run(ctx, cr, mute, outDir, perfettoConfigPath); err != nil {
+		s.Fatal("Failed to run test: ", err)
+	}
 }

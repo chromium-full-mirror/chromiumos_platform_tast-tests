@@ -7,9 +7,12 @@ package ui
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchperf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,11 +31,27 @@ func init() {
 		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
-		Vars:         []string{"mute"},
+		Vars:         []string{"ui.TabSwitchPerfRecorder.mute"},
 		Pre:          wpr.RecordMode(filepath.Join("/tmp", tabswitchperf.WPRArchiveName)),
 	})
 }
 
 func TabSwitchPerfRecorder(ctx context.Context, s *testing.State) {
-	tabswitchperf.Run(ctx, s)
+	cr := s.PreValue().(*chrome.Chrome)
+
+	outDir := s.OutDir()
+	perfettoConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+
+	mute := false
+	if val, ok := s.Var("ui.TabSwitchPerfRecorder.mute"); ok {
+		boolVal, err := strconv.ParseBool(val)
+		if err != nil {
+			s.Fatal("Cannot parse argument mute: ", err)
+		}
+		mute = boolVal
+	}
+
+	if err := tabswitchperf.Run(ctx, cr, mute, outDir, perfettoConfigPath); err != nil {
+		s.Fatal("Failed to run test: ", err)
+	}
 }
