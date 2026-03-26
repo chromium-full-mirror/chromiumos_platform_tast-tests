@@ -158,16 +158,13 @@ func powerButtonPowerOnDUT(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
+// warmResetDUT The precondition is that the DUT stays in the firmware screen.
+// Compare to ModeAwareReboot, ModeAwareReboot assumes that the DUT is connected via ssh.
+// This function also skips the WaitUnreachable step because it's already unreachable in the firmware screen.
 func warmResetDUT(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Rebooting the DUT with a warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		return errors.Wrap(err, "failed to warm reset the DUT")
-	}
-
-	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelUnreachable()
-	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
-		return errors.Wrap(err, "failed to wait DUT unreachable")
 	}
 
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*h.Config.DelayRebootToPing)
