@@ -24,19 +24,16 @@ import (
 )
 
 const (
-	testRoomID   = "power_test"
-	testRoomName = "Power test room"
-
 	// There are different APK urls according to the system architecture.
 	elementArmAPKVarName    = "power.element_arm_apk_url"
 	elementArm64APKVarName  = "power.element_arm64_apk_url"
 	elementX86APKVarName    = "power.element_x86_apk_url"
 	elementX86_64APKVarName = "power.element_x86_64_apk_url"
 	// defaultApkURLBase is the URL base for the Element APKs with the
-	// default version 1.6.50 on the github.
-	// The full links can be found under the Assets
+	// default version 1.6.50 on the google cloud bucket.
+	// The official apks can be found under the Assets
 	// on https://github.com/vector-im/element-android/releases/tag/v1.6.50.
-	defaultApkURLBase = "https://github.com/element-hq/element-android/releases/download/v1.6.50/vector-gplay-"
+	defaultApkURLBase = "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/social-app/v1.6.50/vector-gplay-"
 )
 
 var (
@@ -62,11 +59,13 @@ var (
 
 // Element implements the SocialApp interface with the Element app.
 type Element struct {
-	ele        *element.Element
-	tconn      *chrome.TestConn
-	creds      credconfig.Creds
-	tcpCleanup func(context.Context) error
-	roomName   string
+	ele             *element.Element
+	tconn           *chrome.TestConn
+	creds           credconfig.Creds
+	tcpCleanup      func(context.Context) error
+	privateRoomName string
+	publicRoomID    string
+	publicRoomName  string
 }
 
 // ParseElementAPKURL returns the element APK URL corresponding to the DUT architecture.
@@ -145,19 +144,24 @@ func (e *Element) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to login to the Element app")
 	}
 
+	timeStamp := time.Now().UnixNano()
+	publicRoomID := fmt.Sprintf("public_room_%d", timeStamp)
+	publicRoomName := fmt.Sprintf("Public room %d", timeStamp)
 	// Create a public room for the SearchPublicRoom action.
-	if err := e.ele.CreatePublicRoom(ctx, testRoomName, testRoomID); err != nil {
+	if err := e.ele.CreatePublicRoom(ctx, publicRoomName, publicRoomID); err != nil {
 		return errors.Wrap(err, "failed to create public room")
 	}
-	if err := e.ele.LeaveRoom(testRoomName)(ctx); err != nil {
+	if err := e.ele.LeaveRoom(publicRoomName)(ctx); err != nil {
 		return errors.Wrap(err, "failed to leave public room")
 	}
+	e.publicRoomID = publicRoomID
+	e.publicRoomName = publicRoomName
 
-	roomName := fmt.Sprintf("Power test %d", time.Now().Nanosecond())
-	if err := e.ele.CreatePrivateRoom(ctx, roomName); err != nil {
+	privateRoomName := fmt.Sprintf("Power test %d", timeStamp)
+	if err := e.ele.CreatePrivateRoom(ctx, privateRoomName); err != nil {
 		return errors.Wrap(err, "failed to create room")
 	}
-	e.roomName = roomName
+	e.privateRoomName = privateRoomName
 	return nil
 }
 
@@ -195,16 +199,19 @@ func (e *Element) SendMessages(ctx context.Context) error {
 func (e *Element) RunExtraOperations(ctx context.Context) error {
 	return uiauto.NamedCombine("run extra operations",
 		e.ele.RenameCurrentRoom("new room"),
-		e.ele.RenameCurrentRoom(e.roomName),
-		e.ele.SearchPublicRoom(testRoomID, testRoomName),
-		e.ele.JoinRoom(e.roomName),
+		e.ele.RenameCurrentRoom(e.privateRoomName),
+		e.ele.SearchPublicRoom(e.publicRoomID, e.publicRoomName),
+		e.ele.JoinRoom(e.privateRoomName),
 	)(ctx)
 }
 
 // EnsureInRoom checks if the user is in the room, and attempts to rejoin if not.
 func (e *Element) EnsureInRoom() uiauto.Action {
 	return uiauto.NamedAction("ensure in room",
-		uiauto.IfFailThen(e.ele.CheckUserInRoom(e.roomName), e.ele.JoinRoom(e.roomName)),
+		uiauto.IfFailThen(
+			e.ele.CheckUserInRoom(e.privateRoomName),
+			e.ele.JoinRoom(e.privateRoomName),
+		),
 	)
 }
 
