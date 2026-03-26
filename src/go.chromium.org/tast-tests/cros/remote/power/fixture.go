@@ -63,9 +63,16 @@ func (f *tuwunelServerSetupImpl) SetUp(ctx context.Context, s *testing.FixtState
 		}
 	}()
 
+	dut := s.DUT()
+	if !dut.Connected(ctx) {
+		if err := dut.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to connect to DUT: ", err)
+		}
+	}
+
 	DUTAddr := fmt.Sprintf("127.0.0.1:%d", power.TuwunelServerDefaultPort)
 	hostAddr := fmt.Sprintf("127.0.0.1:%d", f.server.Port())
-	forwarder, err := s.DUT().Conn().ForwardRemoteToLocal("tcp", DUTAddr, hostAddr, nil)
+	forwarder, err := dut.Conn().ForwardRemoteToLocal("tcp", DUTAddr, hostAddr, nil)
 	if err != nil {
 		s.Fatal("Failed to forward port from DUT to host: ", err)
 	}
