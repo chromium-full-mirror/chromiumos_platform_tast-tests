@@ -92,12 +92,9 @@ func (r *RollbackState) IsEntropySet() bool {
 	return r.BlockID > 0
 }
 
-// IsAntiRollbackSet checks if version anti-rollback has been enabled.
-//
-// We currently do not have a minimum version number, thus this function
-// indicates if we are not in the normal rollback state.
-func (r *RollbackState) IsAntiRollbackSet() bool {
-	return r.MinVersion != 0 || r.RWVersion != 0
+// IsAntiRollbackVersionCorrect checks if current RW rollback version matches the minimal rollback version.
+func (r *RollbackState) IsAntiRollbackVersionCorrect() bool {
+	return r.RWVersion == r.MinVersion
 }
 
 // RollbackInfo returns the rollbackinfo of the fingerprint MCU.

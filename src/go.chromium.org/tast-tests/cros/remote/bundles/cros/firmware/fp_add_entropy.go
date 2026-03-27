@@ -80,8 +80,8 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get rollbackinfo: ", err)
 	}
-	if rollbackPrev.IsAntiRollbackSet() {
-		s.Fatalf("Anti-rollback is set: %+v", rollbackPrev)
+	if !rollbackPrev.IsAntiRollbackVersionCorrect() {
+		s.Fatalf("Anti-rollback version is incorrect: %+v", rollbackPrev)
 	}
 	if !rollbackPrev.IsEntropySet() {
 		s.Fatalf("Entropy is unset: %+v", rollbackPrev)
@@ -115,8 +115,8 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get rollbackinfo: ", err)
 	}
-	if rollbackCur.IsAntiRollbackSet() {
-		s.Fatalf("Anti-rollback is set: %+v", rollbackPrev)
+	if !rollbackCur.IsAntiRollbackVersionCorrect() {
+		s.Fatalf("Anti-rollback version is incorrect: %+v", rollbackPrev)
 	}
 	if expectedBlockID := rollbackPrev.BlockID + 1; expectedBlockID != rollbackCur.BlockID {
 		s.Fatalf("Unexpected Rollback Block ID: got %d; want %d",
@@ -136,8 +136,8 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get rollbackinfo: ", err)
 	}
-	if rollbackCur.IsAntiRollbackSet() {
-		s.Fatalf("Anti-rollback is set: %+v", rollbackPrev)
+	if !rollbackCur.IsAntiRollbackVersionCorrect() {
+		s.Fatalf("Anti-rollback version is incorrect: %+v", rollbackPrev)
 	}
 	if expectedBlockID := rollbackPrev.BlockID + 2; expectedBlockID != rollbackCur.BlockID {
 		s.Fatalf("Unexpected Rollback Block ID: got %d; want %d",

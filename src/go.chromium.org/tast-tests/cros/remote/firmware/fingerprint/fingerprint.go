@@ -491,14 +491,14 @@ func CheckValidFlashState(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.Boar
 		return errors.Wrap(err, "FPMCU is not in RW")
 	}
 
-	// Check that no tests enabled anti-rollback and that entropy has been added
+	// Check that anti-rollback version is correct and that entropy has been added
 	// (maybe multiple times).
 	rollback, err := RollbackInfo(ctx, d.DUT())
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve rollbackinfo")
 	}
-	if rollback.IsAntiRollbackSet() {
-		return errors.Wrap(err, "FPMCU has anti-rollback enabled")
+	if !rollback.IsAntiRollbackVersionCorrect() {
+		return errors.Wrap(err, "FPMCU has incorrect anti-rollback version")
 	}
 	// This might be considered overkill to claim the FPMCU is not in a valid
 	// state if entropy is not set. The reason we are doing this is so that
