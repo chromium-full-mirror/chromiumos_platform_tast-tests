@@ -17,7 +17,7 @@ import (
 
 type testWPAtBootConfig struct {
 	action         string
-	wpSetting      string
+	wpSetting      utils.WPState
 	fwmp           bool
 	followBattPres bool
 }
@@ -41,35 +41,35 @@ func init() {
 			Name: "plt_rst_follow_batt_pres_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:         "plt_rst",
-				wpSetting:      "disable",
+				wpSetting:      utils.WPDisabled,
 				followBattPres: true,
 			},
 		}, {
 			Name: "plt_rst_follow_batt_pres_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:         "plt_rst",
-				wpSetting:      "enable",
+				wpSetting:      utils.WPEnabled,
 				followBattPres: true,
 			},
 		}, {
 			Name: "plt_rst_fwmp_wp_disable",
 			Val: testWPAtBootConfig{
 				action:    "plt_rst",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "plt_rst_fwmp_wp_enable",
 			Val: testWPAtBootConfig{
 				action:    "plt_rst",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "plt_rst_fwmp_follow_batt_pres",
 			Val: testWPAtBootConfig{
 				action:         "plt_rst",
-				wpSetting:      "disable",
+				wpSetting:      utils.WPDisabled,
 				fwmp:           true,
 				followBattPres: true,
 			},
@@ -77,33 +77,33 @@ func init() {
 			Name: "plt_rst_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:    "plt_rst",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 			},
 		}, {
 			Name: "plt_rst_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:    "plt_rst",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 			},
 		}, {
 			Name: "reboot_cmd_follow_batt_pres_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:         "reboot",
-				wpSetting:      "disable",
+				wpSetting:      utils.WPDisabled,
 				followBattPres: true,
 			},
 		}, {
 			Name: "reboot_cmd_follow_batt_pres_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:         "reboot",
-				wpSetting:      "enable",
+				wpSetting:      utils.WPEnabled,
 				followBattPres: true,
 			},
 		}, {
 			Name: "reboot_cmd_fwmp_follow_batt_pres",
 			Val: testWPAtBootConfig{
 				action:         "reboot",
-				wpSetting:      "disable",
+				wpSetting:      utils.WPDisabled,
 				fwmp:           true,
 				followBattPres: true,
 			},
@@ -111,53 +111,53 @@ func init() {
 			Name: "reboot_cmd_fwmp_wp_disable",
 			Val: testWPAtBootConfig{
 				action:    "reboot",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "reboot_cmd_fwmp_wp_enable",
 			Val: testWPAtBootConfig{
 				action:    "reboot",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "reboot_cmd_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:    "reboot",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 			},
 		}, {
 			Name: "reboot_cmd_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:    "reboot",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 			},
 		}, {
 			Name: "wp_cmd_fwmp_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:    "wp command",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "wp_cmd_fwmp_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:    "wp command",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 				fwmp:      true,
 			},
 		}, {
 			Name: "wp_cmd_wp_disabled",
 			Val: testWPAtBootConfig{
 				action:    "wp command",
-				wpSetting: "disable",
+				wpSetting: utils.WPDisabled,
 			},
 		}, {
 			Name: "wp_cmd_wp_enabled",
 			Val: testWPAtBootConfig{
 				action:    "wp command",
-				wpSetting: "enable",
+				wpSetting: utils.WPEnabled,
 			},
 		}},
 	})
@@ -171,17 +171,20 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	config := s.Param().(testWPAtBootConfig)
-	action := config.action
-	wpSetting := config.wpSetting
-	wpEnabledPreFwmp := wpSetting != "disable"
-	wpEnabled := wpEnabledPreFwmp || config.fwmp
-	if config.followBattPres {
-		wpSetting = "follow_batt_pres"
+	s.Log("Verify WP")
+	s.Log("action: ", config.action)
+	s.Log("wpSetting: ", config.wpSetting)
+	s.Log("fwmp: ", config.fwmp)
+	s.Log("followBattPres: ", config.followBattPres)
+	wpPreFwmp := config.wpSetting
+	wpPostFwmp := wpPreFwmp
+	if config.fwmp {
+		wpPostFwmp = utils.WPEnabled
 	}
 
 	var bootWpThreshold int
 	if b.TestbedType == ti50.GscH1Shield {
-		if wpEnabled {
+		if wpPostFwmp == utils.WPEnabled {
 			bootWpThreshold = 0
 		} else {
 			// When WP is disabled, Cr50 briefly enables it when it
@@ -194,11 +197,6 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 		bootWpThreshold = 2
 	}
 
-	s.Log("Verify WP")
-	s.Log("action: ", wpSetting)
-	s.Log("wpSetting: ", wpSetting)
-	s.Log("fwmp: ", config.fwmp)
-	s.Log("expect WP enabled: ", wpEnabled)
 	// Release the GSC from reset.
 	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CCDModeOff)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "gsc failed to boot")
@@ -208,14 +206,17 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 	events := b.GpioMonitorRead(ctx, gpioMonitor)
 	s.Log("Cleared Events: ", events)
 
-	wpCmd := fmt.Sprintf("wp %s atboot", wpSetting)
-	_, err := i.Command(ctx, wpCmd)
-	th.MustSucceed(err, "Failed "+wpCmd)
+	wpCmd := wpPreFwmp.String()
+	if config.followBattPres {
+		wpCmd = "follow_batt_pres"
+	}
+	_, err := i.Command(ctx, "wp "+wpCmd+" atboot")
+	th.MustSucceed(err, "Failed wp "+wpCmd+" atboot")
 
 	// Setup battery presence
 	if config.followBattPres {
 		var bpSetting string
-		if !wpEnabledPreFwmp {
+		if wpPreFwmp == utils.WPDisabled {
 			bpSetting = "dis"
 		}
 		bpCmd := fmt.Sprintf("bp %sconnected atboot", bpSetting)
@@ -234,26 +235,18 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 	defer b.ResetAndTpmRemoveFWMP(ctx, i, ti50.FfClamshell)
 	// Create the FWMP and verify WP.
 	if config.fwmp {
-		// Verify the WP setting before creating the fwmp
-		if wpEnabledPreFwmp == b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
-			s.Fatal("Failed to setup initial WP")
-		}
-
+		b.CheckWriteProtect(ctx, wpPreFwmp, "before writing FWMP disable unlock")
 		_, err = b.ResetAndTpmSetFWMP(ctx, i, utils.FWMPDisableUnlock,
 			ti50.CCDModeOff, ti50.FfClamshell)
 		th.MustSucceed(err, "Failed to create FWMP")
+		b.CheckWriteProtect(ctx, wpPostFwmp, "after writing FWMP disable unlock")
+	} else {
+		b.CheckWriteProtect(ctx, wpPreFwmp, "after setup")
 	}
 
 	wp, err := i.Command(ctx, "wp")
 	th.MustSucceed(err, "Failed to get write protect")
 	s.Log("WP: ", wp)
-
-	wpIsEnabled := !b.GpioGet(ctx, ti50.GpioTi50WriteProtectL)
-	// Verify the WP setting
-	if wpEnabled != wpIsEnabled {
-		s.Fatal("Failed to setup WP")
-	}
-	s.Logf("Setup WP: %t", wpIsEnabled)
 
 	// Read from the gpio monitor to clear existing events.
 	events = b.GpioMonitorRead(ctx, gpioMonitor)
@@ -261,7 +254,7 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 
 	for attempt := 0; attempt < 5; attempt++ {
 		var expectReboot bool
-		switch action {
+		switch config.action {
 		case "plt_rst":
 			// Ti50 reboots to run AP RO verification on the first
 			// PLT_RST_L pulse after WP is enabled. If WP was
@@ -269,8 +262,8 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 			// verification was already run. It shouldn't get
 			// triggered again.
 			expectReboot = (b.TestbedType != ti50.GscH1Shield &&
-				attempt == 0 && wpEnabled &&
-				!(config.fwmp && wpEnabledPreFwmp))
+				attempt == 0 && wpPostFwmp == utils.WPEnabled &&
+				!(config.fwmp && wpPreFwmp == utils.WPEnabled))
 			// Toggling PLT_RST_L on ti50 should trigger AP RO verification
 			// once since WP was just enabled.
 			b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
@@ -282,32 +275,30 @@ func GSCWPAtBoot(ctx context.Context, s *testing.State) {
 			th.MustSucceed(i.Reboot(ctx), "Failed to reboot GSC")
 		case "wp command":
 			expectReboot = false
-			_, err := i.Command(ctx, "wp "+wpSetting)
-			th.MustSucceed(err, "Failed wp "+wpSetting)
+			_, err := i.Command(ctx, "wp "+wpCmd)
+			th.MustSucceed(err, "Failed wp "+wpCmd)
 		}
 
 		// Verify the WP setting
-		if wpEnabled == b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
-			s.Fatalf("%s: wp changed", action)
-		}
+		b.CheckWriteProtect(ctx, wpPostFwmp, fmt.Sprintf("after %s %d", config.action, attempt))
 
 		// Check if GSC reset or the WP signal toggled.
 		resetDetected, wpChanged := wpAtBootCheckSignals(ctx, b, gpioMonitor)
-		s.Logf("%s %d: wpChanged %d", action, attempt, wpChanged)
-		s.Logf("%s %d: resetDetected %t", action, attempt, resetDetected)
+		s.Logf("%s %d: wpChanged %d", config.action, attempt, wpChanged)
+		s.Logf("%s %d: resetDetected %t", config.action, attempt, resetDetected)
 		if expectReboot {
 			if !resetDetected {
-				s.Errorf("%s %d: did not detect GSC reset", action, attempt)
+				s.Errorf("%s %d: did not detect GSC reset", config.action, attempt)
 			}
 			if wpChanged > bootWpThreshold {
-				s.Errorf("%s %d: WP changed %d times", action, attempt, wpChanged)
+				s.Errorf("%s %d: WP changed %d times", config.action, attempt, wpChanged)
 			}
 		} else {
 			if resetDetected {
-				s.Errorf("%s %d: unexpected reboot", action, attempt)
+				s.Errorf("%s %d: unexpected reboot", config.action, attempt)
 			}
 			if wpChanged > 0 {
-				s.Errorf("%s %d: WP changed %d times", action, attempt, wpChanged)
+				s.Errorf("%s %d: WP changed %d times", config.action, attempt, wpChanged)
 			}
 
 		}

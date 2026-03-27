@@ -59,10 +59,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 		s.Fatal("Error communicating with ti50: ", err)
 	}
 
-	// Ensure write protect is disabled
-	if !b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
-		s.Fatal("WP signal not disable after `wp disable` console command")
-	}
+	b.CheckWriteProtect(ctx, utils.WPDisabled, "after `wp disable` console command")
 
 	_, err = b.ResetAndTpmSetFWMP(ctx, i, utils.FWMPDisableUnlock,
 		ti50.CCDModeOn, ti50.FfClamshell)
@@ -70,10 +67,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 		s.Fatal("Failed to create FWMP: ", err)
 	}
 
-	// Ensure Write protect is disabled
-	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
-		s.Fatal("WP signal not enabled after policy gets written to NVmem with FWMP unlocked disabled")
-	}
+	b.CheckWriteProtect(ctx, utils.WPEnabled, "after writing FWMP disable unlock")
 
 	// Type the "wp disable" command again; this should have no affect because of FWMP
 	_, err = i.Command(ctx, "wp disable atboot")
@@ -81,10 +75,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 		s.Fatal("Error communicating with ti50: ", err)
 	}
 
-	// Ensure Write protect is still enabled since wp command should have been blocked
-	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) {
-		s.Fatal("WP signal not enabled after `wp disable` command, but should be blocked")
-	}
+	b.CheckWriteProtect(ctx, utils.WPEnabled, "after `wp disable` command is blocked")
 
 	// Verify FWMP force enable doesn't lead to multiple AP RO verification
 	// reboots. This is mostly for Ti50. It also shouldn't trigger resets on

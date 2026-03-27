@@ -1365,3 +1365,33 @@ func (h DevboardHelper) TestUARTForwarding(ctx context.Context, r *rand.Rand, po
 	}
 	return errors.Errorf("%s uart forwarding failed: %s", caseStr, errs)
 }
+
+// WPState is the GSC Write Protect output (ti50.GpioTi50WriteProtectL).
+type WPState bool
+
+const (
+	// WPEnabled means GpioTi50WriteProtectL is low (asserted).
+	WPEnabled WPState = false
+	// WPDisabled means GpioTi50WriteProtectL is high (deasserted).
+	WPDisabled = true
+)
+
+func (s WPState) String() string {
+	if s == WPEnabled {
+		return "enabled"
+	}
+	return "disabled"
+}
+
+// CheckWriteProtect reads the WP GPIO
+func (h DevboardHelper) CheckWriteProtect(ctx context.Context, wantState WPState, desc string) {
+	r1 := WPState(h.GpioGet(ctx, ti50.GpioTi50WriteProtectL))
+	r2 := WPState(h.GpioGet(ctx, ti50.GpioTi50WriteProtectL))
+	if r1 != r2 {
+		h.Fatalf("WP unstable (got %s %s, want %s) %s", r1.String(), r2.String(), wantState.String(), desc)
+	}
+	if r1 != wantState {
+		h.Fatalf("WP incorrect (got %s, want %s) %s", r1.String(), wantState.String(), desc)
+	}
+	testing.ContextLogf(ctx, "WP correct (%s) %s", r1.String(), desc)
+}
