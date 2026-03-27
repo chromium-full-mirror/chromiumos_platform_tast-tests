@@ -24,7 +24,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Cr50Strongbox,
+		Func:    GSCStrongbox,
 		Desc:    "Test strongbox commands",
 		Timeout: 10 * time.Minute,
 		Contacts: []string{
@@ -32,12 +32,20 @@ func init() {
 			"ecgh@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr:         []string{"group:gsc", "gsc_nightly"},
+		Params: []testing.Param{{
+			Name:      "cr50",
+			Fixture:   fixture.GSCOpenCCD,
+			ExtraAttr: []string{"gsc_image_ti50", "gsc_h1_shield"},
+		}, {
+			Name:      "ti50a",
+			Fixture:   fixture.GSCOpenCCDTi50a,
+			ExtraAttr: []string{"gsc_image_ti50a", "gsc_dt_shield", "gsc_ot_shield"},
+		}},
 	})
 }
 
-func Cr50Strongbox(ctx context.Context, s *testing.State) {
+func GSCStrongbox(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)

@@ -21,6 +21,8 @@ const (
 	// GSCOpenCCD fixture ensures the testlab is enabled at startup and that tpm is reset between
 	// each tests
 	GSCOpenCCD = "gscOpenCCD"
+	// GSCOpenCCDTi50a fixture is the same as GSCOpenCCD, but for the Ti50a image.
+	GSCOpenCCDTi50a = "gscOpenCCDTi50a"
 
 	testLabOpenTimeout = 30 * time.Second
 )
@@ -34,6 +36,15 @@ func init() {
 		Impl:           &ccdOpenImpl{},
 		PreTestTimeout: testLabOpenTimeout,
 		Parent:         SystemDevboard,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:           GSCOpenCCDTi50a,
+		Desc:           "Ensures that CCD is open and TPM is cleared before every test",
+		Contacts:       []string{"cros-hwsec@google.com", "ecgh@google.com"},
+		BugComponent:   "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
+		Impl:           &ccdOpenImpl{},
+		PreTestTimeout: testLabOpenTimeout,
+		Parent:         Ti50ADevboard,
 	})
 }
 
