@@ -48,11 +48,24 @@ func UnmarshalEctoolFlags(data string) (uint32, error) {
 	return uint32(flags), nil
 }
 
+// SecretInitializedStatus represents the state of the secret initialization.
+type SecretInitializedStatus int
+
+const (
+	// SecretInitializedUnknown means the secret status was not reported.
+	SecretInitializedUnknown SecretInitializedStatus = iota
+	// SecretInitializedFalse means the secret is not initialized.
+	SecretInitializedFalse
+	// SecretInitializedTrue means the secret is initialized.
+	SecretInitializedTrue
+)
+
 // RollbackState is the state of the anti-rollback block.
 type RollbackState struct {
-	BlockID    int
-	MinVersion int
-	RWVersion  int
+	BlockID           int
+	MinVersion        int
+	RWVersion         int
+	SecretInitialized SecretInitializedStatus
 }
 
 // UnmarshalerEctool unmarshals part of ectool's output into a RollbackState.
@@ -78,23 +91,47 @@ func (r *RollbackState) UnmarshalerEctool(data []byte) error {
 	}
 	state.RWVersion = rwVersion
 
+	if secretInitializedStr, ok := rollbackInfoMap["Secret initialized"]; ok {
+		secretInitialized, err := strconv.Atoi(secretInitializedStr)
+		if err != nil {
+			return errors.Wrap(err, "failed to convert secret initialized")
+		}
+		if secretInitialized != 0 {
+			state.SecretInitialized = SecretInitializedTrue
+		} else {
+			state.SecretInitialized = SecretInitializedFalse
+		}
+	} else {
+		state.SecretInitialized = SecretInitializedUnknown
+	}
+
 	*r = state
 	return nil
 }
 
-// IsEntropySet checks that entropy has already been set based on the block ID.
+// IsEntropySet checks that entropy has already been set, based on the rollback state.
 //
+// If the secret state is unknown, it falls back to checking the block ID.
 // If the block ID is greater than 0, there is a very good chance that entropy
 // has been added. This is the same way that biod/bio_wash checks if entropy has
-// been set. That being said, this method can be fooled if some test simply
-// increments the anti-rollback version from a fresh flashing.
-func (r *RollbackState) IsEntropySet() bool {
+// been set.
+func (r *RollbackState) IsEntropySet(ctx context.Context) bool {
+	if r.SecretInitialized != SecretInitializedUnknown {
+		return r.SecretInitialized == SecretInitializedTrue
+	}
+	testing.ContextLog(ctx, "It's not possible to reliably determine whether the entropy is set. Falling back to checking block id")
 	return r.BlockID > 0
 }
 
 // IsAntiRollbackVersionCorrect checks if current RW rollback version matches the minimal rollback version.
 func (r *RollbackState) IsAntiRollbackVersionCorrect() bool {
 	return r.RWVersion == r.MinVersion
+}
+
+// IsSecretInitializationStatusSupported provides information whether the firmware
+// supports secret initialization status reporting.
+func (r *RollbackState) IsSecretInitializationStatusSupported() bool {
+	return r.SecretInitialized != SecretInitializedUnknown
 }
 
 // RollbackInfo returns the rollbackinfo of the fingerprint MCU.

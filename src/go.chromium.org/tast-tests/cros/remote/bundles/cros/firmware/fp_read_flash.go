@@ -84,7 +84,7 @@ func FpReadFlash(ctx context.Context, s *testing.State) {
 	if !rollback.IsAntiRollbackVersionCorrect() {
 		s.Fatalf("Anti-rollback version is incorrect: %+v", rollback)
 	}
-	if !rollback.IsEntropySet() {
+	if !rollback.IsEntropySet(ctx) {
 		s.Fatalf("Entropy is unset: %+v", rollback)
 	}
 

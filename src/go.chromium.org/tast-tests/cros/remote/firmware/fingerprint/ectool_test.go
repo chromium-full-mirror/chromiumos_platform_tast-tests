@@ -6,7 +6,7 @@ package fingerprint
 
 import "testing"
 
-func TestRollbackStateEctoolUnmarshaler(t *testing.T) {
+func TestRollbackStateV0EctoolUnmarshaler(t *testing.T) {
 	// Note that the following test string is not exactly what ectool would
 	// emit, since it contains tabs at the beginning of each line and includes
 	// a few extra newlines. These tabs and newlines are purely consmetic.
@@ -15,7 +15,51 @@ func TestRollbackStateEctoolUnmarshaler(t *testing.T) {
 	Rollback min version: 0
 	RW rollback version:  255
 	`)
-	var rExpect = RollbackState{BlockID: 19, MinVersion: 0, RWVersion: 255}
+	var rExpect = RollbackState{BlockID: 19, MinVersion: 0, RWVersion: 255, SecretInitialized: SecretInitializedUnknown}
+
+	var r RollbackState
+	if err := r.UnmarshalerEctool(out); err != nil {
+		t.Fatal("Failed to unmarshal: ", err)
+	}
+
+	if r != rExpect {
+		t.Fatalf("Unmarshaled rollback block %+v doesn't match expected block %+v.", r, rExpect)
+	}
+}
+
+func TestRollbackStateV1EctoolUnmarshalerSecretInitialized(t *testing.T) {
+	// Note that the following test string is not exactly what ectool would
+	// emit, since it contains tabs at the beginning of each line and includes
+	// a few extra newlines. These tabs and newlines are purely consmetic.
+	var out = []byte(`
+	Rollback block id:    19
+	Rollback min version: 0
+	RW rollback version:  255
+	Secret initialized:   1
+	`)
+	var rExpect = RollbackState{BlockID: 19, MinVersion: 0, RWVersion: 255, SecretInitialized: SecretInitializedTrue}
+
+	var r RollbackState
+	if err := r.UnmarshalerEctool(out); err != nil {
+		t.Fatal("Failed to unmarshal: ", err)
+	}
+
+	if r != rExpect {
+		t.Fatalf("Unmarshaled rollback block %+v doesn't match expected block %+v.", r, rExpect)
+	}
+}
+
+func TestRollbackStateV1EctoolUnmarshalerSecretNotInitialized(t *testing.T) {
+	// Note that the following test string is not exactly what ectool would
+	// emit, since it contains tabs at the beginning of each line and includes
+	// a few extra newlines. These tabs and newlines are purely consmetic.
+	var out = []byte(`
+	Rollback block id:    19
+	Rollback min version: 0
+	RW rollback version:  255
+	Secret initialized:   0
+	`)
+	var rExpect = RollbackState{BlockID: 19, MinVersion: 0, RWVersion: 255, SecretInitialized: SecretInitializedFalse}
 
 	var r RollbackState
 	if err := r.UnmarshalerEctool(out); err != nil {

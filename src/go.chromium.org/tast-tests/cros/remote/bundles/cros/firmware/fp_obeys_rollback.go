@@ -76,8 +76,20 @@ func testFlashingFirmwareRollback(ctx context.Context, d *rpcdut.RPCDUT, params 
 		}
 	}
 	testing.ContextLog(ctx, "Checking that rollback meets expected values")
-	if err := fingerprint.CheckRollbackState(ctx, d, params.expectedRollbackState); err != nil {
-		return errors.Wrap(err, "rollback not set to expected value")
+	rollbackCur, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	if err != nil {
+		return errors.Wrap(err, "failed to read rollback information")
+	}
+
+	// Current firmware copy may not support reporting secret initialization
+	// status. In this case, change 'SecretInitialized' to
+	// 'SecretInitializedUnknown'.
+	if !rollbackCur.IsSecretInitializationStatusSupported() {
+		params.expectedRollbackState.SecretInitialized = fingerprint.SecretInitializedUnknown
+	}
+
+	if rollbackCur != params.expectedRollbackState {
+		return errors.Errorf("Rollback not set to expected value: current: %v, expected: %v", rollbackCur, params.expectedRollbackState)
 	}
 
 	return nil
@@ -141,7 +153,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: nil,
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 2},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 2, SecretInitialized: initialRollback.SecretInitialized},
 		}); err != nil {
 		s.Fatal("Rollback ID 2 test failed: ", err)
 	}
@@ -160,7 +172,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: errors.New("Process exited with status 1"),
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 0},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 0, SecretInitialized: initialRollback.SecretInitialized},
 		}); err != nil {
 		s.Fatal("Rollback ID 0 test failed: ", err)
 	}
@@ -179,7 +191,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: nil,
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: initialRollback.BlockID + 2, MinVersion: 9, RWVersion: 9},
+				BlockID: initialRollback.BlockID + 2, MinVersion: 9, RWVersion: 9, SecretInitialized: initialRollback.SecretInitialized},
 		}); err != nil {
 		s.Fatal("Rollback ID 9 test failed: ", err)
 	}

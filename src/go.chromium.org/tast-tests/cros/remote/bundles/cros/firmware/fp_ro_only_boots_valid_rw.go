@@ -48,7 +48,7 @@ type testParams struct {
 
 func testFlashingFirmwareVersion(ctx context.Context, d *rpcdut.RPCDUT, params *testParams) error {
 	testing.ContextLog(ctx, "Saving current rollback information")
-	rollbackInfo, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	rollbackPrev, err := fingerprint.RollbackInfo(ctx, d.DUT())
 	if err != nil {
 		return errors.Wrap(err, "failed to read rollback information")
 	}
@@ -69,8 +69,21 @@ func testFlashingFirmwareVersion(ctx context.Context, d *rpcdut.RPCDUT, params *
 	}
 
 	testing.ContextLog(ctx, "Checking that rollback remains unchanged")
-	if err := fingerprint.CheckRollbackState(ctx, d, rollbackInfo); err != nil {
-		return errors.Wrap(err, "rollback information changed during test")
+	rollbackCur, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	if err != nil {
+		return errors.Wrap(err, "failed to read rollback information")
+	}
+
+	// Previous or current firmware copy may not support reporting secret
+	// initialization status. In this case, change 'SecretInitialized' to
+	// 'SecretInitializedUnknown'.
+	if !rollbackPrev.IsSecretInitializationStatusSupported() || !rollbackCur.IsSecretInitializationStatusSupported() {
+		rollbackPrev.SecretInitialized = fingerprint.SecretInitializedUnknown
+		rollbackCur.SecretInitialized = fingerprint.SecretInitializedUnknown
+	}
+
+	if rollbackPrev != rollbackCur {
+		return errors.Errorf("Rollback information changed during test: previous: %v, current: %v", rollbackPrev, rollbackCur)
 	}
 
 	return nil

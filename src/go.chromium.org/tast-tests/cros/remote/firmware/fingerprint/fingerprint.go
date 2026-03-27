@@ -504,7 +504,7 @@ func CheckValidFlashState(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.Boar
 	// state if entropy is not set. The reason we are doing this is so that
 	// the caller will invoke ReimageFPMCU, which has a known good sequence to
 	// add entropy (and reboot dut...).
-	if !rollback.IsEntropySet() {
+	if !rollback.IsEntropySet(ctx) {
 		return errors.Wrap(err, "FPMCU doesn't have entropy set")
 	}
 

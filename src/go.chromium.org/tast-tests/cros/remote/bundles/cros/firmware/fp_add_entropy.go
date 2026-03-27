@@ -83,9 +83,10 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	if !rollbackPrev.IsAntiRollbackVersionCorrect() {
 		s.Fatalf("Anti-rollback version is incorrect: %+v", rollbackPrev)
 	}
-	if !rollbackPrev.IsEntropySet() {
+	if !rollbackPrev.IsEntropySet(ctx) {
 		s.Fatalf("Entropy is unset: %+v", rollbackPrev)
 	}
+	secretStatusSupported := rollbackPrev.IsSecretInitializationStatusSupported()
 
 	testing.ContextLog(ctx, "Adding entropy should fail when running RW")
 	if err := fingerprint.AddEntropy(ctx, d.DUT(), false); err == nil {
@@ -150,6 +151,16 @@ func FpAddEntropy(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLog(ctx, "Validating nothing changed")
 	rollbackPrev = rollbackCur
+
+	// RO may not support reporting secret status.
+	// If the RW supports reporting secret status, we expect it to return true.
+	// Otherwise, we expect it to return unknown.
+	if secretStatusSupported {
+		rollbackPrev.SecretInitialized = fingerprint.SecretInitializedTrue
+	} else {
+		rollbackPrev.SecretInitialized = fingerprint.SecretInitializedUnknown
+	}
+
 	rollbackCur, err = fingerprint.RollbackInfo(ctx, d.DUT())
 	if err != nil {
 		s.Fatal("Failed to get rollbackinfo: ", err)

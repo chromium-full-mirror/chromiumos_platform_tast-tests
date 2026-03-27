@@ -114,6 +114,12 @@ func FpBioWash(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Validating rollback block ID increases by 1")
 	expectedRollback := initialRollback
+
+	// Expect secret to be initialized, if ectool and firmware supports reporting secret status.
+	if initialRollback.IsSecretInitializationStatusSupported() {
+		expectedRollback.SecretInitialized = fingerprint.SecretInitializedTrue
+	}
+
 	expectedRollback.BlockID++
 	if err := fingerprint.CheckRollbackState(ctx, d, expectedRollback); err != nil {
 		s.Fatal("Unexpected rollback state: ", err)
