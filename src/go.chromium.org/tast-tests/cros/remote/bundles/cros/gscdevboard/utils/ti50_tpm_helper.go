@@ -5,6 +5,9 @@
 package utils
 
 import (
+	"encoding/hex"
+	"strconv"
+
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 )
 
@@ -28,6 +31,23 @@ func (t *TpmHelper) ReadRegister(register ti50.TpmRegister) []byte {
 		t.h.Fatalf("failed to read TPM register %s: %s", register, err)
 	}
 	return response
+}
+
+// ReadRegisterWithLength reads a TPM register with length supplied by caller.
+func (t *TpmHelper) ReadRegisterWithLength(register ti50.TpmRegister, length int) []byte {
+	response, err := t.OpenTitanToolTpmCommand("read-register", string(register), "--length", strconv.Itoa(length))
+	if err != nil {
+		t.h.Fatalf("failed to read TPM register %s: %s", register, err)
+	}
+	return response
+}
+
+// WriteRegister writes a TPM register by communicating via SPI or I2C.
+func (t *TpmHelper) WriteRegister(register ti50.TpmRegister, data []byte) {
+	_, err := t.OpenTitanToolTpmCommand("write-register", string(register), "--hexdata", string(hex.EncodeToString(data)))
+	if err != nil {
+		t.h.Fatalf("failed to write TPM register %s: %s", register, err)
+	}
 }
 
 // MakeFWMPFile creates the 40 bytes FWMP file with the specified flags

@@ -138,7 +138,7 @@ func sizeMismatchStr(subcommand uint16, expected, real int) string {
 	return fmt.Sprintf("%s returned incorrect number of bytes, %d instead of %d", mapSubcommand(0x34), real, expected)
 }
 
-// OpenTitanToolTpmCommand runs one of the OpenTitanTool TPM subcommands (read-register or execute-command).
+// OpenTitanToolTpmCommand runs one of the OpenTitanTool TPM subcommands (read-register, write-register, execute-command).
 func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([]byte, error) {
 	var args []string
 	args = append(args, "tpm", "--gsc-ready", string(GpioTi50ApIntL), subcmd)
@@ -148,6 +148,9 @@ func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([
 	response, err := t.b.OpenTitanToolCommand(ctx, string(t.Bus), args...)
 	if err != nil {
 		return nil, err
+	}
+	if subcmd == "write-register" {
+		return nil, nil
 	}
 	b, err := hex.DecodeString(response["hexdata"].(string))
 	if err != nil {
