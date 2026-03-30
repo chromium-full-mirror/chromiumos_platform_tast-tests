@@ -258,7 +258,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		}
 		vbus, err := h.Servo.GetFloat(ctx, servo.VBusVoltage)
 		if err != nil {
-			s.Fatal("Failed to get vbus")
+			s.Fatal("Failed to get vbus: ", err)
 		}
 		vbus = vbus / 1000.0
 
