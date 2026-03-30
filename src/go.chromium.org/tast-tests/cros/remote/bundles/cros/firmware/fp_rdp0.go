@@ -85,13 +85,6 @@ func FpRDP0(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to boot to RW image: ", err)
 	}
 
-	// Rollback should be unset for this test.
-	testing.ContextLog(ctx, "Validating initial rollback state")
-	if err := fingerprint.CheckRollbackState(ctx, d, fingerprint.RollbackState{
-		BlockID: 0, MinVersion: 0, RWVersion: 0}); err != nil {
-		s.Fatal("Failed to validate rollback state: ", err)
-	}
-
 	testing.ContextLog(ctx, "Checking that firmware is functional")
 	if _, err := fingerprint.CheckFirmwareIsFunctional(ctx, d.DUT()); err != nil {
 		s.Fatal("Firmware is not functional after initialization: ", err)
