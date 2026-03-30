@@ -67,6 +67,8 @@ const (
 	TestImageTypeCorruptLastByte
 	// TestImageTypeDevRollbackZero is a dev-key signed version of the firmware with rollback set to zero.
 	TestImageTypeDevRollbackZero
+	// TestImageTypeDevRollbackOne is a dev-key signed version of the firmware with rollback set to one.
+	TestImageTypeDevRollbackOne
 	// TestImageTypeDevRollbackTwo is a dev-key signed version of the firmware with rollback set to two.
 	TestImageTypeDevRollbackTwo
 	// TestImageTypeDevRollbackNine is a dev-key signed version of the firmware with rollback set to nine.
@@ -361,6 +363,11 @@ func generateImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePath, origFWFi
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 0")
 	}
 
+	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, d, futilityInstance, &rollback, 1)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 1")
+	}
+
 	rollbackTwoFilePath, err := firmwareImageGenerator.Rollback(ctx, d, futilityInstance, &rollback, 2)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 2")
@@ -387,6 +394,7 @@ func generateImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePath, origFWFi
 		TestImageTypeCorruptFirstByte: &TestImageData{Path: corruptFirstBytePath},
 		TestImageTypeCorruptLastByte:  &TestImageData{Path: corruptLastBytePath},
 		TestImageTypeDevRollbackZero:  &TestImageData{Path: rollbackZeroFilePath},
+		TestImageTypeDevRollbackOne:   &TestImageData{Path: rollbackOneFilePath},
 		TestImageTypeDevRollbackTwo:   &TestImageData{Path: rollbackTwoFilePath},
 		TestImageTypeDevRollbackNine:  &TestImageData{Path: rollbackNineFilePath},
 	}, nil
