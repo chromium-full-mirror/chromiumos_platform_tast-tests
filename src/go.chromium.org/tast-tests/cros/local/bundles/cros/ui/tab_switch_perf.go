@@ -28,9 +28,21 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile, tabswitchperf.WPRArchiveName},
-		Timeout:      15*time.Minute + cujrecorder.CooldownTimeout,
+		Timeout:      15*time.Minute + tabswitchperf.RecorderCoolDownTimeout,
 		Vars:         []string{"ui.TabSwitchPerf.mute"},
 		Fixture:      "tabSwitchPerfWPRAsh",
+		Params: []testing.Param{
+			{
+				Val: tabswitchperf.TestParams{
+					IsSplitView: false,
+				},
+			}, {
+				Name: "split_view",
+				Val: tabswitchperf.TestParams{
+					IsSplitView: true,
+				},
+			},
+		},
 	})
 }
 
@@ -40,6 +52,7 @@ func TabSwitchPerf(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	outDir := s.OutDir()
 	perfettoConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+	params := s.Param().(tabswitchperf.TestParams)
 
 	mute := false
 	if val, ok := s.Var("ui.TabSwitchPerf.mute"); ok {
@@ -50,7 +63,7 @@ func TabSwitchPerf(ctx context.Context, s *testing.State) {
 		mute = boolVal
 	}
 
-	if err := tabswitchperf.Run(ctx, cr, mute, outDir, perfettoConfigPath); err != nil {
+	if err := tabswitchperf.Run(ctx, cr, mute, params.IsSplitView, outDir, perfettoConfigPath); err != nil {
 		s.Fatal("Failed to run test: ", err)
 	}
 }

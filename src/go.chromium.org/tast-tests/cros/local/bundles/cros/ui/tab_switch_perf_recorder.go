@@ -30,7 +30,7 @@ func init() {
 		// ChromeOS > Software > Performance > TPS
 		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      10 * time.Minute,
+		Timeout:      15*time.Minute + tabswitchperf.RecorderCoolDownTimeout,
 		Vars:         []string{"ui.TabSwitchPerfRecorder.mute"},
 		Pre:          wpr.RecordMode(filepath.Join("/tmp", tabswitchperf.WPRArchiveName)),
 	})
@@ -51,7 +51,7 @@ func TabSwitchPerfRecorder(ctx context.Context, s *testing.State) {
 		mute = boolVal
 	}
 
-	if err := tabswitchperf.Run(ctx, cr, mute, outDir, perfettoConfigPath); err != nil {
+	if err := tabswitchperf.Run(ctx, cr, mute, false /* IsSplitView */, outDir, perfettoConfigPath); err != nil {
 		s.Fatal("Failed to run test: ", err)
 	}
 }

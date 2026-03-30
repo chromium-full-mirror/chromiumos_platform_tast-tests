@@ -24,8 +24,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	sim "go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
@@ -62,6 +64,12 @@ type tabSwitchRunner struct {
 	perfettoConfigPath string
 	kb                 *input.KeyboardEventWriter
 	ui                 *uiauto.Context
+	isSplitView        bool
+}
+
+// TestParams defines the parameters required for the TabSwitchPerf test.
+type TestParams struct {
+	IsSplitView bool
 }
 
 // webPageData holds the info used to visit new sites in the test.
@@ -71,16 +79,33 @@ type webPageData struct {
 	urlPattern string // RegExp Pattern to Open Relevant Links on the Website
 }
 
+type splitTabViews struct {
+	leftView  *tabView
+	rightView *tabView
+}
+
+type tabView struct {
+	conn *chrome.Conn
+	url  string
+}
+
 // coreTestDuration is a minimum duration for the core part of the test.
 // The actual test duration could be longer because of various setup.
 const coreTestDuration = 3 * time.Minute
 
-func newTabSwitchRunner(ctx context.Context, cr *chrome.Chrome, outDir, perfettoConfigPath string) (r *tabSwitchRunner, retErr error) {
+// RecorderCoolDownTimeout defines the cooldown timeout to be used during tab switch test.
+// Two webs (CNN, Reddit) continue running during the test execution.
+// Since the recorder runs once per webpage, a cooldown timeout that is twice
+// as long is required.
+var RecorderCoolDownTimeout = time.Duration(len(getTestWebpages())) * cujrecorder.CooldownTimeout
+
+func newTabSwitchRunner(ctx context.Context, cr *chrome.Chrome, isSplitView bool, outDir, perfettoConfigPath string) (r *tabSwitchRunner, retErr error) {
 	r = &tabSwitchRunner{
 		webPages:           getTestWebpages(),
 		cr:                 cr,
 		outDir:             outDir,
 		perfettoConfigPath: perfettoConfigPath,
+		isSplitView:        isSplitView,
 	}
 
 	var err error
@@ -105,28 +130,6 @@ func newTabSwitchRunner(ctx context.Context, cr *chrome.Chrome, outDir, perfetto
 		}
 	}(cleanupCtx)
 
-	r.recorder, err = cujrecorder.NewRecorder(ctx, r.tconn, r.cr, nil, cujrecorder.RecorderOptions{
-		Mode:              cujrecorder.Benchmark,
-		CooldownBeforeRun: true,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create a recorder")
-	}
-	defer func(ctx context.Context) {
-		if retErr != nil {
-			r.recorder.Close(ctx)
-		}
-	}(cleanupCtx)
-
-	if err := r.recorder.AddCommonMetrics(); err != nil {
-		return nil, errors.Wrap(err, "failed to add common metrics to the recorder")
-	}
-
-	// Add an empty screenshot recorder.
-	if err := r.recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
-		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
-	}
-
 	return r, nil
 }
 
@@ -135,10 +138,6 @@ func (r *tabSwitchRunner) cleanup(ctx context.Context) error {
 
 	if err := r.kb.Close(ctx); err != nil {
 		errs = append(errs, errors.Wrap(err, "failed to close the keyboard"))
-	}
-
-	if err := r.recorder.Close(ctx); err != nil {
-		errs = append(errs, errors.Wrap(err, "failed to close the recorder"))
 	}
 
 	return errors.Join(errs...)
@@ -161,21 +160,8 @@ func (r *tabSwitchRunner) muteDevice(ctx context.Context, mute bool) error {
 	return nil
 }
 
-func (r *tabSwitchRunner) run(ctx context.Context) error {
-	if len(r.webPages) == 0 {
-		return errors.New("test scenario does not specify any web pages")
-	}
-
-	for webNum, webPage := range r.webPages {
-		if err := r.startWebPageAndPerformTest(ctx, webPage, webNum == 0 /* isFirstPage */); err != nil {
-			return errors.Wrap(err, "failed to start web page and perform test")
-		}
-	}
-	return nil
-}
-
-func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPage webPageData, isFirstPage bool) (retErr error) {
-	r.recorder.Annotate(ctx, "Start_opening_"+webPage.name)
+func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPage webPageData, isFirstPage bool) (pv *perf.Values, retErr error) {
+	testing.ContextLogf(ctx, "Start_opening_%s", webPage.name)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
@@ -184,42 +170,79 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 	// Create the homepage of the site.
 	conn, err := r.cr.NewConn(ctx, webPage.startURL)
 	if err != nil {
-		return errors.Wrapf(err, "failed to open %s", webPage.startURL)
+		return nil, errors.Wrapf(err, "failed to open %s", webPage.startURL)
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
 	if webPage.name == redditWebSiteName {
 		if err := prompts.ClearPotentialPrompts(r.tconn, 15*time.Second, prompts.ShowNotificationsPrompt)(ctx); err != nil {
-			return errors.Wrap(err, "failed to clear notifications prompt dialog")
+			return nil, errors.Wrap(err, "failed to clear notifications prompt dialog")
 		}
 	}
 
 	const totalPageForWeb = 7
 
-	conns := make([]*chrome.Conn, 0, totalPageForWeb)
-	conns = append(conns, conn)
+	tabs := make([]*splitTabViews, 0, totalPageForWeb)
+	tabs = append(tabs,
+		&splitTabViews{
+			leftView: &tabView{
+				conn: conn,
+				url:  webPage.startURL,
+			},
+		},
+	)
 
 	// Find extra URLs to navigate to.
 	anchorURLs, err := findAnchorURLs(ctx, conn, webPage.urlPattern, totalPageForWeb-1)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get URLs for %s", webPage.startURL)
+		return nil, errors.Wrapf(err, "failed to get URLs for %s", webPage.startURL)
 	}
 
 	if len(anchorURLs) != totalPageForWeb-1 {
-		return errors.Errorf("failed to find the expected number of anchor URLs, got: %d, want: %d", len(anchorURLs), totalPageForWeb-1)
+		return nil, errors.Errorf("failed to find the expected number of anchor URLs, got: %d, want: %d", len(anchorURLs), totalPageForWeb-1)
 	}
 
 	// Open those found URLs as new tabs.
 	for _, anchorURL := range anchorURLs {
 		conn, err := r.cr.NewConn(ctx, anchorURL)
 		if err != nil {
-			return errors.Wrapf(err, "failed to open URL: %s", anchorURL)
+			return nil, errors.Wrapf(err, "failed to open URL: %s", anchorURL)
 		}
 		defer conn.Close()
 		defer conn.CloseTarget(cleanupCtx)
 
-		conns = append(conns, conn)
+		tabs = append(tabs,
+			&splitTabViews{
+				leftView: &tabView{
+					conn: conn,
+					url:  anchorURL,
+				},
+			},
+		)
+	}
+
+	if r.isSplitView {
+		for i, tab := range tabs {
+			if tab.leftView == nil {
+				return nil, errors.New("connection of the left view was not properly established")
+			}
+
+			// Use a different url for the split view.
+			nextTabView := tabs[(i+1)%totalPageForWeb].leftView
+
+			conn, err := r.splitNewView(ctx, tab.leftView.conn, nextTabView)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to split view for existing tab")
+			}
+			defer conn.Close()
+			defer conn.CloseTarget(cleanupCtx)
+
+			tab.rightView = &tabView{
+				conn: conn,
+				url:  nextTabView.url,
+			}
+		}
 	}
 
 	// Ensure that all tabs are properly loaded before starting test.
@@ -228,18 +251,57 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 	}
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, r.outDir, func() bool { return retErr != nil }, r.tconn, fmt.Sprintf("tab_switch_ui_dump_%s", webPage.name))
 
-	if err := r.scrollEachTab(ctx, conns, webPage.name, isFirstPage); err != nil {
-		return errors.Wrap(err, "failed to scroll each tab")
+	r.recorder, err = cujrecorder.NewRecorder(ctx, r.tconn, r.cr, nil, cujrecorder.RecorderOptions{
+		Mode:              cujrecorder.Benchmark,
+		CooldownBeforeRun: true,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a recorder")
+	}
+	defer r.recorder.Close(cleanupCtx)
+
+	if err := r.recorder.AddCommonMetrics(); err != nil {
+		return nil, errors.Wrap(err, "failed to add common metrics to the recorder")
+	}
+
+	// Add an empty screenshot recorder.
+	if err := r.recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
+	}
+
+	if err := r.recorder.Run(ctx, func(ctx context.Context) error {
+		if err := r.scrollEachTab(ctx, tabs, webPage.name, isFirstPage); err != nil {
+			return errors.Wrap(err, "failed to scroll each tab")
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	tpsValues := perf.NewValues()
+	if err := r.recorder.Record(ctx, tpsValues); err != nil {
+		return nil, errors.Wrap(err, "failed to record metrics")
+	}
+
+	// Only collect the tracing data at the beginning.
+	if isFirstPage {
+		if err := r.recorder.SaveTraceFiles(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to save trace files: ", err)
+		}
 	}
 
 	// Take a screenshot to see the status of the CNN/Reddit
 	// window before closing it.
 	r.recorder.CustomScreenshot(ctx)
 
-	return browser.CloseAllTabs(ctx, r.tconn)
+	if err = browser.CloseAllTabs(ctx, r.tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to close all tabs")
+	}
+
+	return tpsValues, nil
 }
 
-func (r *tabSwitchRunner) scrollEachTab(ctx context.Context, conns []*chrome.Conn, webPageName string, isFirstPage bool) (retErr error) {
+func (r *tabSwitchRunner) scrollEachTab(ctx context.Context, tabs []*splitTabViews, webPageName string, isFirstPage bool) (retErr error) {
 	// Switch through tabs in a skip-order fashion.
 	// Note: when skipSize = N-1, then the skip-order is 1,1,1,1 ... N times
 	// And when skipSize >= N, it is effectively equal to skipSize % N.
@@ -272,37 +334,50 @@ func (r *tabSwitchRunner) scrollEachTab(ctx context.Context, conns []*chrome.Con
 			}
 		}
 
-		tabIcon := nodewith.HasClass("TabIcon").Nth(currentTab)
-		contentsWebView := nodewith.Role(role.WebView).HasClass("ContentsWebView")
-		if err := uiauto.Combine(
-			"switch to the tab to be browsed.",
-			r.ui.MouseMoveTo(tabIcon, 20*time.Millisecond),
-			r.ui.LeftClick(tabIcon),
-			r.ui.MouseMoveTo(contentsWebView, 20*time.Millisecond),
-			r.ui.EnsureFocused(contentsWebView),
-		)(ctx); err != nil {
-			return err
+		conns := []*chrome.Conn{tabs[currentTab].leftView.conn}
+		if r.isSplitView {
+			conns = append(conns, tabs[currentTab].rightView.conn)
 		}
 
-		if err := webutil.WaitForQuiescence(ctx, conns[currentTab], 30*time.Second); err != nil {
-			return errors.Wrap(err, "failed to wait for the tab to quiesce")
-		}
+		for connNum, conn := range conns {
+			tabIcon := nodewith.HasClass("TabIcon").Nth(currentTab)
+			if r.isSplitView {
+				tabToClick := nodewith.NameContaining("Left view").HasClass("Tab").Nth(currentTab)
+				if connNum%2 != 0 {
+					tabToClick = nodewith.NameContaining("Right view").HasClass("Tab").Nth(currentTab)
+				}
+				tabIcon = nodewith.Ancestor(tabToClick).HasClass("TabIcon")
+			}
+			contentsWebView := nodewith.Role(role.WebView).HasClass("ContentsWebView").Nth(connNum % 2)
+			if err := uiauto.Combine(
+				"switch to the tab to be browsed.",
+				r.ui.MouseMoveTo(tabIcon, 20*time.Millisecond),
+				r.ui.LeftClick(tabIcon),
+				r.ui.MouseMoveTo(contentsWebView, 20*time.Millisecond),
+				r.ui.EnsureFocused(contentsWebView),
+			)(ctx); err != nil {
+				return err
+			}
 
-		for _, key := range []string{"Down", "Up"} {
-			if err := sim.RepeatKeyPress(ctx, r.kb, key, 20*time.Millisecond, 3); err != nil {
-				return errors.Wrapf(err, "failed to repeatedly press %s in between tab switches", key)
+			if err := webutil.WaitForQuiescence(ctx, conn, 30*time.Second); err != nil {
+				return errors.Wrap(err, "failed to wait for the tab to quiesce")
+			}
+
+			for _, key := range []string{"Down", "Up"} {
+				if err := sim.RepeatKeyPress(ctx, r.kb, key, 20*time.Millisecond, 3); err != nil {
+					return errors.Wrapf(err, "failed to repeatedly press %s in between tab switches", key)
+				}
+			}
+
+			if err := r.ui.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+				testing.ContextLog(ctx, "Scroll animations haven't stabilized yet, continuing anyway: ", err)
 			}
 		}
-
-		if err := r.ui.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			testing.ContextLog(ctx, "Scroll animations haven't stabilized yet, continuing anyway: ", err)
-		}
-
-		currentTab = (currentTab + skipSize + 1) % len(conns)
+		currentTab = (currentTab + skipSize + 1) % len(tabs)
 
 		// Once we have seen every tab, adjust the skipSize to
 		// vary the tab visitation order.
-		if i == len(conns)-1 {
+		if i == len(tabs)-1 {
 			i = 0
 			currentTab = 0
 			skipSize++
@@ -331,8 +406,51 @@ func (r *tabSwitchRunner) waitUntilAllTabsLoaded(ctx context.Context, timeout ti
 	}, &testing.PollOptions{Timeout: timeout})
 }
 
+// splitNewView opens a split view from the given source connection and
+// navigates to the URL specified in the target tab view.
+func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.Conn, targetTabView *tabView) (conn *chrome.Conn, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Because the UI tree may update inconsistently across tabs after split view is
+	// enabled, ActivateTarget is used to handle tab switching.
+	if err := sourceConn.ActivateTarget(ctx); err != nil {
+		return nil, err
+	}
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, r.outDir, func() bool { return retErr != nil }, r.tconn, "split_view_ui_dump")
+
+	searchBar := nodewith.Name("Address and search bar").Role(role.TextField)
+	if err := uiauto.NamedCombine(fmt.Sprintf("Use URL %s to split new view", targetTabView.url),
+		r.kb.AccelAction("Ctrl+Alt+N"),
+		r.ui.LeftClick(searchBar),
+		r.kb.AccelAction("Ctrl+A"),
+		r.kb.AccelAction("Backspace"),
+		// A trailing space is added to prevent the use of an automatically generated URL.
+		r.kb.TypeAction(targetTabView.url+" "),
+		r.kb.AccelAction("Enter"),
+	)(ctx); err != nil {
+		return nil, err
+	}
+
+	// Prevent the last page from being redirected to a new tab—due to the lack of
+	// remaining standalone pages for split view—which may result in timing issues.
+	if err := r.waitUntilAllTabsLoaded(ctx, time.Minute); err != nil {
+		testing.ContextLog(ctx, "Some tabs are still in loading state, but proceeding with the test: ", err)
+	}
+
+	matcher := func(t *chrome.Target) bool {
+		return t.URL == targetTabView.url && t.TargetID != targetTabView.conn.TargetID
+	}
+
+	findTargetCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	return r.cr.NewConnForTarget(findTargetCtx, matcher)
+}
+
 // Run runs the setup, core part of the TabSwitchPerf test, and cleanup.
-func Run(ctx context.Context, cr *chrome.Chrome, mute bool, outDir, dataPath string) error {
+func Run(ctx context.Context, cr *chrome.Chrome, mute, isSplitView bool, outDir, dataPath string) error {
 	// Reserve time for cleanup
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -344,7 +462,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, mute bool, outDir, dataPath str
 	}
 
 	// Perform initial test setup
-	r, err := newTabSwitchRunner(ctx, cr, outDir, dataPath)
+	r, err := newTabSwitchRunner(ctx, cr, isSplitView, outDir, dataPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to run setup")
 	}
@@ -354,18 +472,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, mute bool, outDir, dataPath str
 		testing.ContextLog(ctx, "(non-error) Failed to mute device: ", err)
 	}
 
-	// Execute Test
-	if err := r.recorder.Run(ctx, r.run); err != nil {
-		return errors.Wrap(err, "failed to conduct the test scenario, or collect the histogram data")
+	if len(r.webPages) == 0 {
+		return errors.New("test scenario does not specify any web pages")
 	}
 
-	// Write out values
-	if err := r.recorder.Record(ctx, pv); err != nil {
-		return errors.Wrap(err, "failed to report")
+	for webNum, webPage := range r.webPages {
+		tpsValue, err := r.startWebPageAndPerformTest(ctx, webPage, webNum == 0 /* isFirstPage */)
+		if err != nil {
+			return errors.Wrap(err, "failed to start web page and perform test")
+		}
+		pv.MergeToExistMetric(tpsValue)
 	}
-	if err := r.recorder.SaveTraceFiles(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to save trace files: ", err)
-	}
+
 	if err := pv.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to store values")
 	}
@@ -375,13 +493,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, mute bool, outDir, dataPath str
 func getTestWebpages() []webPageData {
 	CNN := webPageData{
 		name:       cnnWebSiteName,
-		startURL:   "https://cnn.com",
+		startURL:   "https://www.cnn.com/",
 		urlPattern: `^.*://www.cnn.com/\d{4}/\d{2}/\d{2}/`,
 	}
 
 	Reddit := webPageData{
 		name:       redditWebSiteName,
-		startURL:   "https://reddit.com",
+		startURL:   cuj.RedditURL,
 		urlPattern: `^.*://www.reddit.com/r/[^/]+/comments/[^/]+/`,
 	}
 

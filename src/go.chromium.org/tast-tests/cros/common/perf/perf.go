@@ -220,6 +220,33 @@ func (p *Values) GetValueByMetric(metric Metric) []float64 {
 	return p.values[metric]
 }
 
+// MergeToExistMetric merges all data points from the provided Values into this structure.
+// If a metric already exists, its data points are combined; specifically, the values
+// of single-value metrics are summed.
+func (p *Values) MergeToExistMetric(vs ...*Values) {
+	for _, val := range vs {
+		if val == nil {
+			continue
+		}
+		for k, v := range val.values {
+			if k.Multiple {
+				p.Append(k, v...)
+			} else {
+				if len(v) == 0 {
+					continue
+				}
+
+				if vv, c := p.values[k]; c && len(vv) > 0 {
+					newValue := vv[0] + v[0]
+					p.Set(k, newValue)
+				} else {
+					p.Set(k, v...)
+				}
+			}
+		}
+	}
+}
+
 // MergeWithSuffix merges all data points of vs into this Values structure
 // optionally adding suffix to the value name.
 func (p *Values) MergeWithSuffix(suffix string, vs ...*Values) {
