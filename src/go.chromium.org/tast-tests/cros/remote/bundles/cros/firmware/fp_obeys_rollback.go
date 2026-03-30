@@ -127,23 +127,23 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLogf(ctx, "Initial rollback block ID: %d", initialRollback.BlockID)
 
-	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '1'")
+	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '2'")
 	if err := testFlashingFirmwareRollback(ctx, d,
 		&testRollbackParams{
-			firmwarePath: testImages[fingerprint.TestImageTypeDevRollbackOne].Path,
+			firmwarePath: testImages[fingerprint.TestImageTypeDevRollbackTwo].Path,
 			// RO version should remain unchanged.
 			expectedROVersion: testImages[fingerprint.TestImageTypeDev].ROVersion,
 			// RW version should match what we requested to be flashed.
-			expectedRWVersion: testImages[fingerprint.TestImageTypeDevRollbackOne].RWVersion,
+			expectedRWVersion: testImages[fingerprint.TestImageTypeDevRollbackTwo].RWVersion,
 			// Signature check will pass, so we should be running RW.
 			expectedRunningFirmwareCopy: fingerprint.ImageTypeRW,
 			// Fingerprint task should be running.
 			expectedFingerprintTaskStatusErr: nil,
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: initialRollback.BlockID + 1, MinVersion: 1, RWVersion: 1},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 2},
 		}); err != nil {
-		s.Fatal("Rollback ID 1 test failed: ", err)
+		s.Fatal("Rollback ID 2 test failed: ", err)
 	}
 
 	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '0'")
@@ -160,7 +160,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: errors.New("Process exited with status 1"),
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: initialRollback.BlockID + 1, MinVersion: 1, RWVersion: 0},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 2, RWVersion: 0},
 		}); err != nil {
 		s.Fatal("Rollback ID 0 test failed: ", err)
 	}
