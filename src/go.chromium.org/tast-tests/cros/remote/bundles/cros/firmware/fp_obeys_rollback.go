@@ -65,8 +65,15 @@ func testFlashingFirmwareRollback(ctx context.Context, d *rpcdut.RPCDUT, params 
 		return errors.Wrap(err, "running unexpected firmware copy")
 	}
 	_, err := fingerprint.FpInfoCommand(ctx, d.DUT())
-	if !errors.Is(err, params.expectedFingerprintTaskStatusErr) && err.Error() != params.expectedFingerprintTaskStatusErr.Error() {
-		return errors.Wrap(err, "unexpected error checking fingerprint task")
+	if !errors.Is(err, params.expectedFingerprintTaskStatusErr) {
+		// Either err or params.expectedFingerprintTaskStatusErr could be nil.
+		if err == nil {
+			return errors.New("Checking fingerprint task status finished without error unexpecteadly")
+		}
+
+		if params.expectedFingerprintTaskStatusErr == nil || err.Error() != params.expectedFingerprintTaskStatusErr.Error() {
+			return errors.Wrap(err, "unexpected error checking fingerprint task")
+		}
 	}
 	testing.ContextLog(ctx, "Checking that rollback meets expected values")
 	if err := fingerprint.CheckRollbackState(ctx, d, params.expectedRollbackState); err != nil {
