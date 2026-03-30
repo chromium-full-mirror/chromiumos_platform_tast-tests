@@ -72,7 +72,7 @@ func CheckHWID(ctx context.Context, s *testing.State) {
 	} else {
 		fpInfoMap, err := fingerprint.ParseFpInfo(string(sensorCmdOut))
 		if err != nil {
-			s.Fatalf("Failed to parse Fingerprint sensor map: %s fails with error %v", fpInfoMap.FingerprintSensor, err)
+			s.Fatalf("Failed to parse Fingerprint sensor map: %s fails with error %v", string(sensorCmdOut), err)
 		}
 		sensorVendor := fpInfoMap.FingerprintSensor["vendor"]
 		sensor = fpInfoMap.FingerprintSensor["model"]
