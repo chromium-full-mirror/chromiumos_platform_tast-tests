@@ -83,12 +83,12 @@ func FpBioWash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to boot to RW image: ", err)
 	}
 
-	// Rollback should be unset for this test.
-	testing.ContextLog(ctx, "Validating initial rollback state")
-	if err := fingerprint.CheckRollbackState(ctx, d, fingerprint.RollbackState{
-		BlockID: 0, MinVersion: 0, RWVersion: 0}); err != nil {
-		s.Fatal("Failed to validate rollback state: ", err)
+	testing.ContextLog(ctx, "Saving initial rollback state")
+	initialRollback, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	if err != nil {
+		s.Fatal("Failed to get initial rollback state: ", err)
 	}
+	testing.ContextLogf(ctx, "Initial rollback block ID: %d", initialRollback.BlockID)
 
 	// Enable hardware write protect first.
 	testing.ContextLog(ctx, "Enabling hardware write protect")
@@ -112,9 +112,10 @@ func FpBioWash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to call bio_wash with factory_init: ", err)
 	}
 
-	testing.ContextLog(ctx, "Validating rollback block ID is 1")
-	if err := fingerprint.CheckRollbackState(ctx, d, fingerprint.RollbackState{
-		BlockID: 1, MinVersion: 0, RWVersion: 0}); err != nil {
+	testing.ContextLog(ctx, "Validating rollback block ID increases by 1")
+	expectedRollback := initialRollback
+	expectedRollback.BlockID++
+	if err := fingerprint.CheckRollbackState(ctx, d, expectedRollback); err != nil {
 		s.Fatal("Unexpected rollback state: ", err)
 	}
 
@@ -124,8 +125,8 @@ func FpBioWash(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Validating Block ID increases by 2, but nothing else")
-	if err := fingerprint.CheckRollbackState(ctx, d, fingerprint.RollbackState{
-		BlockID: 3, MinVersion: 0, RWVersion: 0}); err != nil {
+	expectedRollback.BlockID += 2
+	if err := fingerprint.CheckRollbackState(ctx, d, expectedRollback); err != nil {
 		s.Fatal("Unexpected rollback state: ", err)
 	}
 }
