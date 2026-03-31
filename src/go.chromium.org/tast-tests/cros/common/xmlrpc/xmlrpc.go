@@ -361,14 +361,23 @@ func unpackValue(val value, out interface{}) error {
 		}
 		*o = i
 	case *float64:
-		if val.Double == nil {
-			return errors.Errorf("value %s is not a double value", val)
+		if val.Double != nil {
+			f, err := xmlDoubleToFloat64(*val.Double)
+			if err != nil {
+				return err
+			}
+			*o = f
+			return nil
 		}
-		f, err := xmlDoubleToFloat64(*val.Double)
-		if err != nil {
-			return err
+		if val.Int != nil {
+			i, err := xmlIntegerToInt(*val.Int)
+			if err != nil {
+				return err
+			}
+			*o = float64(i)
+			return nil
 		}
-		*o = f
+		return errors.Errorf("value %s is not a double/int value", val)
 	case *[]string:
 		if val.Array == nil {
 			return errors.Errorf("value %s is not an array value", val)

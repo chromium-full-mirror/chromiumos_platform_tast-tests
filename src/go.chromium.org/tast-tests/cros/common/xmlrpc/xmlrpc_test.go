@@ -594,6 +594,30 @@ func TestXMLResponse(t *testing.T) {
 	}
 }
 
+func TestIntResponseAsDouble(t *testing.T) {
+	xmlStr := `
+	<?xml version="1.0"?>
+	<methodResponse>
+	<params>
+		<param>
+			<value><int>19880</int></value>
+		</param>
+	</params>
+	</methodResponse>
+	`
+	res := methodResponse{}
+	if err := xml.Unmarshal([]byte(xmlStr), &res); err != nil {
+		t.Fatal("xml unmarshal:", err)
+	}
+	var floatOut float64
+	if err := res.unpack([]interface{}{&floatOut}); err != nil {
+		t.Fatal("response unpack:", err)
+	}
+	if floatOut != 19880.0 {
+		t.Errorf("unpacking %q: got %f; want %f", "<int>19880</int>", floatOut, 19880.0)
+	}
+}
+
 func TestCheckFault(t *testing.T) {
 	hasFault := []byte(`<?xml version='1.0'?>
 	<methodResponse>
