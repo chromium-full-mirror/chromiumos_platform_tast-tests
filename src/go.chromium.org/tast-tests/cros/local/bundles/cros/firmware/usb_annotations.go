@@ -2,6 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// This test is designed to test that ChromeOS platforms have implemented a
+// minimal set of annotations for their USB ports. Test failure would be
+// indicative of missing annotations, most notably UserVisible field in _PLD
+// table and PortIsConnectable field in _UPC table.
+
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/install/using-acpi-to-configure-usb-ports-on-a-computer
+// contains good reference material.
+
 package firmware
 
 import (
@@ -66,7 +74,14 @@ func USBAnnotations(ctx context.Context, s *testing.State) {
 }
 
 var unannotatedPlatforms = []string{
+	"coral",
 	"elm",
+	"grunt",
 	"hana",
+	"nami",
+	"nautilus",
 	"oak",
+	"reef",
+	"sand",
+	"snappy",
 }
