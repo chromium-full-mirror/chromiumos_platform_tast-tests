@@ -103,6 +103,7 @@ func init() {
 				"peezer",
 				"pirette",
 				"pirika",
+				"sasuke",
 				"sasukette",
 				"storo",
 				// Guybrush
