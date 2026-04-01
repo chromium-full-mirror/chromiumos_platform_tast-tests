@@ -100,9 +100,11 @@ func find(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finde
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// If found Home tab with VM link, click the link to switch to
 		// or create the VM tab.
-		if err := ui.Exists(link)(ctx); err == nil {
-			if err := ui.DoDefault(link)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click Terminal Home Linux")
+		if link != nil {
+			if err := ui.Exists(link)(ctx); err == nil {
+				if err := ui.DoDefault(link)(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Terminal Home")
+				}
 			}
 		}
 		if err := ui.Exists(tab)(ctx); err != nil {
@@ -153,6 +155,12 @@ func LaunchBruschetta(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp
 // An error is returned if terminal cannot be found.
 func FindBruschetta(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
 	return find(ctx, tconn, bruschettaLink, bruschettaTab)
+}
+
+// WaitForBruschettaPrompt waits for an open Terminal App connected to the default bruschetta VM to be ready and returns it.
+// An error is returned if terminal cannot be found or prompt is not ready.
+func WaitForBruschettaPrompt(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+	return find(ctx, tconn, nil, bruschettaTab)
 }
 
 // LaunchSSH launches Terminal App and connects to chronos@localhost.

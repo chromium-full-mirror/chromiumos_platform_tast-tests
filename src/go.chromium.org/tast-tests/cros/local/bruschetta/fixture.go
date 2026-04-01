@@ -324,18 +324,39 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	}(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "ui_tree")
 
-	s.Log("VM installer booted, waiting for VM to stop")
-
-	if err := f.concierge.WaitForVMStop(ctx, f.vm); err != nil {
-		s.Fatal("Failed to wait for VM to finish installing: ", err)
+	vms, err := f.concierge.ListVms(ctx)
+	if err != nil {
+		s.Fatal("Failed to list VMs: ", err)
 	}
 
-	s.Log("Starting installed VM")
+	// b/343813416: Forward-compatible for chromium change crrev/c/7700640.
+	// In the old behavior, the installation step returns as soon as the installation window "opens".
+	// The fixture needs to wait for the window to close when the installer VM is done.
+	// In the new behavior, the installation step returns after the installation is closed.
+	// As a result, we don't wait for VM to stop.
+	installerRunning := false
+	for _, v := range vms {
+		if v.GetName() == f.vm.Name() {
+			installerRunning = true
+			break
+		}
+	}
 
-	// Now use the terminal app to boot the VM.
-	_, err = terminalapp.FindBruschetta(ctx, f.tconn)
-	if err != nil {
-		s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
+	if installerRunning {
+		s.Log("Installer VM is running, waiting for it to stop")
+		if err := f.concierge.WaitForVMStop(ctx, f.vm); err != nil {
+			s.Fatal("Failed to wait for VM to finish installing: ", err)
+		}
+		// Now use the terminal app to boot the VM.
+		s.Log("Starting installed VM")
+		if _, err := terminalapp.FindBruschetta(ctx, f.tconn); err != nil {
+			s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
+		}
+	} else {
+		s.Log("Installer VM is already closed, waiting for VM to start")
+		if _, err := terminalapp.WaitForBruschettaPrompt(ctx, f.tconn); err != nil {
+			s.Fatal("Failed to wait for bruschetta VM to start: ", err)
+		}
 	}
 
 	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
