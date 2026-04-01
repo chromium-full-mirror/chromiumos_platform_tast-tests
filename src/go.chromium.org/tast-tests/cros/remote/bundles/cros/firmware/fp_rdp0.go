@@ -169,10 +169,21 @@ func testRDP0(ctx context.Context, d *rpcdut.RPCDUT, buildFwFile string, removeF
 		return errors.Wrap(err, "failed to read from flash")
 	}
 
-	testing.ContextLog(ctx, "Checking that value read matches the flashed version")
-	cmd = d.Conn().CommandContext(ctx, "cmp", buildFwFile, fileReadFromFlash)
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "file read from flash does not match original fw file")
+	testing.ContextLog(ctx, "Checking that EC_RO and EC_RW match the flashed version")
+	for _, section := range []string{"EC_RO", "EC_RW"} {
+		buildSec := filepath.Join(tempdirPath, "build_"+section)
+		readSec := filepath.Join(tempdirPath, "read_"+section)
+
+		if err := d.Conn().CommandContext(ctx, "dump_fmap", "-x", buildFwFile, section+":"+buildSec).Run(); err != nil {
+			return errors.Wrapf(err, "failed to extract section %s from build fw", section)
+		}
+		if err := d.Conn().CommandContext(ctx, "dump_fmap", "-x", fileReadFromFlash, section+":"+readSec).Run(); err != nil {
+			return errors.Wrapf(err, "failed to extract section %s from read fw", section)
+		}
+
+		if err := d.Conn().CommandContext(ctx, "cmp", buildSec, readSec).Run(); err != nil {
+			return errors.Wrapf(err, "section %s read from flash does not match original fw file", section)
+		}
 	}
 
 	if needsReboot {
