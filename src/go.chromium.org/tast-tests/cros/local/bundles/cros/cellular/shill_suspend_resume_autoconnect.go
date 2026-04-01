@@ -31,7 +31,7 @@ func init() {
 		Contacts:       []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_sim_active", "group:release-health", "release-health_cellular"},
-		Fixture:        "cellularSuspendLocal.ehide",
+		Fixture:        "cellularSuspendLocal",
 		Timeout:        4 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("herobrine")),
