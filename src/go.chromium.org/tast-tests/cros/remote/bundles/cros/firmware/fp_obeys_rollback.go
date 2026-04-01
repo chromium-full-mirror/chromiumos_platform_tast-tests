@@ -120,6 +120,13 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, t.CleanupTime())
 	defer cancel()
 
+	testing.ContextLog(ctx, "Saving initial rollback state")
+	initialRollback, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	if err != nil {
+		s.Fatal("Failed to get initial rollback state: ", err)
+	}
+	testing.ContextLogf(ctx, "Initial rollback block ID: %d", initialRollback.BlockID)
+
 	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '1'")
 	if err := testFlashingFirmwareRollback(ctx, d,
 		&testRollbackParams{
@@ -134,7 +141,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: nil,
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: 2, MinVersion: 1, RWVersion: 1},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 1, RWVersion: 1},
 		}); err != nil {
 		s.Fatal("Rollback ID 1 test failed: ", err)
 	}
@@ -153,7 +160,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: errors.New("Process exited with status 1"),
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: 2, MinVersion: 1, RWVersion: 0},
+				BlockID: initialRollback.BlockID + 1, MinVersion: 1, RWVersion: 0},
 		}); err != nil {
 		s.Fatal("Rollback ID 0 test failed: ", err)
 	}
@@ -172,7 +179,7 @@ func FpObeysRollback(ctx context.Context, s *testing.State) {
 			expectedFingerprintTaskStatusErr: nil,
 			// Expected rollback state.
 			expectedRollbackState: fingerprint.RollbackState{
-				BlockID: 3, MinVersion: 9, RWVersion: 9},
+				BlockID: initialRollback.BlockID + 2, MinVersion: 9, RWVersion: 9},
 		}); err != nil {
 		s.Fatal("Rollback ID 9 test failed: ", err)
 	}
