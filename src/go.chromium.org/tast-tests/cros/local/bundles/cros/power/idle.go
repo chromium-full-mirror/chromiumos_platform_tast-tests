@@ -128,11 +128,6 @@ func init() {
 			Fixture:   "powerAsh",
 			Val:       tracingIdle,
 			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
-			// TODO(b/436439775): Remove from suite after finish debugging.
-			ExtraAttr: []string{
-				"group:power",
-				"power_regression",
-			},
 		}, {
 			Name:    "refresh_high_psr",
 			Fixture: "powerAshHighRefresh",
