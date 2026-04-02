@@ -845,11 +845,15 @@ func getBranch(s string) GscBranch {
 		return PrePvt
 	case "v5.55_pp":
 		return PrePvt
+	case "v6.55_pp":
+		return PrePvt
 	case "v2.94_mp":
 		return MP
 	case "v4.11_mp":
 		return MP
 	case "v5.60_mp":
+		return MP
+	case "v6.60_mp":
 		return MP
 	case "v4.11_28_efi":
 		return EFI
