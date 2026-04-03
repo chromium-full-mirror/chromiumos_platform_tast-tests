@@ -15,6 +15,7 @@ import (
 
 	"github.com/tklauser/go-sysconf"
 
+	mfwd "go.chromium.org/chromiumos/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -159,12 +160,23 @@ func GetModemType(ctx context.Context) (cellularconst.ModemType, error) {
 	return device.Modem, nil
 }
 
-// GetModemTypeFromDeviceID converts a USB Device ID into ModemType.
-func GetModemTypeFromDeviceID(deviceID string) (cellularconst.ModemType, error) {
+// GetModemTypeFromManifestDevice converts a firmware manifest device entry into ModemType.
+func GetModemTypeFromManifestDevice(device *mfwd.Device) (cellularconst.ModemType, error) {
+	deviceID := device.DeviceId
 	if deviceID == "usb:2cb7:0007" {
 		return cellularconst.ModemTypeL850, nil
 	} else if deviceID == "pci:14c3:4d75 (External)" {
-		return cellularconst.ModemTypeFM350, nil
+		// The device ID is shared between the FM350 and RW350, so we must use the variant
+		// to distinguish them
+		fm350Suffix := "_" + strings.ToLower(cellularconst.ModemTypeFM350.String())
+		rw350Suffix := "_" + strings.ToLower(cellularconst.ModemTypeRW350.String())
+		if strings.HasSuffix(device.Variant, fm350Suffix) {
+			return cellularconst.ModemTypeFM350, nil
+		} else if strings.HasSuffix(device.Variant, rw350Suffix) {
+			return cellularconst.ModemTypeRW350, nil
+		} else {
+			return cellularconst.ModemTypeUnknown, errors.Errorf("cannot determine modem type for device ID %q with variant %q", deviceID, device.Variant)
+		}
 	} else if deviceID == "usb:2cb7:01a0" {
 		return cellularconst.ModemTypeNL668, nil
 	} else if deviceID == "usb:2cb7:01a2" {

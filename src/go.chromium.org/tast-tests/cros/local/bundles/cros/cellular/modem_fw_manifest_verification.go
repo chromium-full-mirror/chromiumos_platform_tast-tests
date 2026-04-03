@@ -89,7 +89,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 		uninstallDlc := false
 		if device.GetDlc() != nil && device.GetDlc().GetDlcId() != "" {
 			dlcCounter++
-			modemType, err := cellular.GetModemTypeFromDeviceID(device.DeviceId)
+			modemType, err := cellular.GetModemTypeFromManifestDevice(device)
 			if err != nil {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
@@ -195,7 +195,7 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 					s.Fatalf("There is no carrier id defined for carrier FW %q", carrierFW.Version)
 				}
 			}
-			modemType, err := cellular.GetModemTypeFromDeviceID(device.DeviceId)
+			modemType, err := cellular.GetModemTypeFromManifestDevice(device)
 			if err != nil {
 				s.Fatalf("Failed to get modem type: %s", err)
 			}
@@ -391,6 +391,7 @@ var (
 		cellularconst.ModemTypeLCUK54: *newDlcSpec(200, 200),
 		cellularconst.ModemTypeRW101:  *newDlcSpec(200, 200),
 		cellularconst.ModemTypeRW135:  *newDlcSpec(200, 310),
+		cellularconst.ModemTypeRW350:  *newDlcSpec(156, 156),
 	}
 )
 
