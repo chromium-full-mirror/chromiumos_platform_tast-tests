@@ -189,6 +189,8 @@ func GetModemTypeFromManifestDevice(device *mfwd.Device) (cellularconst.ModemTyp
 		return cellularconst.ModemTypeRW101, nil
 	} else if deviceID == "usb:33f8:0115" {
 		return cellularconst.ModemTypeRW135, nil
+	} else if deviceID == "usb:33f8:0802" {
+		return cellularconst.ModemTypeRW350, nil
 	} else {
 		return cellularconst.ModemTypeUnknown, errors.Errorf("cannot convert device ID %q to ModemType", deviceID)
 	}
