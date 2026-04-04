@@ -9,11 +9,11 @@ package input
 // Do not change the above line; see https://golang.org/pkg/cmd/go/internal/generate/
 //
 // This file contains constants from include/uapi/linux/input-event-codes.h
-// in the Linux kernel repository at revision 45f5262744831b24d3b5cf4640708e01744113b3.
+// in the Linux kernel repository at revision 59f52b6033b49f4c2a2dcc915fecfd820d72b13e.
 // Run "go generate" to regenerate it.
 
-//go:generate ../../../../../../tast/tools/go.sh run gen/gen_constants.go ../../../../../../../third_party/kernel/v5.15/include/uapi/linux/input-event-codes.h generated_constants.go
-//go:generate ../../../../../../tast/tools/go.sh fmt generated_constants.go
+//go:generate ../../../../../../../tast/tools/go.sh run gen/gen_constants.go ../../../../../../../../third_party/kernel/v5.15/include/uapi/linux/input-event-codes.h generated_constants.go
+//go:generate ../../../../../../../tast/tools/go.sh fmt generated_constants.go
 
 // EventType corresponds to the "type" field in the input_event C struct.
 // Per the kernel documentation, "event types are groupings of codes under a logical input construct."
@@ -390,6 +390,7 @@ const (
 	KEY_NOTIFICATION_CENTER      EventCode = 0x1bc
 	KEY_PICKUP_PHONE             EventCode = 0x1bd
 	KEY_HANGUP_PHONE             EventCode = 0x1be
+	KEY_LINK_PHONE               EventCode = 0x1bf
 	KEY_DEL_EOL                  EventCode = 0x1c0
 	KEY_DEL_EOS                  EventCode = 0x1c1
 	KEY_INS_LINE                 EventCode = 0x1c2
@@ -459,6 +460,7 @@ const (
 	KEY_LIGHTS_TOGGLE            EventCode = 0x21e
 	KEY_ALS_TOGGLE               EventCode = 0x230
 	KEY_ROTATE_LOCK_TOGGLE       EventCode = 0x231
+	KEY_REFRESH_RATE_TOGGLE      EventCode = 0x232
 	KEY_BUTTONCONFIG             EventCode = 0x240
 	KEY_TASKMANAGER              EventCode = 0x241
 	KEY_JOURNAL                  EventCode = 0x242
@@ -470,6 +472,10 @@ const (
 	KEY_KBD_LAYOUT_NEXT          EventCode = 0x248
 	KEY_EMOJI_PICKER             EventCode = 0x249
 	KEY_DICTATE                  EventCode = 0x24a
+	KEY_CAMERA_ACCESS_ENABLE     EventCode = 0x24b
+	KEY_CAMERA_ACCESS_DISABLE    EventCode = 0x24c
+	KEY_CAMERA_ACCESS_TOGGLE     EventCode = 0x24d
+	KEY_ACCESSIBILITY            EventCode = 0x24e
 	KEY_BRIGHTNESS_MIN           EventCode = 0x250
 	KEY_BRIGHTNESS_MAX           EventCode = 0x251
 	KEY_KBDINPUTASSIST_PREV      EventCode = 0x260
@@ -775,12 +781,13 @@ const (
 	REP_MAX    EventCode = 0x1
 
 	// Device properties
-	INPUT_PROP_POINTER        DeviceProperty = 0x0
-	INPUT_PROP_DIRECT         DeviceProperty = 0x1
-	INPUT_PROP_BUTTONPAD      DeviceProperty = 0x2
-	INPUT_PROP_SEMI_MT        DeviceProperty = 0x3
-	INPUT_PROP_TOPBUTTONPAD   DeviceProperty = 0x4
-	INPUT_PROP_POINTING_STICK DeviceProperty = 0x5
-	INPUT_PROP_ACCELEROMETER  DeviceProperty = 0x6
-	INPUT_PROP_MAX            DeviceProperty = 0x1f
+	INPUT_PROP_POINTER         DeviceProperty = 0x0
+	INPUT_PROP_DIRECT          DeviceProperty = 0x1
+	INPUT_PROP_BUTTONPAD       DeviceProperty = 0x2
+	INPUT_PROP_SEMI_MT         DeviceProperty = 0x3
+	INPUT_PROP_TOPBUTTONPAD    DeviceProperty = 0x4
+	INPUT_PROP_POINTING_STICK  DeviceProperty = 0x5
+	INPUT_PROP_ACCELEROMETER   DeviceProperty = 0x6
+	INPUT_PROP_HAPTIC_TOUCHPAD DeviceProperty = 0x7
+	INPUT_PROP_MAX             DeviceProperty = 0x1f
 )

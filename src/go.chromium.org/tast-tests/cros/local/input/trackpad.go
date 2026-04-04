@@ -18,6 +18,7 @@ import (
 // TrackpadEventWriter supports injecting events into a virtual trackpad device.
 type TrackpadEventWriter struct {
 	TouchscreenEventWriter
+	isHaptic bool
 }
 
 var nextVirtTrackpadNum = 1 // appended to virtual trackpad device name
@@ -36,7 +37,8 @@ func Trackpad(ctx context.Context) (*TrackpadEventWriter, error) {
 		if !info.isTrackpad() || !info.hasBit(absGroup, uint16(ABS_MT_SLOT)) {
 			continue
 		}
-		testing.ContextLogf(ctx, "Opening trackpad device %+v", info)
+		isHaptic := info.isHapticTrackpad()
+		testing.ContextLogf(ctx, "Opening trackpad device %+v (haptic: %v)", info, isHaptic)
 
 		// Get trackpad properties: bounds, max touches, max pressure and max track id.
 		f, err := os.Open(info.path)
@@ -70,14 +72,17 @@ func Trackpad(ctx context.Context) (*TrackpadEventWriter, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &TrackpadEventWriter{TouchscreenEventWriter{
-			rw:            device,
-			width:         TouchCoord(infoX.maximum),
-			height:        TouchCoord(infoY.maximum),
-			maxTouchSlot:  int(infoSlot.maximum),
-			maxTrackingID: int(infoTrackingID.maximum),
-			maxPressure:   int(infoPressure.maximum),
-		}}, nil
+		return &TrackpadEventWriter{
+			TouchscreenEventWriter{
+				rw:            device,
+				width:         TouchCoord(infoX.maximum),
+				height:        TouchCoord(infoY.maximum),
+				maxTouchSlot:  int(infoSlot.maximum),
+				maxTrackingID: int(infoTrackingID.maximum),
+				maxPressure:   int(infoPressure.maximum),
+			},
+			isHaptic,
+		}, nil
 	}
 	// If we didn't find a real trackpad, create a virtual one.
 	return VirtualTrackpad(ctx)
@@ -127,6 +132,9 @@ func VirtualTrackpad(ctx context.Context) (*TrackpadEventWriter, error) {
 		axisMaxTracking     = 65535
 		axisMaxPressure     = 255
 		axisCoordResolution = 128
+
+		// Haptics not supported.
+		isHaptic = false
 	)
 	axisMaxTouchSlot := 9
 
@@ -161,16 +169,19 @@ func VirtualTrackpad(ctx context.Context) (*TrackpadEventWriter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &TrackpadEventWriter{TouchscreenEventWriter{
-		rw:            device,
-		dev:           dev,
-		virt:          virt,
-		width:         axisMaxX,
-		height:        axisMaxY,
-		maxTouchSlot:  axisMaxTouchSlot,
-		maxTrackingID: axisMaxTracking,
-		maxPressure:   axisMaxPressure,
-	}}, nil
+	return &TrackpadEventWriter{
+		TouchscreenEventWriter{
+			rw:            device,
+			dev:           dev,
+			virt:          virt,
+			width:         axisMaxX,
+			height:        axisMaxY,
+			maxTouchSlot:  axisMaxTouchSlot,
+			maxTrackingID: axisMaxTracking,
+			maxPressure:   axisMaxPressure,
+		},
+		isHaptic,
+	}, nil
 }
 
 // MaxPressure returns the max pressure for the touchpad.
@@ -242,4 +253,38 @@ func (tew *TrackpadEventWriter) PressButton(btn EventCode) error {
 	}
 
 	return tew.rw.Sync()
+}
+
+// NewMultiTouchWriter overrides the embedded TouchscreenEventWriter's method
+// to apply haptic pressure defaults. The default pressure was 25% of max. For a haptic
+// trackpad a high pressure value will result in a click. Use approximately 1% of max as the
+// default pressure value for haptic trackpads.
+func (tew *TrackpadEventWriter) NewMultiTouchWriter(numTouches int) (*TouchEventWriter, error) {
+	tw, err := tew.TouchscreenEventWriter.NewMultiTouchWriter(numTouches)
+	if err != nil {
+		return nil, err
+	}
+	if tew.isHaptic {
+		if err := tw.SetPressure(int32(tew.maxPressure/100) + 1); err != nil {
+			return nil, err
+		}
+	}
+	return tw, nil
+}
+
+// NewSingleTouchWriter overrides the embedded TouchscreenEventWriter's method
+// to apply haptic pressure defaults. The default pressure was 25% of max. For a haptic
+// trackpad a high pressure value will result in a click. Use approximately 1% of max as the
+// default pressure value for haptic trackpads.
+func (tew *TrackpadEventWriter) NewSingleTouchWriter() (*SingleTouchEventWriter, error) {
+	stw, err := tew.TouchscreenEventWriter.NewSingleTouchWriter()
+	if err != nil {
+		return nil, err
+	}
+	if tew.isHaptic {
+		if err := stw.SetPressure(int32(tew.maxPressure/100) + 1); err != nil {
+			return nil, err
+		}
+	}
+	return stw, nil
 }

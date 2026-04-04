@@ -115,6 +115,11 @@ func (di *devInfo) isTrackpad() bool {
 		!di.hasBit(evGroup, uint16(BTN_STYLUS2))
 }
 
+// isHapticTrackpad returns true if this appears to be a haptic trackpad device.
+func (di *devInfo) isHapticTrackpad() bool {
+	return di.isTrackpad() && di.hasBit(propGroup, uint16(INPUT_PROP_HAPTIC_TOUCHPAD))
+}
+
 // isStylus if this appears to be a stylus device.
 func (di *devInfo) isStylus() bool {
 	// Taken from HasStylus in ui/events/ozone/evdev/event_device_info.cc
