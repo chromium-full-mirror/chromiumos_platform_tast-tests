@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -64,6 +65,11 @@ func init() {
 		}},
 	})
 }
+
+const (
+	pdResetPollTimeout  time.Duration = 10 * time.Second
+	pdResetPollInterval time.Duration = 500 * time.Millisecond
+)
 
 // PDResetSoft - USB PD soft reset
 func PDResetSoft(ctx context.Context, s *testing.State) {
@@ -121,6 +127,21 @@ func PDResetSoft(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPDPowerRole(ctx, "SRC"); err != nil {
 		s.Log("EC/DUT cannot swap power roles. End test here: ", err)
 		return
+	}
+
+	// If the swap was accepted, wait for the port to be ready
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
+			if !pdState.IsSourceReady() {
+				return errors.Wrap(err, "PD state is not ready")
+			}
+		} else {
+			return errors.Wrap(err, "failed to get PD state")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: pdResetPollTimeout, Interval: pdResetPollInterval}); err != nil {
+		s.Fatal("Expected PD power swap: ", err)
 	}
 	s.Log("Power role swap succeeded. Repeating soft reset test from each side")
 
