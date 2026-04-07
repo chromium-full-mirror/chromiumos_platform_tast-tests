@@ -187,7 +187,8 @@ func GetModemTypeFromManifestDevice(device *mfwd.Device) (cellularconst.ModemTyp
 		return cellularconst.ModemTypeLCUK54, nil
 	} else if deviceID == "usb:33f8:01a2" {
 		return cellularconst.ModemTypeRW101, nil
-	} else if deviceID == "usb:33f8:0115" {
+	} else if deviceID == "usb:33f8:0115" || deviceID == "usb:33f8:1003" {
+		// Both RW135 and RW135R map to the same modem type
 		return cellularconst.ModemTypeRW135, nil
 	} else if deviceID == "usb:33f8:0802" {
 		return cellularconst.ModemTypeRW350, nil
