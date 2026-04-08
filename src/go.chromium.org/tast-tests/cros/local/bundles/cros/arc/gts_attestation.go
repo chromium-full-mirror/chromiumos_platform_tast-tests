@@ -34,6 +34,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "vm_x86_64",
 			ExtraSoftwareDeps: []string{"amd64"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraData: []string{
 				"GtsGmsCoreSecurityTestApp_x86_64.apk",
 			},

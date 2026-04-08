@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"slices"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -24,20 +25,23 @@ func init() {
 		Contacts:     []string{"arcvm-eng@google.com", "matvore@chromium.org", "niwa@chromium.org"},
 		BugComponent: "b:883059",
 
-		// Exclude boards not planning to support ARCVM. They are
-		// out-of-scope. (see http://go/arcvm-migration)
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel(
-			"banon",
-			"bob",
-			"dru",
-			"druwl",
-			"dumo",
-			"elm", // AUE on Container-R
-			"edgar",
-			"hana", // AUE on Container-R
-			"kevin",
-			"ultima",
-		)),
+		HardwareDeps: hwdep.D(slices.Concat(
+			arc.ArcAppHwDepConds,
+			// Exclude boards not planning to support ARCVM. They are
+			// out-of-scope. (see http://go/arcvm-migration)
+			[]hwdep.Condition{hwdep.SkipOnModel(
+				"banon",
+				"bob",
+				"dru",
+				"druwl",
+				"dumo",
+				"elm", // AUE on Container-R
+				"edgar",
+				"hana", // AUE on Container-R
+				"kevin",
+				"ultima",
+			)},
+		)...),
 
 		SoftwareDeps: []string{"arc", "chrome"},
 		Fixture:      "arcBooted",

@@ -14,11 +14,19 @@ import (
 	"go.chromium.org/tast-tests/cros/local/pvsched"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 	"go.chromium.org/tast/core/timing"
 )
 
 // ResetTimeout is the timeout duration to trying reset of the current precondition.
 const ResetTimeout = 30 * time.Second
+
+// ArcAppHwDepConds is a list of the hardware conditions of the boards on which the ARC Apps tests run.
+// ARC testing uses a large storage for apps and harnesses (eg. UIAutomator, CTS, GTS, ...). Not all DUTs in the lab do not have enough space.
+var ArcAppHwDepConds = []hwdep.Condition{hwdep.MinStorage(24)}
+
+// ArcAppHwDeps is a hardware dependency limiting the boards on which the ARC Apps tests run.
+var ArcAppHwDeps = hwdep.D(ArcAppHwDepConds...)
 
 // PreData holds information made available to tests that specify preconditions.
 type PreData struct {

@@ -36,6 +36,7 @@ func init() {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:arc-functional"},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 		}, {
 			Name:              "refresh",
 			ExtraAttr:         []string{"informational"},

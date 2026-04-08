@@ -61,6 +61,7 @@ func init() {
 				Name:              "vm",
 				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
 			},
 			{

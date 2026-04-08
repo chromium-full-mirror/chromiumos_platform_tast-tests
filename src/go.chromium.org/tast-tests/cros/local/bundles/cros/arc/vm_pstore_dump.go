@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,6 +23,7 @@ func init() {
 		BugComponent: "b:882467",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBooted",
 	})
 }

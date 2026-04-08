@@ -33,6 +33,7 @@ func init() {
 			Name: "vm_x86_64",
 			// TODO(b/301347001): Enable this test for ARC T+.
 			ExtraSoftwareDeps: []string{"android_vm_t", "amd64"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraData: []string{
 				"VtsAidlKeyMintTargetTest_x86_64",
 			},
