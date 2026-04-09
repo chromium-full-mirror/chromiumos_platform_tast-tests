@@ -7,7 +7,6 @@ package terminal
 import (
 	"context"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -130,7 +129,7 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 		// The controlling tab should be in focus now. We want to check that the
 		// integration mode has exited. We use regex here because the beginning of
 		// the prompt might be polluted with the tmux prompt ">>> ".
-		ui.WaitUntilExists(terminalapp.AsRow(nodewith.NameRegex(regexp.MustCompile(`chronos@localhost ~ \$\s*$`)))),
+		ui.WaitUntilExists(terminalapp.AsRow(nodewith.NameRegex(terminalapp.SSHPromptRegex))),
 	)(ctx); err != nil {
 		s.Fatal("Failed: ", err)
 	}
