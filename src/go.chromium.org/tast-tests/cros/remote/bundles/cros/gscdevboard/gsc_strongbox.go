@@ -10,7 +10,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -83,18 +82,22 @@ func GSCStrongbox(ctx context.Context, s *testing.State) {
 	_, macedKey2, _ := strongboxRPCGenerateKey(ctx, s, tpm, "maced_key2")
 
 	challenge := []byte("1234567890abcdefghijklmnopqrstuv")
-	deviceInfo, _ := hex.DecodeString(
-		"AE656272616E6466476F6F676C6565667573656401656D6F64656C656D6F64656C" +
-			"66646576696365666465766963656770726F647563746442727961" +
-			"6A6F735F76657273696F6E6231376C6D616E756661637475726572" +
-			"66476F6F676C656D76626D6574615F6469676573744F112233445566778899AABBCC" +
-			"DDEEFF70626F6F745F70617463685F6C6576656C1A013501927273797374656D5F70" +
-			"617463685F6C6576656C1A013501917276656E646F725F70617463685F6C6576656C" +
-			"1A01350193" +
-			"6E73656375726974795F6C6576656C697374726F6E67626F78" + // "security_level" : "strongbox"
-			"6876625F737461746565677265656E" + // "vb_state":"green"
-			"70626F6F746C6F616465725F7374617465666C6F636B6564") // "bootloader_state":"locked"
-
+	deviceInfo := utils.DeviceInfo{
+		Brand:            "Google",
+		Fused:            1,
+		Model:            "model",
+		Device:           "device",
+		Product:          "Brya",
+		OSVersion:        "17",
+		Manufacturer:     "Google",
+		VBMetaDigest:     "112233445566778899AABBCCDDEEFF",
+		BootPatchLevel:   20251026,
+		SystemPatchLevel: 20251025,
+		VendorPatchLevel: 20251027,
+		SecurityLevel:    "strongbox",
+		VBState:          "green",
+		BootloaderState:  "locked",
+	}
 	strongboxRPCGenerateCertificate(ctx, s, tpm, nil, challenge, deviceInfo, cdiPubKey, "csr0")
 	strongboxRPCGenerateCertificate(ctx, s, tpm, [][]byte{macedKey1}, challenge, deviceInfo, cdiPubKey, "csr1")
 	strongboxRPCGenerateCertificate(ctx, s, tpm, [][]byte{macedKey1, macedKey2}, challenge, deviceInfo, cdiPubKey, "csr2")
@@ -139,8 +142,9 @@ func strongboxRPCGenerateKey(ctx context.Context, s *testing.State, tpm *utils.T
 	return
 }
 
-func strongboxRPCGenerateCertificate(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, macedKeys [][]byte, challenge, deviceInfo []byte, cdiPubKey *ecdsa.PublicKey, label string) {
-	csr, err := utils.StrongboxRPCGenerateCertificate(ctx, tpm, macedKeys, challenge, deviceInfo)
+func strongboxRPCGenerateCertificate(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, macedKeys [][]byte, challenge []byte, deviceInfo utils.DeviceInfo, cdiPubKey *ecdsa.PublicKey, label string) {
+	deviceInfoCbor := deviceInfo.ToCBOR()
+	csr, err := utils.StrongboxRPCGenerateCertificate(ctx, tpm, macedKeys, challenge, deviceInfoCbor)
 	if err != nil {
 		s.Fatal("Failed RPCGenerateCertificate: ", err)
 	}
@@ -148,7 +152,7 @@ func strongboxRPCGenerateCertificate(ctx context.Context, s *testing.State, tpm 
 	if err != nil {
 		s.Fatal("Failed to save file: ", err)
 	}
-	challenge2, _, keysCount, err := utils.CheckCsrCbor(ctx, csr, cdiPubKey)
+	challenge2, deviceInfo2, keysCount, err := utils.CheckCsrCbor(ctx, csr, cdiPubKey)
 	if err != nil {
 		s.Fatal("Failed to parse CSR: ", err)
 	}
@@ -157,6 +161,10 @@ func strongboxRPCGenerateCertificate(ctx context.Context, s *testing.State, tpm 
 	}
 	if len(macedKeys) != keysCount {
 		s.Fatal("Wrong number of keys in CSR")
+	}
+	deviceInfo.VBState = "orange"
+	if !bytes.Equal(deviceInfo.ToCBOR(), deviceInfo2) {
+		s.Fatal("Wrong device info in CSR")
 	}
 }
 

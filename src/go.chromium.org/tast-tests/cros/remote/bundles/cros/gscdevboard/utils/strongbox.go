@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math/big"
+	"reflect"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -1179,4 +1180,77 @@ func CheckSignature(ctx context.Context, label string, pub *ecdsa.PublicKey, has
 		return errors.New("Signature is not valid")
 	}
 	return nil
+}
+
+// DeviceInfo is used for KeyMint RKP (Remote Key Provisioning).
+// https://cs.android.com/android/platform/superproject/+/android-latest-release:hardware/interfaces/security/rkp/aidl/android/hardware/security/keymint/DeviceInfoV3.cddl
+type DeviceInfo struct {
+	Brand            string `json:"brand"`
+	Fused            int    `json:"fused"`
+	Model            string `json:"model"`
+	Device           string `json:"device"`
+	Product          string `json:"product"`
+	OSVersion        string `json:"os_version"`
+	Manufacturer     string `json:"manufacturer"`
+	VBMetaDigest     string `json:"vbmeta_digest"`
+	BootPatchLevel   int    `json:"boot_patch_level"`
+	SystemPatchLevel int    `json:"system_patch_level"`
+	VendorPatchLevel int    `json:"vendor_patch_level"`
+	SecurityLevel    string `json:"security_level"`
+	VBState          string `json:"vb_state"`
+	BootloaderState  string `json:"bootloader_state"`
+}
+
+// ToCBOR encodes the DeviceInfo as CBOR bytes.
+func (c *DeviceInfo) ToCBOR() []byte {
+	var buf []byte
+	t := reflect.TypeOf(*c)
+	v := reflect.ValueOf(*c)
+	buf = append(buf, cborMajorMap|uint8(t.NumField()))
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("json")
+		c.appendBytes(&buf, cborMajorTstr, []byte(tag))
+		switch field.Type.Kind() {
+		case reflect.String:
+			s := v.FieldByName(field.Name).String()
+			if tag == "vbmeta_digest" {
+				h, err := hex.DecodeString(s)
+				if err != nil {
+					panic("Invalid hex string")
+				}
+				c.appendBytes(&buf, cborMajorBstr, h)
+			} else {
+				c.appendBytes(&buf, cborMajorTstr, []byte(s))
+			}
+		case reflect.Int:
+			c.appendHeader(&buf, cborMajorUint, int(v.FieldByName(field.Name).Int()))
+		default:
+			panic("Unexpected type")
+		}
+	}
+	return buf
+}
+
+func (c *DeviceInfo) appendBytes(buf *[]byte, major uint8, b []byte) {
+	c.appendHeader(buf, major, len(b))
+	*buf = append(*buf, b...)
+}
+
+func (c *DeviceInfo) appendHeader(buf *[]byte, major uint8, value int) {
+	if value < 24 {
+		*buf = append(*buf, major|uint8(value))
+	} else if value < 0x100 {
+		*buf = append(*buf, major|24)
+		*buf = append(*buf, uint8(value))
+	} else if value < 0x10000 {
+		*buf = append(*buf, major|25)
+		*buf = binary.BigEndian.AppendUint16(*buf, uint16(value))
+	} else if value < 0x100000000 {
+		*buf = append(*buf, major|26)
+		*buf = binary.BigEndian.AppendUint32(*buf, uint32(value))
+	} else {
+		*buf = append(*buf, major|27)
+		*buf = binary.BigEndian.AppendUint64(*buf, uint64(value))
+	}
 }
