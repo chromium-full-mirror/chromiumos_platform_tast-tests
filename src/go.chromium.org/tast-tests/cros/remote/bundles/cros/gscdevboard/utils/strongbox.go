@@ -370,10 +370,12 @@ func appendAlignedBytes(buf, bytes []byte) []byte {
 }
 
 // StrongboxRPCGenerateCertificate sends RPCGenerateCertificateV2Request.
-func StrongboxRPCGenerateCertificate(ctx context.Context, tpm *TpmHelper, macedKey, challenge, deviceInfo []byte) (csr []byte, err error) {
+func StrongboxRPCGenerateCertificate(ctx context.Context, tpm *TpmHelper, macedKeys [][]byte, challenge, deviceInfo []byte) (csr []byte, err error) {
 	var buf []byte
-	buf = binary.LittleEndian.AppendUint32(buf, 1)
-	buf = appendAlignedBytes(buf, macedKey)
+	buf = binary.LittleEndian.AppendUint32(buf, uint32(len(macedKeys)))
+	for _, k := range macedKeys {
+		buf = appendAlignedBytes(buf, k)
+	}
 	buf = appendAlignedBytes(buf, challenge)
 	buf = appendAlignedBytes(buf, deviceInfo)
 	sbErr, response, err := StrongboxCommand(ctx, tpm, RPCGenerateCertificateV2Request, buf)
@@ -665,11 +667,19 @@ func newCborChecker(data []byte) *cborChecker {
 	}
 }
 
-func (c *cborChecker) headerMajor(want uint8) error {
+func (c *cborChecker) headerMajor() (uint8, error) {
 	if len(c.data) == 0 {
-		return errors.New("no data left")
+		return 0, errors.New("no data left")
 	}
 	m := c.data[0] & cborMajorMask
+	return m, nil
+}
+
+func (c *cborChecker) checkHeaderMajor(want uint8) error {
+	m, err := c.headerMajor()
+	if err != nil {
+		return err
+	}
 	if m != want {
 		return errors.Errorf("Wrong type: got 0x%x want 0x%x", m, want)
 	}
@@ -711,7 +721,7 @@ func (c *cborChecker) headerValue() (int, error) {
 }
 
 func (c *cborChecker) checkHeader(major uint8, want int) error {
-	if err := c.headerMajor(major); err != nil {
+	if err := c.checkHeaderMajor(major); err != nil {
 		return err
 	}
 	v, err := c.headerValue()
@@ -732,8 +742,8 @@ func (c *cborChecker) nint(want int) error {
 	return c.checkHeader(cborMajorNint, want)
 }
 
-func (c *cborChecker) bytes() ([]byte, error) {
-	if err := c.headerMajor(cborMajorBstr); err != nil {
+func (c *cborChecker) takeBytesValue(major uint8) ([]byte, error) {
+	if err := c.checkHeaderMajor(major); err != nil {
 		return nil, err
 	}
 	n, err := c.headerValue()
@@ -743,15 +753,12 @@ func (c *cborChecker) bytes() ([]byte, error) {
 	return c.takeData(n), nil
 }
 
+func (c *cborChecker) bytes() ([]byte, error) {
+	return c.takeBytesValue(cborMajorBstr)
+}
+
 func (c *cborChecker) text() ([]byte, error) {
-	if err := c.headerMajor(cborMajorTstr); err != nil {
-		return nil, err
-	}
-	n, err := c.headerValue()
-	if err != nil {
-		return nil, err
-	}
-	return c.takeData(n), nil
+	return c.takeBytesValue(cborMajorTstr)
 }
 
 func (c *cborChecker) array(want int) error {
@@ -760,6 +767,35 @@ func (c *cborChecker) array(want int) error {
 
 func (c *cborChecker) cmap(want int) error {
 	return c.checkHeader(cborMajorMap, want)
+}
+
+func (c *cborChecker) takeItemAsCbor() ([]byte, error) {
+	m, err := c.headerMajor()
+	if err != nil {
+		return nil, err
+	}
+	n, err := c.headerValue()
+	if err != nil {
+		return nil, err
+	}
+	cb := bytes.Clone(c.lastHeader)
+	items := 0
+	switch m {
+	case cborMajorBstr, cborMajorTstr:
+		cb = append(cb, c.takeData(n)...)
+	case cborMajorArr:
+		items = n
+	case cborMajorMap:
+		items = n * 2
+	}
+	for range items {
+		i, err := c.takeItemAsCbor()
+		if err != nil {
+			return nil, err
+		}
+		cb = append(cb, i...)
+	}
+	return cb, nil
 }
 
 // checkSignedData checks SignedData in COSE CBOR encoding.
@@ -1026,17 +1062,69 @@ func CheckMacedKeyCbor(macedKey []byte) (*ecdsa.PublicKey, error) {
 }
 
 // CheckCsrCbor checks SignedData in COSE CBOR encoding.
-// SignedData payload = [challenge, CsrPayload]
-func CheckCsrCbor(ctx context.Context, csr []byte, cdiPubKey *ecdsa.PublicKey) error {
+func CheckCsrCbor(ctx context.Context, csr []byte, cdiPubKey *ecdsa.PublicKey) (challenge, deviceInfo []byte, keysCount int, err error) {
 	cb := newCborChecker(csr)
-	_, err := cb.checkSignedData(ctx, "CSR", cdiPubKey)
+	payload, err := cb.checkSignedData(ctx, "CSR", cdiPubKey)
 	if err != nil {
-		return err
+		return nil, nil, 0, err
 	}
 	if len(cb.data) != 0 {
-		return errors.Errorf("Extra data: %v", cb.data)
+		return nil, nil, 0, errors.Errorf("Extra data: %v", cb.data)
 	}
-	return nil
+	// SignedData payload = [challenge, CsrPayload]
+	cb = newCborChecker(payload)
+	if err := cb.array(2); err != nil {
+		return nil, nil, 0, err
+	}
+	challenge, err = cb.bytes()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	csrp, err := cb.bytes()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	if len(cb.data) != 0 {
+		return nil, nil, 0, errors.Errorf("Extra data: %v", cb.data)
+	}
+	// CsrPayload = [version: 3, CertificateType: "keymint", DeviceInfo, KeysToSign: [ *PublicKey]]
+	cb = newCborChecker(csrp)
+	if err := cb.array(4); err != nil {
+		return nil, nil, 0, err
+	}
+	if err := cb.uint(3); err != nil {
+		return nil, nil, 0, err
+	}
+	certType, err := cb.text()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	if string(certType) != "keymint" {
+		return nil, nil, 0, errors.Errorf("Wrong certType: %v", certType)
+	}
+	if err := cb.checkHeaderMajor(cborMajorMap); err != nil {
+		return nil, nil, 0, err
+	}
+	deviceInfo, err = cb.takeItemAsCbor()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	if err := cb.checkHeaderMajor(cborMajorArr); err != nil {
+		return nil, nil, 0, err
+	}
+	keys, err := cb.takeItemAsCbor()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	if len(cb.data) != 0 {
+		return nil, nil, 0, errors.Errorf("Extra data: %v", cb.data)
+	}
+	cb = newCborChecker(keys)
+	keysCount, err = cb.headerValue()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	return
 }
 
 // CheckDiceChainCbor checks DiceCertChain in COSE CBOR encoding.

@@ -5,6 +5,7 @@
 package gscdevboard
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
@@ -78,18 +79,8 @@ func GSCStrongbox(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse dice chain: ", err)
 	}
 
-	rkpBlob, macedKey, err := utils.StrongboxRPCGenerateKey(ctx, tpm)
-	if err != nil {
-		s.Fatal("Failed RPCGenerateKey: ", err)
-	}
-	err = saveFile(ctx, "maced_key.cbor", macedKey)
-	if err != nil {
-		s.Fatal("Failed to save file: ", err)
-	}
-	attestPubKey, err := utils.CheckMacedKeyCbor(macedKey)
-	if err != nil {
-		s.Fatal("Failed to parse maced key: ", err)
-	}
+	rkpBlob1, macedKey1, attestPubKey1 := strongboxRPCGenerateKey(ctx, s, tpm, "maced_key1")
+	_, macedKey2, _ := strongboxRPCGenerateKey(ctx, s, tpm, "maced_key2")
 
 	challenge := []byte("1234567890abcdefghijklmnopqrstuv")
 	deviceInfo, _ := hex.DecodeString(
@@ -103,24 +94,16 @@ func GSCStrongbox(ctx context.Context, s *testing.State) {
 			"6E73656375726974795F6C6576656C697374726F6E67626F78" + // "security_level" : "strongbox"
 			"6876625F737461746565677265656E" + // "vb_state":"green"
 			"70626F6F746C6F616465725F7374617465666C6F636B6564") // "bootloader_state":"locked"
-	csr, err := utils.StrongboxRPCGenerateCertificate(ctx, tpm, macedKey, challenge, deviceInfo)
-	if err != nil {
-		s.Fatal("Failed RPCGenerateCertificate: ", err)
-	}
-	err = saveFile(ctx, "csr.cbor", csr)
-	if err != nil {
-		s.Fatal("Failed to save file: ", err)
-	}
-	err = utils.CheckCsrCbor(ctx, csr, cdiPubKey)
-	if err != nil {
-		s.Fatal("Failed to parse CSR: ", err)
-	}
+
+	strongboxRPCGenerateCertificate(ctx, s, tpm, nil, challenge, deviceInfo, cdiPubKey, "csr0")
+	strongboxRPCGenerateCertificate(ctx, s, tpm, [][]byte{macedKey1}, challenge, deviceInfo, cdiPubKey, "csr1")
+	strongboxRPCGenerateCertificate(ctx, s, tpm, [][]byte{macedKey1, macedKey2}, challenge, deviceInfo, cdiPubKey, "csr2")
 
 	// Test without attestation key
 	generateAndTestKey(ctx, s, tpm, nil, nil, "self")
 
 	// Test with attestation key
-	generateAndTestKey(ctx, s, tpm, rkpBlob, attestPubKey, "attest")
+	generateAndTestKey(ctx, s, tpm, rkpBlob1, attestPubKey1, "attest")
 }
 
 func saveFile(ctx context.Context, filename string, contents []byte) error {
@@ -138,6 +121,43 @@ func saveFile(ctx context.Context, filename string, contents []byte) error {
 		return errors.Wrapf(err, "failed to write data to %s", path)
 	}
 	return nil
+}
+
+func strongboxRPCGenerateKey(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, label string) (rkpBlob, macedKey []byte, attestPubKey *ecdsa.PublicKey) {
+	rkpBlob, macedKey, err := utils.StrongboxRPCGenerateKey(ctx, tpm)
+	if err != nil {
+		s.Fatal("Failed RPCGenerateKey: ", err)
+	}
+	err = saveFile(ctx, label+".cbor", macedKey)
+	if err != nil {
+		s.Fatal("Failed to save file: ", err)
+	}
+	attestPubKey, err = utils.CheckMacedKeyCbor(macedKey)
+	if err != nil {
+		s.Fatal("Failed to parse maced key: ", err)
+	}
+	return
+}
+
+func strongboxRPCGenerateCertificate(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, macedKeys [][]byte, challenge, deviceInfo []byte, cdiPubKey *ecdsa.PublicKey, label string) {
+	csr, err := utils.StrongboxRPCGenerateCertificate(ctx, tpm, macedKeys, challenge, deviceInfo)
+	if err != nil {
+		s.Fatal("Failed RPCGenerateCertificate: ", err)
+	}
+	err = saveFile(ctx, label+".cbor", csr)
+	if err != nil {
+		s.Fatal("Failed to save file: ", err)
+	}
+	challenge2, _, keysCount, err := utils.CheckCsrCbor(ctx, csr, cdiPubKey)
+	if err != nil {
+		s.Fatal("Failed to parse CSR: ", err)
+	}
+	if !bytes.Equal(challenge, challenge2) {
+		s.Fatal("Wrong challenge in CSR")
+	}
+	if len(macedKeys) != keysCount {
+		s.Fatal("Wrong number of keys in CSR")
+	}
 }
 
 func generateAndTestKey(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, attestKey []byte, attestPubKey *ecdsa.PublicKey, label string) {
