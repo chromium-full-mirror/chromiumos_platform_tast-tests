@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/cdputil"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -278,6 +279,10 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 				testing.ContextLog(ctx, "Failed to clear username field: ", err)
 			}
 			testing.ContextLog(ctx, "Failed to wait for username screen to go away attempt")
+
+			if err := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to check network connection: ", err)
+			}
 			return errors.Wrap(err, "failed to wait for username screen to go away")
 		}
 
