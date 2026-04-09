@@ -24107,37 +24107,6 @@ func (p *SafeBrowsingProxiedRealTimeChecksAllowed) Equal(iface interface{}) bool
 }
 
 // ****************************************************************************
-// 1117. PostQuantumKeyAgreementEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PostQuantumKeyAgreementEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *PostQuantumKeyAgreementEnabled) Name() string          { return "PostQuantumKeyAgreementEnabled" }
-func (p *PostQuantumKeyAgreementEnabled) Scope() Scope          { return ScopeUser }
-func (p *PostQuantumKeyAgreementEnabled) Status() Status        { return p.Stat }
-func (p *PostQuantumKeyAgreementEnabled) UntypedV() interface{} { return p.Val }
-func (p *PostQuantumKeyAgreementEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *PostQuantumKeyAgreementEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PostQuantumKeyAgreementEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1118. PhysicalKeyboardAutocorrect
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -27557,39 +27526,6 @@ func (p *HistorySearchSettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1276. DevicePostQuantumKeyAgreementEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DevicePostQuantumKeyAgreementEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *DevicePostQuantumKeyAgreementEnabled) Name() string {
-	return "DevicePostQuantumKeyAgreementEnabled"
-}
-func (p *DevicePostQuantumKeyAgreementEnabled) Scope() Scope          { return ScopeDevice }
-func (p *DevicePostQuantumKeyAgreementEnabled) Status() Status        { return p.Stat }
-func (p *DevicePostQuantumKeyAgreementEnabled) UntypedV() interface{} { return p.Val }
-func (p *DevicePostQuantumKeyAgreementEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *DevicePostQuantumKeyAgreementEnabled) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "DevicePostQuantumKeyAgreementEnabled", "value", p.Val)
-}
-func (p *DevicePostQuantumKeyAgreementEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1277. DefaultJavaScriptOptimizerSetting
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -30570,7 +30506,6 @@ func (p *DevToolsGoogleDeveloperProgramProfileAvailability) Equal(iface interfac
 // ****************************************************************************
 // 1392. IncognitoModeUrlBlocklist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type IncognitoModeUrlBlocklist struct {
 	Stat Status
@@ -30602,7 +30537,6 @@ func (p *IncognitoModeUrlBlocklist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1393. IncognitoModeUrlAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type IncognitoModeUrlAllowlist struct {
 	Stat Status
@@ -30758,7 +30692,6 @@ func (p *PreferSlowCiphers) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1399. DeveloperToolsAvailabilityAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeveloperToolsAvailabilityAllowlist struct {
 	Stat Status
@@ -30792,7 +30725,6 @@ func (p *DeveloperToolsAvailabilityAllowlist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1400. DeveloperToolsAvailabilityBlocklist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeveloperToolsAvailabilityBlocklist struct {
 	Stat Status
@@ -31718,7 +31650,6 @@ func (p *ForceForegroundPriorityForAllTabs) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1432. WebRtcDiagnosticLogCollectionAllowedForOrigins
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type WebRtcDiagnosticLogCollectionAllowedForOrigins struct {
 	Stat Status
@@ -31775,6 +31706,40 @@ func (p *IsolatedWebAppUserInstallationEnabled) SetProto(m *protoreflect.Message
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *IsolatedWebAppUserInstallationEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1434. ExtensionDOMActivityLoggingEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ExtensionDOMActivityLoggingEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ExtensionDOMActivityLoggingEnabled) Name() string {
+	return "ExtensionDOMActivityLoggingEnabled"
+}
+func (p *ExtensionDOMActivityLoggingEnabled) Scope() Scope          { return ScopeUser }
+func (p *ExtensionDOMActivityLoggingEnabled) Status() Status        { return p.Stat }
+func (p *ExtensionDOMActivityLoggingEnabled) UntypedV() interface{} { return p.Val }
+func (p *ExtensionDOMActivityLoggingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ExtensionDOMActivityLoggingEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ExtensionDOMActivityLoggingEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -33267,8 +33232,6 @@ func newByName(name string) (Policy, error) {
 		return &DeviceLoginScreenWebHidAllowDevicesForUrls{}, nil
 	case "SafeBrowsingProxiedRealTimeChecksAllowed":
 		return &SafeBrowsingProxiedRealTimeChecksAllowed{}, nil
-	case "PostQuantumKeyAgreementEnabled":
-		return &PostQuantumKeyAgreementEnabled{}, nil
 	case "PhysicalKeyboardAutocorrect":
 		return &PhysicalKeyboardAutocorrect{}, nil
 	case "PhysicalKeyboardPredictiveWriting":
@@ -33477,8 +33440,6 @@ func newByName(name string) (Policy, error) {
 		return &LensOnGalleryEnabled{}, nil
 	case "HistorySearchSettings":
 		return &HistorySearchSettings{}, nil
-	case "DevicePostQuantumKeyAgreementEnabled":
-		return &DevicePostQuantumKeyAgreementEnabled{}, nil
 	case "DefaultJavaScriptOptimizerSetting":
 		return &DefaultJavaScriptOptimizerSetting{}, nil
 	case "JavaScriptOptimizerAllowedForSites":
@@ -33741,6 +33702,8 @@ func newByName(name string) (Policy, error) {
 		return &WebRtcDiagnosticLogCollectionAllowedForOrigins{}, nil
 	case "IsolatedWebAppUserInstallationEnabled":
 		return &IsolatedWebAppUserInstallationEnabled{}, nil
+	case "ExtensionDOMActivityLoggingEnabled":
+		return &ExtensionDOMActivityLoggingEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
