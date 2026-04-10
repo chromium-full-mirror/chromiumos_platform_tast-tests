@@ -100,11 +100,11 @@ func Temperature(ctx context.Context) (int, string, error) {
 	// Regular expression to match different CPU vendors' thermal sensor types.
 	// - Intel: "x86_pkg_temp"
 	// - AMD: "acpitz", "acpitz0"
-	// - MediaTek: "cpu_thermal", "soc-thermal", "soc_max"
+	// - MediaTek: "cpu_thermal", "soc-thermal", "soc_max", "cpu-little0-thermal" (v6.12+)
 	// - Qualcomm: "CPU", "cpu0-thermal"
 	// Note: On Intel platforms, there will be x86_pkg_temp and TCPU.
 	// In this case, 'TCPU' is not used. (See b/406409030#comment9)
-	thermalTypeNameReg := regexp.MustCompile("^(x86_pkg_temp|soc-thermal|soc_max|cpu_thermal|cpu0-thermal|CPU|acpitz[0-9]?)$")
+	thermalTypeNameReg := regexp.MustCompile("^(x86_pkg_temp|soc-thermal|soc_max|cpu_thermal|cpu0-thermal|cpu-(little|medium|big)[0-9]-thermal|CPU|acpitz[0-9]?)$")
 
 	zonePaths, err := filepath.Glob(thermalZonePath)
 	if err != nil || len(zonePaths) == 0 {
