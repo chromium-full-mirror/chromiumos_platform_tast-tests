@@ -1224,7 +1224,7 @@ func (c *DeviceInfo) ToCBOR() []byte {
 				c.appendBytes(&buf, cborMajorTstr, []byte(s))
 			}
 		case reflect.Int:
-			c.appendHeader(&buf, cborMajorUint, int(v.FieldByName(field.Name).Int()))
+			c.appendHeader(&buf, cborMajorUint, uint64(v.FieldByName(field.Name).Int()))
 		default:
 			panic("Unexpected type")
 		}
@@ -1233,11 +1233,11 @@ func (c *DeviceInfo) ToCBOR() []byte {
 }
 
 func (c *DeviceInfo) appendBytes(buf *[]byte, major uint8, b []byte) {
-	c.appendHeader(buf, major, len(b))
+	c.appendHeader(buf, major, uint64(len(b)))
 	*buf = append(*buf, b...)
 }
 
-func (c *DeviceInfo) appendHeader(buf *[]byte, major uint8, value int) {
+func (c *DeviceInfo) appendHeader(buf *[]byte, major uint8, value uint64) {
 	if value < 24 {
 		*buf = append(*buf, major|uint8(value))
 	} else if value < 0x100 {
