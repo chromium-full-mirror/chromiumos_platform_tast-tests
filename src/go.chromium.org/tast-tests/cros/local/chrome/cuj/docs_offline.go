@@ -99,8 +99,10 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 		defer cancel()
 
+		sctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+		defer cancel()
 		// Open Drive settings page.
-		conn, err := cr.NewConn(ctx, "https://drive.google.com/settings")
+		conn, err := cr.NewConn(sctx, "https://drive.google.com/settings")
 		if err != nil {
 			return errors.Wrap(err, "failed to open Drive settings")
 		}
