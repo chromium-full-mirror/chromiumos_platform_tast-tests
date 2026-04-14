@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -72,6 +73,13 @@ func saveScreenshot(ctx context.Context, dir string) {
 	// Fallback to built-in screenshot command.
 	if err := saveScreenshotBuiltIn(ctx, dir); err != nil {
 		testing.ContextLog(ctx, "Failed to take screenshot by a command: ", err)
+		testing.ContextLog(ctx, "Trying to turn on display")
+		if turnErr := power.TurnOnDisplay(ctx); turnErr != nil {
+			testing.ContextLog(ctx, "Failed to turn on display: ", turnErr)
+		}
+		if err := saveScreenshotBuiltIn(ctx, dir); err != nil {
+			testing.ContextLog(ctx, "Failed to take screenshot by a command: ", err)
+		}
 	}
 }
 
