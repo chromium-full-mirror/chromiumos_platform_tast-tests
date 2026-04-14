@@ -57,7 +57,9 @@ var (
 	// SSHPromptRegex is the regex for the prompt for a SSH terminal session.
 	// Newer version of xterm.js preserves the space at the end. Using `\s*`
 	// allows the tests to work across uprev.
-	SSHPromptRegex = regexp.MustCompile(`^chronos@(localhost|chromeos\d+-row\d+-rack\d+-host\d+) ~ \$\s*$`)
+	// On CI running in Google Infra, a hostname format depends on the lab
+	// network the running DUT belongs to. See go/chromeos-lab-duts-ssh.
+	SSHPromptRegex = regexp.MustCompile(`^chronos@(localhost|chromeos\d+-row\d+-rack\d+-host\d+|cri\d+-\d+) ~ \$\s*$`)
 	// SSHPrompt is the prompt for a SSH terminal session.
 	SSHPrompt = AsRow(nodewith.NameRegex(SSHPromptRegex))
 	// TmuxModeMsg represents the controlling tab of Tmux.
