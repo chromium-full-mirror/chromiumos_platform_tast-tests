@@ -77,9 +77,9 @@ func testFlashingRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, params *testR
 	return nil
 }
 
-// FpROCanUpdateRW flashes RW firmware with a version string that ends in '.rb1'
-// (has rollback ID '1') and validates that it is running. Then flashes RW
-// firmware with version string that ends in '.dev' (also has rollback ID '1')
+// FpROCanUpdateRW flashes RW firmware with a version string that ends in '.rb0'
+// (has rollback ID '0') and validates that it is running. Then flashes RW
+// firmware with version string that ends in '.dev' (also has rollback ID '0')
 // and validates that it is running.
 func FpROCanUpdateRW(ctx context.Context, s *testing.State) {
 	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
@@ -113,18 +113,18 @@ func FpROCanUpdateRW(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, t.CleanupTime())
 	defer cancel()
 
-	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '1'")
+	testing.ContextLog(ctx, "Flashing RW firmware with rollback ID of '0'")
 	if err := testFlashingRWFirmware(ctx, d,
 		&testRWFlashParams{
-			firmwarePath: testImages[fingerprint.TestImageTypeDevRollbackOne].Path,
+			firmwarePath: testImages[fingerprint.TestImageTypeDevRollbackZero].Path,
 			// RO version should remain unchanged.
 			expectedROVersion: testImages[fingerprint.TestImageTypeDev].ROVersion,
 			// RW version should match what we requested to be flashed.
-			expectedRWVersion: testImages[fingerprint.TestImageTypeDevRollbackOne].RWVersion,
+			expectedRWVersion: testImages[fingerprint.TestImageTypeDevRollbackZero].RWVersion,
 			// Signature check will pass, so we should be running RW.
 			expectedRunningFirmwareCopy: fingerprint.ImageTypeRW,
 		}); err != nil {
-		s.Fatal("Rollback ID 1 test failed: ", err)
+		s.Fatal("Rollback ID 0 test failed: ", err)
 	}
 	testing.ContextLog(ctx, "Flashing RW with dev firmware")
 	if err := testFlashingRWFirmware(ctx, d,
