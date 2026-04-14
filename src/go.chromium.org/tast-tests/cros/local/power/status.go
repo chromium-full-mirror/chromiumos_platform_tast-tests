@@ -19,7 +19,7 @@ import (
 
 // GetStatus returns current power supply information.
 func GetStatus(ctx context.Context) (*pb.Status, error) {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	cmd := testexec.CommandContext(ctx, "dump_power_status")
 	b, err := cmd.Output()
