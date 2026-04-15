@@ -7,6 +7,8 @@ package power
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -104,5 +106,18 @@ func (f *tuwunelServerSetupImpl) PreTest(ctx context.Context, s *testing.FixtTes
 }
 
 func (f *tuwunelServerSetupImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// No-op.
+	if f.server.LogLen() == 0 {
+		s.Log("Tuwunel server produced no logs. Skipping log file creation")
+		return
+	}
+
+	logFile, err := os.Create(filepath.Join(s.OutDir(), "tuwunel.log"))
+	if err != nil {
+		s.Log("Failed to create Tuwunel log file: ", err)
+	} else {
+		defer logFile.Close()
+		if err := f.server.DumpLogs(logFile); err != nil {
+			s.Log("Failed to dump Tuwunel log file: ", err)
+		}
+	}
 }

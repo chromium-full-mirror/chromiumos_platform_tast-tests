@@ -5,13 +5,16 @@
 package power
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -31,6 +34,40 @@ const (
 	signalKilledMessage = "signal: killed"
 )
 
+// logBuffer is a buffer for storing logs that supports dumping its contents.
+type logBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+// Write writes data d into the bytes buffer.
+func (b *logBuffer) Write(d []byte) (n int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(d)
+}
+
+func (b *logBuffer) reset() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.buf.Reset()
+}
+
+// dump writes the contents of the buffer to w.
+// This operation drains the buffer, making it ideal for log rotation between test cases.
+func (b *logBuffer) dump(w io.Writer) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	_, err := b.buf.WriteTo(w)
+	return err
+}
+
+func (b *logBuffer) len() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Len()
+}
+
 // TuwunelServer is a wrapper for the Tuwunel server.
 type TuwunelServer struct {
 	cmd         *testexec.Cmd
@@ -40,6 +77,7 @@ type TuwunelServer struct {
 	configFile  string
 	binaryFile  string
 	port        int
+	buf         logBuffer
 }
 
 // NewTuwunelServer returns a new TuwunelServer object.
@@ -107,6 +145,7 @@ func (t *TuwunelServer) CleanUp() error {
 		}
 		t.listener = nil
 	}
+	t.buf.reset()
 	return errors.Join(errs...)
 }
 
@@ -124,6 +163,8 @@ func (t *TuwunelServer) Start(ctx context.Context) error {
 		t.listener = nil
 	}
 	t.cmd = testexec.CommandContext(ctx, t.binaryFile, "-c", t.configFile)
+	t.cmd.Stdout = &t.buf
+	t.cmd.Stderr = &t.buf
 	if err := t.cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to start Tuwunel server")
 	}
@@ -153,6 +194,7 @@ func (t *TuwunelServer) Reset(ctx context.Context) error {
 	if err := t.Stop(); err != nil {
 		return errors.Wrap(err, "failed to stop Tuwunel server")
 	}
+	t.buf.reset()
 	if err := os.RemoveAll(t.databaseDir); err != nil {
 		return errors.Wrap(err, "failed to clear Tuwunel database")
 	}
@@ -160,6 +202,16 @@ func (t *TuwunelServer) Reset(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create Tuwunel database")
 	}
 	return t.Start(ctx)
+}
+
+// DumpLogs copies the collected server logs to w.
+func (t *TuwunelServer) DumpLogs(w io.Writer) error {
+	return t.buf.dump(w)
+}
+
+// LogLen returns the number of unread bytes in the log buffer.
+func (t *TuwunelServer) LogLen() int {
+	return t.buf.len()
 }
 
 // Port returns the port that is used by the Tuwunel server.
