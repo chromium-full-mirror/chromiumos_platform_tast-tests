@@ -99,10 +99,32 @@ func CorruptFWSectionTest(ctx context.Context, backupManager *fixture.FirmwareBa
 			"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
 			return errors.Wrapf(err, "failed restoring firmware via servo: %s", string(out))
 		}
-		// In b/314059450 it was discovered that some devices don't come back on after futility update. Explicitly reset to prevent this problem.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			return errors.Wrap(err, "failed to reset after restoring firmware")
+		// In b/314059450 it was discovered that some devices don't come back on after futility update.
+		if hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
+			testing.ContextLog(ctx, "Error checking for chrome ec: ", err)
+		} else if hasEC {
+			testing.ContextLog(ctx, "Waiting for DUT to power on")
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
+				"G3", "S0"); err != nil {
+				return errors.Wrap(err, "failed to get power state after restoring firmware")
+			}
+			powerState, err := h.Servo.GetECSystemPowerState(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get power state")
+			}
+			if powerState == "G3" {
+				testing.ContextLog(ctx, "DUT is in G3, pressing power key to wake")
+				err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn))
+				if err != nil {
+					return errors.Wrap(err, "failed to press power")
+				}
+				if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
+					"S0"); err != nil {
+					return errors.Wrap(err, "failed to wait for S0 after power button")
+				}
+			}
 		}
+
 		if err := h.WaitConnect(ctx); err != nil {
 			return errors.Wrap(err, "failed to WaitConnect after reset")
 		}
