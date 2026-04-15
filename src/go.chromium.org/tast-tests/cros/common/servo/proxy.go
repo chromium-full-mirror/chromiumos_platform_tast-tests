@@ -22,6 +22,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/go-connections/tlsconfig"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -69,7 +70,6 @@ func createDockerClient(ctx context.Context, dockerHost string) (*client.Client,
 		dockerHost = "tcp://192.168.231.1:2375"
 	}
 	// Otherwise connect over TCP
-	testing.ContextLogf(ctx, "Docker client connecting over TCP to %q", dockerHost)
 
 	// b/207133139, default HTTPClient inside the Docker Client object fails to
 	// connects to docker daemon. Create the transport with DialContext and use
@@ -80,8 +80,27 @@ func createDockerClient(ctx context.Context, dockerHost string) (*client.Client,
 			Timeout: timeout,
 		}).DialContext,
 	}
-	c := http.Client{Transport: transport}
 
+	// Configure TLS if the env var DOCKER_CERT_PATH is set.
+	if dockerCertPath := os.Getenv("DOCKER_CERT_PATH"); dockerCertPath != "" {
+		options := tlsconfig.Options{
+			CAFile:             filepath.Join(dockerCertPath, "ca.pem"),
+			CertFile:           filepath.Join(dockerCertPath, "cert.pem"),
+			KeyFile:            filepath.Join(dockerCertPath, "key.pem"),
+			InsecureSkipVerify: os.Getenv("DOCKER_TLS_VERIFY") == "",
+		}
+		tlsc, err := tlsconfig.Client(options)
+		if err != nil {
+			return nil, err
+		}
+
+		transport.TLSClientConfig = tlsc
+		testing.ContextLogf(ctx, "Docker client connecting over TCP to %q w/ TLS", dockerHost)
+	} else {
+		testing.ContextLogf(ctx, "Docker client connecting over TCP to %q", dockerHost)
+	}
+
+	c := http.Client{Transport: transport}
 	return client.NewClientWithOpts(client.WithHost(dockerHost), client.WithHTTPClient(&c), client.WithAPIVersionNegotiation())
 }
 
