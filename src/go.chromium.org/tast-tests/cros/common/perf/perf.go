@@ -528,10 +528,9 @@ func (h *histogram) updateRunning() {
 	h.Running = [7]float64{float64(len(sorted)), max, math.Log(mean), mean, min, sum, variance}
 }
 
-// toCrosbolt returns perf values formatted as json for crosbolt.
-func (p *Values) toCrosbolt() ([]byte, error) {
+// toCrosboltCharts returns perf values as a map of maps of traceData.
+func (p *Values) toCrosboltCharts() map[string]*map[string]*traceData {
 	charts := &map[string]*map[string]*traceData{}
-
 	for s := range p.values {
 		// Need the original slice since we'll take a pointer to it.
 		vs := p.values[s]
@@ -565,8 +564,14 @@ func (p *Values) toCrosbolt() ([]byte, error) {
 
 		(*traces)[s.Variant] = &t
 	}
+	return *charts
+}
 
-	return json.MarshalIndent(charts, "", "  ")
+// toCrosbolt returns perf values formatted as json for crosbolt.
+func (p *Values) toCrosbolt() ([]byte, error) {
+	charts := p.toCrosboltCharts()
+
+	return json.MarshalIndent(&charts, "", "  ")
 }
 
 // toChromeperf returns perf values formatted as json for chromeperf.
@@ -637,6 +642,29 @@ func (p *Values) Save(outDir string) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+}
+
+// SaveAppend Acts like Save but append new data if the file already exists.
+func (p *Values) SaveAppend(outDir string) error {
+	fileName, err := Crosbolt.fileName()
+	if err != nil {
+		return err
+	}
+	charts := p.toCrosboltCharts()
+	path := filepath.Join(outDir, fileName)
+	if data, err := os.ReadFile(path); err == nil {
+		var existingCharts map[string]*map[string]*traceData
+		if err := json.Unmarshal(data, &existingCharts); err == nil {
+			for k, v := range existingCharts {
+				charts[k] = v
+			}
+		}
+	}
+	json, err := json.MarshalIndent(&charts, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, json, 0644)
 }
 
 // Proto converts this Values to something that can be passed in a gRPC call.

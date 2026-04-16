@@ -2664,7 +2664,7 @@ func (h *Helper) LogWatchdogInfo(ctx context.Context, s ErrorHandler) {
 	p.Set(perf.Metric{Name: "watchdog_reload_period_max", Unit: "ms", Direction: perf.SmallerIsBetter}, float64(info.ReloadPeriodMax))
 	p.Set(perf.Metric{Name: "watchdog_reload_period_max_timestamp", Unit: "ms", Direction: perf.SmallerIsBetter}, info.ReloadPeriodMaxTime*1000)
 
-	if err := p.Save(s.OutDir()); err != nil {
+	if err := p.SaveAppend(s.OutDir()); err != nil {
 		s.Error("Failed to save watchdog info to results-chart.json: ", err)
 	}
 }
