@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/actionlogger"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -382,11 +383,24 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 	var lastLocation coords.Rect
 	var currentLocation coords.Rect
 	start := time.Now()
+	// Get the initial location of the node.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := q.Call(ctx, &currentLocation, expr); err != nil {
+			return err
+		}
+		lastLocation = currentLocation
+		return nil
+	}, &ac.pollOpts); err != nil {
+		return nil, errors.Wrap(err, "failed to get the initial location")
+	}
+	// GoBigSleepLint: Wait before the second retrieval.
+	testing.Sleep(ctx, ac.pollOpts.Interval)
+	// Get the location of the node and ensure the node has not moved between two consecutive retrievals.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := q.Call(ctx, &currentLocation, expr); err != nil {
 			// Reset lastLocation on error.
 			lastLocation = coords.Rect{}
-			return err
+			return testing.PollBreak(errors.New("failed to get node location after the initial retrieval, perhaps the node disappears"))
 		}
 		if currentLocation != lastLocation {
 			lastLocation = currentLocation
@@ -395,7 +409,7 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 		}
 		return nil
 	}, &ac.pollOpts); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get location")
 	}
 	return &currentLocation, nil
 }
