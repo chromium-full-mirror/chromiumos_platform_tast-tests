@@ -7,11 +7,14 @@ package hooks
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/remote/kdump"
@@ -46,6 +49,29 @@ func isKdumpSupported(ctx context.Context, d *dut.DUT) (bool, error) {
 		return false, err
 	}
 	return strings.HasPrefix(string(arch), "x86"), nil
+}
+
+// fetchKdumpFiles copies kdump crash dumps to the fixture out directory and
+// removes them from the DUT.
+func fetchKdumpFiles(ctx context.Context, d *dut.DUT, outDir string) {
+	files, err := kdump.ListKdumpFiles(ctx, d)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to fetch kdump files: ", err)
+		return
+	}
+	if err := os.MkdirAll(outDir, 0755); err != nil {
+		testing.ContextLog(ctx, "Failed to create dir: ", err)
+	}
+	for _, file := range files {
+		src := filepath.Join(kdump.KdumpDir, file)
+		dst := filepath.Join(outDir, file)
+		if err := linuxssh.GetFile(ctx, d.Conn(), src, dst, linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLogf(ctx, "Failed to copy %s from the DUT to the host %s: %v", src, dst, err)
+		}
+		if err := os.Remove(src); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove %s from the DUT: %v", src, err)
+		}
+	}
 }
 
 // SetUp enables kdump if the corresponding var is set.
@@ -107,6 +133,9 @@ func (h *kdumpHook) TearDown(ctx context.Context, s *HookState) error {
 	if h.cleanup == nil {
 		return nil
 	}
+	// Move kdump dump data to fixture out directory so that it is uploaded
+	// as test result.
+	fetchKdumpFiles(ctx, h.dut, s.OutDir())
 	if err := h.cleanup(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable kdump")
 	}
