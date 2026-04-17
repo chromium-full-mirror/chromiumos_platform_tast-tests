@@ -57,7 +57,7 @@ const (
 	CPUStabilizationTimeout = cujrecorder.CooldownTimeout
 	// BatteryChargingTimeout is the battery charging duration if capacity is
 	//  below 25%
-	BatteryChargingTimeout = 8 * time.Minute
+	BatteryChargingTimeout = 50 * time.Minute
 	// webRTCLogsGatherTimeout is the time allowed for gathering the WebRTC
 	// event log files into a gzip archive in the test output directory.
 	webRTCLogsGatherTimeout = 15 * time.Second
@@ -165,7 +165,7 @@ func init() {
 		Impl: &prepareCUJFixture{
 			minBatteryRequirement: minimumBatteryRequirementForCUJs,
 		},
-		PreTestTimeout:  CPUStabilizationTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout + BatteryChargingTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -181,7 +181,7 @@ func init() {
 			minBatteryRequirement: minimumBatteryRequirementForCUJs,
 			skipCPUCooldown:       true,
 		},
-		PreTestTimeout:  CPUStabilizationTimeout,
+		PreTestTimeout:  BatteryChargingTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -1381,11 +1381,6 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		return
 	}
 
-	if f.skipCPUCooldown {
-		s.Log("Skipping CPU cooldown because of fixture")
-		return
-	}
-
 	if f.minBatteryRequirement > 0 {
 		if err := chargeBatteryCapacityBeforePowerTest(ctx, f.minBatteryRequirement); err != nil {
 			s.Fatal("Failed to meet minimum battery capacity before test: ", err)
@@ -1394,6 +1389,11 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		if err := chargeBatteryCapacityBeforePowerTest(ctx, minimumBatteryCapacity); err != nil {
 			testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
 		}
+	}
+
+	if f.skipCPUCooldown {
+		s.Log("Skipping CPU cooldown because of fixture")
+		return
 	}
 
 	// Drop host caches for predictable results.
@@ -1480,7 +1480,6 @@ func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts [
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	}
 }
