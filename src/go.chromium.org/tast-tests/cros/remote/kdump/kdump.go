@@ -23,15 +23,16 @@ import (
 const KexecCrashLoadedPath = "/sys/kernel/kexec_crash_loaded"
 
 const (
-	kdumpDir                           = "/var/spool/kdump"
+	// KdumpDir is the directory that contains kdump artifacts.
+	KdumpDir                           = "/var/spool/kdump"
 	procCmdlinePath                    = "/proc/cmdline"
 	cmdlineParamCrashKernel            = "crashkernel"
 	cmdlineParamCrashKexecPostNotifier = "crash_kexec_post_notifiers"
 )
 
-// listKdumpFiles lists the files in the kdump directory.
-func listKdumpFiles(ctx context.Context, d *dut.DUT) ([]string, error) {
-	out, err := d.Conn().CommandContext(ctx, "ls", "-1", kdumpDir).CombinedOutput()
+// ListKdumpFiles lists the files in the kdump directory.
+func ListKdumpFiles(ctx context.Context, d *dut.DUT) ([]string, error) {
+	out, err := d.Conn().CommandContext(ctx, "ls", "-1", KdumpDir).CombinedOutput()
 	if err != nil {
 		// It's okay if the directory doesn't exist.
 		if strings.Contains(string(out), "No such file or directory") {
@@ -40,22 +41,6 @@ func listKdumpFiles(ctx context.Context, d *dut.DUT) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to list kdump files")
 	}
 	return strings.Split(strings.TrimSpace(string(out)), "\n"), nil
-}
-
-// CountKdumpCoreFiles counts the number of core dump files in the kdump directory.
-func CountKdumpCoreFiles(ctx context.Context, d *dut.DUT) (int, error) {
-	files, err := listKdumpFiles(ctx, d)
-	if err != nil {
-		return 0, err
-	}
-
-	count := 0
-	for _, f := range files {
-		if strings.HasSuffix(f, ".core") {
-			count++
-		}
-	}
-	return count, nil
 }
 
 // getRootPartition returns root partition index by running `rootdev -s` and

@@ -6,6 +6,7 @@ package crash
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -107,10 +108,10 @@ func Kdump(ctx context.Context, s *testing.State) {
 	}
 
 	// Since there can be kdump files from other crashes before the test start,
-	// let's count the number of core files before the test.
-	beforeCore, err := kdump.CountKdumpCoreFiles(ctx, d)
+	// let's check the files before the test.
+	beforeFiles, err := kdump.ListKdumpFiles(ctx, d)
 	if err != nil {
-		s.Fatal("Failed to count core files before crash: ", err)
+		s.Fatal("Failed to list kdump files before crash: ", err)
 	}
 
 	// Force all cached file system data to be written to disk. Otherwise kernel
@@ -162,12 +163,46 @@ func Kdump(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Verifying kdump artifacts")
-	if afterCore, err := kdump.CountKdumpCoreFiles(ctx, d); err != nil {
-		s.Fatal("Failed to count core files after crash: ", err)
-	} else if afterCore != beforeCore+1 {
-		s.Errorf("Unexpected number of core files: got %d, want %d", afterCore, beforeCore+1)
+	afterFiles, err := kdump.ListKdumpFiles(ctx, d)
+	if err != nil {
+		s.Fatal("Failed to list kdump files after crash: ", err)
+	}
+	newFiles := stringSliceDifference(afterFiles, beforeFiles)
+	count := 0
+	for _, f := range newFiles {
+		if strings.HasSuffix(f, ".core") {
+			count++
+		}
+	}
+	if count != 1 {
+		s.Errorf("Unexpected number of new core files: got %d, want 1", count)
 	}
 
 	// TODO(b/453571009): Verify that console-ramoops was not overwritten by the
 	// kdump kernel.
+
+	// Remove the kdump artifact.
+	for _, f := range newFiles {
+		fullPath := filepath.Join(kdump.KdumpDir, f)
+		s.Logf("Removing %s for cleanup", fullPath)
+		if _, err := s.DUT().Conn().CommandContext(ctx, "rm", fullPath).Output(testexec.DumpLogOnError); err != nil {
+			s.Error("Failed to remove the kdump artifact for cleanup: ", err)
+		}
+	}
+}
+
+// stringSliceDifference returns elements in 'superset' that are not in
+// 'subset'. It assumes 'superset' contains all elements of 'subset'.
+func stringSliceDifference(superset, subset []string) []string {
+	m := make(map[string]bool)
+	for _, e := range subset {
+		m[e] = true
+	}
+	var diff []string
+	for _, e := range superset {
+		if !m[e] {
+			diff = append(diff, e)
+		}
+	}
+	return diff
 }
