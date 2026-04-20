@@ -14,6 +14,7 @@ import (
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -26,10 +27,6 @@ import (
 // game is the game app for testing.
 // playTime is the time to play the game and record power consumption.
 func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device, game GameApp, outDir, testName string, playTime time.Duration, discharge bool) (retErr error) {
-	if err := game.Install(ctx); err != nil {
-		return errors.Wrap(err, "failed to install Game")
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
@@ -48,6 +45,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device
 			testing.ContextLog(ctx, "Failed to uninstall game: ", err)
 		}
 	}(cleanupCtx)
+	if err := game.Install(ctx); err != nil {
+		return errors.Wrap(err, "failed to install Game")
+	}
 
 	testing.ContextLog(ctx, "Start setting up the power recorder")
 	const recordInterval = 5 * time.Second
@@ -58,11 +58,20 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device
 	if err := r.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "Cooldown failed")
 	}
-	if err := game.Launch(ctx); err != nil {
-		return errors.Wrap(err, "failed to launch game")
+	relaunchIfNeeded := func(ctx context.Context) error {
+		if game.IsLaunched() {
+			// Close the game to relaunch it.
+			if err := game.End(ctx); err != nil {
+				return errors.Wrap(err, "failed to end the game")
+			}
+		}
+		return game.Launch(ctx)
 	}
-	if err := game.EnterGameScene(ctx); err != nil {
-		return errors.Wrap(err, "failed to enter game scene")
+	if err := uiauto.Retry(3, uiauto.NamedCombine("launch and enter game scene",
+		relaunchIfNeeded,
+		game.EnterGameScene,
+	))(ctx); err != nil {
+		return err
 	}
 	// Take a screenshot to see it enter the game scene.
 	takeScreenshot(ctx, cr, outDir, "enter_game_scene")

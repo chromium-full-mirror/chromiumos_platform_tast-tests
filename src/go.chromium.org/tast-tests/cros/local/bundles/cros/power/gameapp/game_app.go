@@ -24,6 +24,8 @@ type GameApp interface {
 	// Launch launches the game app.
 	// It should be called after the game app is installed.
 	Launch(ctx context.Context) error
+	// IsLaunched returns whether the game app is launched.
+	IsLaunched() bool
 	// EnterGameScene enters the game scene.
 	// It should be called after the game app is launched.
 	EnterGameScene(ctx context.Context) error

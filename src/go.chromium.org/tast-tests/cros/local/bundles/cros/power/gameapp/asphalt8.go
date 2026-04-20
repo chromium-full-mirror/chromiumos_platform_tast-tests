@@ -72,6 +72,11 @@ func (as *Asphalt8) Launch(ctx context.Context) error {
 	return nil
 }
 
+// IsLaunched returns whether the Asphalt8 game app is launched.
+func (as *Asphalt8) IsLaunched() bool {
+	return as.launched
+}
+
 // EnterGameScene enters the game scene by keyboard.
 func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	kb := as.kb
@@ -132,5 +137,9 @@ func (as *Asphalt8) End(ctx context.Context) error {
 	if !as.launched {
 		return nil
 	}
-	return util.CloseApp(ctx, as.tconn, asphalt8PackageName)
+	if err := util.CloseApp(ctx, as.tconn, asphalt8PackageName); err != nil {
+		return err
+	}
+	as.launched = false
+	return nil
 }

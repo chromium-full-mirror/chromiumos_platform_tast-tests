@@ -78,6 +78,11 @@ func (s *SuperTuxKart) Launch(ctx context.Context) error {
 	return nil
 }
 
+// IsLaunched returns whether the SuperTuxKart game app is launched.
+func (s *SuperTuxKart) IsLaunched() bool {
+	return s.launched
+}
+
 // EnterGameScene enters the game scene by keyboard.
 func (s *SuperTuxKart) EnterGameScene(ctx context.Context) error {
 	const (
@@ -145,7 +150,11 @@ func (s *SuperTuxKart) End(ctx context.Context) error {
 	if !s.launched {
 		return nil
 	}
-	return util.CloseApp(ctx, s.tconn, superTuxKartPackageName)
+	if err := util.CloseApp(ctx, s.tconn, superTuxKartPackageName); err != nil {
+		return err
+	}
+	s.launched = false
+	return nil
 }
 
 // SetAPKURL sets the APK URL of SuperTuxKart.
