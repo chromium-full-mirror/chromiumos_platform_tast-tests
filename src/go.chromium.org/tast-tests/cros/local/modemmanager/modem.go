@@ -296,104 +296,113 @@ func (m *Modem) EnsureValidSIM(ctx context.Context, isStarfish bool) (*Modem, er
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to call GetProperties on modem")
 	}
+
 	primarySlot, err := props.GetUint32(mmconst.ModemPropertyPrimarySimSlot)
-	if isStarfish {
-		if err != nil {
-			return nil, errors.Wrap(err, "missing Modem.PrimarySimSlot property")
-		}
-		testing.ContextLog(ctx, "Primary SIM slot: ", primarySlot)
-		if primarySlot == 0 {
-			// for starfish setup in a single SIM scenario: nothing to do here.
-			return m, nil
-		}
+	// For non-starfish setups, primarySlot is used only as an optimization to avoid
+	// redundant slot switches. If the property is missing, we proceed with primarySlot=0,
+	// which simply means the switch will always be attempted for the first valid SIM found.
+	if isStarfish && err != nil {
+		return nil, errors.Wrap(err, "missing Modem.PrimarySimSlot property")
 	}
 
 	simSlots, err := props.GetObjectPaths(mmconst.ModemPropertySimSlots)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get simslots property")
 	}
+
 	if isStarfish {
-		if len(simSlots) == 0 {
-			// for starfish setup in a single SIM scenario: nothing to do here.
-			// shouldn't reach here.
-			return nil, errors.Errorf("unexpected number of simSlots: %d", len(simSlots))
-		}
-		if len(simSlots) != 2 {
-			// unknown SIM scenario: return error.
-			return nil, errors.Errorf("unsupported number of simSlots: %d", len(simSlots))
-		}
-	} else {
-		// b/185479169: L850 modems always return an empty array.
-		if len(simSlots) == 0 {
-			simPath, err := props.GetObjectPath(mmconst.ModemPropertySim)
-			if err != nil {
-				return nil, errors.Wrap(err, "missing sim property")
-			}
-			simSlots = append(simSlots, simPath)
-		}
+		return m.ensureValidSIMStarfish(ctx, primarySlot, simSlots)
 	}
-	var switchSlots bool = false
-	var targetSimSlot uint32
+	return m.ensureValidSIMStandard(ctx, primarySlot, simSlots, props)
+}
+
+// ensureValidSIMStandard handles SIM validation for standard setups.
+// It iterates through available slots and selects the first one with a valid SIM profile.
+func (m *Modem) ensureValidSIMStandard(ctx context.Context, primarySlot uint32, simSlots []dbus.ObjectPath, props *dbusutil.Properties) (*Modem, error) {
+	// b/185479169: L850 modems always return an empty simSlots array.
+	if len(simSlots) == 0 {
+		simPath, err := props.GetObjectPath(mmconst.ModemPropertySim)
+		if err != nil {
+			return nil, errors.Wrap(err, "missing sim property")
+		}
+		simSlots = append(simSlots, simPath)
+	}
 	for s, path := range simSlots {
 		slotIndex := uint32(s + 1)
-		if !isStarfish {
-			// For non-starfish setups, we check if the SIM in the current slot is valid
-			// (e.g. has a profile). If it is, we use this slot.
-			valid, err := m.isValidSIM(ctx, path)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to check if sim is valid")
-			}
-			if !valid {
-				continue
-			}
-			// If the current primary slot is already valid, no need to switch.
-			// For modems with a single slot, there is not need to try to switch
-			// slots.
-			// For L850(which also has a single slot), the primary slot is slot
-			// 0, which doesn't match the slot convention used by other modems,
-			// so we cannot switch.
-			if primarySlot == slotIndex || len(simSlots) < 2 {
+		// We check if the SIM in the current slot is valid (e.g. has a profile).
+		valid, err := m.isValidSIM(ctx, path)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to check if sim is valid")
+		}
+		if !valid {
+			continue
+		}
+		// If the current primary slot is already valid, no need to switch.
+		// For modems with a single slot, there is no need to try to switch
+		// slots.
+		// For L850(which also has a single slot), the primary slot is slot 0,
+		// which doesn't match the slot convention used by other modems, so we
+		// cannot switch.
+		if primarySlot == slotIndex || len(simSlots) < 2 {
+			return m, nil
+		}
+		// Switch to the first valid SIM found.
+		testing.ContextLog(ctx, "switching the primary slot to: ", slotIndex)
+		newm, err := m.SetPrimarySimSlot(ctx, slotIndex)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to set primary SIM slot: %d", slotIndex)
+		}
+		return newm, nil
+	}
+	return nil, errors.New("failed to validate SIM: modemmanager D-Bus object has no valid SIMs")
+}
+
+// ensureValidSIMStarfish handles SIM validation for Starfish setups.
+// It ensures that the physical SIM (PSIM) slot is active by switching away from eSIM slots.
+func (m *Modem) ensureValidSIMStarfish(ctx context.Context, primarySlot uint32, simSlots []dbus.ObjectPath) (*Modem, error) {
+	testing.ContextLog(ctx, "Primary SIM slot: ", primarySlot)
+	if primarySlot == 0 {
+		// for starfish setup in a single SIM scenario: nothing to do here.
+		return m, nil
+	}
+
+	if len(simSlots) == 0 { // This should not be reached as primarySlot == 0 is handled above.
+		return nil, errors.Errorf("unexpected number of simSlots: %d", len(simSlots))
+	}
+	if len(simSlots) != 2 {
+		return nil, errors.Errorf("unsupported number of simSlots: %d", len(simSlots))
+	}
+
+	for s, path := range simSlots {
+		slotIndex := uint32(s + 1)
+		if path == mmconst.EmptySlotPath {
+			continue
+		}
+		simProps, err := m.GetSimProperties(ctx, path)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to read sim properties in slot: %d", slotIndex)
+		}
+		if simProps == nil {
+			testing.ContextLog(ctx, "No SIM properties in slot: ", slotIndex)
+			continue
+		}
+		eid, err := simProps.GetString(mmconst.SimPropertySimEid)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read eid from sim")
+		}
+		// If the slot has an EID, it is an eSIM slot.
+		if eid != "" {
+			// If the current primary slot is NOT the eSIM slot, then it must be the
+			// physical slot (assuming a 2-slot modem), so we are good.
+			if primarySlot != slotIndex {
+				testing.ContextLog(ctx, "PSIM is already the primary slot: ", primarySlot)
 				return m, nil
 			}
-			targetSimSlot = slotIndex
-			switchSlots = true
-		} else {
-			// For starfish setups, we ensure that a physical SIM (PSIM) slot is active.
-			// Starfish devices are connected to the physical slot.
-			if path == mmconst.EmptySlotPath {
-				continue
+			// If the eSIM slot is primary, we switch to the other slot (the PSIM slot).
+			targetSimSlot := uint32(1)
+			if slotIndex == 1 {
+				targetSimSlot = 2
 			}
-			simProps, err := m.GetSimProperties(ctx, path)
-			if err != nil {
-				return nil, errors.Wrapf(err, "failed to read sim properties in slot: %d", slotIndex)
-			}
-			if simProps == nil {
-				testing.ContextLog(ctx, "No SIM properties in slot: ", slotIndex)
-				continue
-			}
-			eid, err := simProps.GetString(mmconst.SimPropertySimEid)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read eid from sim")
-			}
-			// If the slot has an EID, it is an eSIM slot.
-			if eid != "" {
-				// If the current primary slot is NOT the eSIM slot, then it must be the
-				// physical slot (assuming a 2-slot modem), so we are good.
-				if primarySlot != slotIndex {
-					testing.ContextLog(ctx, "PSIM is already the primary slot: ", primarySlot)
-					return m, nil
-				}
-				// If the eSIM slot is primary, we switch to the other slot (the PSIM slot).
-				if slotIndex == 1 {
-					targetSimSlot = 2
-				} else {
-					targetSimSlot = 1
-				}
-				switchSlots = true
-			}
-		}
-		// If a switch is required, perform it and return the new modem object.
-		if switchSlots {
 			testing.ContextLog(ctx, "switching the primary slot to: ", targetSimSlot)
 			newm, err := m.SetPrimarySimSlot(ctx, targetSimSlot)
 			if err != nil {
@@ -402,12 +411,8 @@ func (m *Modem) EnsureValidSIM(ctx context.Context, isStarfish bool) (*Modem, er
 			return newm, nil
 		}
 	}
-	// In starfish setups, if we didn't find an eSIM to switch away from,
-	// or if we didn't find any reason to switch, we just return the current modem.
-	if isStarfish {
-		return m, nil
-	}
-	return nil, errors.New("failed to create modem: modemmanager D-Bus object has no valid SIM's")
+	// If we didn't find an eSIM to switch away from, or no switch was needed.
+	return m, nil
 }
 
 // isValidSIM checks if a simPath has a connectable sim card.
