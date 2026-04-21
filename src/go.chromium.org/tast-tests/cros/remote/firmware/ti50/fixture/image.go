@@ -128,7 +128,7 @@ func AllTi50TestbedTypes() []ti50.TestbedType {
 
 // AllTi50ImageTypes returns all the ti50 image types.
 func AllTi50ImageTypes() []ImageType {
-	return []ImageType{SystemImage, SystemTestAutoImage, SystemTestAuto2Image, SystemTestAutoAImage}
+	return []ImageType{SystemImage, Ti50AImage, SystemTestAutoImage, SystemTestAuto2Image, SystemTestAutoAImage}
 }
 
 // ImageValue provides access to a image binary along with json configuration files.
