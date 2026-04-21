@@ -22,6 +22,7 @@ package tabswitchperf
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -421,8 +422,16 @@ func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.C
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, r.outDir, func() bool { return retErr != nil }, r.tconn, "split_view_ui_dump")
 
 	searchBar := nodewith.Name("Address and search bar").Role(role.TextField)
+
+	// As there are no remaining standalone tabs available for split view on the final
+	// tab, the page defaults to a Google Search page.
+	regexp := regexp.MustCompile("^Choose a tab|New Tab$")
+	splitView := nodewith.NameRegex(regexp).Role(role.Window).HasClass("WebContentsViewAura")
+
 	if err := uiauto.NamedCombine(fmt.Sprintf("Use URL %s to split new view", targetTabView.url),
 		r.kb.AccelAction("Ctrl+Alt+N"),
+		r.ui.WaitUntilExists(splitView),
+		r.ui.EnsureExistsFor(splitView, 3*time.Second),
 		r.ui.LeftClick(searchBar),
 		r.kb.AccelAction("Ctrl+A"),
 		r.kb.AccelAction("Backspace"),
@@ -431,12 +440,6 @@ func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.C
 		r.kb.AccelAction("Enter"),
 	)(ctx); err != nil {
 		return nil, err
-	}
-
-	// Prevent the last page from being redirected to a new tab—due to the lack of
-	// remaining standalone pages for split view—which may result in timing issues.
-	if err := r.waitUntilAllTabsLoaded(ctx, time.Minute); err != nil {
-		testing.ContextLog(ctx, "Some tabs are still in loading state, but proceeding with the test: ", err)
 	}
 
 	matcher := func(t *chrome.Target) bool {
