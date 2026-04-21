@@ -48,6 +48,7 @@ func init() {
 				hasARC: true,
 			},
 			ExtraSoftwareDeps: []string{"arc", "chrome"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Fixture:           "arcBooted.ehide",
 		}, {
 			Name: "with_arc_with_ipv4",
@@ -56,6 +57,7 @@ func init() {
 				hasARC:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc", "chrome"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Fixture:           "arcBooted.ehide",
 		}},
 	})

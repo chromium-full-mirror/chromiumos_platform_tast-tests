@@ -34,6 +34,7 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      7 * time.Minute,
 	})
 }

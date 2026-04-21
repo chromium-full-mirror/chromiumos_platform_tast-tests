@@ -53,6 +53,7 @@ func init() {
 					isWifi:            true,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 			}, {
 				Name: "multicast_lock_not_held_ethernet",
 				Val: multicastForwarderTestCase{
@@ -60,6 +61,7 @@ func init() {
 					isWifi:            false,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 			}, {
 				Name: "multicast_lock_held_wifi",
 				Val: multicastForwarderTestCase{
@@ -67,6 +69,7 @@ func init() {
 					isWifi:            true,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 			}, {
 				Name: "multicast_lock_held_ethernet",
 				Val: multicastForwarderTestCase{
@@ -74,6 +77,7 @@ func init() {
 					isWifi:            false,
 				},
 				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 			},
 		},
 	})

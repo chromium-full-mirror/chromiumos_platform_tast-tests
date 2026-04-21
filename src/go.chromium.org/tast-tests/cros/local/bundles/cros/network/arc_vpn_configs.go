@@ -30,6 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "vpnEnvWithArcBooted",
 		SoftwareDeps: []string{"arc", "wireguard"},
+		HardwareDeps: arc.ArcAppHwDeps,
 	})
 }
 

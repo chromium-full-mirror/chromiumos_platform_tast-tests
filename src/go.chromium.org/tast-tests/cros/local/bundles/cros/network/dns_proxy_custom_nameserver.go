@@ -28,6 +28,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "arc", "no_kernel_upstream"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Data:         []string{digExecutable()},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{

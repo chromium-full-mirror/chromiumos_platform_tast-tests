@@ -31,6 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:cq-medium"},
 		// "no_qemu" disables the test on betty (this test is not compatible with the qemu virtual network setup).
 		SoftwareDeps: []string{"chrome", "arc", "no_qemu"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBooted",
 	})
 }

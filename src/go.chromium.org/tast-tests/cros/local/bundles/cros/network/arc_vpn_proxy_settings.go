@@ -44,6 +44,7 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Params: []testing.Param{
 			{
 				Name: "manual_proxy",

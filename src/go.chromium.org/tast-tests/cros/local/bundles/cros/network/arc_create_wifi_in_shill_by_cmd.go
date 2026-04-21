@@ -45,6 +45,7 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
 			{

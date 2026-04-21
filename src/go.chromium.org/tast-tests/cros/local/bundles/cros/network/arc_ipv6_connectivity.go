@@ -35,6 +35,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium", "group:hw_agnostic"},
 		SoftwareDeps: []string{"arc", "chrome"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/qos"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
@@ -54,6 +55,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "wifi", "arc", "no_android_p"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      10 * time.Minute,
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Params: []testing.Param{

@@ -30,6 +30,7 @@ func init() {
 		BugComponent: "b:882467",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome", "crosvm_swap"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBootedBoostedVmmSwap",
 		Timeout:      5 * time.Minute,
 	})

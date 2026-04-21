@@ -59,6 +59,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Params: []testing.Param{
 			{
 				Name: "included",

@@ -51,6 +51,7 @@ func init() {
 			Val:               loseDHCPTestCaseARC,
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 		}, {
 			Name:              "crostini",
 			Val:               loseDHCPTestCaseCrostini,

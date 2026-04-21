@@ -46,6 +46,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBooted.ehide",
 		SoftwareDeps: []string{"arc", "no_android_p"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Params: []testing.Param{
 			{
 				Name: "tcp4",

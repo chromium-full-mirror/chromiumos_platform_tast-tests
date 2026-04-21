@@ -41,6 +41,7 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Params: []testing.Param{{
 			Name: "allow",
 			Val: passpointARCDialogTestParams{

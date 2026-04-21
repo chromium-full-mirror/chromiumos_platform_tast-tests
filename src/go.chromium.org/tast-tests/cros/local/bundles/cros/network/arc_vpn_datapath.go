@@ -37,6 +37,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 	})
 }
 

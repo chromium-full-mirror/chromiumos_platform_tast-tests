@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcwifi"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/certutil"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/eap"
@@ -44,6 +45,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",

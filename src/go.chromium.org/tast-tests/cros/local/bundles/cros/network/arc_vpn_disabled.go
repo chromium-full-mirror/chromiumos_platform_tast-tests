@@ -8,8 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
-	"go.chromium.org/tast-tests/cros/local/network/arc"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
@@ -25,6 +26,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "vpnEnvWithArcBooted",
 		SoftwareDeps: []string{"arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 	})
 }
 
@@ -39,7 +41,7 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 
 	// Save the ARC network dumpsys as close to the time of error as possible, in case
 	// further cleanup affects the network state.
-	handler := arc.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
+	handler := arcnet.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
 	s.AttachErrorHandlers(handler, handler)
 
 	if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
@@ -75,7 +77,7 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, false); err != nil {
 		s.Fatalf("Failed to stop %s: %v", arcvpn.FacadeVPNSvc, err)
 	}
-	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err == nil {
+	if err := arcnet.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err == nil {
 		s.Fatalf("Expected unable to ping %s from ARC over 'vpn', but was reachable", conn.Server.OverlayIPv4)
 	}
 }

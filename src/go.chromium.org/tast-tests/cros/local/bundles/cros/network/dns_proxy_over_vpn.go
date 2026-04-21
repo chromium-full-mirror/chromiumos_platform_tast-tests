@@ -73,6 +73,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Fixture:           "arcBooted",
 		}, {
 			Name: "arc_doh_automatic",
@@ -81,6 +82,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Fixture:           "arcBooted",
 		}, {
 			Name: "arc_doh_always_on",
@@ -89,6 +91,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Fixture:           "arcBooted",
 		}, {
 			Name: "crostini_doh_off",
@@ -148,6 +151,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {
@@ -157,6 +161,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {
@@ -166,6 +171,7 @@ func init() {
 				arc:  true,
 			},
 			ExtraSoftwareDeps: []string{"arc"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraAttr:         []string{"informational"},
 			Fixture:           "arcBootedWithRootNsDnsProxy",
 		}, {

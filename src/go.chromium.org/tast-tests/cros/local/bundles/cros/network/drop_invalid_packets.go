@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/socketutil"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -36,6 +37,7 @@ func init() {
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
+		HardwareDeps: arc.ArcAppHwDeps,
 	})
 }
 
