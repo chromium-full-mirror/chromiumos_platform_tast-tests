@@ -27,6 +27,7 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

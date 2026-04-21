@@ -27,13 +27,13 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBootedWithAllowAdbRoot",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			Name: "vm_x86_64",
 			// TODO(b/301347001): Enable this test for ARC T+.
 			ExtraSoftwareDeps: []string{"android_vm_t", "amd64"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraData: []string{
 				"VtsAidlKeyMintTargetTest_x86_64",
 			},

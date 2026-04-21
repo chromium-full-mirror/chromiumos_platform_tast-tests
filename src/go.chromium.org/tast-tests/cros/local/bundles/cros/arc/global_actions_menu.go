@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"chrome", "android_vm"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      3 * time.Minute,
 	})
 }

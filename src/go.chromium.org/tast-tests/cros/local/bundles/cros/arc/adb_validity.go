@@ -50,18 +50,21 @@ func init() {
 				Name:              "vm",
 				Fixture:           "arcBooted",
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			},
 			{
 				Name:              "fieldtrial_testing_config_off_vm",
 				Fixture:           "arcBooted.fieldtrial_testing_config_off",
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				ExtraAttr:         []string{"group:mainline", "informational"},
 			},
 			{
 				Name:              "fieldtrial_testing_config_on_vm",
 				Fixture:           "arcBooted.fieldtrial_testing_config_on",
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
 			}},
 	})

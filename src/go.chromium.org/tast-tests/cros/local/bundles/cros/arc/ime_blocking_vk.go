@@ -35,6 +35,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 		}},
 		HardwareDeps: hwdep.D(
 			// Test is failing on dooly b/187069593.

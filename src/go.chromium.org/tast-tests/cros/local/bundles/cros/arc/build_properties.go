@@ -47,6 +47,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val: buildPropertiesTestParameters{
 				arcBootType:  "vendor.arc.boot_type",
 				hardwareType: "bertha",

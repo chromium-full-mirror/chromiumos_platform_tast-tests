@@ -83,6 +83,7 @@ func init() {
 				clamshellWindowStateTests,
 			},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Timeout:           4 * time.Minute,
 			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {

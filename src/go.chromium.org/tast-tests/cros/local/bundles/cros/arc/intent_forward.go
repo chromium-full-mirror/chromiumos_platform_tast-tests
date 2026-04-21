@@ -28,6 +28,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		Params: []testing.Param{{

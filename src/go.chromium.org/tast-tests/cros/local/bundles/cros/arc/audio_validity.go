@@ -42,6 +42,7 @@ func init() {
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBooted",
 			},
 			{
@@ -60,6 +61,7 @@ func init() {
 					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBooted",
 			},
 
@@ -78,6 +80,7 @@ func init() {
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBootedWithFieldTrialConfigOff",
 			},
 			{
@@ -96,6 +99,7 @@ func init() {
 					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBootedWithFieldTrialConfigOff",
 			},
 
@@ -114,6 +118,7 @@ func init() {
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBootedWithFieldTrialConfigOn",
 			},
 			{
@@ -132,6 +137,7 @@ func init() {
 					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
 				Fixture:           "arcBootedWithFieldTrialConfigOn",
 			},
 		},

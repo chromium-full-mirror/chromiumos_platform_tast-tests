@@ -29,6 +29,7 @@ func init() {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 		}},
 	})
 }

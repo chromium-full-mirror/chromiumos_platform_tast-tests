@@ -30,11 +30,11 @@ func init() {
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 60*time.Second,
 		Fixture:      "arcBootedWithoutUIAutomator",
 		SoftwareDeps: []string{"android_vm_t", "chrome", "no_qemu"},
+		HardwareDeps: arc.ArcAppHwDeps,
 		VarDeps:      []string{},
 		Params: []testing.Param{{
 			Name:              "vm_x86_64",
 			ExtraSoftwareDeps: []string{"amd64"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			ExtraData: []string{
 				"GtsGmsCoreSecurityTestApp_x86_64.apk",
 			},
