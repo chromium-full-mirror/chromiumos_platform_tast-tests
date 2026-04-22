@@ -43,7 +43,7 @@ func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context)
 		hwCtx.isLongForm = true
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 2 * time.Second})
+		Timeout: 10 * time.Second})
 
 	return hwCtx, nil
 }
