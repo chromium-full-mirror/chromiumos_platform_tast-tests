@@ -26,9 +26,13 @@ func init() {
 		Contacts:     []string{"chromeos-engprod-syd@google.com", "alvinjia@google.com", "mattlui@google.com"},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      chrome.LoginTimeout + 2*time.Minute,
+		HardwareDeps: hwdep.D(
+			hwdep.InternalDisplay(),
+			// Some space is required to store a recorded video file
+			hwdep.MinStorage(16),
+		),
+		Attr:    []string{"group:mainline", "group:hw_agnostic"},
+		Timeout: chrome.LoginTimeout + 2*time.Minute,
 	})
 }
 
