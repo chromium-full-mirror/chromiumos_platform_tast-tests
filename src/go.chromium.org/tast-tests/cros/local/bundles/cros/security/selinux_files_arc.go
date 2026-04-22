@@ -40,6 +40,7 @@ func init() {
 			Name:              "arcvm_user",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val:               "arcvm-user",
 		}},
 	})
