@@ -4,7 +4,10 @@
 
 package cujrecorder
 
-import "go.chromium.org/tast-tests/cros/common/perf"
+import (
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
+)
 
 // CUJAshCommonMetricConfigs returns metrics which are required to be
 // collected by all CUJ tests from the Ash process only. This function
@@ -161,16 +164,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 				0: perf.BiggerIsBetter,
 			},
 		),
-		NewEnumCustomMetricConfig("Viz.DisplayCompositor.OverlayStrategy",
-			map[int64]string{
-				0: "Unknown",
-				1: "NoStrategyUsed",
-				2: "Fullscreen",
-				3: "SingleOnTop",
-				4: "Underlay",
-				5: "UnderlayCast",
-				6: "NoStrategyAllFail",
-				7: "NoStrategyFailMin"},
+		NewEnumCustomMetricConfig(metrics.OverlayStrategyMetric,
+			metrics.OverlayStrategyVariants,
 			nil),
 	)
 }

@@ -347,7 +347,9 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
-	r.RegisterMetrics(pm.NewVideoFpsMetrics(conn))
+	r.RegisterMetrics(
+		pm.NewVideoFpsMetrics(conn),
+		pm.NewHistogramEnumMetric(tconn, pm.OverlayStrategyMetric, pm.OverlayStrategyVariants, false /* isTimelineMetric */))
 
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

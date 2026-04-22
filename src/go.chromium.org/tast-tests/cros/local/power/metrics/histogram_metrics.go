@@ -41,10 +41,27 @@ type histogramMetadata struct {
 	direction perf.Direction
 }
 
+// OverlayStrategyMetric is the metric name of the video overlay strategy.
+const OverlayStrategyMetric = "Viz.DisplayCompositor.OverlayStrategy"
+
 // A map of supported histogram name to {unit, direction}
 var validHistogramsMap = map[string]histogramMetadata{
 	"EventLatency.KeyPressed.TotalLatency":   {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
 	"EventLatency.MousePressed.TotalLatency": {cp.HistogramLatencyMetricTypeUnit, perf.SmallerIsBetter},
+	OverlayStrategyMetric:                    {cp.HistogramOverlayStrategyMetricTypeUnit, perf.SmallerIsBetter},
+}
+
+// OverlayStrategyVariants maps the enum values of Viz.DisplayCompositor.OverlayStrategy
+// to their string representations.
+var OverlayStrategyVariants = map[int64]string{
+	0: "Unknown",
+	1: "NoStrategyUsed",
+	2: "Fullscreen",
+	3: "SingleOnTop",
+	4: "Underlay",
+	5: "UnderlayCast",
+	6: "NoStrategyAllFail",
+	7: "NoStrategyFailMin",
 }
 
 // NewHistogramMetrics creates the struct to store Chrome histogram metrics.
@@ -209,16 +226,128 @@ func (v *HistogramAverageMetrics) Stop(ctx context.Context, values *perf.Values)
 	return v.snapshot(ctx, values)
 }
 
+// HistogramEnumMetric is a timeline data source implementation used to record
+// histogram stats for histograms with enum values. It reuses some
+// HistogramMetrics implementation by embedding it.
+// This struct only supports one histogram per instance.
+type HistogramEnumMetric struct {
+	*HistogramMetrics
+	// variants maps the enum value to the variants.
+	variants map[int64]string
+	// isTimelineMetric determines how the metric will be collected.
+	// When true, the metric will be collected every interval.
+	// When false, the metric will be collected once at the end of the measurement.
+	isTimelineMetric bool
+}
+
+// Assert that HistogramEnumMetric can be used in perf.Timeline.
+var _ perf.TimelineDatasource = &HistogramEnumMetric{}
+
+// NewHistogramEnumMetric creates a timeline data source that records a Chrome
+// histogram with enum values.
+func NewHistogramEnumMetric(tconn *chrome.TestConn, name string, variants map[int64]string, isTimelineMetric bool) *HistogramEnumMetric {
+	return newHistogramEnumMetricWithLabel(tconn, name, variants, "histogram metrics", isTimelineMetric)
+}
+
+// newHistogramEnumMetricWithLabel creates the struct to store Chrome histogram
+// metrics with enum values, and name the instance with the given label.
+func newHistogramEnumMetricWithLabel(tconn *chrome.TestConn, name string, variants map[int64]string, label string, isTimelineMetric bool) *HistogramEnumMetric {
+	return &HistogramEnumMetric{
+		HistogramMetrics: newHistogramMetricsWithLabel(tconn, []string{name}, label),
+		variants:         variants,
+		isTimelineMetric: isTimelineMetric,
+	}
+}
+
+// Setup initializes metrics for each enum variant.
+func (m *HistogramEnumMetric) Setup(ctx context.Context, prefix, intervalName string) error {
+	if err := metrics.ClearHistogramTransferFile(); err != nil {
+		testing.ContextLog(ctx, "Failed to clear histogram transfer file: ", err)
+	}
+	for _, variant := range m.variants {
+		metric := perf.Metric{
+			Multiple: m.isTimelineMetric,
+		}
+		if err := setUpMetricWithVariant(prefix, m.names[0], variant, &metric); err != nil {
+			return err
+		}
+		m.metrics[variant] = metric
+	}
+	return nil
+}
+
+// Start logs the start of histogram stats tracker.
+func (m *HistogramEnumMetric) Start(ctx context.Context) error {
+	return m.HistogramMetrics.Start(ctx)
+}
+
+// Snapshot takes one snapshot of histogram stats for each enum variant if it
+// is a timeline metric.
+func (m *HistogramEnumMetric) Snapshot(ctx context.Context, values *perf.Values) error {
+	if m.isTimelineMetric {
+		return m.snapshot(ctx, values)
+	}
+	return nil
+}
+
+// Stop logs the stop of histogram stats tracker and makes a snapshot
+// if it is not a timeline metric.
+func (m *HistogramEnumMetric) Stop(ctx context.Context, values *perf.Values) error {
+	testing.ContextLogf(ctx, "Stop tracking %s stats", m.label)
+	// No need to make an extra snapshot for timeline metrics.
+	if m.isTimelineMetric {
+		return nil
+	}
+	return m.snapshot(ctx, values)
+}
+
+func (m *HistogramEnumMetric) snapshot(ctx context.Context, values *perf.Values) error {
+	const expectedHistogramNum = 1
+	newHists, err := metrics.GetHistograms(ctx, m.tconn, m.names)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get histograms %v", m.names)
+	}
+	diffs, err := histogram.DiffHistograms(m.lastHists, newHists)
+	if err != nil {
+		return errors.Wrap(err, "failed to diff histogram")
+	} else if len(diffs) != expectedHistogramNum {
+		return errors.Errorf("unexpected histogram diff length, got %d, want %d", len(diffs), expectedHistogramNum)
+	}
+
+	for _, bucket := range diffs[0].Buckets {
+		enum := bucket.Min
+		variant, ok := m.variants[enum]
+		if !ok {
+			return errors.Errorf("failed to get variant name with enum %d", enum)
+		}
+		metric, ok := m.metrics[variant]
+		if !ok {
+			return errors.Errorf("failed to get metric with variant %s", variant)
+		}
+		if metric.Multiple {
+			values.Append(metric, float64(bucket.Count))
+		} else {
+			values.Set(metric, float64(bucket.Count))
+		}
+	}
+	m.lastHists = newHists
+	return nil
+}
+
 // setUpMetric does histogram validation and sets up the metric name, unit and
 // direction.
 func setUpMetric(prefix, name string, metric *perf.Metric) error {
+	return setUpMetricWithVariant(prefix, name, "", metric)
+}
+
+func setUpMetricWithVariant(prefix, name, variant string, metric *perf.Metric) error {
 	if _, ok := validHistogramsMap[name]; !ok {
 		return errors.Errorf("unexpected histogram name %s", name)
 	}
 	// Remove "." from the name because power_dashboard would confuse that with metric type.
 	nameInChart := strings.ReplaceAll(name, ".", "")
 
-	metric.Name = prefix + cp.HistogramMetricType + nameInChart
+	metric.Name = prefix + cp.HistogramMetricType + nameInChart + variant
 	metric.Unit = validHistogramsMap[name].unit
 	metric.Direction = validHistogramsMap[name].direction
 	return nil
