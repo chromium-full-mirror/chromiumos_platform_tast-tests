@@ -27,6 +27,7 @@ const (
 	[global]
 	server_name = "powertest.localdomain"
 	database_path = "%s"
+	address = "0.0.0.0"
 	port = %d
 	allow_registration = true
 	yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse = true
@@ -94,7 +95,7 @@ func (t *TuwunelServer) Initiate(ctx context.Context) (retErr error) {
 	}()
 
 	// Find an available port and keep the listener alive to reserve the port for the server.
-	listener, err := net.Listen("tcp", "localhost:0")
+	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return errors.Wrap(err, "failed to find an available port")
 	}
