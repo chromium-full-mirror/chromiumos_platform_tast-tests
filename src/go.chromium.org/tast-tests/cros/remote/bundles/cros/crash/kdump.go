@@ -6,7 +6,6 @@ package crash
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -180,15 +179,6 @@ func Kdump(ctx context.Context, s *testing.State) {
 
 	// TODO(b/453571009): Verify that console-ramoops was not overwritten by the
 	// kdump kernel.
-
-	// Remove the kdump artifact.
-	for _, f := range newFiles {
-		fullPath := filepath.Join(kdump.KdumpDir, f)
-		s.Logf("Removing %s for cleanup", fullPath)
-		if _, err := s.DUT().Conn().CommandContext(ctx, "rm", fullPath).Output(testexec.DumpLogOnError); err != nil {
-			s.Error("Failed to remove the kdump artifact for cleanup: ", err)
-		}
-	}
 }
 
 // stringSliceDifference returns elements in 'superset' that are not in

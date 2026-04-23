@@ -497,6 +497,7 @@ func SetUpCrashTest(ctx context.Context, opts ...Option) error {
 		{SystemCrashDir, systemCrashStash},
 		{LocalCrashDir, localCrashStash},
 		{ClobberCrashDir, clobberCrashStash},
+		{KdumpCrashDir, kdumpCrashStash},
 	}
 
 	p := setUpParams{
@@ -701,6 +702,12 @@ func setUpCrashTest(ctx context.Context, p *setUpParams) (retErr error) {
 		return errors.Wrapf(err, "could not make directory %v", p.inProgDir)
 	}
 
+	// Always create the directory regardless of the feature to simplify
+	// code logic.
+	if err := os.MkdirAll(KdumpCrashDir, 0775); err != nil {
+		testing.ContextLogf(ctx, "Failed to create kdump directory %s: %v", KdumpCrashDir, err)
+	}
+
 	if p.setConsent {
 		if err := SetConsent(ctx, p.chrome, true); err != nil {
 			return errors.Wrap(err, "couldn't enable metrics consent")
@@ -777,6 +784,24 @@ func cleanUpStashDir(stashDir, realDir string) error {
 	return nil
 }
 
+// cleanUpKdumpDir removes all the files in the kdump directory.
+func cleanUpKdumpDir() error {
+	files, err := os.ReadDir(KdumpCrashDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return errors.Wrapf(err, "failed to read kdump directory %s", KdumpCrashDir)
+	}
+	for _, f := range files {
+		filePath := filepath.Join(KdumpCrashDir, f.Name())
+		if err := os.Remove(filePath); err != nil {
+			return errors.Wrapf(err, "failed to remove kdump file %s", filePath)
+		}
+	}
+	return nil
+}
+
 // tearDownOption is a self-referential function can be used to configure crash tests.
 // See https://commandcenter.blogspot.com.au/2014/01/self-referential-functions-and-design.html
 // for details about this pattern.
@@ -792,6 +817,7 @@ func TearDownCrashTest(ctx context.Context, opts ...tearDownOption) error {
 		{SystemCrashDir, systemCrashStash},
 		{LocalCrashDir, localCrashStash},
 		{ClobberCrashDir, clobberCrashStash},
+		{KdumpCrashDir, kdumpCrashStash},
 	}
 
 	p := tearDownParams{
@@ -882,6 +908,16 @@ func tearDownCrashTest(ctx context.Context, p *tearDownParams) error {
 		testing.ContextLog(ctx, "Couldn't disable crash filtering: ", err)
 		if firstErr == nil {
 			firstErr = errors.Wrap(err, "couldn't disable crash filtering")
+		}
+	}
+
+	// Cleanup kdump artifacts to avoid uploading them as test results. This
+	// is expected to exist only if the kdump feature is enabled. Otherwise,
+	// this is a no-op.
+	if err := cleanUpKdumpDir(); err != nil {
+		testing.ContextLog(ctx, "Failed to cleanup kdump files: ", err)
+		if firstErr == nil {
+			firstErr = errors.Wrap(err, "couldn't clean up kdump dir")
 		}
 	}
 

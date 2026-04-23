@@ -40,7 +40,11 @@ func ListKdumpFiles(ctx context.Context, d *dut.DUT) ([]string, error) {
 		}
 		return nil, errors.Wrap(err, "failed to list kdump files")
 	}
-	return strings.Split(strings.TrimSpace(string(out)), "\n"), nil
+	trimmed := strings.TrimSpace(string(out))
+	if trimmed == "" {
+		return nil, nil
+	}
+	return strings.Split(trimmed, "\n"), nil
 }
 
 // getRootPartition returns root partition index by running `rootdev -s` and

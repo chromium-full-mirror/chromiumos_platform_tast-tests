@@ -61,6 +61,10 @@ const (
 	ClobberCrashDir = "/mnt/stateful_partition/reboot_vault/crash"
 	// clobberCrashStash is a directory used to stash pre-existing crash reports after an FS clobber. Used in crash tests.
 	clobberCrashStash = "/mnt/stateful_partition/reboot_vault/crash.real"
+	// KdumpCrashDir is a directory where crash dumps go when the kdump feature is enabled.
+	KdumpCrashDir = "/var/spool/kdump"
+	// kdumpCrashStash is a directory used to stash pre-existing crash dumps. Used in crash tests.
+	kdumpCrashStash = "/var/spool/kdump.real"
 	// FilterInPath is the path to the filter-in file.
 	FilterInPath = "/run/crash_reporter/filter-in"
 	// FilterOutPath is the path to the filter-out file.
