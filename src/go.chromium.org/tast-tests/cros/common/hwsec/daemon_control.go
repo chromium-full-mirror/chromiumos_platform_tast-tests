@@ -287,16 +287,16 @@ func (dc *DaemonController) waitForDBusService(ctx context.Context, info *Daemon
 	defer cancel()
 
 	name := info.DBusName
-	if _, err := dc.r.Run(ctx, "gdbus", "wait", "--system", name); err != nil {
-		return errors.Wrapf(err, "failed to wait for D-Bus service %s", name)
+	if out, err := dc.r.RunWithCombinedOutput(ctx, "gdbus", "wait", "--system", name); err != nil {
+		return errors.Wrapf(err, "failed to wait for D-Bus service %s: %s", name, out)
 	}
 	return nil
 }
 
 // Start starts a daemon and waits until the D-Bus interface is responsive if it has D-Bus interface.
 func (dc *DaemonController) Start(ctx context.Context, info *DaemonInfo) error {
-	if _, err := dc.r.Run(ctx, "start", info.DaemonName); err != nil {
-		return errors.Wrapf(err, "failed to start %s", info.Name)
+	if out, err := dc.r.RunWithCombinedOutput(ctx, "start", info.DaemonName); err != nil {
+		return errors.Wrapf(err, "failed to start %s: %s", info.Name, out)
 	}
 	if info.HasDBus {
 		return dc.waitForDBusService(ctx, info)
@@ -306,16 +306,16 @@ func (dc *DaemonController) Start(ctx context.Context, info *DaemonInfo) error {
 
 // Stop stops a daemon.
 func (dc *DaemonController) Stop(ctx context.Context, info *DaemonInfo) error {
-	if _, err := dc.r.Run(ctx, "stop", info.DaemonName); err != nil {
-		return errors.Wrapf(err, "failed to stop %s", info.Name)
+	if out, err := dc.r.RunWithCombinedOutput(ctx, "stop", info.DaemonName); err != nil {
+		return errors.Wrapf(err, "failed to stop %s: %s", info.Name, out)
 	}
 	return nil
 }
 
 // Restart restarts a daemon and waits until the D-Bus interface is responsive if it has D-Bus interface.
 func (dc *DaemonController) Restart(ctx context.Context, info *DaemonInfo) error {
-	if _, err := dc.r.Run(ctx, "restart", info.DaemonName); err != nil {
-		return errors.Wrapf(err, "failed to restart %s", info.Name)
+	if out, err := dc.r.RunWithCombinedOutput(ctx, "restart", info.DaemonName); err != nil {
+		return errors.Wrapf(err, "failed to restart %s: %s", info.Name, out)
 	}
 	if info.HasDBus {
 		return dc.waitForDBusService(ctx, info)
@@ -343,8 +343,8 @@ func (dc *DaemonController) TryStop(ctx context.Context, info *DaemonInfo) error
 		return errors.Wrapf(err, "failed to get the status of %s", info.Name)
 	}
 	if goal == startGoal {
-		if _, err := dc.r.Run(ctx, "stop", info.DaemonName); err != nil {
-			return errors.Wrapf(err, "failed to stop %s", info.Name)
+		if out, err := dc.r.RunWithCombinedOutput(ctx, "stop", info.DaemonName); err != nil {
+			return errors.Wrapf(err, "failed to stop %s: %s", info.Name, out)
 		}
 	}
 	return nil
