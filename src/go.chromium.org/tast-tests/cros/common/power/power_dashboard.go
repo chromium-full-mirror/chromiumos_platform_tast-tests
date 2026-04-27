@@ -250,9 +250,9 @@ func CreatePowerLogsAndUpdatePerfValues(ctx context.Context, testName string, va
 	return powerLogs, nil
 }
 
-// PowerDict stores the power metrics that are collected during a test and exported to the dashboard.
-// TODO: b/324894902 - Use PowerDict instead of map[string]interface{} so that the return value is more direct.
-type PowerDict struct {
+// Dict stores the power metrics that are collected during a test and exported to the dashboard.
+// TODO: b/324894902 - Use Dict instead of map[string]interface{} so that the return value is more direct.
+type Dict struct {
 	// SampleCount indicates how many time each metric has been collected.
 	SampleCount int `json:"sample_count"`
 	// SampleDuration is the time interval between two data points.
@@ -269,8 +269,8 @@ type PowerDict struct {
 	UnitMap map[string]string `json:"unit"`
 }
 
-func newPowerDict() *PowerDict {
-	return &PowerDict{
+func newPowerDict() *Dict {
+	return &Dict{
 		Checkpoint:      [][]string{},
 		InnerDataMap:    make(map[string][]float64),
 		InnerAverageMap: make(map[string]float64),
@@ -279,19 +279,19 @@ func newPowerDict() *PowerDict {
 	}
 }
 
-func convertPowerDict(p *PowerDict) map[string]interface{} {
+func convertPowerDict(d *Dict) map[string]interface{} {
 	powerDictMap := map[string]interface{}{
-		"sample_count":    p.SampleCount,
-		"sample_duration": p.SampleDuration,
-		"data":            p.InnerDataMap,
-		"average":         p.InnerAverageMap,
-		"type":            p.TypeMap,
-		"unit":            p.UnitMap,
+		"sample_count":    d.SampleCount,
+		"sample_duration": d.SampleDuration,
+		"data":            d.InnerDataMap,
+		"average":         d.InnerAverageMap,
+		"type":            d.TypeMap,
+		"unit":            d.UnitMap,
 	}
 	// Because the server will return an error if the checkpoint is empty,
 	// "checkpoint" field is added to the powerDictMap only if the slice is not empty.
-	if len(p.Checkpoint) > 0 {
-		powerDictMap["checkpoint"] = p.Checkpoint
+	if len(d.Checkpoint) > 0 {
+		powerDictMap["checkpoint"] = d.Checkpoint
 	}
 	return powerDictMap
 }
@@ -414,21 +414,21 @@ func convertPerfValuesToPowerDicts(ctx context.Context, values *perf.Values, che
 	return powerDicts, start, nil
 }
 
-func handleTimelineData(ctx context.Context, values *perf.Values, checkpoints *perf.Checkpoints, powerDict *PowerDict) error {
+func handleTimelineData(ctx context.Context, values *perf.Values, checkpoints *perf.Checkpoints, dict *Dict) error {
 	// TODO: b/316820383 - power dashboard should support multiple timelines.
-	if value, ok := powerDict.InnerDataMap["t"]; ok {
+	if value, ok := dict.InnerDataMap["t"]; ok {
 
 		var sampleCount = len(value)
-		powerDict.SampleCount = sampleCount
+		dict.SampleCount = sampleCount
 		if sampleCount > 1 {
 			firsTimestamp := value[0]
 			lastTimestamp := value[sampleCount-1]
-			powerDict.SampleDuration = (lastTimestamp - firsTimestamp) / (float64(sampleCount) - 1)
+			dict.SampleDuration = (lastTimestamp - firsTimestamp) / (float64(sampleCount) - 1)
 		} else if sampleCount > 0 {
 			// When sampleCount == 1, sample_duration may be wrong
 			// and the power dashboard will only show 1 data point.
 			lastTimestamp := value[sampleCount-1]
-			powerDict.SampleDuration = lastTimestamp / float64(sampleCount)
+			dict.SampleDuration = lastTimestamp / float64(sampleCount)
 		}
 		// checkpointsList is list of lists, where each list contains the
 		// Checkpoint names that are on for the corresponding timestamp.
@@ -437,66 +437,66 @@ func handleTimelineData(ctx context.Context, values *perf.Values, checkpoints *p
 			return errors.Wrap(err, "unable to process the checkpoints for power_log.json")
 		}
 		if checkpointsList != nil {
-			powerDict.Checkpoint = checkpointsList
+			dict.Checkpoint = checkpointsList
 		}
 	}
 
 	// Check if package-0 is collected first because `rapl` is not supported on all platforms.
-	if _, ok := powerDict.InnerDataMap[Package0]; ok && len(powerDict.InnerDataMap["system"]) == len(powerDict.InnerDataMap[Package0]) {
-		powerDict.InnerDataMap["non_SoC"], powerDict.InnerAverageMap["non_SoC"] =
-			getNonSocSubsystemPowerData(ctx, powerDict.InnerDataMap, powerDict.InnerAverageMap)
-		powerDict.TypeMap["non_SoC"] = "power"
-		powerDict.UnitMap["non_SoC"] = PowerRelatedMetricTypeUnit
+	if _, ok := dict.InnerDataMap[Package0]; ok && len(dict.InnerDataMap["system"]) == len(dict.InnerDataMap[Package0]) {
+		dict.InnerDataMap["non_SoC"], dict.InnerAverageMap["non_SoC"] =
+			getNonSocSubsystemPowerData(ctx, dict.InnerDataMap, dict.InnerAverageMap)
+		dict.TypeMap["non_SoC"] = "power"
+		dict.UnitMap["non_SoC"] = PowerRelatedMetricTypeUnit
 		values.Append(perf.Metric{
 			Name:     PowerRelatedMetricType + "non_SoC",
 			Unit:     PowerRelatedMetricTypeUnit,
 			Multiple: true,
-		}, powerDict.InnerDataMap["non_SoC"]...)
+		}, dict.InnerDataMap["non_SoC"]...)
 	}
 
 	return nil
 }
 
-func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics, powerDict *PowerDict) {
+func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics, dict *Dict) {
 	var totalDurationSec float64
-	batteryLifeTested, ok := powerDict.InnerAverageMap[MinutesBatteryLifeTestedKey]
+	batteryLifeTested, ok := dict.InnerAverageMap[MinutesBatteryLifeTestedKey]
 	if ok {
 		totalDurationSec = batteryLifeTested * 60
 	}
-	powerDict.SampleDuration = totalDurationSec
-	powerDict.SampleCount = 2
+	dict.SampleDuration = totalDurationSec
+	dict.SampleCount = 2
 
-	minutesBatteryLife, batteryLifeOk := powerDict.InnerAverageMap[MinutesBatteryLifeKey]
+	minutesBatteryLife, batteryLifeOk := dict.InnerAverageMap[MinutesBatteryLifeKey]
 	// Get battery life only when it is not available yet.
 	if !batteryLifeOk && metrics != nil {
-		minutesBatteryLife = getMinutesBatteryLife(ctx, powerDict.InnerDataMap, powerDict.InnerAverageMap, totalDurationSec, metrics)
-		powerDict.InnerAverageMap[MinutesBatteryLifeKey] = minutesBatteryLife
+		minutesBatteryLife = getMinutesBatteryLife(ctx, dict.InnerDataMap, dict.InnerAverageMap, totalDurationSec, metrics)
+		dict.InnerAverageMap[MinutesBatteryLifeKey] = minutesBatteryLife
 	}
 	values.Set(perf.Metric{
 		Name:      GeneralPerfMetricType + MinutesBatteryLifeKey,
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
 	}, minutesBatteryLife)
-	powerDict.InnerDataMap[MinutesBatteryLifeKey] = []float64{minutesBatteryLife}
-	powerDict.TypeMap[MinutesBatteryLifeKey] = "perf"
-	powerDict.UnitMap[MinutesBatteryLifeKey] = "minute"
+	dict.InnerDataMap[MinutesBatteryLifeKey] = []float64{minutesBatteryLife}
+	dict.TypeMap[MinutesBatteryLifeKey] = "perf"
+	dict.UnitMap[MinutesBatteryLifeKey] = "minute"
 
-	powerDict.TypeMap[MinutesBatteryLifeTestedKey] = "perf"
-	powerDict.InnerDataMap[MinutesBatteryLifeTestedKey] = []float64{batteryLifeTested}
+	dict.TypeMap[MinutesBatteryLifeTestedKey] = "perf"
+	dict.InnerDataMap[MinutesBatteryLifeTestedKey] = []float64{batteryLifeTested}
 
-	addPowerPerfValues(ctx, powerDict, metrics)
+	addPowerPerfValues(ctx, dict, metrics)
 
 	// Make sure all the metrics have two samples.
-	for k, v := range powerDict.InnerDataMap {
+	for k, v := range dict.InnerDataMap {
 		if len(v) == 1 {
-			powerDict.InnerDataMap[k] = append(v, v[0])
+			dict.InnerDataMap[k] = append(v, v[0])
 		}
 	}
 }
 
 // addPowerPerfValues adds perf scalar to power log map.
-func addPowerPerfValues(ctx context.Context, powerDict *PowerDict, metrics *pb.OneTimeMetrics) {
-	dataMap, averageMap, typeMap, unitMap := powerDict.InnerDataMap, powerDict.InnerAverageMap, powerDict.TypeMap, powerDict.UnitMap
+func addPowerPerfValues(ctx context.Context, dict *Dict, metrics *pb.OneTimeMetrics) {
+	dataMap, averageMap, typeMap, unitMap := dict.InnerDataMap, dict.InnerAverageMap, dict.TypeMap, dict.UnitMap
 
 	backlightNonlinearPercent, nonLinearOk := averageMap[BacklightPercentNonlinearKey]
 	// Get it from metrics only if it is not yet available.
