@@ -109,21 +109,22 @@ def _load_results_from_web_tests_dir(
 ) -> test_result.TestResults:
     # web-tests results directory structure is:
     # <run_timestamp>/<test_name>/pass/<run_timestamp>/runs/<iteration>
-    paths = path.glob("*/*/pass/*/runs/*/trace_processor/v2_metrics.pb")
+    paths = list(path.glob("*/*/pass/*/runs/*/trace_processor/v2_metrics.pb"))
+    paths.extend(path.glob("*/pass/*/runs/*/trace_processor/v2_metrics.pb"))
 
     all_results = test_result.TestResults()
-    for path in paths:
-        path_parts = path.parts
+    for path_item in paths:
+        path_parts = path_item.parts
         global_timestamp = path_parts[-8]
-        if global_timestamp == "latest":
-            # Skip the "latest" symlink, it's pointing to one of the other dirs.
+        # Skip "latest" only if it's a subfolder we found, but not if it's the root.
+        if global_timestamp == "latest" and path.name != "latest":
             continue
         run_timestamp = path_parts[-5]
         run_iteration = path_parts[-3]
         test_name = path_parts[-7]
         run_id = run_timestamp + "_" + run_iteration
         summary = file_pb2.TraceSummary()
-        summary.ParseFromString(path.read_bytes())
+        summary.ParseFromString(path_item.read_bytes())
         results = _load_results_from_trace_summary(
             summary, run_id, test_name, label, unspecified_direction
         )
