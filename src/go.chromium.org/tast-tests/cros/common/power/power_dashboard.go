@@ -470,19 +470,23 @@ func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.On
 	// Get battery life only when it is not available yet.
 	if !batteryLifeOk && metrics != nil {
 		minutesBatteryLife = getMinutesBatteryLife(ctx, dict.InnerDataMap, dict.InnerAverageMap, totalDurationSec, metrics)
-		dict.InnerAverageMap[MinutesBatteryLifeKey] = minutesBatteryLife
 	}
-	values.Set(perf.Metric{
-		Name:      GeneralPerfMetricType + MinutesBatteryLifeKey,
-		Unit:      "minute",
-		Direction: perf.BiggerIsBetter,
-	}, minutesBatteryLife)
-	dict.InnerDataMap[MinutesBatteryLifeKey] = []float64{minutesBatteryLife}
-	dict.TypeMap[MinutesBatteryLifeKey] = "perf"
-	dict.UnitMap[MinutesBatteryLifeKey] = "minute"
+	// A value of 0 for minutesBatteryLife indicates that the battery life metrics could not be
+	// calculated. In this case, we skip adding them to the results.
+	if minutesBatteryLife != 0 {
+		dict.InnerAverageMap[MinutesBatteryLifeKey] = minutesBatteryLife
+		values.Set(perf.Metric{
+			Name:      GeneralPerfMetricType + MinutesBatteryLifeKey,
+			Unit:      "minute",
+			Direction: perf.BiggerIsBetter,
+		}, minutesBatteryLife)
+		dict.InnerDataMap[MinutesBatteryLifeKey] = []float64{minutesBatteryLife}
+		dict.TypeMap[MinutesBatteryLifeKey] = "perf"
+		dict.UnitMap[MinutesBatteryLifeKey] = "minute"
 
-	dict.TypeMap[MinutesBatteryLifeTestedKey] = "perf"
-	dict.InnerDataMap[MinutesBatteryLifeTestedKey] = []float64{batteryLifeTested}
+		dict.TypeMap[MinutesBatteryLifeTestedKey] = "perf"
+		dict.InnerDataMap[MinutesBatteryLifeTestedKey] = []float64{batteryLifeTested}
+	}
 
 	addPowerPerfValues(ctx, dict, metrics)
 

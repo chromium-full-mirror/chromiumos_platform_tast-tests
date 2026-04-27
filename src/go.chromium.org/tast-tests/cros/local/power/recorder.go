@@ -364,7 +364,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		testName:     testName,
 		optionalArgs: args,
 
-		dataSources:             metrics.TestMetrics(),
+		dataSources:             getTestMetrics(ctx),
 		enableDischargeWatchdog: discharge,
 		isRecording:             false,
 		totalCooldownDuration:   -1,
@@ -374,6 +374,21 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		traceConfigPath: "",
 		traceFilePath:   "",
 	}
+}
+
+// getTestMetrics returns the metrics to collect during the test.
+// Battery metrics will be skipped if the device is connected to line power.
+func getTestMetrics(ctx context.Context) []perf.TimelineDatasource {
+	status, err := GetStatus(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to read battery status, skip battery metrics: ", err)
+		return metrics.TestMetricsWithoutBatteryInfo()
+	}
+	testing.ContextLog(ctx, "Battery status: ", status)
+	if IsLinePowerConnected(status) {
+		return metrics.TestMetricsWithoutBatteryInfo()
+	}
+	return metrics.TestMetrics()
 }
 
 // EnableTracing enables and configures perfetto tracing in the recorder.
