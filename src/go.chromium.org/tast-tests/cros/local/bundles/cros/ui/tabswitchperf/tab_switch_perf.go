@@ -27,6 +27,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	sim "go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
@@ -470,6 +471,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, mute, isSplitView bool, outDir,
 		return errors.Wrap(err, "failed to run setup")
 	}
 	defer r.cleanup(cleanupCtx)
+
+	// Ensure that the device is in clamshell mode.
+	cleanUpTabletMode, err := ash.EnsureTabletModeEnabled(ctx, r.tconn, false)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure clamshell mode")
+	}
+	defer cleanUpTabletMode(cleanupCtx)
 
 	if err := r.muteDevice(ctx, mute); err != nil {
 		testing.ContextLog(ctx, "(non-error) Failed to mute device: ", err)
