@@ -1,6 +1,7 @@
 # Copyright 2026 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+import json
 import logging
 import pathlib
 
@@ -102,6 +103,44 @@ def _load_results_from_trace_summary(
     return out_results
 
 
+def _load_results_from_json(
+    json_path: pathlib.Path,
+    run_id: str,
+    test_name: str,
+    label: str,
+    unspecified_direction: test_result.ImprovementDirection | None,
+) -> test_result.TestResults:
+    out_results = test_result.TestResults()
+    data = json.loads(json_path.read_text())
+    for _, browser_data in data.items():
+        if "data" not in browser_data:
+            continue
+        for metric_name, metric_data in browser_data["data"].items():
+            if "values" not in metric_data:
+                continue
+            values = metric_data["values"]
+            if not values:
+                continue
+
+            direction = (
+                unspecified_direction or test_result.ImprovementDirection("up")
+            )
+
+            key = test_result.TestResultKey(
+                run_id=run_id,
+                test_name=test_name,
+                metric_name=metric_name,
+                variant="summary",
+                label=label,
+            )
+            out_results.results[key] = test_result.TestResult(
+                units="unknown",
+                improvement_direction=direction,
+                value=values if len(values) > 1 else values[0],
+            )
+    return out_results
+
+
 def _load_results_from_web_tests_dir(
     path: pathlib.Path,
     label: str,
@@ -129,6 +168,45 @@ def _load_results_from_web_tests_dir(
             summary, run_id, test_name, label, unspecified_direction
         )
         all_results.merge(results)
+
+    # Find JSON metric files via cb.results.json
+    json_index_paths = list(path.glob("*/*/pass/*/cb.results.json"))
+    json_index_paths.extend(path.glob("*/pass/*/cb.results.json"))
+
+    for index_path in json_index_paths:
+        path_parts = index_path.parts
+        global_timestamp = path_parts[-5]
+
+        if global_timestamp == "latest" and path.name != "latest":
+            continue
+
+        run_timestamp = path_parts[-2]
+        test_name = path_parts[-4]
+        run_id = run_timestamp
+
+        index_data = json.loads(index_path.read_text())
+        probes = index_data.get("probes", {})
+        for probe_name, probe_data in probes.items():
+            if probe_name == test_name and "json" in probe_data:
+                for json_rel_path in probe_data["json"]:
+                    json_full_path = pathlib.Path(json_rel_path)
+                    # Fallback to looking in the same directory as cb.results.json
+                    local_path = index_path.parent / json_full_path.name
+                    if local_path.exists():
+                        json_full_path = local_path
+                    elif not json_full_path.is_absolute():
+                        json_full_path = index_path.parent / json_rel_path
+
+                    if json_full_path.exists():
+                        results = _load_results_from_json(
+                            json_full_path,
+                            run_id,
+                            test_name,
+                            label,
+                            unspecified_direction,
+                        )
+                        all_results.merge(results)
+
     return all_results
 
 
