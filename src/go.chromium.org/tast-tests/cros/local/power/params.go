@@ -45,6 +45,10 @@ type ChargeParams struct {
 	// test to measure charging speed, the screen will be set to default
 	// brightness instead of 0 for fast charging.
 	IsPowerQual bool
+
+	// EnableDischargeWatchdog indicates whether to enable the discharge watchdog
+	// in drainBattery to reliably discharge the battery despite software glitches.
+	EnableDischargeWatchdog bool
 }
 
 // RegressionTestChargeParam is used for tests in power_regression suite that

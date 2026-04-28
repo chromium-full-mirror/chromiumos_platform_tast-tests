@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -46,6 +47,7 @@ type Recorder struct {
 	perfValues              *perf.Values
 	totalCooldownDuration   time.Duration
 	cooldownDurations       []cooldownDuration
+	watchdogCancel          context.CancelFunc
 
 	// Fields used for perfetto tracing.
 	traceEnabled    bool
@@ -102,7 +104,7 @@ func (r *Recorder) Start(ctx context.Context) error {
 	}
 
 	if r.enableDischargeWatchdog {
-		r.StartDischargeWatchdog(ctx)
+		r.startDischargeWatchdog(ctx)
 	}
 
 	metrics, err := perf.NewTimeline(ctx, r.dataSources, perf.Interval(r.interval))
@@ -148,7 +150,10 @@ func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
 
 	r.isRecording = false
 	// Stop watching for battery discharge either way.
-	r.enableDischargeWatchdog = false
+	if r.watchdogCancel != nil {
+		r.watchdogCancel()
+		r.watchdogCancel = nil
+	}
 
 	p, err := r.metrics.StopRecording(ctx)
 	if err != nil {
@@ -278,6 +283,11 @@ func (r *Recorder) Record(ctx context.Context, f func(context.Context) error) er
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Close(ctx context.Context) error {
+	if r.watchdogCancel != nil {
+		r.watchdogCancel()
+		r.watchdogCancel = nil
+	}
+
 	if !r.isRecording {
 		return nil
 	}
@@ -318,27 +328,47 @@ func (r *Recorder) EndCheckpoint(section *perf.Section) {
 // StartDischargeWatchdog starts a goroutine that makes sure the device is on
 // discharge to keep guard of chargeoverride reset out of AC charger connection
 // flakiness.
-func (r *Recorder) StartDischargeWatchdog(ctx context.Context) {
-	var checkInterval = 10 * time.Second
+func StartDischargeWatchdog(ctx context.Context) context.CancelFunc {
+	const checkInterval = 10 * time.Second
+	var wg sync.WaitGroup
+
+	watchdogCtx, cancel := context.WithCancel(ctx)
+	wg.Add(1)
 	go func() {
-		for r.enableDischargeWatchdog {
-			status, err := GetStatus(ctx)
-			if err != nil {
-				testing.ContextLog(ctx, "Discharge watchdog failed to read power status: ", err)
+		defer wg.Done()
+
+		ticker := time.NewTicker(checkInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-watchdogCtx.Done():
 				return
-			}
-			if IsLinePowerConnected(status) {
-				testing.ContextLog(ctx, "Discharge watchdog detected power supply on, force discharge again")
-				err = util.SimpleForceDischarge(ctx)
+			case <-ticker.C:
+				status, err := GetStatus(watchdogCtx)
 				if err != nil {
-					testing.ContextLogf(ctx, "Discharge watchdog unable to set discharge: %s", err)
+					testing.ContextLog(watchdogCtx, "Discharge watchdog failed to read power status: ", err)
 					return
 				}
+				if IsLinePowerConnected(status) {
+					testing.ContextLog(watchdogCtx, "Discharge watchdog detected power supply on, force discharge again")
+					if err := util.SimpleForceDischarge(watchdogCtx); err != nil {
+						testing.ContextLogf(watchdogCtx, "Discharge watchdog unable to set discharge: %s", err)
+						return
+					}
+				}
 			}
-			// GoBigSleepLint: Sleep this thread that aims to do periodic check.
-			testing.Sleep(ctx, checkInterval)
 		}
 	}()
+	return func() {
+		cancel()
+		wg.Wait()
+	}
+}
+
+// startDischargeWatchdog starts a watchdog to ensure the device stays
+// discharging and saves its cancellation handle.
+func (r *Recorder) startDischargeWatchdog(ctx context.Context) {
+	r.watchdogCancel = StartDischargeWatchdog(ctx)
 }
 
 // NewRecorder creates and returns a new Recorder.

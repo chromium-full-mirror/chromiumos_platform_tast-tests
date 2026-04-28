@@ -224,7 +224,7 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		err = chargeBattery(ctx, batteryPreparationTimeout, minChargePercentage, cp.IsPowerQual, cp.UseDisplayPercentage)
 	} else {
 		testing.ContextLog(ctx, "Current battery charge is above the acceptable range")
-		err = drainBattery(ctx, batteryPreparationTimeout, cp.MaxChargePercentage, cp.UseDisplayPercentage)
+		err = drainBattery(ctx, batteryPreparationTimeout, cp)
 	}
 
 	if err != nil {
@@ -302,7 +302,7 @@ func chargeBattery(ctx context.Context, batteryPreparationTimeout time.Duration,
 	})
 }
 
-func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, targetPercentage float64, UseDisplayPercent bool) error {
+func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, cp power.ChargeParams) error {
 	testing.ContextLog(ctx, "Start draining battery")
 
 	cleanupCtx := ctx
@@ -339,22 +339,27 @@ func drainBattery(ctx context.Context, batteryPreparationTimeout time.Duration, 
 	}
 	defer stopStressTest(cleanupCtx)
 
+	if cp.EnableDischargeWatchdog {
+		cancelWatchdog := power.StartDischargeWatchdog(ctx)
+		defer cancelWatchdog()
+	}
+
 	return testing.Poll(ctx, func(context.Context) error {
 		status, err := power.GetStatus(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
 		if power.IsLinePowerConnected(status) {
-			return testing.PollBreak(errors.Wrap(err, "power source is connected while discharging"))
+			return errors.New("power source is connected while discharging")
 		}
 		currentPercent := status.BatteryPercent
 		logStr := "battery"
-		if UseDisplayPercent {
+		if cp.UseDisplayPercentage {
 			currentPercent = status.BatteryDisplayPercent
 			logStr = "display battery"
 		}
 		testing.ContextLogf(ctx, "Current %s percentage is %v%%", logStr, currentPercent)
-		if currentPercent > targetPercentage {
+		if currentPercent > cp.MaxChargePercentage {
 			return errors.New("failed to reach target battery charge")
 		}
 		testing.ContextLog(ctx, "Successfully drained battery")

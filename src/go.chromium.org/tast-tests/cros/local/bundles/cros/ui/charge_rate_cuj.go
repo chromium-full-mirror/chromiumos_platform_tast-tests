@@ -62,11 +62,12 @@ func ChargeRateCUJ(ctx context.Context, s *testing.State) {
 	// chargeParams prepares the battery to around 65% within testable range to
 	// measure the charging rate.
 	chargeParams := power.ChargeParams{
-		MinChargePercentage:   64.0,
-		MaxChargePercentage:   65.0,
-		DischargeOnCompletion: false,
-		IsCustomized:          false,
-		IsPowerQual:           false,
+		MinChargePercentage:     64.0,
+		MaxChargePercentage:     65.0,
+		DischargeOnCompletion:   false,
+		IsCustomized:            false,
+		IsPowerQual:             false,
+		EnableDischargeWatchdog: true,
 	}
 
 	if err := prepareBatteryWithHighLoad(ctx, cr, chargeParams); err != nil {
