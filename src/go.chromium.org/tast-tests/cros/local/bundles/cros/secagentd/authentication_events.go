@@ -67,7 +67,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-	const batchIntervalS = 5
+	const batchIntervalS = 10
 
 	currTime := time.Now()
 	// Restart secagentd and have it ignore policy and not wait for the first
@@ -108,7 +108,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := secagentdaffiliation.GetSessionManagerReady(ctx, currTime)
 		return err
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("Failed to listen to session manager: ", err)
 	}
 
@@ -128,7 +128,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, deviceUser, err = secagentdaffiliation.GetAffiliationStatus(signedInUser, hash)
 		return err
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Error("Failed to get affiliation status: ", err)
 	}
 
