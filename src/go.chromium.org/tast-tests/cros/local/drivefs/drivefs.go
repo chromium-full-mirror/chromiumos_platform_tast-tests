@@ -124,7 +124,7 @@ func (dfs *DriveFs) ClearLocalData(ctx context.Context, cr *chrome.Chrome) error
 	if err := pageConn.Eval(ctx, "chrome.send('resetDriveFileSystem');", nil); err != nil {
 		return errors.Wrap(err, "failed to clear local data")
 	}
-	if err := pageConn.WaitForExpr(ctx, "$('reset-status-text').textContent === 'success'"); err != nil {
+	if err := pageConn.WaitForExpr(ctx, "document.getElementById('reset-status-text').textContent === 'success'"); err != nil {
 		return errors.Wrap(err, "failed to wait for local data to clear successfully")
 	}
 	if _, err = WaitForDriveFs(ctx, dfs.user); err != nil {
