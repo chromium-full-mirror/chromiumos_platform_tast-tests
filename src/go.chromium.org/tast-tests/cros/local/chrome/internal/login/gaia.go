@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/network/diag"
 	"go.chromium.org/tast-tests/cros/local/session"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -197,7 +198,20 @@ func MatchSignInGAIAWebView(ctx context.Context, sess *driver.Session) cdputil.T
 // performGAIALogin waits for and interacts with the GAIA webview to perform login.
 // This function is heavily based on NavigateGaiaLogin() in Catapult's
 // telemetry/telemetry/internal/backends/chrome/oobe.py.
-func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Session, oobeConn *driver.Conn) error {
+func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Session, oobeConn *driver.Conn) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			// Dump network info on connectivity check failure for troubleshooting.
+			if err := diag.DUTConnectionCheckAndDump(ctx, diag.CheckAttemptTimeout+time.Second); err != nil {
+				testing.ContextLog(ctx, "Failed to check network connection after performGAIALogin failed: ", err)
+			} else {
+				testing.ContextLog(ctx, "Network connection check after performGAIALogin succeeded")
+			}
+		}
+	}(cleanupCtx)
 	if err := oobeConn.Call(ctx, nil, "OobeAPI.skipToLoginForTesting"); err != nil {
 		return err
 	}
@@ -275,14 +289,14 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		if err := gaiaConn.WaitForExprWithTimeout(ctx,
 			`document.querySelector('[aria-label="Email or phone"]')===null`,
 			60*time.Second); err != nil {
-			if err := clearGAIAField(ctx, gaiaConn, "#identifierId"); err != nil {
+			// Use a shortened context because clearGAIAField may hang and
+			// should not consume the entire test timeout.
+			sctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+			defer cancel()
+			if err := clearGAIAField(sctx, gaiaConn, "#identifierId"); err != nil {
 				testing.ContextLog(ctx, "Failed to clear username field: ", err)
 			}
 			testing.ContextLog(ctx, "Failed to wait for username screen to go away attempt")
-
-			if err := diag.DUTNetworkCheckAndResolve(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to check network connection: ", err)
-			}
 			return errors.Wrap(err, "failed to wait for username screen to go away")
 		}
 

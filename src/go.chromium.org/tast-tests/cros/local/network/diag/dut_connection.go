@@ -48,6 +48,21 @@ func DUTConnectionCheck(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
+// DUTConnectionCheckAndDump checks the DUT connection and dumps network info if it fails.
+func DUTConnectionCheckAndDump(ctx context.Context, timeout time.Duration) error {
+	err := DUTConnectionCheck(ctx, timeout)
+	if err == nil {
+		return nil
+	}
+	dumpfile := "network_dump_ping_" + time.Now().Format("030405000") + ".txt"
+	if err := dumputil.DumpNetworkInfo(ctx, dumpfile); err != nil {
+		testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
+	}
+	testing.ContextLog(ctx, "Current network info dumped into ", dumpfile)
+
+	return err
+}
+
 // DUTConnectionResolve tries to resolve DUT connections by restart shill process.
 func DUTConnectionResolve(ctx context.Context) error {
 	testing.ContextLog(ctx, "Trying to resolve network connections")
@@ -73,12 +88,7 @@ func DUTNetworkCheckAndResolve(ctx context.Context) error {
 		if err := DUTConnectionResolve(ctx); err != nil {
 			return err
 		}
-		if err := DUTConnectionCheck(ctx, ResolveCheckTimeout); err != nil {
-			dumpfile := "network_dump_ping_" + time.Now().Format("030405000") + ".txt"
-			if err := dumputil.DumpNetworkInfo(ctx, dumpfile); err != nil {
-				testing.ContextLog(ctx, "Failed to dump network info after a ping expectation failure: ", err)
-			}
-			testing.ContextLog(ctx, "Current network info dumped into ", dumpfile)
+		if err := DUTConnectionCheckAndDump(ctx, ResolveCheckTimeout); err != nil {
 			return errors.Wrap(err, "DUT network connections still failed after shill reset")
 		}
 		testing.ContextLog(ctx, "DUT network connections fixed")
