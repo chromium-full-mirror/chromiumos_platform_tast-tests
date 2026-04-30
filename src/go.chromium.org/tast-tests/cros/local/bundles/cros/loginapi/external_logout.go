@@ -223,7 +223,7 @@ func ExternalLogout(ctx context.Context, s *testing.State) {
 	}
 
 	select {
-	case <-swLocked.Signals:
+	case <-swUnlocked.Signals:
 		// Pass
 	case <-ctx.Done():
 		s.Fatal("Timeout before getting session unlocked signal: ", ctx.Err())
