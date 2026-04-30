@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/saml"
@@ -65,6 +66,11 @@ func ChromeSAML(ctx context.Context, s *testing.State) {
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	}
 	if ok {
+		pb := policy.NewBlob()
+		pb.PolicyUser = username
+		if err := fdms.WritePolicyBlob(pb); err != nil {
+			s.Fatal("Failed to update FakeDMS policy user: ", err)
+		}
 		opts = append(opts, chrome.KeepEnrollment())
 		opts = append(opts, chrome.DMSPolicy(fdms.URL))
 	}
