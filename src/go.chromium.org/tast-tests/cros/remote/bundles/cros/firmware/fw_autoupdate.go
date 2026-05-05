@@ -418,6 +418,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
 		}
 		expectedAPRWVersion = expectedVersions["default"].AP.Versions.RW
+		expectedECRWVersion = expectedVersions["default"].AP.Versions.ECRW
 	}
 	s.Logf("Extracted AP RW: %q (%s)", apRWFile, expectedAPRWVersion)
 
