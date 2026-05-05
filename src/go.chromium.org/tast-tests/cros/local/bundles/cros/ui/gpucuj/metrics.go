@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 
@@ -21,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -488,21 +490,26 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	if err := tracer.StartTracing(ctx, tracingCategories, browser.DisableSystrace()); err != nil {
 		return err
 	}
+	stopped := false
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if !stopped {
+			if _, err := tracer.StopTracing(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to stop tracing: ", err)
+			}
+		}
+	}(cleanupCtx)
 
 	histograms, err := metrics.Run(ctx, tconn, perfFn, keys...)
 	if err != nil {
-		if _, err := tracer.StopTracing(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to stop tracing: ", err)
-		}
 		return errors.Wrap(err, "failed to get histograms")
 	}
 
 	// Collect temperature first in case it decreases after the test finishes.
 	temps, err := thermal.SnapshotValues(ctx)
 	if err != nil {
-		if _, err := tracer.StopTracing(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to stop tracing: ", err)
-		}
 		return errors.Wrap(err, "failed to get temperature data")
 	}
 
@@ -511,9 +518,6 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	if rapl != nil {
 		rd, err := rapl.DiffWithCurrentRAPL()
 		if err != nil {
-			if _, err := tracer.StopTracing(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to stop tracing: ", err)
-			}
 			return errors.Wrap(err, "failed to compute RAPL diffs")
 		}
 		testing.ContextLog(ctx, "RAPL duration seconds ", rd.Duration().Seconds())
@@ -524,6 +528,7 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	if err != nil {
 		return err
 	}
+	stopped = true
 
 	filename := fmt.Sprintf("%s-trace.data.gz", invoc.page.name)
 	filename = filepath.Join(invoc.traceDir, filename)

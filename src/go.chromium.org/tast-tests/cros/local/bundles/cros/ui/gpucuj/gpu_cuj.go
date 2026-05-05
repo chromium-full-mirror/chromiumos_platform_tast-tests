@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -96,7 +97,7 @@ var pageSet = []page{
 	},
 }
 
-func toggleThreeDotMenu(ctx context.Context, tconn *chrome.TestConn) error {
+func toggleThreeDotMenu(ctx context.Context) error {
 	// Open the three-dot menu via keyboard shortcut.
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -184,7 +185,7 @@ type testInvocation struct {
 }
 
 // runTest runs the common part of the GpuCUJ performance test.
-func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) error {
+func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, invoc *testInvocation) error {
 	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
 	// Reduce the timeout to avoid test timeouts.
 	cooldownConfig.PollTimeout = 2 * time.Minute
@@ -192,12 +193,15 @@ func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) erro
 		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 	conn, err := cr.NewConn(ctx, invoc.page.url)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", invoc.page)
 	}
 	defer conn.Close()
-	defer conn.CloseTarget(ctx)
+	defer conn.CloseTarget(cleanupCtx)
 
 	scenario := invoc.scenario
 	// Setup extra window for multi-window tests.
@@ -207,12 +211,7 @@ func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) erro
 			return errors.Wrap(err, "failed to open new tab")
 		}
 		defer connBlank.Close()
-		defer connBlank.CloseTarget(ctx)
-	}
-
-	ctconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
+		defer connBlank.CloseTarget(cleanupCtx)
 	}
 
 	w, err := ash.WaitForAnyWindowWithoutTitle(ctx, ctconn, "about:blank")
@@ -306,10 +305,10 @@ func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) erro
 
 	// Open the threedot menu if indicated.
 	if invoc.scenario == TestTypeThreeDot {
-		if err := toggleThreeDotMenu(ctx, ctconn); err != nil {
+		if err := toggleThreeDotMenu(ctx); err != nil {
 			return errors.Wrap(err, "failed to open three dot menu")
 		}
-		defer toggleThreeDotMenu(ctx, ctconn)
+		defer toggleThreeDotMenu(cleanupCtx)
 	}
 
 	// GoBigSleepLint: sleep for three seconds after loading pages / setting up the environment.
@@ -324,34 +323,35 @@ func runTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) erro
 	return runHistogram(ctx, ctconn, cr, invoc, perfFn)
 }
 
-// CleanupCallback is a callback that should be deferred to clean up test resources.
-type CleanupCallback func(context.Context) error
+// SetupPerfTest sets up the environment for a performance test.
+// It disables Wi-Fi, Night Light, and enables Do Not Disturb mode.
+// It returns a cleanup function that should be deferred to restore the original state.
+func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (runCleanup func(context.Context) error, retErr error) {
+	var cleanups []func(context.Context) error
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-func noCleanup(context.Context) error { return nil }
-
-// CombineCleanup combines two CleanupCallbacks so they are executed in the same order
-// that they would be if they had been deferred.
-func CombineCleanup(ctx context.Context, existing, new func(context.Context) error, msg string) CleanupCallback {
-	return func(context.Context) error {
-		if err := new(ctx); err != nil {
-			existing(ctx)
-			return errors.Wrap(err, msg)
+	runCleanup = func(ctx context.Context) error {
+		var errs []error
+		for i := len(cleanups) - 1; i >= 0; i-- {
+			if err := cleanups[i](ctx); err != nil {
+				errs = append(errs, err)
+			}
 		}
-		return existing(ctx)
+		return errors.Join(errs...)
 	}
-}
 
-// SetupPerfTest sets up a stable environment for a performance test.
-// The returned CleanupCallback should be deferred to be executed upon test completion.
-func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (retCleanup CleanupCallback, retErr error) {
 	// Set-up environment to be more consistent.
 	sup, supCleanup := setup.New(name)
-	cleanup := CombineCleanup(ctx, noCleanup, supCleanup, "failed to clean up perf test")
-	defer func() {
+	cleanups = append(cleanups, supCleanup)
+	defer func(ctx context.Context) {
 		if retErr != nil {
-			cleanup(ctx)
+			if err := runCleanup(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to run cleanup: ", err)
+			}
 		}
-	}()
+	}(cleanupCtx)
 
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DoNotChangeWifiInterfaces, NightLight: setup.DisableNightLight},
@@ -365,9 +365,10 @@ func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (re
 	if err := quicksettings.SetDoNotDisturb(ctx, tconn, true); err != nil {
 		return nil, errors.Wrap(err, "failed to enable do not disturb")
 	}
-	cleanup = CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
+	cleanupDoNotDisturb := func(ctx context.Context) error {
 		return quicksettings.SetDoNotDisturb(ctx, tconn, false)
-	}, "failed to disable do not disturb")
+	}
+	cleanups = append(cleanups, cleanupDoNotDisturb)
 
 	// Disable automation feature for performance test.
 	// ResetAutomation should be already called previously, but automation is implicitly enabled by
@@ -377,44 +378,58 @@ func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (re
 		return nil, errors.Wrap(err, "failed to reset the automation feature")
 	}
 
-	return cleanup, nil
+	return runCleanup, nil
 }
 
-// RunGpuCUJ runs a GpuCUJ test according to the given parameters.
-func RunGpuCUJ(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, traceDir string) (
-	retPV *perf.Values, retCleanup CleanupCallback, retErr error) {
-	ctconn, err := cr.TestAPIConn(ctx)
+// Run runs a GpuCUJ performance test.
+func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, outDir string) error {
+	// Use a shorter timeout to avoid hanging when connecting to the test API.
+	sCtx, sCancel := context.WithTimeout(ctx, 30*time.Second)
+	defer sCancel()
+	ctconn, err := cr.TestAPIConn(sCtx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to test API")
+		return errors.Wrap(err, "failed to connect to test API")
 	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+
+	tabletCleanup, err := ash.EnsureTabletModeEnabled(ctx, ctconn, false)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure tablet mode is disabled")
+	}
+	defer tabletCleanup(cleanupCtx)
 
 	cleanup, err := SetupPerfTest(ctx, ctconn, "GpuCUJ")
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to setup GpuCUJ test")
+		return errors.Wrap(err, "failed to setup GpuCUJ test")
 	}
-	defer func() {
-		if retErr != nil {
-			cleanup(ctx)
+	defer func(ctx context.Context) {
+		if err := cleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to run cleanup: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	infos, err := display.GetInfo(ctx, ctconn)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get display info")
+		return errors.Wrap(err, "failed to get display info")
 	}
 	if len(infos) != 1 {
-		return nil, nil, errors.New("failed to find unique display")
+		return errors.New("failed to find unique display")
 	}
 	info := infos[0]
 	if params.Rot90 {
 		rot := 90
 		if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &rot}); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to rotate display")
+			return errors.Wrap(err, "failed to rotate display")
 		}
-		// Restore the initial rotation.
-		cleanup = CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
-			return display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation})
-		}, "failed to restore the initial display rotation")
+		defer func(ctx context.Context) {
+			// Restore the initial rotation.
+			if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
+				testing.ContextLog(ctx, "Failed to restore original display rotation: ", err)
+			}
+		}(cleanupCtx)
 	} else if params.TestType == TestTypeMoveOcclusion || params.TestType == TestTypeMoveOcclusionWithCrosWindow {
 		// According to b/320175701, the display width of the devices that failing
 		// the tests are 1080px.
@@ -428,12 +443,14 @@ func RunGpuCUJ(ctx context.Context, cr *chrome.Chrome, params TestParams, server
 
 			revertZoom, err := reduceDisplayZoomFactor(ctx, ctconn)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to set the zoom factor of the primary display")
+				return errors.Wrap(err, "failed to set the zoom factor of the primary display")
 			}
-			// Restore the display zoom factor.
-			cleanup = CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
-				return revertZoom(ctx, ctconn)
-			}, "failed to restore the initial zoom factor of primary display")
+			defer func(ctx context.Context) {
+				// Restore the display zoom factor.
+				if err := revertZoom(ctx, ctconn); err != nil {
+					testing.ContextLog(ctx, "Failed to restore original display zoom factor: ", err)
+				}
+			}(cleanupCtx)
 		}
 	}
 
@@ -444,20 +461,23 @@ func RunGpuCUJ(ctx context.Context, cr *chrome.Chrome, params TestParams, server
 			page.url = serverURL + page.url
 		}
 
-		if err := runTest(ctx, cr, &testInvocation{
+		if err := runTest(ctx, cr, ctconn, &testInvocation{
 			pv:       pv,
 			scenario: params.TestType,
 			page:     page,
 			metrics:  &m,
-			traceDir: traceDir,
+			traceDir: outDir,
 		}); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to run cros test")
+			return errors.Wrap(err, "failed to run cros test")
 		}
 	}
 
 	if err := m.computeStatistics(ctx, pv); err != nil {
-		return nil, nil, errors.Wrap(err, "could not compute derived statistics")
+		return errors.Wrap(err, "could not compute derived statistics")
 	}
 
-	return pv, cleanup, nil
+	if err := pv.Save(outDir); err != nil {
+		return errors.Wrap(err, "failed to save perf data")
+	}
+	return nil
 }

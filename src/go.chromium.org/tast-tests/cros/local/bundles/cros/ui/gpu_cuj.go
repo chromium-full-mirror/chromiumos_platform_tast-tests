@@ -12,9 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/gpucuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -158,34 +156,8 @@ func GpuCUJ(ctx context.Context, s *testing.State) {
 	defer server.Close()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
-	if err != nil {
-		s.Fatal("Failed to ensure clamshell mode: ", err)
-	}
-	defer cleanup(cleanupCtx)
-
-	pv, cleanup, err := gpucuj.RunGpuCUJ(ctx, cr, s.Param().(gpucuj.TestParams),
-		server.URL, s.OutDir())
-	if err != nil {
-		s.Fatal("Could not run GpuCUJ test: ", err)
-	}
-	defer func() {
-		if err := cleanup(ctx); err != nil {
-			s.Fatal("Failed to cleanup after creating test: ", err)
-		}
-	}()
-
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Cannot save perf data: ", err)
+	params := s.Param().(gpucuj.TestParams)
+	if err := gpucuj.Run(ctx, cr, params, server.URL, s.OutDir()); err != nil {
+		s.Fatal("Failed to run GpuCUJ test: ", err)
 	}
 }
