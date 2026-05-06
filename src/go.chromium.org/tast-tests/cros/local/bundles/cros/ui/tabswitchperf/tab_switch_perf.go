@@ -163,6 +163,14 @@ func (r *tabSwitchRunner) muteDevice(ctx context.Context, mute bool) error {
 }
 
 func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPage webPageData, isFirstPage bool) (pv *perf.Values, retErr error) {
+	const (
+		totalPageForWeb = 7
+
+		// Low-end devices lack sufficient RAM to complete the test when running with
+		// seven pages and fourteen views open.
+		anchorURLsNumForSplitView = 2
+	)
+
 	testing.ContextLogf(ctx, "Start_opening_%s", webPage.name)
 
 	cleanupCtx := ctx
@@ -182,8 +190,6 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 			return nil, errors.Wrap(err, "failed to clear notifications prompt dialog")
 		}
 	}
-
-	const totalPageForWeb = 7
 
 	tabs := make([]*splitTabViews, 0, totalPageForWeb)
 	tabs = append(tabs,
@@ -205,8 +211,15 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 		return nil, errors.Errorf("failed to find the expected number of anchor URLs, got: %d, want: %d", len(anchorURLs), totalPageForWeb-1)
 	}
 
+	anchorURLsToOpen := len(anchorURLs)
+	if r.isSplitView {
+		anchorURLsToOpen = anchorURLsNumForSplitView
+	}
+
 	// Open those found URLs as new tabs.
-	for _, anchorURL := range anchorURLs {
+	for i := 0; i < anchorURLsToOpen; i++ {
+		anchorURL := anchorURLs[i]
+
 		conn, err := r.cr.NewConn(ctx, anchorURL)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to open URL: %s", anchorURL)
@@ -231,9 +244,13 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 			}
 
 			// Use a different url for the split view.
-			nextTabView := tabs[(i+1)%totalPageForWeb].leftView
+			targetURLIndex := i + anchorURLsToOpen + 1
+			if targetURLIndex >= len(anchorURLs) {
+				return nil, errors.New("not enough anchor URLs for split view")
+			}
+			urlForSplitView := anchorURLs[targetURLIndex]
 
-			conn, err := r.splitNewView(ctx, tab.leftView.conn, nextTabView)
+			conn, err := r.splitNewView(ctx, tab.leftView.conn, urlForSplitView)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to split view for existing tab")
 			}
@@ -242,7 +259,7 @@ func (r *tabSwitchRunner) startWebPageAndPerformTest(ctx context.Context, webPag
 
 			tab.rightView = &tabView{
 				conn: conn,
-				url:  nextTabView.url,
+				url:  urlForSplitView,
 			}
 		}
 	}
@@ -410,7 +427,7 @@ func (r *tabSwitchRunner) waitUntilAllTabsLoaded(ctx context.Context, timeout ti
 
 // splitNewView opens a split view from the given source connection and
 // navigates to the URL specified in the target tab view.
-func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.Conn, targetTabView *tabView) (conn *chrome.Conn, retErr error) {
+func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.Conn, urlForSplitView string) (conn *chrome.Conn, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -429,7 +446,7 @@ func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.C
 	regexp := regexp.MustCompile("^Choose a tab|New Tab$")
 	splitView := nodewith.NameRegex(regexp).Role(role.Window).HasClass("WebContentsViewAura")
 
-	if err := uiauto.NamedCombine(fmt.Sprintf("Use URL %s to split new view", targetTabView.url),
+	if err := uiauto.NamedCombine(fmt.Sprintf("Use URL %s to split new view", urlForSplitView),
 		r.kb.AccelAction("Ctrl+Alt+N"),
 		r.ui.WaitUntilExists(splitView),
 		r.ui.EnsureExistsFor(splitView, 3*time.Second),
@@ -437,20 +454,16 @@ func (r *tabSwitchRunner) splitNewView(ctx context.Context, sourceConn *chrome.C
 		r.kb.AccelAction("Ctrl+A"),
 		r.kb.AccelAction("Backspace"),
 		// A trailing space is added to prevent the use of an automatically generated URL.
-		r.kb.TypeAction(targetTabView.url+" "),
+		r.kb.TypeAction(urlForSplitView+" "),
 		r.kb.AccelAction("Enter"),
 	)(ctx); err != nil {
 		return nil, err
 	}
 
-	matcher := func(t *chrome.Target) bool {
-		return t.URL == targetTabView.url && t.TargetID != targetTabView.conn.TargetID
-	}
-
 	findTargetCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	return r.cr.NewConnForTarget(findTargetCtx, matcher)
+	return r.cr.NewConnForTarget(findTargetCtx, chrome.MatchTargetURL(urlForSplitView))
 }
 
 // Run runs the setup, core part of the TabSwitchPerf test, and cleanup.
