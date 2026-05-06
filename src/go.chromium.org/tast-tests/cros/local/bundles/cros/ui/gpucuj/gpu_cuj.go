@@ -113,18 +113,18 @@ func toggleThreeDotMenu(ctx context.Context) error {
 	return nil
 }
 
-func setWindowBounds(ctx context.Context, ctconn *chrome.TestConn, windowID int, to coords.Rect) error {
-	w, err := ash.GetWindow(ctx, ctconn, windowID)
+func setWindowBounds(ctx context.Context, tconn *chrome.TestConn, windowID int, to coords.Rect) error {
+	w, err := ash.GetWindow(ctx, tconn, windowID)
 	if err != nil {
 		return err
 	}
 
-	info, err := display.GetPrimaryInfo(ctx, ctconn)
+	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		return err
 	}
 
-	b, d, err := ash.SetWindowBounds(ctx, ctconn, w.ID, to, info.ID)
+	b, d, err := ash.SetWindowBounds(ctx, tconn, w.ID, to, info.ID)
 	if err != nil {
 		return err
 	}
@@ -137,11 +137,11 @@ func setWindowBounds(ctx context.Context, ctconn *chrome.TestConn, windowID int,
 	return nil
 }
 
-func reduceDisplayZoomFactor(ctx context.Context, ctconn *chrome.TestConn) (
+func reduceDisplayZoomFactor(ctx context.Context, tconn *chrome.TestConn) (
 	func(context.Context, *chrome.TestConn) error,
 	error,
 ) {
-	info, err := display.GetPrimaryInfo(ctx, ctconn)
+	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
@@ -163,11 +163,11 @@ func reduceDisplayZoomFactor(ctx context.Context, ctconn *chrome.TestConn) (
 		return nil, errors.Errorf("invalid AvailableDisplayZoomFactors: want array with at least one value less than '%.2f', got %v", originalZoom, displayZoomFactors)
 	}
 
-	if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &newZoom}); err != nil {
+	if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &newZoom}); err != nil {
 		return nil, errors.Wrapf(err, "failed to set zoom factor of primary display to %f", newZoom)
 	}
-	return func(ctx context.Context, ctconn *chrome.TestConn) error {
-		if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &originalZoom}); err != nil {
+	return func(ctx context.Context, tconn *chrome.TestConn) error {
+		if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &originalZoom}); err != nil {
 			return errors.Wrapf(err, "failed to revert zoom factor of primary display to %f", originalZoom)
 		}
 		return nil
@@ -185,7 +185,7 @@ type testInvocation struct {
 }
 
 // runTest runs the common part of the GpuCUJ performance test.
-func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, invoc *testInvocation) error {
+func runTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, invoc *testInvocation) error {
 	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
 	// Reduce the timeout to avoid test timeouts.
 	cooldownConfig.PollTimeout = 2 * time.Minute
@@ -214,12 +214,12 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 		defer connBlank.CloseTarget(cleanupCtx)
 	}
 
-	w, err := ash.WaitForAnyWindowWithoutTitle(ctx, ctconn, "about:blank")
+	w, err := ash.WaitForAnyWindowWithoutTitle(ctx, tconn, "about:blank")
 	if err != nil {
 		return err
 	}
 
-	info, err := display.GetPrimaryInfo(ctx, ctconn)
+	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		return err
 	}
@@ -230,14 +230,14 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 	}
 	if invoc.scenario == TestTypeResize {
 		// Restore window.
-		if err := ash.SetWindowStateAndWait(ctx, ctconn, w.ID, ash.WindowStateNormal); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateNormal); err != nil {
 			return errors.Wrap(err, "failed to restore non-blank window")
 		}
 
 		// Create a landscape rectangle. Avoid snapping by insetting by insetSlopDP.
 		ms := math.Min(float64(info.WorkArea.Width), float64(info.WorkArea.Height))
 		sb := coords.NewRect(info.WorkArea.Left, info.WorkArea.Top, int(ms), int(ms*0.6)).WithInset(insetSlopDP, insetSlopDP)
-		if err := setWindowBounds(ctx, ctconn, w.ID, sb); err != nil {
+		if err := setWindowBounds(ctx, tconn, w.ID, sb); err != nil {
 			return errors.Wrap(err, "failed to set window initial bounds")
 		}
 
@@ -247,23 +247,23 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 			start := coords.NewPoint(sb.Left+sb.Width-1, sb.Top+sb.Height-1)
 			end := coords.NewPoint(sb.Left+sb.Height, sb.Top+sb.Width)
 
-			if err := mouse.Drag(ctconn, start, end, testDuration)(ctx); err != nil {
+			if err := mouse.Drag(tconn, start, end, testDuration)(ctx); err != nil {
 				return errors.Wrap(err, "failed to drag resize")
 			}
 			return nil
 		}
 	} else if invoc.scenario == TestTypeMoveOcclusion || invoc.scenario == TestTypeMoveOcclusionWithCrosWindow {
-		wb, err := ash.WaitForAnyWindowWithTitle(ctx, ctconn, "about:blank")
+		wb, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "about:blank")
 		if err != nil {
 			return err
 		}
 
 		// Restore windows.
-		if err := ash.SetWindowStateAndWait(ctx, ctconn, w.ID, ash.WindowStateNormal); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateNormal); err != nil {
 			return errors.Wrap(err, "failed to restore non-blank window")
 		}
 
-		if err := ash.SetWindowStateAndWait(ctx, ctconn, wb.ID, ash.WindowStateNormal); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, wb.ID, ash.WindowStateNormal); err != nil {
 			return errors.Wrap(err, "failed to restore blank window")
 		}
 
@@ -274,7 +274,7 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 			sbl = coords.NewRect(info.WorkArea.Left, info.WorkArea.Top, info.WorkArea.Width, info.WorkArea.Height/2)
 		}
 		sbl = sbl.WithInset(insetSlopDP, insetSlopDP)
-		if err := setWindowBounds(ctx, ctconn, w.ID, sbl); err != nil {
+		if err := setWindowBounds(ctx, tconn, w.ID, sbl); err != nil {
 			return errors.Wrap(err, "failed to set non-blank window initial bounds")
 		}
 
@@ -283,7 +283,7 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 		if isp {
 			sbr = sbl.WithOffset(0, sbl.Height)
 		}
-		if err := setWindowBounds(ctx, ctconn, wb.ID, sbr); err != nil {
+		if err := setWindowBounds(ctx, tconn, wb.ID, sbr); err != nil {
 			return errors.Wrap(err, "failed to set blank window initial bounds")
 		}
 		perfFn = func(ctx context.Context) error {
@@ -291,14 +291,14 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 			start := coords.NewPoint(sbr.Left+dragMoveOffsetDP, sbr.Top+dragMoveOffsetDP)
 			end := coords.NewPoint(sbl.Left+dragMoveOffsetDP, sbl.Top+dragMoveOffsetDP)
 
-			if err := mouse.Drag(ctconn, start, end, testDuration)(ctx); err != nil {
+			if err := mouse.Drag(tconn, start, end, testDuration)(ctx); err != nil {
 				return errors.Wrap(err, "failed to drag move")
 			}
 			return nil
 		}
 	} else {
 		// Maximize window.
-		if err := ash.SetWindowStateAndWait(ctx, ctconn, w.ID, ash.WindowStateMaximized); err != nil {
+		if err := ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized); err != nil {
 			return errors.Wrap(err, "failed to maximize window")
 		}
 	}
@@ -320,7 +320,7 @@ func runTest(ctx context.Context, cr *chrome.Chrome, ctconn *chrome.TestConn, in
 	// manual inspection).
 	testing.Sleep(ctx, 3*time.Second)
 
-	return runHistogram(ctx, ctconn, cr, invoc, perfFn)
+	return runHistogram(ctx, tconn, cr, invoc, perfFn)
 }
 
 // SetupPerfTest sets up the environment for a performance test.
@@ -386,7 +386,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 	// Use a shorter timeout to avoid hanging when connecting to the test API.
 	sCtx, sCancel := context.WithTimeout(ctx, 30*time.Second)
 	defer sCancel()
-	ctconn, err := cr.TestAPIConn(sCtx)
+	tconn, err := cr.TestAPIConn(sCtx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
 	}
@@ -395,13 +395,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
-	tabletCleanup, err := ash.EnsureTabletModeEnabled(ctx, ctconn, false)
+	tabletCleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to ensure tablet mode is disabled")
 	}
 	defer tabletCleanup(cleanupCtx)
 
-	cleanup, err := SetupPerfTest(ctx, ctconn, "GpuCUJ")
+	cleanup, err := SetupPerfTest(ctx, tconn, "GpuCUJ")
 	if err != nil {
 		return errors.Wrap(err, "failed to setup GpuCUJ test")
 	}
@@ -411,7 +411,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 		}
 	}(cleanupCtx)
 
-	infos, err := display.GetInfo(ctx, ctconn)
+	infos, err := display.GetInfo(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get display info")
 	}
@@ -421,12 +421,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 	info := infos[0]
 	if params.Rot90 {
 		rot := 90
-		if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &rot}); err != nil {
+		if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{Rotation: &rot}); err != nil {
 			return errors.Wrap(err, "failed to rotate display")
 		}
 		defer func(ctx context.Context) {
 			// Restore the initial rotation.
-			if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
+			if err := display.SetDisplayProperties(ctx, tconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation}); err != nil {
 				testing.ContextLog(ctx, "Failed to restore original display rotation: ", err)
 			}
 		}(cleanupCtx)
@@ -441,13 +441,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 		if info.Bounds.Width <= smallDisplayWidth {
 			testing.ContextLogf(ctx, "The width(%d) of the display is equal or smaller than %d px, set the display factor down by 1", info.Bounds.Width, smallDisplayWidth)
 
-			revertZoom, err := reduceDisplayZoomFactor(ctx, ctconn)
+			revertZoom, err := reduceDisplayZoomFactor(ctx, tconn)
 			if err != nil {
 				return errors.Wrap(err, "failed to set the zoom factor of the primary display")
 			}
 			defer func(ctx context.Context) {
 				// Restore the display zoom factor.
-				if err := revertZoom(ctx, ctconn); err != nil {
+				if err := revertZoom(ctx, tconn); err != nil {
 					testing.ContextLog(ctx, "Failed to restore original display zoom factor: ", err)
 				}
 			}(cleanupCtx)
@@ -461,7 +461,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params TestParams, serverURL, o
 			page.url = serverURL + page.url
 		}
 
-		if err := runTest(ctx, cr, ctconn, &testInvocation{
+		if err := runTest(ctx, cr, tconn, &testInvocation{
 			pv:       pv,
 			scenario: params.TestType,
 			page:     page,
