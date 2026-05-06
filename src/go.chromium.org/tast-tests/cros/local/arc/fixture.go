@@ -668,6 +668,7 @@ type bootedFixture struct {
 
 	playStoreOptin    bool                                  // Opt into PlayStore.
 	enableUIAutomator bool                                  // Enable UI Automator
+	enableLightTheme  bool                                  // Enable LightTheme
 	arcvmConfig       func(context.Context) (string, error) // Append config to arcvm_dev.conf
 	bootTimeout       time.Duration
 
@@ -696,6 +697,8 @@ type BootedFixtureConfig struct {
 	EnableUIAutomator bool
 	// Whether or not to opt into the play store.
 	PlayStoreOptin bool
+	// Whether or not to enable light theme.
+	EnableLightTheme bool
 }
 
 // DefaultBootedFixtureConfig provides sane defaults for most tests.
@@ -710,6 +713,7 @@ func DefaultBootedFixtureConfig() BootedFixtureConfig {
 		ParentStateProvider: nil,
 		EnableUIAutomator:   true,
 		PlayStoreOptin:      false,
+		EnableLightTheme:    false,
 	}
 }
 
@@ -727,6 +731,7 @@ func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.Fix
 		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
 		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
 		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
+		enableLightTheme:    arcBootedFixtureConfig.EnableLightTheme,
 		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
@@ -754,6 +759,7 @@ func NewArcBootedFixtureWithPvSchedEnabled(arcBootedFixtureConfig BootedFixtureC
 		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
 		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
 		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
+		enableLightTheme:    arcBootedFixtureConfig.EnableLightTheme,
 		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
@@ -844,6 +850,17 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 			if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
 				s.Fatal("Failed to opt into Play Store: ", err)
 			}
+		}
+	}
+
+	if f.enableLightTheme {
+		s.Log("Turning on light theme")
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to connect Test API: ", err)
+		}
+		if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.forceAutoThemeMode)`, false); err != nil {
+			s.Fatal("Failed to enable light theme: ", err)
 		}
 	}
 
