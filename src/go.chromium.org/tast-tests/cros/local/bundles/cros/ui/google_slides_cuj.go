@@ -136,7 +136,10 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected number of open windows, got %d, expected 1", len(windows))
 	}
 
-	if windows[0].State != ash.WindowStateNormal {
+	// In tablet mode, windows are generally restricted to a Maximized state.
+	// Therefore, only adjust the state when not in tablet mode and the window
+	// is not already in a Normal state.
+	if !inTabletMode && windows[0].State != ash.WindowStateNormal {
 		s.Logf("Window state was originally %s; will update to WindowStateNormal", windows[0].State)
 		if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, ash.WindowStateNormal); err != nil {
 			s.Fatal("Failed to set window state normal: ", err)
