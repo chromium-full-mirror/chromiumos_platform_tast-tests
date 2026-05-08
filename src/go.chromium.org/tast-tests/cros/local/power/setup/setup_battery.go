@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
@@ -176,6 +177,21 @@ func Battery(ctx context.Context, total time.Duration, discharge bool) (CleanupC
 
 }
 
+// calculateMinChargePercentage calculates the minimum charge percentage, applying degradation adjustment if needed.
+func calculateMinChargePercentage(ctx context.Context, cp power.ChargeParams, status *powerpb.Status) float64 {
+	if cp.SkipDegradationAdjustment {
+		return cp.MinChargePercentage
+	}
+
+	degradation := status.BatteryChargeFull / status.BatteryChargeFullDesign
+	// The charge would take a long time in the capacity interval 80% ~ 100%.
+	// Cap the minimum charge percentage to 80% to avoid timeout.
+	const minChargeThreshold = 80.0
+	finalMin := min(cp.MinChargePercentage/degradation, cp.MaxChargePercentage, minChargeThreshold)
+	testing.ContextLogf(ctx, "Degradation of the battery is %f, use %f as minimum charge percentage", degradation, finalMin)
+	return finalMin
+}
+
 // PrepareBattery charges or drains the battery to reach the specified
 // range. Upon completion, the DUT would be allowed to resume charging or
 // being forced to discharge as specified.
@@ -195,13 +211,7 @@ func PrepareBattery(ctx context.Context, cp power.ChargeParams) error {
 		return errors.Wrap(err, "failed to obtain DUT power status")
 	}
 
-	degradation := status.BatteryChargeFull / status.BatteryChargeFullDesign
-	// The charge would take a long time in the capacity interval 80% ~ 100%.
-	// Cap the minimum charge percentage to 80% to avoid timeout.
-	const minChargeThreshold = 80.0
-	minChargePercentage := min(cp.MinChargePercentage/degradation, cp.MaxChargePercentage, minChargeThreshold)
-	testing.ContextLogf(ctx, "Degradation of the battery is %f, use %f as minimum charge percentage", degradation, minChargePercentage)
-
+	minChargePercentage := calculateMinChargePercentage(ctx, cp, status)
 	currentPercentage := status.BatteryPercent
 	logStr := "battery"
 	if cp.UseDisplayPercentage {

@@ -33,6 +33,7 @@ var qualChargeParam = power.ChargeParams{
 	DischargeOnCompletion:     false,
 	IsCustomized:              false,
 	IsPowerQual:               true,
+	SkipDegradationAdjustment: true,
 }
 
 const (

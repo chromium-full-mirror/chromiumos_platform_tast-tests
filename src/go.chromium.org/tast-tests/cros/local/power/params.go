@@ -49,6 +49,15 @@ type ChargeParams struct {
 	// EnableDischargeWatchdog indicates whether to enable the discharge watchdog
 	// in drainBattery to reliably discharge the battery despite software glitches.
 	EnableDischargeWatchdog bool
+
+	// SkipDegradationAdjustment indicates whether to skip adjusting the charge
+	// percentage to account for battery degradation.
+	// If true, MinChargePercentage is interpreted as a percentage of the
+	// battery's current full capacity.
+	// If false, MinChargePercentage is interpreted as a percentage of the
+	// battery's design capacity; the actual charge target is then adjusted and
+	// capped at 80% to avoid long charge times.
+	SkipDegradationAdjustment bool
 }
 
 // RegressionTestChargeParam is used for tests in power_regression suite that

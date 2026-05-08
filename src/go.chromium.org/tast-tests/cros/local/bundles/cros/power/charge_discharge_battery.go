@@ -66,9 +66,11 @@ func init() {
 		}, {
 			Name: "customization_prep",
 			Val: power.ChargeParams{
-				DischargeOnCompletion: true,
-				IsCustomized:          true,
-				IsPowerQual:           false},
+				DischargeOnCompletion:     true,
+				IsCustomized:              true,
+				IsPowerQual:               false,
+				SkipDegradationAdjustment: true,
+			},
 			Timeout: 5 * time.Hour,
 		}, {
 			Name: "power_qual_prep_80_browsing_light",
