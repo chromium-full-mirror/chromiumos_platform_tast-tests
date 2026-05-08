@@ -43,7 +43,8 @@ func init() {
 		Desc: "Collect power metrics of using Simplify",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"alanlxl@google.com",
+			"chenjih@google.com",
+			"thanhdng@google.com",
 		},
 		BugComponent: "b:1673015",
 		Timeout:      20*time.Minute + power.RecorderTimeout,

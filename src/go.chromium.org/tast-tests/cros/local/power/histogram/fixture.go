@@ -21,7 +21,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeFastHistograms",
 		Desc:     "Logged into a user session and enabled quick metrics collection for fast histogram validation",
-		Contacts: []string{"alanlxl@google.com"},
+		Contacts: []string{"chrome-knowledge-eng@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeQuickMetricsCollectionArg),
@@ -35,7 +35,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeFastHistogramsAndBuiltinSmartDimModel",
 		Desc:     "Similar to chromeFastHistograms, plus force chrome to use builtin smart dim models",
-		Contacts: []string{"alanlxl@google.com"},
+		Contacts: []string{"chrome-knowledge-eng@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeQuickMetricsCollectionArg),

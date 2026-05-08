@@ -26,7 +26,6 @@ func init() {
 		Desc: "Check the AdaptiveCharging model",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"alanlxl@chromium.org",
 			"amoylan@chromium.org",
 			"thanhdng@chromium.org",
 		},

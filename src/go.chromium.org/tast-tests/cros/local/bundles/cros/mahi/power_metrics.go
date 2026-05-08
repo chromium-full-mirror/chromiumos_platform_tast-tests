@@ -41,7 +41,6 @@ func init() {
 		Desc: "Collect power metrics of using mahi",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"alanlxl@google.com",
 			"chenjih@google.com",
 			"thanhdng@google.com",
 		},

@@ -797,7 +797,6 @@ func init() {
 		Desc:         "Fixture with mahi flags enabled and feature key provided",
 		BugComponent: "b:1551116",
 		Contacts: []string{
-			"alanlxl@google.com",
 			"chenjih@google.com",
 			"thanhdng@google.com",
 		},
@@ -829,7 +828,7 @@ func init() {
 		Desc:         "Fixture with mahi flag (for simplify feature) enabled",
 		BugComponent: "b:1673015",
 		Contacts: []string{
-			"alanlxl@google.com",
+			"chenjih@google.com",
 			"thanhdng@google.com",
 		},
 		Impl: NewPowerUIFixture(PowerTestOptions{
