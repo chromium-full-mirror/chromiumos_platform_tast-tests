@@ -1089,7 +1089,11 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	}
 
 	// TODO:(b/474614687) - servod power_state:cold_reset is flaky on ti50 if the WP has changed
-	if s.hasCCD && value == PowerStateReset {
+	gscVer, err := s.GSCVersionInfo(ctx)
+	if err != nil {
+		return errors.Wrap(err, "GSCVersionInfo failed")
+	}
+	if gscVer.IsTi50 && s.hasCCD && value == PowerStateReset {
 		testing.ContextLog(ctx, "Resetting EC via GSC console")
 		if err := s.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
 			return errors.Wrap(err, "ecrst pulse failed")
