@@ -83,6 +83,13 @@ const (
 	lowResFakeCameraFileName  = "720p_camera_video.mjpeg"
 )
 
+// webRTCOpts configures WebRTC logging behavior.
+// Increase the stats polling interval to reduce dump file size.
+var webRTCOpts = []chrome.Option{
+	chrome.EnableFeatures("WebRtcInternalsStatsPollingInterval:interval/3s"),
+	chrome.ExtraArgs(webRTCEventLogCommandFlag),
+}
+
 // Benchmark flags to mimic CrossBench setup.
 var benchmarkFlags = []string{
 	"--no-default-browser-check",
@@ -282,10 +289,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			useEnterprisePool: true,
 			docsBlocker:       true,
 		},
@@ -441,10 +448,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -465,11 +472,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-				chrome.EnableFeatures("VsyncDecoding"),
-			},
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("PreferConstantFrameRate", "VsyncDecoding"),
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -489,10 +495,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			disableARC:  true,
 			docsBlocker: true,
 		},
@@ -515,8 +521,8 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures(
 					"PreferConstantFrameRate",
 					"CrOSLateBootAudioAPNoiseCancellation",
@@ -526,7 +532,7 @@ func init() {
 					"FeatureManagementVideoConference",
 				),
 				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
-			},
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -548,8 +554,8 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures(
 					"PreferConstantFrameRate",
 					"CrOSLateBootAudioStyleTransfer",
@@ -558,7 +564,7 @@ func init() {
 					"VideoConference",
 					"FeatureManagementVideoConference",
 				),
-			},
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -579,10 +585,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			docsBlocker:        true,
 			enableBatterySaver: true,
 		},
@@ -620,10 +626,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			docsBlocker: true,
 			scxType:     scx.TypeScxCentral,
 		},
@@ -657,13 +663,15 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrOSLateBootInitDLServer"),
-				chrome.EnableFeatures("CrOSLateBootSetRtForDisplayThreads"),
-				chrome.EnableFeatures("SetThreadBgForBgProcess"),
-				chrome.EnableFeatures("SetRtForDisplayThreads"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures(
+					"CrOSLateBootInitDLServer",
+					"CrOSLateBootSetRtForDisplayThreads",
+					"SetThreadBgForBgProcess",
+					"SetRtForDisplayThreads",
+				),
+			),
 			docsBlocker: true,
 			disableARC:  true,
 		},
@@ -729,11 +737,11 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
 				chrome.ExtraArgs("--enable-field-trial-config"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -970,10 +978,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			),
 			disableARC:               true,
 			docsBlocker:              true,
 			mlbenchmarkDataDirectory: true,
@@ -1012,10 +1020,8 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(
-					webRTCEventLogCommandFlag,
-				),
+			chromeExtraOpts: append(
+				webRTCOpts,
 				chrome.EnableFeatures(
 					"PreferConstantFrameRate",
 					"CrOSLateBootAudioAPNoiseCancellation",
@@ -1025,7 +1031,7 @@ func init() {
 					"FeatureManagementVideoConference",
 				),
 				chrome.DisableFeatures("CrOSLateBootAudioStyleTransfer"),
-			},
+			),
 			disableARC:               true,
 			mlbenchmarkDataDirectory: true,
 		},
@@ -1126,12 +1132,10 @@ func init() {
 		BugComponent: "b:1445284",
 		Data:         docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures(
-					"CoralFeature",
-				),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("CoralFeature"),
+			),
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
