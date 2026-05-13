@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_epson_printer_color_golden_20250613.bin",
-  "size": 9535,
-  "sha256sum": "99febf7301e1cd35b5ef3acae59089167459398a08951bf3dff46f55c6e53b93"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_epson_printer_color_golden_20260513.bin",
+  "size": 9542,
+  "sha256sum": "8d39985905073a65d4a698d7551905f481203c6c5b3a289cfeb7de86b66605db"
 }
