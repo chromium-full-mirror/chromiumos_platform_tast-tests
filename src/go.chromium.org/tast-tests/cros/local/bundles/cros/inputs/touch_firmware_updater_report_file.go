@@ -12,8 +12,11 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/touchcheck"
 )
 
 var unsupportedReferenceModels = []string{
@@ -25,6 +28,33 @@ var unsupportedReferenceModels = []string{
 var unstableModels = []string{
 	// TODO: b/311252896 - Undo skip after fix.
 	"ciri",
+}
+
+// Lists models that may or may not have touch hardware.
+var touchVariantModels = []string{
+	"karma",
+}
+
+// Checks only on models that may or may not have a touch hardware.
+// Safely bypassing the check for all other devices.
+func skipModelWithoutTouch(models ...string) hwdep.Condition {
+	return hwdep.Condition{
+		Satisfied: func(f *protocol.HardwareFeatures) (bool, string, error) {
+			// Check if the current device matches any of the provided models.
+			isMatch, _, err := hwdep.Model(models...).Satisfied(f)
+			if err != nil {
+				return false, "Failed to determine device model", err
+			}
+
+			// If the model is not in the list, bypass the touch hardware check.
+			if !isMatch {
+				return true, "", nil
+			}
+
+			// If the model is in the list, evaluate the touch hardware check.
+			return touchcheck.TouchscreenOrTouchpad().Satisfied(f)
+		},
+	}
 }
 
 func init() {
@@ -39,7 +69,10 @@ func init() {
 		// Skip form factors that do not have built-in touchpads or touchscreens.
 		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebit, hwdep.Chromebox),
 			// Skip unsupported/unstable models.
-			hwdep.SkipOnModel(append(unsupportedReferenceModels, unstableModels...)...)),
+			hwdep.SkipOnModel(append(unsupportedReferenceModels, unstableModels...)...),
+			// Skip models that do not have touchscreen or touchpads.
+			skipModelWithoutTouch(touchVariantModels...),
+		),
 		// Skip vms since this test is for functionality that is not available in VMs.
 		SoftwareDeps: []string{"chrome", "chrome_internal", "no_qemu"},
 	})
