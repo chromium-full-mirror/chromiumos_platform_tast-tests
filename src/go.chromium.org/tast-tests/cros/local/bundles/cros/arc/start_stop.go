@@ -41,43 +41,6 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val: startStopTestArgs{
-					fieldTrialConfig: chrome.FieldTrialConfigDefault,
-					subtests: []startstop.Subtest{
-						&startstop.TestMidis{},
-						&startstop.TestMount{},
-						&startstop.TestPID{},
-					},
-				},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val: startStopTestArgs{
-					fieldTrialConfig: chrome.FieldTrialConfigDisable,
-					subtests: []startstop.Subtest{
-						&startstop.TestMidis{},
-						&startstop.TestMount{},
-						&startstop.TestPID{},
-					},
-				},
-			},
-			{
-				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val: startStopTestArgs{
-					fieldTrialConfig: chrome.FieldTrialConfigEnable,
-					subtests: []startstop.Subtest{
-						&startstop.TestMidis{},
-						&startstop.TestMount{},
-						&startstop.TestPID{},
-					},
-				},
-			},
-			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Val: startStopTestArgs{

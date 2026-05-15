@@ -23,12 +23,11 @@ func init() {
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
 }

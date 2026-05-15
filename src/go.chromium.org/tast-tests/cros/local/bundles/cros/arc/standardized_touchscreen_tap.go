@@ -32,26 +32,18 @@ func init() {
 		// TODO(b/210260303): Remove models after tap issue is resolved for kukui devices.
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("kakadu", "katsu", "kodama")),
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchscreenTapTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedTouchscreenTapTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}, {
-			Name:              "vm",
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchscreenTapTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "vm_tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedTouchscreenTapTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchscreenTapTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
+			}, {
+				Name:              "vm_tablet_mode",
+				Val:               standardizedtestutil.GetTabletTest(runStandardizedTouchscreenTapTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
+			}},
 	})
 }
 

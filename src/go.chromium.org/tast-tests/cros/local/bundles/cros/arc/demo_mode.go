@@ -44,13 +44,6 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{
-					// Disabled by TORA.  See:b/330879131.
-					//"informational",
-				},
-			},
-			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{

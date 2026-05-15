@@ -80,29 +80,26 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      25 * time.Minute,
 		Vars:         []string{bootAttemptCountVarName, maxFailureCountVarName},
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               testParams{},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               testParams{},
-		}, {
-			Name:              "no_guest_ureadahead_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParams{
-				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
-			},
-		}, {
-			// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
-			Name:              "keymint_vm",
-			ExtraSoftwareDeps: []string{"android_vm_t"},
-			Val: testParams{
-				chromeArgs: []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val:               testParams{},
+			}, {
+				Name:              "no_guest_ureadahead_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParams{
+					chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
+				},
+			}, {
+				// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
+				Name:              "keymint_vm",
+				ExtraSoftwareDeps: []string{"android_vm_t"},
+				Val: testParams{
+					chromeArgs: []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
+				},
+			}},
 		VarDeps: []string{
 			"arc.perfAccountPool",
 		},

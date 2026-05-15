@@ -33,15 +33,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SkipOnModel("kakadu", "katsu", "kodama")),
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchscreenLongTapTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedTouchscreenLongTapTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}, {
 			Name:              "vm",
 			Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchscreenLongTapTest),
 			ExtraSoftwareDeps: []string{"android_vm"},

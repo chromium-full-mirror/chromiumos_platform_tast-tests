@@ -67,85 +67,57 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Timeout:      dataMigrationTestTimeout,
 		Fixture:      fixture.TAPERemoteBase,
-		Params: []testing.Param{{
-			// Launch ARC R with /data created on ARC P (for x86).
-			Name: "p_to_r_x86",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationUnmanagedPool,
-				dataFileName: homeDataNamePiX86,
-				managed:      false,
-			},
-			ExtraData: []string{homeDataNamePiX86},
-			ExtraSoftwareDeps: []string{
-				"android_container_r",
-				"amd64",
-			},
-		}, {
-			// Launch ARC T with virtio-fs /data created on ARC R (for x86).
-			Name: "r_to_t_x86_virtiofs",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationUnmanagedPool,
-				dataFileName: homeDataNameRvcX86Virtiofs,
-				managed:      false,
-			},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			ExtraData: []string{homeDataNameRvcX86Virtiofs},
-			ExtraSoftwareDeps: []string{
-				"android_vm_t",
-				"amd64",
-				"no_arcvm_virtio_blk_data",
-			},
-		}, {
-			// Launch ARC T with crosvm virtio-blk /data created on ARC R (for arm).
-			// Note: This doesn't support boards with virtio-blk /data on logical volumes.
-			Name: "r_to_t_arm_virtioblk",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationUnmanagedPool,
-				dataFileName: homeDataNameRvcArmVirtioBlk,
-				managed:      false,
-			},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			ExtraData: []string{homeDataNameRvcArmVirtioBlk},
-			ExtraSoftwareDeps: []string{
-				"android_vm_t",
-				"arm",
-				"no_lvm_stateful_partition",
-			},
-		}, {
-			// Launch ARC R with /data created on ARC P for managed user(for x86).
-			Name: "managed_p_to_r_x86",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationManagedPool,
-				dataFileName: homeDataNameManagedPiX86,
-				managed:      true,
-			},
-			ExtraData: []string{homeDataNameManagedPiX86},
-			ExtraSearchFlags: []*testing.StringPair{
-				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
-			},
-			ExtraSoftwareDeps: []string{
-				"android_container_r",
-				"amd64",
-			},
-		}, {
-			// Launch ARC T with virtio-fs /data created on ARC R for managed user (for x86).
-			Name: "managed_r_to_t_x86_virtiofs",
-			Val: dataMigrationTestParams{
-				poolID:       arcDataMigrationManagedPool,
-				dataFileName: homeDataNameManagedRvcX86Virtiofs,
-				managed:      true,
-			},
-			ExtraAttr: []string{"group:mainline", "informational"},
-			ExtraData: []string{homeDataNameManagedRvcX86Virtiofs},
-			ExtraSearchFlags: []*testing.StringPair{
-				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
-			},
-			ExtraSoftwareDeps: []string{
-				"android_vm_t",
-				"amd64",
-				"no_arcvm_virtio_blk_data",
-			},
-		}},
+		Params: []testing.Param{
+			{
+				// Launch ARC T with virtio-fs /data created on ARC R (for x86).
+				Name: "r_to_t_x86_virtiofs",
+				Val: dataMigrationTestParams{
+					poolID:       arcDataMigrationUnmanagedPool,
+					dataFileName: homeDataNameRvcX86Virtiofs,
+					managed:      false,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+				ExtraData: []string{homeDataNameRvcX86Virtiofs},
+				ExtraSoftwareDeps: []string{
+					"android_vm_t",
+					"amd64",
+					"no_arcvm_virtio_blk_data",
+				},
+			}, {
+				// Launch ARC T with crosvm virtio-blk /data created on ARC R (for arm).
+				// Note: This doesn't support boards with virtio-blk /data on logical volumes.
+				Name: "r_to_t_arm_virtioblk",
+				Val: dataMigrationTestParams{
+					poolID:       arcDataMigrationUnmanagedPool,
+					dataFileName: homeDataNameRvcArmVirtioBlk,
+					managed:      false,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+				ExtraData: []string{homeDataNameRvcArmVirtioBlk},
+				ExtraSoftwareDeps: []string{
+					"android_vm_t",
+					"arm",
+					"no_lvm_stateful_partition",
+				},
+			}, {
+				// Launch ARC T with virtio-fs /data created on ARC R for managed user (for x86).
+				Name: "managed_r_to_t_x86_virtiofs",
+				Val: dataMigrationTestParams{
+					poolID:       arcDataMigrationManagedPool,
+					dataFileName: homeDataNameManagedRvcX86Virtiofs,
+					managed:      true,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+				ExtraData: []string{homeDataNameManagedRvcX86Virtiofs},
+				ExtraSearchFlags: []*testing.StringPair{
+					pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+				},
+				ExtraSoftwareDeps: []string{
+					"android_vm_t",
+					"amd64",
+					"no_arcvm_virtio_blk_data",
+				},
+			}},
 	})
 }
 

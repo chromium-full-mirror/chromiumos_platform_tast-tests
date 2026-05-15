@@ -41,10 +41,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 		Params: []testing.Param{
 			{
-				// Promise Icons requires Android R+ (android_container which includes pi will not work).
-				Name:              "container_r",
-				ExtraSoftwareDeps: []string{"android_container_r"},
-			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},

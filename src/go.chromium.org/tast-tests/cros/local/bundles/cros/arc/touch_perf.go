@@ -32,23 +32,20 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         inputlatency.AndroidData(),
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBootedWithDisableExternalStorage",
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBootedWithDisableExternalStorage",
-		}, {
-			Name:              "vm_pvsched",
-			BugComponent:      "b:167279",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-			Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBootedWithDisableExternalStorage",
+			}, {
+				Name:              "vm_pvsched",
+				BugComponent:      "b:167279",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
+			}},
 		Timeout: 10 * time.Minute,
 	})
 }

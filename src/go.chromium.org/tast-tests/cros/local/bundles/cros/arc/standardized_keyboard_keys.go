@@ -65,27 +65,19 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardKeysTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardKeysTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}, {
-			Name:              "vm",
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardKeysTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "vm_tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardKeysTest),
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardKeysTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
+			}, {
+				Name:              "vm_tablet_mode",
+				Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardKeysTest),
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
+			}},
 	})
 }
 

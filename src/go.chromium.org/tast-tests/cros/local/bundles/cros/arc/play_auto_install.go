@@ -30,12 +30,11 @@ func init() {
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia", "no_arc_userdebug"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container", "chrome"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 10*time.Minute,
 		VarDeps: []string{arcCommon.PlayAutoInstallAccountVarName},
 	})

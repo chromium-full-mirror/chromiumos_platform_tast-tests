@@ -41,23 +41,6 @@ func init() {
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health", "release-health_arc"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off",
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
-			},
-			{
-				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "informational", "group:chrome_uprev_cbx"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               playStoreTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
-			},
-			{
 				Name:              "vm",
 				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:release-health"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},

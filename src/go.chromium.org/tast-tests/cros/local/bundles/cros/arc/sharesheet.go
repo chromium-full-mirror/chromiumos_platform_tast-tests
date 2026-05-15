@@ -40,12 +40,11 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      8 * time.Minute,
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		VarDeps: []string{
 			arcCommon.SharesheetPoolVarName,
 		},

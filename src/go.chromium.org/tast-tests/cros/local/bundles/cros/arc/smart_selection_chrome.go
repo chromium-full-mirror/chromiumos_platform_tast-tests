@@ -34,12 +34,11 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{"arc.SmartSelectionChrome.username", "arc.SmartSelectionChrome.password"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 	})
 }
 

@@ -36,14 +36,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"capybara.jpg"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               "/run/arc/sdcard/write/emulated/0",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               "/media/fuse/android_files",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val:               "/media/fuse/android_files",
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }

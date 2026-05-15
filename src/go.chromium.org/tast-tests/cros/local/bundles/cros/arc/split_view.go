@@ -47,31 +47,11 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:              "clamshell_mode",
-				ExtraSoftwareDeps: []string{"android_container"},
-				Fixture:           "arcBooted",
-				Val: splitViewTestParams{
-					tablet:        false,
-					startFromHome: false,
-				},
-			},
-			{
 				Name:              "clamshell_mode_vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				Fixture:           "arcBooted",
 				Val: splitViewTestParams{
 					tablet:        false,
-					startFromHome: false,
-				},
-			},
-			{
-				Name:              "tablet_mode",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_container"},
-				// TODO(b/251344622): Migrate to 'arcBooted'.
-				Fixture: "arcBootedInTabletMode",
-				Val: splitViewTestParams{
-					tablet:        true,
 					startFromHome: false,
 				},
 			},
@@ -84,17 +64,6 @@ func init() {
 				Val: splitViewTestParams{
 					tablet:        true,
 					startFromHome: false,
-				},
-			},
-			{
-				Name:              "tablet_home_launcher",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				ExtraSoftwareDeps: []string{"android_container"},
-				// TODO(b/251344622): Migrate to 'arcBooted'.
-				Fixture: "arcBootedInTabletMode",
-				Val: splitViewTestParams{
-					tablet:        true,
-					startFromHome: true,
 				},
 			},
 			{

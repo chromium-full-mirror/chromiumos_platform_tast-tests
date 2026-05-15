@@ -33,17 +33,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
-				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchScreenScrollTest),
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-			},
-			{
-				Name:              "tablet_mode",
-				Val:               standardizedtestutil.GetTabletTest(runStandardizedTouchScreenScrollTest),
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-			},
-			{
 				Name:              "vm",
 				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTouchScreenScrollTest),
 				ExtraSoftwareDeps: []string{"android_vm"},

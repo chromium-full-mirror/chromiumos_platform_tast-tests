@@ -30,13 +30,11 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Timeout:      2 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "container",
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 	})
 }
 

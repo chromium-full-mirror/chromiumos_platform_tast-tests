@@ -39,17 +39,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
-				Val: &standardizedMouseScrollArgs{
-					test: standardizedtestutil.GetClamshellTest(
-						runStandardizedMouseScrollTest,
-						standardizedtestutil.WithMouse(),
-					),
-					resizeLockEnabled: false,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-			},
-			{
 				Name: "vm",
 				Val: &standardizedMouseScrollArgs{
 					test: standardizedtestutil.GetClamshellTest(

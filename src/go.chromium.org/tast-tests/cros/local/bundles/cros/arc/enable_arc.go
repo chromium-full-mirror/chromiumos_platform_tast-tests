@@ -36,24 +36,18 @@ func init() {
 			// Disabled by TORA.  See:b/326900847.
 			// "gaia"
 		},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "familyLinkParentArcLogin",
-		}, {
-			Name:              "unicorn",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "familyLinkUnicornArcLogin",
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "familyLinkParentArcLogin",
-		}, {
-			Name:              "unicorn_vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "familyLinkUnicornArcLogin",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "familyLinkParentArcLogin",
+			}, {
+				Name:              "unicorn_vm",
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "familyLinkUnicornArcLogin",
+			}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
 	})
 }

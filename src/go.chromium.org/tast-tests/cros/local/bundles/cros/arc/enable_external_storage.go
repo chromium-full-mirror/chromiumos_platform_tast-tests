@@ -30,13 +30,12 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 	})
 }

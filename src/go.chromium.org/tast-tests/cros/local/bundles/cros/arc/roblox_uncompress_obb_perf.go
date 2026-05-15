@@ -32,20 +32,18 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Data:         []string{"com.roblox.client-886.zip"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBooted",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBooted",
-		}, {
-			Name:              "vm_pvsched",
-			BugComponent:      "b:167279",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-			Fixture:           "arcBootedWithPvSchedEnabled",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBooted",
+			}, {
+				Name:              "vm_pvsched",
+				BugComponent:      "b:167279",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Fixture:           "arcBootedWithPvSchedEnabled",
+			}},
 	})
 }
 

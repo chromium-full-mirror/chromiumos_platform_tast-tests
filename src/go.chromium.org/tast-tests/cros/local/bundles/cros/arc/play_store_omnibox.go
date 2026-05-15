@@ -32,15 +32,13 @@ func init() {
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"gaia"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container", "chrome"},
-			Fixture:           "arcBootedWithPlayStore",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
-			Fixture:           "arcBootedWithPlayStore",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "chrome"},
+				Fixture:           "arcBootedWithPlayStore",
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }

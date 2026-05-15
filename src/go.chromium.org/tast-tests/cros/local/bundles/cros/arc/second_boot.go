@@ -28,14 +28,12 @@ func init() {
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome", "gaia"},
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: (chrome.LoginTimeout * 2) + (arc.BootTimeout * 2) + 5*time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

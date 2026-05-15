@@ -35,17 +35,16 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "selinux", "gaia"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name: "vm",
-			ExtraSoftwareDeps: []string{
-				"android_vm",
-				// Skip the test when ARCVM virtio-blk /data is enabled.
-				// ARC's /data directory is encapsulated in a disk image when it is enabled.
-				"no_arcvm_virtio_blk_data",
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name: "vm",
+				ExtraSoftwareDeps: []string{
+					"android_vm",
+					// Skip the test when ARCVM virtio-blk /data is enabled.
+					// ARC's /data directory is encapsulated in a disk image when it is enabled.
+					"no_arcvm_virtio_blk_data",
+				},
+			}},
 		Timeout: 12 * time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

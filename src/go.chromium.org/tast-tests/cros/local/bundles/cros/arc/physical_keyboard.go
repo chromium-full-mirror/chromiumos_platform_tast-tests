@@ -55,25 +55,18 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Val:               stablePkTests,
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			Val:               stablePkTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "unstable",
-			Val:               unstablePkTests,
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "unstable_vm",
-			Val:               unstablePkTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Val:               stablePkTests,
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"informational"},
+			}, {
+				Name:              "unstable_vm",
+				Val:               unstablePkTests,
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"informational"},
+			}},
 	})
 }
 

@@ -43,19 +43,15 @@ func init() {
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional"},
 		SoftwareDeps: []string{"gaia"},
-		Params: []testing.Param{{
-			Val: playStoreSearchAndLaunchTestParams{
-				MaxOptinAttempts: 2,
-			},
-			ExtraSoftwareDeps: []string{"android_container", "chrome"},
-		}, {
-			Name: "vm",
-			Val: playStoreSearchAndLaunchTestParams{
-				MaxOptinAttempts: 2,
-			},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
-		}},
+		Params: []testing.Param{
+			{
+				Name: "vm",
+				Val: playStoreSearchAndLaunchTestParams{
+					MaxOptinAttempts: 2,
+				},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "chrome"},
+			}},
 		Timeout: 10 * time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

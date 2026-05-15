@@ -41,54 +41,32 @@ func init() {
 		Data:         []string{"drag_source_window.html", "drag_target_window.html"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Name:              "chrome_to_android",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: &dragDropTestArgs{
-				androidSource: false,
-				androidTarget: true,
-			},
-		}, {
-			Name:              "chrome_to_android_vm",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: &dragDropTestArgs{
-				androidSource: false,
-				androidTarget: true,
-			},
-		}, {
-			Name:              "android_to_android",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: &dragDropTestArgs{
-				androidSource: true,
-				androidTarget: true,
-			},
-		}, {
-			Name:              "android_to_android_vm",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: &dragDropTestArgs{
-				androidSource: true,
-				androidTarget: true,
-			},
-		}, {
-			Name:              "android_to_chrome",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: &dragDropTestArgs{
-				androidSource: true,
-				androidTarget: false,
-			},
-		}, {
-			Name:              "android_to_chrome_vm",
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: &dragDropTestArgs{
-				androidSource: true,
-				androidTarget: false,
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "chrome_to_android_vm",
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: &dragDropTestArgs{
+					androidSource: false,
+					androidTarget: true,
+				},
+			}, {
+				Name:              "android_to_android_vm",
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: &dragDropTestArgs{
+					androidSource: true,
+					androidTarget: true,
+				},
+			}, {
+				Name:              "android_to_chrome_vm",
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: &dragDropTestArgs{
+					androidSource: true,
+					androidTarget: false,
+				},
+			}},
 	})
 }
 

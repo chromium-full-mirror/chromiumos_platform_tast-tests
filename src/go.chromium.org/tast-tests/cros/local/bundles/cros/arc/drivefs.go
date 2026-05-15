@@ -35,8 +35,6 @@ func init() {
 		VarDeps:      []string{arcCommon.DrivefsPoolVarName},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
-			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},

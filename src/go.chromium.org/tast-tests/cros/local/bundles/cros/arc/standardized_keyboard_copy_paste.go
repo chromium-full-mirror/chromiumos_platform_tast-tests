@@ -31,29 +31,20 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational"},
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"informational"},
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "vm_tablet_mode",
-			ExtraAttr:         []string{"informational"},
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardCopyPasteTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"informational"},
+				Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardCopyPasteTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
+			}, {
+				Name:              "vm_tablet_mode",
+				ExtraAttr:         []string{"informational"},
+				Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardCopyPasteTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
+			}},
 	})
 }
 

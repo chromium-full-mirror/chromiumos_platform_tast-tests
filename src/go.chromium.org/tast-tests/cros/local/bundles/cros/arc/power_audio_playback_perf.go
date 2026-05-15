@@ -36,32 +36,12 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Params: []testing.Param{
 			{
-				Name: "default",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModeNone,
-					BatteryDischargeMode: setup.ForceBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
 				Name: "default_vm",
 				Val: audio.TestParameters{
 					PerformanceMode:      audio.PerformanceModeNone,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
-				Name: "low_latency",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModeLowLatency,
-					BatteryDischargeMode: setup.ForceBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
@@ -87,16 +67,6 @@ func init() {
 				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 			},
 			{
-				Name: "power_saving",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModePowerSaving,
-					BatteryDischargeMode: setup.ForceBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
 				Name: "power_saving_vm",
 				Val: audio.TestParameters{
 					PerformanceMode:      audio.PerformanceModePowerSaving,
@@ -118,16 +88,6 @@ func init() {
 				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 			},
 			{
-				Name: "default_nobatterymetrics",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModeNone,
-					BatteryDischargeMode: setup.NoBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
 				Name: "default_vm_nobatterymetrics",
 				Val: audio.TestParameters{
 					PerformanceMode:      audio.PerformanceModeNone,
@@ -138,32 +98,12 @@ func init() {
 				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
-				Name: "low_latency_nobatterymetrics",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModeLowLatency,
-					BatteryDischargeMode: setup.NoBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
 				Name: "low_latency_vm_nobatterymetrics",
 				Val: audio.TestParameters{
 					PerformanceMode:      audio.PerformanceModeLowLatency,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
-				Fixture:           "arcBootedWithDisableExternalStorage",
-			},
-			{
-				Name: "power_saving_nobatterymetrics",
-				Val: audio.TestParameters{
-					PerformanceMode:      audio.PerformanceModePowerSaving,
-					BatteryDischargeMode: setup.NoBatteryDischarge,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				Fixture:           "arcBootedWithDisableExternalStorage",
 			},

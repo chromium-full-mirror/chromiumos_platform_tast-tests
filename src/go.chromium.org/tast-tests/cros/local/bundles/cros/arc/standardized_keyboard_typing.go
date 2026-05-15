@@ -33,26 +33,18 @@ func init() {
 		// Disabled temporarily on Kukui Devices due to test flakiness with FakeKeyboardHeuristic (b/245854219).
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kakadu", "katsu", "kodama")),
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardTypingTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardTypingTest),
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}, {
-			Name:              "vm",
-			Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardTypingTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-		}, {
-			Name:              "vm_tablet_mode",
-			Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardTypingTest),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Val:               standardizedtestutil.GetClamshellTest(runStandardizedKeyboardTypingTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
+			}, {
+				Name:              "vm_tablet_mode",
+				Val:               standardizedtestutil.GetTabletTest(runStandardizedKeyboardTypingTest),
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(standardizedtestutil.TabletHardwareDep),
+			}},
 	})
 }
 

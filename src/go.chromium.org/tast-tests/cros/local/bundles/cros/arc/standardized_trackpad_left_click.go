@@ -33,10 +33,6 @@ func init() {
 		Fixture:      "arcBooted",
 		Params: []testing.Param{
 			{
-				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTrackpadLeftClickTest),
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(standardizedtestutil.ClamshellHardwareDep),
-			}, {
 				Name:              "vm",
 				Val:               standardizedtestutil.GetClamshellTest(runStandardizedTrackpadLeftClickTest),
 				ExtraSoftwareDeps: []string{"android_vm"},
