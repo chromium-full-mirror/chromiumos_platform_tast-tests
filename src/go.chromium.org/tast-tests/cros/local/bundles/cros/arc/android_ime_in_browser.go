@@ -35,14 +35,12 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBootedInTabletMode",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBootedInTabletMode",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBootedInTabletMode",
+			}},
 	})
 }
 

@@ -29,23 +29,17 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"group:arc-functional"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"group:arc-functional"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-		}, {
-			Name:              "refresh",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "refresh_vm",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"group:arc-functional"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+			}, {
+				Name:              "refresh_vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 	})
 }
 

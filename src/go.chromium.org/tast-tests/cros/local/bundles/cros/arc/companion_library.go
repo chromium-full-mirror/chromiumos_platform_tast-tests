@@ -100,21 +100,18 @@ func init() {
 		Data:         []string{"ArcCompanionLibDemo.apk", wm.WhiteWallpaperFileName},
 		Fixture:      "arcBooted",
 		Timeout:      6 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "container_r",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-			Val:               generalTests,
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               generalTests,
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name:              "vm_unstable",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               unstableTests,
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val:               generalTests,
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}, {
+				Name:              "vm_unstable",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val:               unstableTests,
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}},
 	})
 }
 

@@ -35,10 +35,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "play_store", "gaia"},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:cq-minimal"},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name:              "vm",
 				ExtraAttr:         []string{"group:cq-minimal", "informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm"},

@@ -31,10 +31,6 @@ func init() {
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name:              "vm",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},

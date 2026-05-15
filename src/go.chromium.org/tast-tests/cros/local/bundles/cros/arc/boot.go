@@ -42,54 +42,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Val: bootTestArgs{
-					numTrials:        1,
-					fieldTrialConfig: chrome.FieldTrialConfigDefault,
-				},
-				ExtraAttr:         []string{"group:mainline"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-			},
-			{
-				Name: "fieldtrial_testing_config_off",
-				Val: bootTestArgs{
-					numTrials:        1,
-					fieldTrialConfig: chrome.FieldTrialConfigDisable,
-				},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-			},
-			{
-				Name: "fieldtrial_testing_config_on",
-				Val: bootTestArgs{
-					numTrials:        1,
-					fieldTrialConfig: chrome.FieldTrialConfigEnable,
-				},
-				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-			},
-			{
-				Name: "forever",
-				Val: bootTestArgs{
-					numTrials:        1000000,
-					fieldTrialConfig: chrome.FieldTrialConfigDefault,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           365 * 24 * time.Hour,
-			},
-			{
-				Name: "stress",
-				Val: bootTestArgs{
-					numTrials:        10,
-					fieldTrialConfig: chrome.FieldTrialConfigDefault,
-				},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           25 * time.Minute,
-			},
-			{
 				Name: "vm",
 				Val: bootTestArgs{
 					numTrials:        1,

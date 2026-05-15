@@ -35,14 +35,12 @@ func init() {
 		},
 		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps: []string{uiCommon.GaiaPoolDefaultVarName},
 	})

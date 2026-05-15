@@ -30,23 +30,6 @@ func init() {
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture:           "arcBooted",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off",
-				Fixture:           "arcBooted.fieldtrial_testing_config_off",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"group:mainline", "informational"},
-			},
-			{
-				Name:              "fieldtrial_testing_config_on",
-				Fixture:           "arcBooted.fieldtrial_testing_config_on",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"group:mainline", "informational", "group:chrome_uprev_cbx"},
-			},
-			{
 				Name:              "vm",
 				Fixture:           "arcBooted",
 				ExtraSoftwareDeps: []string{"android_vm"},

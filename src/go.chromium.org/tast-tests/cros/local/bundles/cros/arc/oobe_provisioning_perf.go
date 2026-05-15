@@ -44,36 +44,22 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		// This test steps through opt-in flow 5 times and each iteration takes ~2 min.
 		Timeout: 20 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "managed",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamOobeProvisioningPerf{
-				username: "arc.OobeProvisioningPerf.managed_username",
-				password: "arc.OobeProvisioningPerf.managed_password",
-				metric:   "Managed",
-			},
-		}, {
-			Name:              "managed_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParamOobeProvisioningPerf{
-				username: "arc.OobeProvisioningPerf.managed_username",
-				password: "arc.OobeProvisioningPerf.managed_password",
-				metric:   "Managed",
-			},
-		}, {
-			Name:              "unmanaged",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamOobeProvisioningPerf{
-				metric: "Unmanaged",
-			},
-		}, {
-			Name:              "unmanaged_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParamOobeProvisioningPerf{
-				metric: "Unmanaged",
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "managed_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParamOobeProvisioningPerf{
+					username: "arc.OobeProvisioningPerf.managed_username",
+					password: "arc.OobeProvisioningPerf.managed_password",
+					metric:   "Managed",
+				},
+			}, {
+				Name:              "unmanaged_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParamOobeProvisioningPerf{
+					metric: "Unmanaged",
+				},
+			}},
 		VarDeps: []string{
 			"arc.OobeProvisioningPerf.managed_username",
 			"arc.OobeProvisioningPerf.managed_password",

@@ -95,14 +95,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithoutUIAutomator",
 		Timeout:      4 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "container_r",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}},
 	})
 }
 

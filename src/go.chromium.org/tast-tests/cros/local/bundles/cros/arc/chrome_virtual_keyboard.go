@@ -63,24 +63,17 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
 		Data:         []string{wm.WhiteWallpaperFileName},
-		Params: []testing.Param{{
-			Val:               stableVkTests,
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			Val:               stableVkTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}, {
-			Name:              "unstable",
-			Val:               unstableVkTests,
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           8 * time.Minute,
-		}, {
-			Name:              "unstable_vm",
-			Val:               unstableVkTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           8 * time.Minute,
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Val:               stableVkTests,
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}, {
+				Name:              "unstable_vm",
+				Val:               unstableVkTests,
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           8 * time.Minute,
+			}},
 	})
 }
 

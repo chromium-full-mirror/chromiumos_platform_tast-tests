@@ -51,23 +51,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "group:cq-minimal"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDefault},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off",
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigDisable},
-			},
-			{
-				Name:              "fieldtrial_testing_config_on",
-				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "informational", "group:chrome_uprev_cbx"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val:               optinTestArgs{preprod: false, fieldTrialConfig: chrome.FieldTrialConfigEnable},
-			},
-			{
 				Name:              "vm",
 				ExtraAttr:         []string{"group:arc-functional", "group:mainline", "group:cq-medium", "group:cq-minimal"},
 				ExtraSoftwareDeps: []string{"android_vm"},

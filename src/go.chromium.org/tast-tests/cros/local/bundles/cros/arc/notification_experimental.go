@@ -69,22 +69,20 @@ func init() {
 		Data:         []string{arcNotificationTest2ApkFilename},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,
-		Params: []testing.Param{{
-			Val:               testedStyles{"basic", "big_text", "big_picture", "inbox", "messaging"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "standard_vm",
-			Val:               testedStyles{"basic", "big_text", "big_picture", "inbox", "messaging"},
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name:              "custom_vm",
-			Val:               testedStyles{"custom"},
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "standard_vm",
+				Val:               testedStyles{"basic", "big_text", "big_picture", "inbox", "messaging"},
+				Fixture:           "arcBooted",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}, {
+				Name:              "custom_vm",
+				Val:               testedStyles{"custom"},
+				Fixture:           "arcBooted",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+			}},
 	})
 }
 

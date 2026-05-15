@@ -27,21 +27,13 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			Val:               false,
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "logged_in",
-			Val:               true,
-			ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm_logged_in",
-			Val:               true,
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm_logged_in",
+				Val:               true,
+				ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: 10 * time.Minute,
 	})
 }

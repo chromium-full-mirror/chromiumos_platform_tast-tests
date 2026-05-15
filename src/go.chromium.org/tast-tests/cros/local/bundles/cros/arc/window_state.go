@@ -66,87 +66,49 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Name: "clamshell",
-			Val: windowStateParams{
-				false, // Clamshell mode.
-				1,     // Num test iterations.
-				clamshellWindowStateTests,
-			},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name: "clamshell_vm",
-			Val: windowStateParams{
-				false, // Clamshell mode.
-				1,     // Num test iterations.
-				clamshellWindowStateTests,
-			},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-			Timeout:           4 * time.Minute,
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}, {
-			Name: "clamshell_stress",
-			Val: windowStateParams{
-				false, // Clamshell mode.
-				20,    // Num test iterations.
-				clamshellWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name: "clamshell_stress_vm",
-			Val: windowStateParams{
-				false, // Clamshell mode.
-				20,    // Num test iterations.
-				clamshellWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name: "tablet",
-			Val: windowStateParams{
-				true, // Tablet Mode.
-				1,    // Num test iterations.
-				tabletWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name: "tablet_vm",
-			Val: windowStateParams{
-				true, // Tablet Mode.
-				1,    // Num test iterations.
-				tabletWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name: "tablet_stress",
-			Val: windowStateParams{
-				true, // Tablet Mode.
-				20,   // Num test iterations.
-				tabletWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Timeout:           10 * time.Minute,
-		}, {
-			Name: "tablet_stress_vm",
-			Val: windowStateParams{
-				true, // Tablet Mode.
-				20,   // Num test iterations.
-				tabletWindowStateTests,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           10 * time.Minute,
-		}},
+		Params: []testing.Param{
+			{
+				Name: "clamshell_vm",
+				Val: windowStateParams{
+					false, // Clamshell mode.
+					1,     // Num test iterations.
+					clamshellWindowStateTests,
+				},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+				Timeout:           4 * time.Minute,
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}, {
+				Name: "clamshell_stress_vm",
+				Val: windowStateParams{
+					false, // Clamshell mode.
+					20,    // Num test iterations.
+					clamshellWindowStateTests,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           10 * time.Minute,
+			}, {
+				Name: "tablet_vm",
+				Val: windowStateParams{
+					true, // Tablet Mode.
+					1,    // Num test iterations.
+					tabletWindowStateTests,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           4 * time.Minute,
+			}, {
+				Name: "tablet_stress_vm",
+				Val: windowStateParams{
+					true, // Tablet Mode.
+					20,   // Num test iterations.
+					tabletWindowStateTests,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Timeout:           10 * time.Minute,
+			}},
 	})
 }
 

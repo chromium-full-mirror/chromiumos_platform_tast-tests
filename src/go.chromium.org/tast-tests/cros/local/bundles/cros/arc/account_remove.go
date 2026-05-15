@@ -59,23 +59,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name: "managed",
-				Val: accountRemoveTestArgs{
-					primaryAccountPool:   arcCommon.ManagedAccountPoolVarName,
-					secondaryAccountPool: uiCommon.GaiaPoolDefaultVarName,
-					optin:                false,
-				},
-				ExtraSoftwareDeps: []string{
-					"android_container",
-					// Disabled by TORA.  See:b/342208261.
-					//"gaia"
-				},
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/342208261.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name: "managed_vm",
 				Val: accountRemoveTestArgs{
 					primaryAccountPool:   arcCommon.ManagedAccountPoolVarName,
@@ -86,23 +69,6 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/342208261.
 					//"informational"
-				},
-			},
-			{
-				Name: "unmanaged",
-				Val: accountRemoveTestArgs{
-					primaryAccountPool:   uiCommon.GaiaPoolDefaultVarName,
-					secondaryAccountPool: arcCommon.ManagedAccountPoolVarName,
-					optin:                true,
-				},
-				ExtraSoftwareDeps: []string{
-					"android_container",
-					// Disabled by TORA.  See:b/342208261.
-					//"gaia"
-				},
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/342208261.
-					// "informational", "group:mainline"
 				},
 			},
 			{

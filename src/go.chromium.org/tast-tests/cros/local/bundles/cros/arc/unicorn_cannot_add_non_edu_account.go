@@ -41,10 +41,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{
-			{
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
 			// Disabled by TORA. See: b/331078204
 			// {
 			// 	Name: "vm",

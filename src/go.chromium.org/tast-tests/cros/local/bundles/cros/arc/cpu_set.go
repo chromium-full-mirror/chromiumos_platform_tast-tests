@@ -47,25 +47,23 @@ func init() {
 			"no_qemu",
 		},
 		Attr: []string{"group:mainline"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               cpuSetConfig{},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: cpuSetConfig{
-				// Make sure the DUT uses per-VM core scheduling rather than per-vCPU one. This will prevent the test
-				// from failing even when ArcEnablePerVmCoreScheduling's default in components/arc/arc_features.cc is
-				// changed. When ArcEnablePerVmCoreScheduling's default is changed, the flag below should eventually
-				// be changed too.
-				chromeExtraArgs: []string{"--enable-features=ArcEnablePerVmCoreScheduling",
-					// Similarly, make sure the DUT won't set up RT vCPU for all machines at the moment.
-					// This will prevent the test from failing even when [ArcRtVcpuDualCore|ArcRtVcpuQuadCore]'s default
-					// in components/arc/arc_features.cc is changed. When [ArcRtVcpuDualCore|ArcRtVcpuQuadCore]'s default
-					// is changed, the flags below should eventually be changed too.
-					"--disable-features=ArcRtVcpuDualCore,ArcRtVcpuQuadCore"},
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: cpuSetConfig{
+					// Make sure the DUT uses per-VM core scheduling rather than per-vCPU one. This will prevent the test
+					// from failing even when ArcEnablePerVmCoreScheduling's default in components/arc/arc_features.cc is
+					// changed. When ArcEnablePerVmCoreScheduling's default is changed, the flag below should eventually
+					// be changed too.
+					chromeExtraArgs: []string{"--enable-features=ArcEnablePerVmCoreScheduling",
+						// Similarly, make sure the DUT won't set up RT vCPU for all machines at the moment.
+						// This will prevent the test from failing even when [ArcRtVcpuDualCore|ArcRtVcpuQuadCore]'s default
+						// in components/arc/arc_features.cc is changed. When [ArcRtVcpuDualCore|ArcRtVcpuQuadCore]'s default
+						// is changed, the flags below should eventually be changed too.
+						"--disable-features=ArcRtVcpuDualCore,ArcRtVcpuQuadCore"},
+				},
+			}},
 		Timeout: 8 * time.Minute,
 	})
 }

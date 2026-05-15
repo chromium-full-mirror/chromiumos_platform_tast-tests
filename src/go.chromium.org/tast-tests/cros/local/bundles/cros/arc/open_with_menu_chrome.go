@@ -33,14 +33,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"open_with_menu_test.html"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBooted",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBooted",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBooted",
+			}},
 	})
 }
 

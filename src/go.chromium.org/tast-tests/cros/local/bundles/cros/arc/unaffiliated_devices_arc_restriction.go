@@ -60,20 +60,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			},
-			{
-				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_true_on_unaffiliated",
-				Val: unaffiliatedDevicesArcRestrictionTestArgs{
-					arcEnabledPolicy:                   true,
-					unaffiliatedDeviceArcAllowedPolicy: true,
-					isAffiliated:                       false,
-					shouldEnroll:                       true,
-					expectArcEnabled:                   true,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
+			}, {
 				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_true_on_affiliated_vm",
 				Val: unaffiliatedDevicesArcRestrictionTestArgs{
 					arcEnabledPolicy:                   true,
@@ -84,20 +71,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			},
-			{
-				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_true_on_affiliated",
-				Val: unaffiliatedDevicesArcRestrictionTestArgs{
-					arcEnabledPolicy:                   true,
-					unaffiliatedDeviceArcAllowedPolicy: true,
-					isAffiliated:                       true,
-					shouldEnroll:                       true,
-					expectArcEnabled:                   true,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
+			}, {
 				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_false_on_affiliated_vm",
 				Val: unaffiliatedDevicesArcRestrictionTestArgs{
 					arcEnabledPolicy:                   true,
@@ -108,20 +82,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			},
-			{
-				Name: "arc_allowed_when_unaffiliated_device_arc_allowed_is_false_on_affiliated",
-				Val: unaffiliatedDevicesArcRestrictionTestArgs{
-					arcEnabledPolicy:                   true,
-					unaffiliatedDeviceArcAllowedPolicy: false,
-					isAffiliated:                       true,
-					shouldEnroll:                       true,
-					expectArcEnabled:                   true,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
+			}, {
 				Name: "arc_disallowed_when_unaffiliated_device_arc_allowed_is_false_on_unaffiliated_vm",
 				Val: unaffiliatedDevicesArcRestrictionTestArgs{
 					arcEnabledPolicy:                   true,
@@ -132,20 +93,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			},
-			{
-				Name: "arc_disallowed_when_unaffiliated_device_arc_allowed_is_false_on_unaffiliated",
-				Val: unaffiliatedDevicesArcRestrictionTestArgs{
-					arcEnabledPolicy:                   true,
-					unaffiliatedDeviceArcAllowedPolicy: false,
-					isAffiliated:                       false,
-					shouldEnroll:                       true,
-					expectArcEnabled:                   false,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
+			}, {
 				Name: "arc_disabled_when_arc_enabled_is_false_and_unaffiliated_device_arc_allowed_is_true_vm",
 				Val: unaffiliatedDevicesArcRestrictionTestArgs{
 					arcEnabledPolicy:                   false,
@@ -157,18 +105,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
-			{
-				Name: "arc_disabled_when_arc_enabled_is_false_and_unaffiliated_device_arc_allowed_is_true",
-				Val: unaffiliatedDevicesArcRestrictionTestArgs{
-					arcEnabledPolicy:                   false,
-					unaffiliatedDeviceArcAllowedPolicy: true,
-					isAffiliated:                       false,
-					shouldEnroll:                       true,
-					expectArcEnabled:                   false,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			}},
+		},
 	})
 }
 

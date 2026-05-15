@@ -38,21 +38,16 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Attr:         []string{"group:mainline"},
 		// Val is the property representing ARC boot type, which is different for container/VM.
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: buildPropertiesTestParameters{
-				arcBootType:  "ro.vendor.arc_boot_type",
-				hardwareType: "cheets",
-			},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-			Val: buildPropertiesTestParameters{
-				arcBootType:  "vendor.arc.boot_type",
-				hardwareType: "bertha",
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+				Val: buildPropertiesTestParameters{
+					arcBootType:  "vendor.arc.boot_type",
+					hardwareType: "bertha",
+				},
+			}},
 	})
 }
 

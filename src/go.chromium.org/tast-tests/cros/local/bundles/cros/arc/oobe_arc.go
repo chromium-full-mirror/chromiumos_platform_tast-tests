@@ -34,22 +34,19 @@ func init() {
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:mainline", "informational"},
-			Val:               oobeArcArgs{preprod: false},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:hw_agnostic"},
-			Val:               oobeArcArgs{preprod: false},
-		}, {
-			Name:              "preprod",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
-			ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
-			Val:               oobeArcArgs{preprod: true},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:arc", "arc_core", "group:arc-functional", "group:hw_agnostic"},
+				Val:               oobeArcArgs{preprod: false},
+			}, {
+				Name:              "preprod",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:external-dependency", "group:hw_agnostic"},
+				ExtraSearchFlags:  []*testing.StringPair{testenv.SearchFlag(testenv.GFEPreprod)},
+				Val:               oobeArcArgs{preprod: true},
+			}},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 	})

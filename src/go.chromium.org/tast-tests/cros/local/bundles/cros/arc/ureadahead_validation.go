@@ -31,12 +31,11 @@ func init() {
 		Attr: []string{"group:arc", "arc_core", "group:arc-functional"},
 		// Skip userdebug boards which we don't generate ureadahead packs for.
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm_t",
-			ExtraSoftwareDeps: []string{"android_vm_t"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm_t",
+				ExtraSoftwareDeps: []string{"android_vm_t"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
 }

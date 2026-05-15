@@ -29,29 +29,12 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "playback",
-				Val: audio.TestParameters{
-					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Fixture:           "arcBooted",
-			},
-			{
 				Name: "playback_vm",
 				Val: audio.TestParameters{
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: arc.ArcAppHwDeps,
-				Fixture:           "arcBooted",
-			},
-			{
-				Name: "record",
-				Val: audio.TestParameters{
-					Permission: "android.permission.RECORD_AUDIO",
-					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 				Fixture:           "arcBooted",
 			},
 			{
@@ -67,29 +50,12 @@ func init() {
 
 			// Field-trial config off
 			{
-				Name: "playback_fieldtrial_testing_config_off",
-				Val: audio.TestParameters{
-					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Fixture:           "arcBootedWithFieldTrialConfigOff",
-			},
-			{
 				Name: "playback_vm_fieldtrial_testing_config_off",
 				Val: audio.TestParameters{
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: arc.ArcAppHwDeps,
-				Fixture:           "arcBootedWithFieldTrialConfigOff",
-			},
-			{
-				Name: "record_fieldtrial_testing_config_off",
-				Val: audio.TestParameters{
-					Permission: "android.permission.RECORD_AUDIO",
-					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 				Fixture:           "arcBootedWithFieldTrialConfigOff",
 			},
 			{
@@ -105,29 +71,12 @@ func init() {
 
 			// Field-trial config on
 			{
-				Name: "playback_fieldtrial_testing_config_on",
-				Val: audio.TestParameters{
-					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Fixture:           "arcBootedWithFieldTrialConfigOn",
-			},
-			{
 				Name: "playback_vm_fieldtrial_testing_config_on",
 				Val: audio.TestParameters{
 					Class: "org.chromium.arc.testapp.arcaudiotest.TestOutputActivity",
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: arc.ArcAppHwDeps,
-				Fixture:           "arcBootedWithFieldTrialConfigOn",
-			},
-			{
-				Name: "record_fieldtrial_testing_config_on",
-				Val: audio.TestParameters{
-					Permission: "android.permission.RECORD_AUDIO",
-					Class:      "org.chromium.arc.testapp.arcaudiotest.TestInputActivity",
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 				Fixture:           "arcBootedWithFieldTrialConfigOn",
 			},
 			{

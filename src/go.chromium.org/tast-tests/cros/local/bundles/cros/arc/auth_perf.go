@@ -68,69 +68,55 @@ func init() {
 		Vars:         []string{"arc.AuthPerf.successBootCount"},
 		// This test steps through opt-in flow 10 times and each iteration takes 20~40 seconds.
 		Timeout: 30 * time.Minute,
-		Params: []testing.Param{{
-			Name:              "managed",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParam{
-				username:          "arc.AuthPerf.managed_username",
-				password:          "arc.AuthPerf.managed_password",
-				maxErrorBootCount: 1,
-			},
-		}, {
-			Name:              "managed_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				username:          "arc.AuthPerf.managed_username",
-				password:          "arc.AuthPerf.managed_password",
-				maxErrorBootCount: 3,
-			},
-		}, {
-			Name:              "unmanaged",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParam{
-				maxErrorBootCount: 1,
-			},
-		}, {
-			Name:              "unmanaged_no_guest_ureadahead_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				maxErrorBootCount: 3,
-				chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
-			},
-		}, {
-			Name:              "unmanaged_virtio_blk_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				maxErrorBootCount: 3,
-				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
-			},
-		}, {
-			Name:              "unmanaged_vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				maxErrorBootCount: 3,
-			},
-		}, {
-			// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
-			Name:              "keymint_vm",
-			ExtraSoftwareDeps: []string{"android_vm_t"},
-			Val: testParam{
-				maxErrorBootCount: 3,
-				chromeArgs:        []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
-			},
-		}, {
-			// TODO(b/318405975): Remove this after collecting some traces for debugging.
-			Name:              "unmanaged_vm_perfetto",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Platform("dedede")),
-			ExtraData:         []string{"perfetto_config.pbtxt"},
-			Val: testParam{
-				maxErrorBootCount: 1,
-				tracingEnabled:    true,
-			},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "managed_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParam{
+					username:          "arc.AuthPerf.managed_username",
+					password:          "arc.AuthPerf.managed_password",
+					maxErrorBootCount: 3,
+				},
+			}, {
+				Name:              "unmanaged_no_guest_ureadahead_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParam{
+					maxErrorBootCount: 3,
+					chromeArgs:        []string{"--arcvm-ureadahead-mode=disabled"},
+				},
+			}, {
+				Name:              "unmanaged_virtio_blk_vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParam{
+					maxErrorBootCount: 3,
+					chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
+				},
+			}, {
+				Name:              "unmanaged_vm",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: testParam{
+					maxErrorBootCount: 3,
+				},
+			}, {
+				// TODO(b/301311408): Remove this, when KeyMint is fully launched and is the default.
+				Name:              "keymint_vm",
+				ExtraSoftwareDeps: []string{"android_vm_t"},
+				Val: testParam{
+					maxErrorBootCount: 3,
+					chromeArgs:        []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
+				},
+			}, {
+				// TODO(b/318405975): Remove this after collecting some traces for debugging.
+				Name:              "unmanaged_vm_perfetto",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Platform("dedede")),
+				ExtraData:         []string{"perfetto_config.pbtxt"},
+				Val: testParam{
+					maxErrorBootCount: 1,
+					tracingEnabled:    true,
+				},
+			}},
 		VarDeps: []string{
 			"arc.AuthPerf.managed_username",
 			"arc.AuthPerf.managed_password",

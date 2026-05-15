@@ -38,15 +38,13 @@ func init() {
 		Data:         []string{"clipboard.html", "clipboard_image.html"},
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_arc"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
-		Params: []testing.Param{{
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				Fixture:           "arcBooted",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			}},
 	})
 }
 
