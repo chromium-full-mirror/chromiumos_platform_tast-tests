@@ -44,11 +44,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:              "disabled",
-				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name:              "disabled_vm",
 				Val:               arcDisabled,
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
@@ -58,11 +53,6 @@ func init() {
 				Val:               arcDisabled,
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-			},
-			{
-				Name:              "enabled",
-				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name:              "enabled_vm",

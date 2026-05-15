@@ -41,10 +41,6 @@ func init() {
 		Params: []testing.Param{
 			// Disabled by TORA. See: b/337892189
 			// {
-			// 	ExtraSoftwareDeps: []string{"android_container"},
-			// 	ExtraAttr:         []string{"informational"},
-			// },
-			// {
 			// 	Name:              "vm",
 			// 	ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 			// 	ExtraAttr:         []string{"informational"},

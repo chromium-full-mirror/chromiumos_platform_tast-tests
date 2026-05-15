@@ -72,16 +72,6 @@ func init() {
 				Timeout: 75 * time.Minute,
 			},
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
-				Val: testArgsForPowerIdlePerf{
-					setupOption:  setup.ForceBatteryDischarge,
-					extendedTest: false,
-				},
-				Fixture: "arcBootedRestricted",
-				Timeout: 20 * time.Minute,
-			},
-			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
@@ -91,18 +81,6 @@ func init() {
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
-			},
-			{
-				Name:              "extended",
-				ExtraAttr:         []string{"crosbolt_weekly"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
-				Val: testArgsForPowerIdlePerf{
-					setupOption:  setup.ForceBatteryDischarge,
-					extendedTest: true,
-				},
-				Fixture: "arcBootedRestricted",
-				Timeout: 75 * time.Minute,
 			},
 			{
 				Name:              "vm_extended",
@@ -139,17 +117,6 @@ func init() {
 				Timeout: 75 * time.Minute,
 			},
 			{
-				Name:              "nobatterymetrics",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
-				Val: testArgsForPowerIdlePerf{
-					setupOption:  setup.NoBatteryDischarge,
-					extendedTest: false,
-				},
-				Fixture: "arcBootedRestricted",
-				Timeout: 20 * time.Minute,
-			},
-			{
 				Name:              "vm_nobatterymetrics",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
@@ -159,17 +126,6 @@ func init() {
 				},
 				Fixture: "arcBootedRestricted",
 				Timeout: 20 * time.Minute,
-			},
-			{
-				Name:              "extended_nobatterymetrics",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
-				Val: testArgsForPowerIdlePerf{
-					setupOption:  setup.NoBatteryDischarge,
-					extendedTest: true,
-				},
-				Fixture: "arcBootedRestricted",
-				Timeout: 75 * time.Minute,
 			},
 			{
 				Name:              "vm_extended_nobatterymetrics",

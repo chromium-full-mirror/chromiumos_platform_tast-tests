@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -48,22 +47,6 @@ func init() {
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
-			Name:              "container_p",
-			Val:               "arc_print_ippusb_golden.pwg",
-			ExtraSoftwareDeps: []string{"android_p"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "kevin", "scarlet")),
-			ExtraData:         []string{"arc_print_ippusb_golden.pwg"},
-			ExtraAttr:         []string{"group:cq-medium"},
-		}, {
-			Name:              "container_r",
-			Val:               "arc_print_vm_ippusb_golden.pwg",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-			// TODO(b:5766953): Re-enable this on grunt models after flakiness has
-			// been resolved (barla, careena, kasumi, liara).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "maple", "sycamore360", "barla", "careena", "kasumi", "kasumi360", "liara")),
-			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
-			ExtraAttr:         []string{"informational", "group:cq-medium"},
-		}, {
 			Name:              "vm_t",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
 			ExtraAttr:         []string{"group:cq-medium"},

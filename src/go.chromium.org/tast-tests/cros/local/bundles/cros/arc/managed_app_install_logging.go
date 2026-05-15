@@ -55,23 +55,6 @@ func init() {
 		Params: []testing.Param{
 			{
 				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
-				},
-			},
-			{
-				// Report and log events using the encrypted reporting pipeline.
-				Name:              "using_encrypted_reporting",
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"group:enterprise-reporting-daily", "group:enterprise-reporting"},
-				Val: managedAppInstallLoggingParam{
-					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
-				},
-			},
-			{
-				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"informational"},

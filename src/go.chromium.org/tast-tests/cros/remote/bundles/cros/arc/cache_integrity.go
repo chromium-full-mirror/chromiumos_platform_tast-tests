@@ -40,11 +40,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Data:         []string{erofsUtilsZip},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamCacheIntegrity{
-				vmEnabled: false,
-			},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamCacheIntegrity{

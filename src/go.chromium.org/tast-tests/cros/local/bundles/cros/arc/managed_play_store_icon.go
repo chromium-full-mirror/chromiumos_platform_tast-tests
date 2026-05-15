@@ -42,79 +42,56 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		VarDeps:      []string{arcCommon.ManagedAccountPoolVarName},
-		Params: []testing.Param{{
-			Name: "enabled",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: true},
-				wantEnabled: true,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name: "disabled",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: false},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name: "unset",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name: "enabled_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: true},
-				wantEnabled: true,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-		}, {
-			Name: "enabled_betty_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: true},
-				wantEnabled: true,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-		}, {
-			Name: "disabled_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: false},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-		}, {
-			Name: "disabled_betty_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Val: false},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-		}, {
-			Name: "unset_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-		}, {
-			Name: "unset_betty_vm",
-			Val: managedPlayStoreIconTestArgs{
-				arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
-				wantEnabled: false,
-			},
-			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-		}},
+		Params: []testing.Param{
+			{
+				Name: "enabled_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Val: true},
+					wantEnabled: true,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			}, {
+				Name: "enabled_betty_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Val: true},
+					wantEnabled: true,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			}, {
+				Name: "disabled_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Val: false},
+					wantEnabled: false,
+				},
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			}, {
+				Name: "disabled_betty_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Val: false},
+					wantEnabled: false,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			}, {
+				Name: "unset_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
+					wantEnabled: false,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			}, {
+				Name: "unset_betty_vm",
+				Val: managedPlayStoreIconTestArgs{
+					arcEnabled:  &policy.ArcEnabled{Stat: policy.StatusUnset},
+					wantEnabled: false,
+				},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SyncDisabled{}, pci.VerifiedFunctionalityUI),

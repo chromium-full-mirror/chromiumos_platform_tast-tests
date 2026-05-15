@@ -28,15 +28,12 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			Name:              "container_r",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container_r"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+			}},
 	})
 }
 

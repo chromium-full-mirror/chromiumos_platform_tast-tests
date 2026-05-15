@@ -33,8 +33,6 @@ func init() {
 		Fixture:      "gpuWatchDog",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},

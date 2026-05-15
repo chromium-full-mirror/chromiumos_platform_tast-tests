@@ -37,14 +37,6 @@ func init() {
 		Fixture:      "arcBootedWithVideoLogging",
 		Timeout:      12 * time.Minute,
 		Params: []testing.Param{{
-			Name: "h264_192p_i420",
-			Val: video.EncodeTestOptions{
-				Profile: videotype.H264MainProf,
-				Params:  video.Bear192P,
-			},
-			ExtraData:         []string{video.Bear192P.Name},
-			ExtraSoftwareDeps: []string{"android_container_r", caps.HWEncodeH264},
-		}, {
 			Name: "h264_192p_i420_vm",
 			Val: video.EncodeTestOptions{
 				Profile: videotype.H264MainProf,
@@ -53,14 +45,6 @@ func init() {
 			ExtraData:         []string{video.Bear192P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
-		}, {
-			Name: "h264_360p_i420",
-			Val: video.EncodeTestOptions{
-				Profile: videotype.H264MainProf,
-				Params:  video.Tulip360P,
-			},
-			ExtraData:         []string{video.Tulip360P.Name},
-			ExtraSoftwareDeps: []string{"android_container_r", caps.HWEncodeH264},
 		}, {
 			Name: "h264_360p_i420_vm",
 			Val: video.EncodeTestOptions{
@@ -71,14 +55,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
 		}, {
-			Name: "h264_720p_i420",
-			Val: video.EncodeTestOptions{
-				Profile: videotype.H264MainProf,
-				Params:  video.Tulip720P,
-			},
-			ExtraData:         []string{video.Tulip720P.Name},
-			ExtraSoftwareDeps: []string{"android_container_r", caps.HWEncodeH264},
-		}, {
 			Name: "h264_720p_i420_vm",
 			Val: video.EncodeTestOptions{
 				Profile: videotype.H264MainProf,
@@ -87,14 +63,6 @@ func init() {
 			ExtraData:         []string{video.Tulip720P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
-		}, {
-			Name: "h264_1080p_i420",
-			Val: video.EncodeTestOptions{
-				Profile: videotype.H264MainProf,
-				Params:  video.Crowd1080P,
-			},
-			ExtraData:         []string{video.Crowd1080P.Name},
-			ExtraSoftwareDeps: []string{"android_container_r", caps.HWEncodeH264},
 		}, {
 			Name: "h264_1080p_i420_vm",
 			Val: video.EncodeTestOptions{

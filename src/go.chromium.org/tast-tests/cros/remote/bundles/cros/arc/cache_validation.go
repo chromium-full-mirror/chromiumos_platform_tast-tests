@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/cache"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
@@ -55,11 +56,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		ServiceDeps:  []string{"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamCacheValidation{
-				vmEnabled: false,
-			},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamCacheValidation{

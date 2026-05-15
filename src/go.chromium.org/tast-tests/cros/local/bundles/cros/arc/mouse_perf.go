@@ -35,23 +35,20 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         append(inputlatency.AndroidData(), "perfetto_config.pbtxt"),
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBootedWithDisableExternalStorage",
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBootedWithDisableExternalStorage",
-		}, {
-			Name:              "vm_pvsched",
-			BugComponent:      "b:167279",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
-			Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBootedWithDisableExternalStorage",
+			}, {
+				Name:              "vm_pvsched",
+				BugComponent:      "b:167279",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
+			}},
 		Timeout: 10 * time.Minute,
 	})
 }

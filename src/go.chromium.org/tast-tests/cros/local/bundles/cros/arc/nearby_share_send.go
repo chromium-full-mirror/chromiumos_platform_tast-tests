@@ -78,19 +78,6 @@ func init() {
 		Data:         []string{apkName},
 		Params: []testing.Param{
 			{
-				Name:              "dataoffline_noone_text",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOfflineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxTextID,
-						TransferTimeout: nearbycommon.SmallFileTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
 				Name:              "dataoffline_noone_text_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOfflineNoOneARCEnabled",
@@ -102,19 +89,6 @@ func init() {
 					},
 				},
 				Timeout: baseArcTestTime + nearbycommon.SmallFileTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_small_file",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID,
-						TransferTimeout: nearbycommon.MediumFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
 			},
 			{
 				Name:              "dataonline_noone_small_file_vm",
@@ -130,19 +104,6 @@ func init() {
 				Timeout: baseArcTestTime + nearbycommon.MediumFileOnlineTransferTimeout,
 			},
 			{
-				Name:              "dataonline_noone_medium_file",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
 				Name:              "dataonline_noone_medium_file_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
@@ -154,19 +115,6 @@ func init() {
 					},
 				},
 				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_large_file",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileTimeout + largeFileExtraBufferTime,
 			},
 			{
 				Name:              "dataonline_noone_large_file_vm",
@@ -182,19 +130,6 @@ func init() {
 				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + largeFileTimeout + largeFileExtraBufferTime,
 			},
 			{
-				Name:              "dataonline_noone_xlarge_file",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxXLargeFileID,
-						TransferTimeout: nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-						TestTimeout:     baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileExtraBufferTime,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
-			},
-			{
 				Name:              "dataonline_noone_xlarge_file_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
@@ -206,19 +141,6 @@ func init() {
 					},
 				},
 				Timeout: baseArcTestTime + nearbycommon.ExtraLargeFileOnlineTransferTimeout + xlargeFileTimeout + xlargeFileExtraBufferTime,
-			},
-			{
-				Name:              "dataonline_noone_multiple_files",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxSmallFileID + "," + checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
 				Name:              "dataonline_noone_multiple_files_vm",
@@ -234,39 +156,11 @@ func init() {
 				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
 			},
 			{
-				Name:              "dataonline_noone_medium_file_cancel",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					Cancel: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
 				Name:              "dataonline_noone_medium_file_cancel_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "gaia"},
 				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
 				Val: arcNearbyShareParams{
 					Cancel: true,
-					TestData: nearbycommon.TestData{
-						Filename:        checkBoxMediumFileID,
-						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,
-						TestTimeout:     baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-					},
-				},
-				Timeout: baseArcTestTime + nearbycommon.LargeFileOnlineTransferTimeout,
-			},
-			{
-				Name:              "dataonline_noone_medium_file_cancel_select",
-				ExtraSoftwareDeps: []string{"android_p"},
-				Fixture:           "nearbyShareDataUsageOnlineNoOneARCEnabled",
-				Val: arcNearbyShareParams{
-					CancelSelect: true,
 					TestData: nearbycommon.TestData{
 						Filename:        checkBoxMediumFileID,
 						TransferTimeout: nearbycommon.LargeFileOnlineTransferTimeout,

@@ -82,28 +82,12 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"true",
 			},
 			{
-				"",
-				"",
-				"android_container",
-				"arcBootedRestricted",
-				"20 * time.Minute",
-				"false",
-			},
-			{
 				"vm",
 				"",
 				"android_vm",
 				"arcBootedRestricted",
 				"20 * time.Minute",
 				"false",
-			},
-			{
-				"extended",
-				"crosbolt_weekly",
-				"android_container",
-				"arcBootedRestricted",
-				"75 * time.Minute",
-				"true",
 			},
 			{
 				"vm_extended",

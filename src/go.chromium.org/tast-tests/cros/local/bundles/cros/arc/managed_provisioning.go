@@ -49,22 +49,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Val:               chrome.FieldTrialConfigDefault,
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
-				Name:              "fieldtrial_testing_config_off",
-				Val:               chrome.FieldTrialConfigDisable,
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			{
-				Name:              "fieldtrial_testing_config_on",
-				Val:               chrome.FieldTrialConfigEnable,
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational", "group:chrome_uprev_cbx"},
-			},
-			{
 				Name:              "vm",
 				Val:               chrome.FieldTrialConfigDefault,
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},

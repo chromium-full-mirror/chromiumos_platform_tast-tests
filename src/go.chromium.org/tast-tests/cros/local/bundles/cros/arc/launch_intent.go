@@ -24,14 +24,13 @@ func init() {
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-			ExtraAttr:         []string{"group:hw_agnostic"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+				ExtraAttr:         []string{"group:hw_agnostic"},
+			}},
 	})
 }
 

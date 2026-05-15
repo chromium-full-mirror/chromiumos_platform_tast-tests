@@ -29,14 +29,12 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedInTabletMode",
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraAttr:         []string{"informational"}, // TODO(b/236309112): Promote to critical again
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: arc.ArcAppHwDeps,
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: arc.ArcAppHwDeps,
+			}},
 		HardwareDeps: hwdep.D(
 			// Test is failing on dooly b/187069593.
 			hwdep.SkipOnModel("dooly"),

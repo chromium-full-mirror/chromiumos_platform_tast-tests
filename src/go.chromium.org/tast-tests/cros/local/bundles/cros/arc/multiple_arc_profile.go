@@ -42,13 +42,12 @@ func init() {
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome", "gaia"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 6*time.Minute,
 		VarDeps: []string{ui.GaiaPoolDefaultVarName, arcCommon.ParentAccountVarName},
 	})

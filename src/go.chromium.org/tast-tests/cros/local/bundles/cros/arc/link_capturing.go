@@ -41,14 +41,12 @@ func init() {
 		BugComponent: "b:1389907",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBooted",
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBooted",
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Fixture:           "arcBooted",
+			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Data: []string{
 			"link_capturing/link_capturing_index.html",

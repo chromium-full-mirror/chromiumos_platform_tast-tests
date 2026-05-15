@@ -29,8 +29,6 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "arcBootedWithPlayStore",
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},

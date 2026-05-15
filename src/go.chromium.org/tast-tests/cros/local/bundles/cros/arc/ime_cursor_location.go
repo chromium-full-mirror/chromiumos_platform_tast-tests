@@ -34,12 +34,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			}},
 	})
 }
 

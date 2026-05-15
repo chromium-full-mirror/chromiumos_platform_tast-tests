@@ -107,31 +107,9 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:              "ca_certs",
-				Val:               policyCaCerts,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "ca_certs_vm",
 				Val:               policyCaCerts,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "camera_disabled",
-				Val:               policyCameraDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -151,17 +129,6 @@ func init() {
 				},
 			},
 			{
-				Name:              "choose_private_key_rules",
-				Val:               policyChoosePrivateKeyRules,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "choose_private_key_rules_vm",
 				Val:               policyChoosePrivateKeyRules,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
@@ -173,31 +140,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "credentials_config_disabled",
-				Val:               policyCredentialsConfigDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "credentials_config_disabled_vm",
 				Val:               policyCredentialsConfigDisabled,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "enabled_system_app_package_names",
-				Val:               policyEnabledSystemAppPackageNames,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -219,31 +164,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "install_unknown_sources_disabled",
-				Val:               policyInstallUnknownSourcesDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "install_unknown_sources_disabled_vm",
 				Val:               policyInstallUnknownSourcesDisabled,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "modify_accounts_disabled",
-				Val:               policyModifyAccountsDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -263,31 +186,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "permitted_accessibility_services",
-				Val:               policyPermittedAccessibilityServices,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "permitted_accessibility_services_vm",
 				Val:               policyPermittedAccessibilityServices,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "printing_disabled",
-				Val:               policyPrintingDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -307,31 +208,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "screen_capture_disabled",
-				Val:               policyScreenCaptureDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "screen_capture_disabled_vm",
 				Val:               policyScreenCaptureDisabled,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "set_wallpaper",
-				Val:               policySetWallpaper,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -351,31 +230,9 @@ func init() {
 				},
 			},
 			{
-				Name:              "share_location_disabled",
-				Val:               policyShareLocationDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
 				Name:              "share_location_disabled_vm",
 				Val:               policyShareLocationDisabled,
 				ExtraSoftwareDeps: []string{"android_vm"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "unmute_microphone_disabled",
-				Val:               policyUnmuteMicrophoneDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
 				// "gaia"
 
 				ExtraAttr: []string{
@@ -392,17 +249,6 @@ func init() {
 				ExtraAttr: []string{
 					// Disabled by TORA.  See:b/346157268.
 					// "informational", "group:mainline"
-				},
-			},
-			{
-				Name:              "vpn_config_disabled",
-				Val:               policyVpnConfigDisabled,
-				ExtraSoftwareDeps: []string{"android_container"}, // Disabled by TORA.  See:b/346157268.
-				// "gaia"
-
-				ExtraAttr: []string{
-					// Disabled by TORA.  See:b/346157268.
-					// "informational",
 				},
 			},
 			{

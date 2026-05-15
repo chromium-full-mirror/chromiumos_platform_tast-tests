@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/cache"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/arc/dututils"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
@@ -118,7 +119,7 @@ func (du *dataUploader) upload(src, bucket string) error {
 	if out, err := exec.Command(gsUtil, "copy", src, gsURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to upload %q to the server %q", src, out)
 	}
-        testing.ContextLogf(du.ctx, "Uploading meta data %q to the server", gsDescURL);
+	testing.ContextLogf(du.ctx, "Uploading meta data %q to the server", gsDescURL)
 	if out, err := exec.Command(gsUtil, "copy", du.buildDescriptorPath, gsDescURL).CombinedOutput(); err != nil {
 		return errors.Wrapf(err, "failed to upload %q device information to the server %q", du.buildDescriptorPath, out)
 	}
@@ -152,20 +153,6 @@ func init() {
 		// then disabling this in Android PFQ. At this time missing the data is allowed
 		// for the grace period however it will be a build stopper after.
 		Params: []testing.Param{{
-			Name:              "container_r",
-			ExtraAttr:         []string{"group:arc-data-collector"},
-			ExtraSoftwareDeps: []string{"android_container_r"},
-			Val: testParam{
-				vmEnabled:               false,
-				androidPackage:          "android-container-rvc",
-				upload:                  true,
-				uploadPackagesReference: false,
-				uprevBranch:             false,
-				dexOptCacheGen:          false,
-				dataDir:                 "",
-				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
-			},
-		}, {
 			Name:              "vm_t",
 			ExtraAttr:         []string{"group:arc-data-collector"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
@@ -178,19 +165,6 @@ func init() {
 				dexOptCacheGen:          true,
 				dataDir:                 "",
 				tmpCachesDir:            tmpVMCacheArtifactsRoot,
-			},
-		}, {
-			Name:              "container_r_local",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-			Val: testParam{
-				vmEnabled:               false,
-				androidPackage:          "android-container-rvc",
-				upload:                  false,
-				uploadPackagesReference: false,
-				uprevBranch:             false,
-				dexOptCacheGen:          false,
-				dataDir:                 "/tmp/data_collector",
-				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "vm_t_local",

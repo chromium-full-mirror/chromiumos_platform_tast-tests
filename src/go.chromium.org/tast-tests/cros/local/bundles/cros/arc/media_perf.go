@@ -42,36 +42,23 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{mediaperf.X86ApkName, mediaperf.ArmApkName},
 		Timeout:      35 * time.Minute,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: mediaPerfTestParameters{
-				binaryTranslation: true,
-			},
-			Pre: mediaPerfBooted,
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: mediaPerfTestParameters{
-				binaryTranslation: true,
-			},
-			Pre: mediaPerfBooted,
-		}, {
-			Name:              "x86",
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
-			Val: mediaPerfTestParameters{
-				binaryTranslation: false,
-			},
-			Pre: mediaPerfBooted,
-		}, {
-			Name:              "vm_x86",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
-			Val: mediaPerfTestParameters{
-				binaryTranslation: false,
-			},
-			Pre: mediaPerfBooted,
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				Val: mediaPerfTestParameters{
+					binaryTranslation: true,
+				},
+				Pre: mediaPerfBooted,
+			}, {
+				Name:              "vm_x86",
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.X86()),
+				Val: mediaPerfTestParameters{
+					binaryTranslation: false,
+				},
+				Pre: mediaPerfBooted,
+			}},
 		VarDeps: []string{"arc.MediaPerf.username", "arc.MediaPerf.password"},
 	})
 }

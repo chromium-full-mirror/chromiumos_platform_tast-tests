@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
@@ -19,33 +18,27 @@ import (
 )
 
 func init() {
-	testing.AddTest(&testing.Test{
-		Func:     DemoModeOfflineProvision,
-		Desc:     "Enter Demo Mode from OOBE via offline mode, verify Play Store can be opened",
-		Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
-		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
-		BugComponent: "b:1487630",
-		Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
-		Attr:         []string{"group:mainline"},
-		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
-		// requires a real TPM.
-		// We require "arc" and "chrome_internal" because the ARC TOS screen
-		// is only shown for chrome-branded builds when the device is ARC-capable.
-		SoftwareDeps: []string{"chrome", "arc", "tpm", "play_store"},
-		Timeout:      15 * time.Minute,
-		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{"informational"},
-			},
-			// Disabled by TORA. See: b/337500189
-			// {
-			// 	Name:              "vm",
-			// 	ExtraSoftwareDeps: []string{"android_vm"},
-			// 	ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			// }
-		},
-	})
+	// Disabled by TORA. See: b/337500189
+	// testing.AddTest(&testing.Test{
+	// 	Func:     DemoModeOfflineProvision,
+	// 	Desc:     "Enter Demo Mode from OOBE via offline mode, verify Play Store can be opened",
+	// 	Contacts: []string{"arc-commercial@google.com", "yaohuali@google.com"},
+	// 	// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+	// 	BugComponent: "b:1487630",
+	// 	Fixture:      fixture.PostDemoModeOOBESkipBothComponentsProd,
+	// 	Attr:         []string{"group:mainline"},
+	// 	// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which
+	// 	// requires a real TPM.
+	// 	// We require "arc" and "chrome_internal" because the ARC TOS screen
+	// 	// is only shown for chrome-branded builds when the device is ARC-capable.
+	// 	SoftwareDeps: []string{"chrome", "arc", "tpm", "play_store"},
+	// 	Timeout:      15 * time.Minute,
+	// 	Params: []testing.Param{{
+	// 		Name:              "vm",
+	// 		ExtraSoftwareDeps: []string{"android_vm"},
+	// 		ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+	// 	}},
+	// })
 }
 
 func DemoModeOfflineProvision(ctx context.Context, s *testing.State) {

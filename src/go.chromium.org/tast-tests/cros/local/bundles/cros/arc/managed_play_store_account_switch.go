@@ -56,18 +56,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name: "blocklist",
-				Val: managedPlayStoreAccountSwitchArgs{
-					playStoreMode:        arcent.PlayStoreModeBlockList,
-					accountSwitchEnabled: true,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{
-					// Disabled by TORA.  See:b/345997350.
-					//"informational"
-				},
-			},
-			{
 				Name: "blocklist_vm",
 				Val: managedPlayStoreAccountSwitchArgs{
 					playStoreMode:        arcent.PlayStoreModeBlockList,
@@ -89,18 +77,6 @@ func init() {
 				ExtraAttr:         []string{
 					// Disabled by TORA.  See:b/345997350.
 					//"informational", "group:hw_agnostic"
-				},
-			},
-			{
-				Name: "allowlist",
-				Val: managedPlayStoreAccountSwitchArgs{
-					playStoreMode:        arcent.PlayStoreModeAllowList,
-					accountSwitchEnabled: false,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraAttr:         []string{
-					// Disabled by TORA.  See:b/345997350.
-					//"informational"
 				},
 			},
 			{

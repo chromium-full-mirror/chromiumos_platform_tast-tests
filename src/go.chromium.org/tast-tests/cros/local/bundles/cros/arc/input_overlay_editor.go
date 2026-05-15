@@ -32,8 +32,6 @@ func init() {
 		Fixture:      "arcBootedWithGameDashboard",
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container_r"},
-			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"group:hw_agnostic"},

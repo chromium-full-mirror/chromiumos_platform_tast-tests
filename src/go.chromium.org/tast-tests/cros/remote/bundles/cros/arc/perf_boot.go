@@ -38,8 +38,6 @@ func init() {
 		Vars:         []string{"arc.PerfBoot.iterations"},
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},

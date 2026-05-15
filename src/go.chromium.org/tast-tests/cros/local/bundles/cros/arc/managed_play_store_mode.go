@@ -47,14 +47,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name: "allowlist",
-				Val: managedPlayStoreModeArgs{
-					playStoreMode: arcent.PlayStoreModeAllowList,
-					shouldBeEmpty: true,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name: "allowlist_vm",
 				Val: managedPlayStoreModeArgs{
 					playStoreMode: arcent.PlayStoreModeAllowList,
@@ -71,14 +63,6 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			},
-			{
-				Name: "blocklist",
-				Val: managedPlayStoreModeArgs{
-					playStoreMode: arcent.PlayStoreModeBlockList,
-					shouldBeEmpty: false,
-				},
-				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name: "blocklist_vm",

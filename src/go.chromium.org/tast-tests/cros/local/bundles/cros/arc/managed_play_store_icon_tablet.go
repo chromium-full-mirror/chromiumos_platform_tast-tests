@@ -36,12 +36,11 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container", "tablet_form_factor"},
-		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm", "tablet_form_factor"},
-		}},
+		Params: []testing.Param{
+			{
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm", "tablet_form_factor"},
+			}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SyncDisabled{}, pci.VerifiedFunctionalityUI),
