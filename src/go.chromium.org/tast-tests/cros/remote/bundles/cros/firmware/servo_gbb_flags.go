@@ -159,8 +159,14 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 			s.Fatal("Pre-power button sleep failed: ", err)
 		}
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
-				return errors.Wrap(err, "power button press failed")
+			state, err := h.Servo.GetECSystemPowerState(ctx)
+			if err != nil {
+				return errors.Wrap(err, "power state failed")
+			}
+			if state != "S0" {
+				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+					return errors.Wrap(err, "power button press failed")
+				}
 			}
 			s.Log("Waiting for reboot")
 			context.WithTimeout(ctx, 10*time.Second)
