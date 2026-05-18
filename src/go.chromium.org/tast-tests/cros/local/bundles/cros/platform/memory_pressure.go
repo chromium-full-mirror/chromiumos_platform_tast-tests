@@ -56,11 +56,6 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
-			Name:              "container",
-			Val:               memoryPressureParams{enableARC: true, useHugePages: false, useVulkan: false},
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual", "crosbolt_arc_perf_memory_nightly"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "vulkan",
 			Val:               memoryPressureParams{enableARC: false, useHugePages: false, useVulkan: true},
 			ExtraAttr:         []string{"crosbolt_memory_nightly"},

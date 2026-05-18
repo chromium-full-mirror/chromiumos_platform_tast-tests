@@ -40,11 +40,6 @@ func init() {
 			Fixture: fixture.ChromeLoggedInGuest,
 			Val:     "guest",
 		}, {
-			Name:              "arcpp_user",
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               "arcpp-user",
-		}, {
 			Name:              "arcvm_user",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},

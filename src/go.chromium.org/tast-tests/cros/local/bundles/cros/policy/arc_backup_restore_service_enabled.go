@@ -33,8 +33,6 @@ func init() {
 		// keeps failing it should be fixed or removed.
 		Attr: []string{"group:golden_tier"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"group:hw_agnostic"},

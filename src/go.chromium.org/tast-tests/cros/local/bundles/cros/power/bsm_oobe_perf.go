@@ -77,38 +77,6 @@ func init() {
 				metric:    "Unmanaged",
 				enableBsm: true,
 			},
-		}, {
-			Name:              "managed_container",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamBsmOobePerf{
-				username: "power.BsmOobePerf.managed_username",
-				password: "power.BsmOobePerf.managed_password",
-				metric:   "Managed",
-			},
-		}, {
-			Name:              "unmanaged_container",
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamBsmOobePerf{
-				metric: "Unmanaged",
-			},
-		}, {
-			Name:              "managed_container_bsm",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamBsmOobePerf{
-				username:  "power.BsmOobePerf.managed_username",
-				password:  "power.BsmOobePerf.managed_password",
-				metric:    "Managed",
-				enableBsm: true,
-			},
-		}, {
-			Name:              "unmanaged_container_bsm",
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val: testParamBsmOobePerf{
-				metric:    "Unmanaged",
-				enableBsm: true,
-			},
 		}},
 		VarDeps: []string{
 			"power.BsmOobePerf.managed_username",

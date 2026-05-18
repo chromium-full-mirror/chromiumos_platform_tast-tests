@@ -35,9 +35,6 @@ func init() {
 			"memory.Stress.useHugePages",
 		},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},

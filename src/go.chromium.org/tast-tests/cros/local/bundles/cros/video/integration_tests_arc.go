@@ -45,11 +45,6 @@ func init() {
 			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.vp9"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_vm"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
-		}, {
-			Name:              "h264_container_r",
-			Val:               arcvideo.DecodeTestOptions{TestVideo: "test-25fps.h264"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "android_container_r"},
-			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}},
 	})
 }

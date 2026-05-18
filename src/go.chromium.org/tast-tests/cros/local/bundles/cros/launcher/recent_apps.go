@@ -50,19 +50,6 @@ func init() {
 		}},
 		VarDeps: []string{ui.GaiaPoolDefaultVarName},
 		Params: []testing.Param{
-			{
-				Name:              "androidp_clamshell",
-				Val:               initParams{TabletMode: false, BootWithArc: true},
-				ExtraSoftwareDeps: []string{"android_container"},
-				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
-			},
-			{
-				Name:              "androidp_tablet",
-				Val:               initParams{TabletMode: true, BootWithArc: true},
-				ExtraSoftwareDeps: []string{"android_container"},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				Timeout:           chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
-			},
 			// Disabled by TORA. See: b/341411279
 			// {
 			// 	Name:              "androidvm_clamshell",

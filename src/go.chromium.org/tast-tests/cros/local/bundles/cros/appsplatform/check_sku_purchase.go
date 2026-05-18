@@ -22,22 +22,19 @@ func init() {
 			"lt-web-apps-team@google.com",
 		},
 		BugComponent: "b:1389907",
-		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:hw_agnostic",
+		Attr:         []string{
+			// Disabled by TORA. See: b/336143181
+			// "group:mainline",
+			// "informational",
+			// "group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      "playBillingFixture",
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
+				Name:              "vm",
+				ExtraSoftwareDeps: []string{"android_vm"},
 			},
-			// Disabled by TORA. See: b/336143181
-			// {
-			// 	Name:              "vm",
-			// 	ExtraSoftwareDeps: []string{"android_vm"},
-			// },
 		},
 		Timeout: 4 * time.Minute,
 	})

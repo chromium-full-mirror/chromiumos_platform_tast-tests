@@ -36,11 +36,6 @@ func init() {
 		SoftwareDeps: []string{"selinux", "chrome"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			Name:              "arcpp_user",
-			Fixture:           "arcBooted",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               "arcpp-user",
-		}, {
 			Name:              "arcvm_user",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},

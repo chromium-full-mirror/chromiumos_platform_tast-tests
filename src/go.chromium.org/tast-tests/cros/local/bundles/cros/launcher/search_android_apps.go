@@ -39,15 +39,6 @@ func init() {
 		}},
 		Timeout: 5 * time.Minute,
 		Params: []testing.Param{{
-			Name:              "clamshell_mode",
-			ExtraSoftwareDeps: []string{"android_container"},
-			Val:               launcher.TestCase{TabletMode: false},
-		}, {
-			Name:              "tablet_mode",
-			Val:               launcher.TestCase{TabletMode: true},
-			ExtraSoftwareDeps: []string{"android_container"},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		}, {
 			Name:              "clamshell_mode_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               launcher.TestCase{TabletMode: false},

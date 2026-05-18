@@ -26,10 +26,6 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Fixture:      "vpnEnvWithArcBooted",
 		Params: []testing.Param{{
-			Name:              "container",
-			Val:               "container",
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "vm",
 			Val:               "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

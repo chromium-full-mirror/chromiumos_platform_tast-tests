@@ -48,26 +48,12 @@ func init() {
 		Data: fakeAppInfoForAppInstallWithAppListSortedTest.IconFileNames,
 		Params: []testing.Param{
 			{
-				Name: "clamshell_alphabetical_android_container",
-				Val: launcher.SortTestType{TabletMode: false, SortMethod: launcher.AlphabeticalSort,
-					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNames,
-					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNamesAfterAppInstall},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name: "clamshell_alphabetical_androidvm",
 				Val: launcher.SortTestType{TabletMode: false, SortMethod: launcher.AlphabeticalSort,
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"group:hw_agnostic"},
-			},
-			{
-				Name: "tablet_alphabetical_android_container",
-				Val: launcher.SortTestType{TabletMode: true, SortMethod: launcher.AlphabeticalSort,
-					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNames,
-					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNamesAfterAppInstall},
-				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name: "tablet_alphabetical_androidvm",
@@ -78,26 +64,12 @@ func init() {
 				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 			{
-				Name: "clamshell_color_android_container",
-				Val: launcher.SortTestType{TabletMode: false, SortMethod: launcher.ColorSort,
-					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNames,
-					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNamesAfterAppInstall},
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
 				Name: "clamshell_color_androidvm",
 				Val: launcher.SortTestType{TabletMode: false, SortMethod: launcher.ColorSort,
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraAttr:         []string{"group:hw_agnostic"},
-			},
-			{
-				Name: "tablet_color_android_container",
-				Val: launcher.SortTestType{TabletMode: true, SortMethod: launcher.ColorSort,
-					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNames,
-					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNamesAfterAppInstall},
-				ExtraSoftwareDeps: []string{"android_container"},
 			},
 			{
 				Name: "tablet_color_androidvm",

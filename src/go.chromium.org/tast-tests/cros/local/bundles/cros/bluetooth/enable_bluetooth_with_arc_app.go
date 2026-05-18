@@ -21,10 +21,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	androidContainerR string = "android_container_r"
-	androidVMT        string = "android_vm_t"
-)
+const androidVMT string = "android_vm_t"
 
 const apkName = "customized_arc_app_release_20240704.apk"
 
@@ -45,10 +42,6 @@ func init() {
 		Fixture:         "arcBootedWithBluetoothFloss",
 		VariantCategory: `{"name": "BT_Chipset_Kernel"}`,
 		Params: []testing.Param{{
-			Name:              "android_container_r",
-			ExtraSoftwareDeps: []string{androidContainerR},
-			Val:               androidContainerR,
-		}, {
 			Name:              "android_vm_t",
 			ExtraSoftwareDeps: []string{androidVMT},
 			Val:               androidVMT,
@@ -125,7 +118,7 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	// The texts are different across Android versions.
 	var allowBluetoothObj *ui.Object
 	switch androidDep {
-	case androidContainerR, androidVMT:
+	case androidVMT:
 		allowBluetoothObj = d.Object(ui.Text("Allow"))
 	default:
 		s.Fatal("Unsupported ARC type: ", androidDep)

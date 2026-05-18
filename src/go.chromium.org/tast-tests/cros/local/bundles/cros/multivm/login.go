@@ -45,11 +45,6 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
-			Name:              "arc_container",
-			Pre:               multivm.ArcStarted(),
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
 			Name:              "crostini",
 			Pre:               multivm.CrostiniStarted(),
 			ExtraData:         []string{crostini.GetContainerMetadataArtifact("bookworm", false), crostini.GetContainerRootfsArtifact("bookworm", false)},

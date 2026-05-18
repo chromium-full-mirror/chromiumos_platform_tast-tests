@@ -36,14 +36,10 @@ func init() {
 			"chrome_internal",
 			"play_store",
 		},
-		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"android_container"},
-			},
-			{
-				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
-			}},
+		Params: []testing.Param{{
+			Name:              "vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
 }
