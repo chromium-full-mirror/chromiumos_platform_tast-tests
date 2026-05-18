@@ -33,7 +33,6 @@ func init() {
 		Contacts: []string{
 			"launcher-search-notify@google.com",
 			"chenjih@google.com",
-			"ypitsishin@google.com",
 		},
 		BugComponent: "b:1281467",
 		SoftwareDeps: []string{"chrome"},
@@ -54,7 +53,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				ExtraAttr: []string{"group:cbx",
 					"cbx_feature_enabled",
-					"cbx_unstable"},
+					"cbx_stable"},
 				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 			{
@@ -88,7 +87,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				ExtraAttr: []string{"group:cbx",
 					"cbx_feature_enabled",
-					"cbx_unstable"},
+					"cbx_stable"},
 				ExtraTestBedDeps: []string{tbdep.Cbx(true)},
 			},
 		},
