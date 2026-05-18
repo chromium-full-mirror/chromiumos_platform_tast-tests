@@ -86,7 +86,7 @@ const (
 // webRTCOpts configures WebRTC logging behavior.
 // Increase the stats polling interval to reduce dump file size.
 var webRTCOpts = []chrome.Option{
-	chrome.EnableFeatures("WebRtcInternalsStatsPollingInterval:interval/3s"),
+	chrome.EnableFeatures("WebRtcInternalsStatsPollingInterval:interval/15s"),
 	chrome.ExtraArgs(webRTCEventLogCommandFlag),
 }
 
