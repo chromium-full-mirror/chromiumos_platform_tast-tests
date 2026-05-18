@@ -381,10 +381,13 @@ func Browsing(ctx context.Context, s *testing.State) {
 						s.Fatal("Failed to sleep: ", err)
 					}
 
-					js := fmt.Sprintf("window.scrollBy(0, %d) == null", scrollAmount)
+					scrollCtx, cancel := context.WithTimeout(ctx, eventTimeout)
+					defer cancel()
+
+					js := fmt.Sprintf("window.scrollBy(0, %d)", scrollAmount)
 					// On some low-end devices, browsing heavier pages—such as the Apple page,
 					// may take more time to load to a state where scrolling is feasible.
-					if err := tabData.Conn.WaitForExprWithTimeout(ctx, js, eventTimeout); err != nil {
+					if err := tabData.Conn.Eval(scrollCtx, js, nil); err != nil {
 						s.Fatal("Failed to scroll: ", err)
 					}
 					scrollAmount = -scrollAmount
