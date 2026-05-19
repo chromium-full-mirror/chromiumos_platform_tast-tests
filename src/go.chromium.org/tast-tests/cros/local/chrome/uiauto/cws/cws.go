@@ -76,19 +76,22 @@ func InstallApp(ctx context.Context, cr *chrome.Chrome, app App) (retErr error) 
 		emailRE = regexp.MustCompile(`^[-.+\w]+@([-.+\w]+?\.)+[-.+\w]+$`)
 		account = nodewith.Role(role.PopUpButton).NameRegex(emailRE)
 		// User account restricts for the new (dogfood) CWS page.
-		newAccountRE = regexp.MustCompile(`^Google Account:[^\(]+\([-.+\w]+@([-.+\w]+?\.)+[-.+\w]+\)`)
-		newAccount   = nodewith.Role(role.Button).NameRegex(newAccountRE)
+		newAccountRE      = regexp.MustCompile(`^Google Account:[^\(]+\([-.+\w]+@([-.+\w]+?\.)+[-.+\w]+\)`)
+		newAccount        = nodewith.Role(role.Button).NameRegex(newAccountRE)
+		closeDialogButton = nodewith.Role(role.Button).Name("Close dialog")
 	)
 	ui := uiauto.New(tconn)
 
 	// Helper to wait for the account element on the  current CWS page or the new
 	// dogfood CWS page.
-	waitForAccount := func(ctx context.Context) error {
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(account)(ctx); err == nil {
-			return nil
-		}
-		return ui.WithTimeout(5 * time.Second).WaitUntilExists(newAccount)(ctx)
-	}
+	waitForAccount := uiauto.NamedCombine("wait for account",
+		ui.WaitUntilAnyExists(closeDialogButton, account, newAccount),
+		uiauto.IfSuccessThen(
+			ui.Exists(closeDialogButton),
+			ui.DoDefault(closeDialogButton),
+		),
+		ui.WaitUntilAnyExists(account, newAccount),
+	)
 
 	// Check if the account has been added to Chrome Web Store page.
 	// There might be a timing issue that the account has been added to Lacros profile but not yet propagated to the web page
