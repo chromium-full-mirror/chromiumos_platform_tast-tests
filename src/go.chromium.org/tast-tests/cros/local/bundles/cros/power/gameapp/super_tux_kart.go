@@ -29,8 +29,11 @@ const (
 	superTuxKartPackageName   = "org.supertuxkart.stk"
 	superTuxKartIDPrefix      = superTuxKartPackageName + ":id/"
 
-	// Default to install the apk with version "1.4".
-	defaultSuperTuxKartAPKURL = "https://github.com/supertuxkart/stk-code/releases/download/1.4/SuperTuxKart-1.4.apk"
+	// defaultSuperTuxKartAPKURL is the URL base for the SuperTuxKart APK
+	// with the default version 1.4 on the Google Cloud bucket.
+	// The official APK can be found under the Assets
+	// on https://github.com/supertuxkart/stk-code/releases/download/1.4/SuperTuxKart-1.4.apk.
+	defaultSuperTuxKartAPKURL = "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/super-tux-kart/v1.4/SuperTuxKart-1.4.apk"
 )
 
 // SuperTuxKart holds the information for Game App testing.
