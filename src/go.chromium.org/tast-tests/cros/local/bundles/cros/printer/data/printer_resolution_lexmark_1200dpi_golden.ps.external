@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_resolution_lexmark_1200dpi_golden_20250613.ps",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_resolution_lexmark_1200dpi_golden_20260529.ps",
   "size": 185575,
-  "sha256sum": "c7bef4abffe1de0bf69487a7641ce87357d572ff27749709f60aa43ce3f8bb20"
+  "sha256sum": "63270ae7c7969b7e488a608ee0a157529ffca819cac74c02bcafbd9ec20b77a0"
 }
