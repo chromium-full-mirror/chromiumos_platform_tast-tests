@@ -567,7 +567,6 @@ func initializeLoginPerfTest(ctx context.Context,
 	defer cancel()
 
 	loginPool := dma.CredsFromPool(ui.GaiaPoolDefaultVarName)
-
 	options := []chrome.Option{
 		chrome.GAIALoginPool(loginPool),
 		chrome.EnableRestoreTabs(),
@@ -581,8 +580,10 @@ func initializeLoginPerfTest(ctx context.Context,
 		// so that each test run does not remember info from last test run.
 		chrome.ExtraArgs("--disable-sync"),
 	}
-	// Only enable arc if it's supported.
-	if arc.Supported() {
+
+	isARCEnabled := arc.Supported() && param.arcMode == arcenabled
+	// Only enable arc if it's supported and enabled.
+	if isARCEnabled {
 		// We enable ARC initially to fully initialize it.
 		options = append(options, chrome.ARCSupported(), disableARCSyncOption)
 	}
@@ -615,7 +616,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	defer faillog.DumpUITreeOnError(ctx, outDir, func() bool { return retErr != nil }, tconn)
 
 	testing.ContextLog(ctx, "Opting into Play Store")
-	if arc.Supported() {
+	if isARCEnabled {
 		if err := optin.PerformWithTimeout(ctx, cr, tconn, loginPerfOptinTimeout); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to optin to Play Store")
 		}
