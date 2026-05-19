@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_oki_tray4_golden_20250613.ps",
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_oki_tray4_golden_20260604.ps",
   "size": 181012,
-  "sha256sum": "198871fa760b349b5f0672e5c6e81e8616029b23961c26017a90b28424d9b0cb"
+  "sha256sum": "fa4e29bf808ba90bf798e69a0019a923dc2025770140c8234f0f90d6bfaa2010"
 }
