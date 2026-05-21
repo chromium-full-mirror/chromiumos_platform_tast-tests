@@ -61,6 +61,7 @@ func init() {
 				"osiris",
 				"redrix",
 				"taeko",
+				"taniks",
 				"vell",
 				"volmar",
 				"xol",
