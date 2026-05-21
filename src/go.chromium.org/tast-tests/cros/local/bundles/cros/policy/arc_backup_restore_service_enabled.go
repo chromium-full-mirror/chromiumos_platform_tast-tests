@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -106,18 +107,26 @@ func ArcBackupRestoreServiceEnabled(ctx context.Context, s *testing.State) {
 
 			// Get ARC Backup Manager state.
 			var enabled bool
-			if output, err := a.Command(ctx, "bmgr", "enabled").Output(); err != nil {
-				s.Fatal("Failed to run adb command: ", err)
-			} else if strings.Contains(string(output), "enabled") {
-				enabled = true
-			} else if strings.Contains(string(output), "disabled") {
-				enabled = false
-			} else {
-				s.Fatalf("Invalid adb response: %q", string(output))
-			}
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				output, err := a.Command(ctx, "bmgr", "enabled").Output()
+				if err != nil {
+					return testing.PollBreak(errors.Wrap(err, "failed to run adb command"))
+				}
+				s := string(output)
+				if strings.Contains(s, "enabled") {
+					enabled = true
+				} else if strings.Contains(s, "disabled") {
+					enabled = false
+				} else {
+					return testing.PollBreak(errors.Errorf("invalid adb response: %q", s))
+				}
 
-			if enabled != param.wantEnabled {
-				s.Errorf("Unexpected ARC backup restore service state: got %t; want %t", enabled, param.wantEnabled)
+				if enabled != param.wantEnabled {
+					return errors.Errorf("got %t, want %t", enabled, param.wantEnabled)
+				}
+				return nil
+			}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+				s.Errorf("Unexpected ARC backup restore service state: got %t; want %t. name %s: %v", enabled, param.wantEnabled, param.name, err)
 			}
 		})
 	}
