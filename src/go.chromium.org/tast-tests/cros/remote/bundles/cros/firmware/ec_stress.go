@@ -948,10 +948,72 @@ func startFlashStressTask(ctx context.Context, h *firmware.Helper, timeout time.
 
 // ****** Suspend Utility Functions ******
 
+// getSuspendTargetCmd determines the correct command to trigger suspend based on system configuration.
+// It prefers S0ix (freeze) if supported and configured, and falls back to S3 (deep) otherwise.
+func getSuspendTargetCmd(ctx context.Context, h *firmware.Helper) (string, error) {
+	// 1. Check if S0ix (freeze) is supported by the kernel.
+	hasS0ix := false
+	if stateBytes, err := h.DUT.Conn().CommandContext(ctx, "cat", "/sys/power/state").Output(); err == nil {
+		hasS0ix = strings.Contains(string(stateBytes), "freeze")
+	}
+
+	// 2. Check if S3 (deep) is supported by the kernel.
+	hasS3 := false
+	if memSleepBytes, err := h.DUT.Conn().CommandContext(ctx, "cat", "/sys/power/mem_sleep").Output(); err == nil {
+		hasS3 = strings.Contains(string(memSleepBytes), "deep")
+	}
+
+	// 3. Check powerd configuration for suspend_to_idle preference.
+	// We check R/W prefs, board-specific R/O prefs, common R/O prefs, and unified config (cros_config).
+	prefCmd := `cat /var/lib/power_manager/suspend_to_idle 2>/dev/null || ` +
+		`cat /usr/share/power_manager/board_specific/suspend_to_idle 2>/dev/null || ` +
+		`cat /usr/share/power_manager/suspend_to_idle 2>/dev/null || ` +
+		`cat /run/chromeos-config/v1/power/suspend-to-idle 2>/dev/null || ` +
+		`echo 0`
+
+	outBytes, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", prefCmd).Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read powerd suspend_to_idle preference")
+	}
+	pref := strings.TrimSpace(string(outBytes))
+	suspendToIdlePref := (pref == "1")
+
+	testing.ContextLogf(ctx, "Suspend detection: S0ix_supported=%t, S3_supported=%t, suspend_to_idle_pref=%t", hasS0ix, hasS3, suspendToIdlePref)
+
+	// Decision logic:
+	// Use S0ix if S0ix is supported AND suspend_to_idle pref is explicitly enabled.
+	if hasS0ix && suspendToIdlePref {
+		testing.ContextLog(ctx, "Selecting S0ix (freeze) for suspend")
+		return "echo freeze > /sys/power/state", nil
+	}
+
+	// Otherwise, fall back to S3 if supported.
+	if hasS3 {
+		testing.ContextLog(ctx, "Selecting S3 (deep) for suspend")
+		// Ensure 'deep' is selected in mem_sleep before echoing 'mem' to state
+		return "echo deep > /sys/power/mem_sleep && echo mem > /sys/power/state", nil
+	}
+
+	// Ultimate fallback to S0ix if S3 is not supported but S0ix is.
+	if hasS0ix {
+		testing.ContextLog(ctx, "S3 unsupported, falling back to S0ix (freeze)")
+		return "echo freeze > /sys/power/state", nil
+	}
+
+	return "", errors.New("neither S0ix (freeze) nor S3 (deep) suspend states are supported by this system")
+}
+
 func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod time.Duration) (cancelfunc, error) {
 	testing.ContextLogf(ctx, "Starting Suspend Stress Task with wakePeriod=%v, suspendPeriod=%v", wakePeriod, suspendPeriod)
+
+	suspendTargetCmd, err := getSuspendTargetCmd(ctx, h)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to determine suspend command")
+	}
+
 	// powerd_dbus_suspend is not used because user input from the keyboard prevents suspend
-	cmd := fmt.Sprintf("while true; do sleep %v; echo 0 > /sys/class/rtc/rtc0/wakealarm; echo +%v > /sys/class/rtc/rtc0/wakealarm; echo mem > /sys/power/state; done;", wakePeriod.Seconds(), suspendPeriod.Seconds())
+	cmd := fmt.Sprintf("while true; do sleep %v; echo 0 > /sys/class/rtc/rtc0/wakealarm; echo +%v > /sys/class/rtc/rtc0/wakealarm; %s; done;",
+		wakePeriod.Seconds(), suspendPeriod.Seconds(), suspendTargetCmd)
 	remoteSuspendStressCancel, err := startBackgroundProcess(ctx, h, cmd, "/tmp/ec_suspend_stress.out", timeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start suspend stress task")
