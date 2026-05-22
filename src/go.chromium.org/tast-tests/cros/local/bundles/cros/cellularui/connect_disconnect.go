@@ -7,6 +7,7 @@ package cellularui
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -93,7 +94,7 @@ func ConnectDisconnect(ctx context.Context, s *testing.State) {
 	}
 
 	// If there are multiple cellular networks with the same name, the currently connected network will always appear first in the list.
-	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(networkDetailedView).First()
+	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(strings.TrimSpace(networkName))).Ancestor(networkDetailedView).First()
 	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameContaining("Connected").Ancestor(cellularNetworkQuickSettingsView)
 
 	ui := uiauto.New(tconn)

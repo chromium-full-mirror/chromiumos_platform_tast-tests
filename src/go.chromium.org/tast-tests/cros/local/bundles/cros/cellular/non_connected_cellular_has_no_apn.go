@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -108,13 +109,13 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	if err = quicksettings.SelectNetwork(ctx, tconn, name); err != nil {
+	if err = quicksettings.SelectNetwork(ctx, tconn, strings.TrimSpace(name)); err != nil {
 		s.Fatal("Failed to open the Quick Settings and select the default cellular service from the network detailed view: ", err)
 	}
 
 	lastGoodApn, err := helper.GetCellularLastGoodAPN(ctx)
 	if err != nil {
-		s.Fatal("Failed to get the last good APN: ", ctx)
+		s.Fatal("Failed to get the last good APN: ", err)
 	}
 
 	ui := uiauto.New(tconn)
