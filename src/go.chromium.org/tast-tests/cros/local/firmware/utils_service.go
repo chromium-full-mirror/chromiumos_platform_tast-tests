@@ -541,7 +541,7 @@ type imageCandidate struct {
 
 // A url like gs://chromeos-image-archive/firmware-brya-14505.B-branch/R100-14505.832.0-1-8730368903603296945/brya/firmware_from_source.tar.bz2
 // becomes gs://firmware-image-archive/firmware-brya-14505.B/14505.832.0/omnigul.14505.832.0.tar.bz2
-var legacyURLRE = regexp.MustCompile(`^gs://(?:chromeos|firmware)-image-archive/(firmware-\S+-[\d\.]+\.B)(?:-branch(?:-firmware)?)?/(?:R\d+-)?(\d+\.\d+\.\d+)[-\d]*/.*`)
+var legacyURLRE = regexp.MustCompile(`^gs://(?:chromeos|firmware)-image-archive/(?:[^/]*/)?(firmware-[^/]*)(?:-branch(?:-firmware)?)?/(?:R\d+-)?(\d+\.\d+\.\d+)[-\d]*/.*`)
 
 // A url like gs://firmware-image-archive/firmware-ec-R135-16209.5.B/16209.5.25/ or gs://chromeos-image-archive/firmware-zephyr-postsubmit/R136-16217.0.0-108800-8720748254242768705/
 // with a trailing slash needs the version number extracted so we can append the single target tar file.
@@ -584,6 +584,10 @@ func getAPCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 	// If the url matches legacyUrlRe, and we have a coreboot name, try the single target tarfile
 	m = legacyURLRE.FindStringSubmatch(gsPath)
 	if m != nil && buildTargets.CorebootName != "" {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[4]s/%[1]s/%[2]s/%[3]s.%[2]s.tar.bz2", m[1], m[2], buildTargets.CorebootName, board),
+			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
+		})
 		candidates = append(candidates, imageCandidate{
 			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.%[2]s.tar.bz2", m[1], m[2], buildTargets.CorebootName),
 			Filenames: []string{fmt.Sprintf("image-%v.bin", buildTargets.CorebootName), "image.bin"},
@@ -639,6 +643,10 @@ func getECCandidateURLs(ctx context.Context, gsPath, board, model string, buildT
 	// If the url matches legacyURLRE, and we have a legacy ec name, try the single target tarfile
 	m = legacyURLRE.FindStringSubmatch(gsPath)
 	if m != nil && buildTargets.LegacyEcName != "" {
+		candidates = append(candidates, imageCandidate{
+			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[4]s/%[1]s/%[2]s/%[3]s.EC.%[2]s.tar.bz2", m[1], m[2], ecName, board),
+			Filenames: []string{"ec.bin"},
+		})
 		candidates = append(candidates, imageCandidate{
 			GSURL:     fmt.Sprintf("gs://firmware-image-archive/%[1]s/%[2]s/%[3]s.EC.%[2]s.tar.bz2", m[1], m[2], ecName),
 			Filenames: []string{"ec.bin"},
