@@ -28,7 +28,9 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
-		Attr:         []string{"group:mainline"},
+		// This test is expected to be flaky since the WebRTC detection can fail
+		// in some cases. See b/510988583#comment3 for details.
+		Attr: []string{"group:network", "network_platform"},
 		// `no_chrome_dcheck`: To avoid chrome crashes affecting the test execution.
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
 		// crrev.com/c/5119091 is in the kernel upstream branch.
