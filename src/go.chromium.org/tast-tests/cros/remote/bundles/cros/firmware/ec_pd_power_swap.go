@@ -241,6 +241,9 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}()
 
 	if testParams.Shutdown {
+		if err := testing.Sleep(ctx, 500 * time.Millisecond); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 			testing.ContextLog(ctx, "Failed to power on DUT: ", err)
 		}
