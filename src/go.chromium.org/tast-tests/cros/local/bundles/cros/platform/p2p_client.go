@@ -43,7 +43,8 @@ func newFakeP2PServer(port, numConn int, files map[string]int) (*fakeP2PServer, 
 		txt = append(txt, fmt.Sprintf("id_%s=%d", name, size))
 	}
 
-	service, err := mdns.NewMDNSService(instance, p2p.ServiceType, "", "", port, []net.IP{net.ParseIP(p2p.DefaultNSIP)}, txt)
+	hostname := fmt.Sprintf("p2p-%d.local.", port)
+	service, err := mdns.NewMDNSService(instance, p2p.ServiceType, "", hostname, port, []net.IP{net.ParseIP(p2p.DefaultNSIP)}, txt)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create mDNS service")
 	}
