@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui"
@@ -166,6 +167,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 		// the split-view controller moves the divider slightly.
 		dragPoints[3].X += info.WorkArea.Width / 20
 	}
+	ac := uiauto.New(tconn)
 
 	// Testing 3 patterns;
 	// SingleWindow: there's a single window which is snapped to the left.
@@ -188,7 +190,6 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 				}
 				// Click the toggle button to open the WebUI tabstrip.
 				toggleButton := nodewith.Role(role.Button).NameContaining("toggle tab strip")
-				ac := uiauto.New(tconn)
 				if err := uiauto.Combine(
 					"wait and click",
 					ac.WaitForLocation(toggleButton),
@@ -231,7 +232,6 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 				}
 
 				// Open the WebUI tabstrip of the browser window of the right side.
-				ac := uiauto.New(tconn)
 				toggleButton := nodewith.Role(role.Button).NameContaining("toggle tab strip")
 				nodes, err := ac.NodesInfo(ctx, toggleButton)
 				if err != nil {
@@ -280,19 +280,8 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 				if err := ash.CreateNewDesk(ctx, tconn); err != nil {
 					return errors.Wrap(err, "failed to create a new desk")
 				}
-				w, err := ash.FindFirstWindowInOverview(ctx, tconn)
-				if err != nil {
-					return errors.Wrap(err, "failed to find the window in the overview mode")
-				}
-				deskMiniView := nodewith.ClassName("DeskMiniView")
-				if err := pc.Drag(
-					w.OverviewInfo.Bounds.CenterPoint(),
-					pc.DragToNode(deskMiniView.Nth(1), time.Second),
-				)(ctx); err != nil {
-					return errors.Wrap(err, "failed to drag window from overview grid to desk mini-view")
-				}
-				if _, err := ash.FindFirstWindowInOverview(ctx, tconn); err == nil {
-					return errors.New("failed to arrange clamshell split view with empty overview grid")
+				if err := moveOverviewWindowToNextDesk(ctx, tconn, ac); err != nil {
+					return errors.Wrap(err, "failed to move overview window to the next desk")
 				}
 				// Disable automation features explicitly, so that further operations
 				// won't be affected by accessibility events. See
@@ -406,4 +395,29 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 	if err := runner.Values().Save(ctx, s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
+}
+
+func moveOverviewWindowToNextDesk(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer kb.Close(ctx)
+
+	if err := uiauto.NamedCombine("move overview window to the next desk",
+		// Focus on the window in the overview grid.
+		kb.AccelAction("Tab"),
+		ac.WaitUntilExists(nodewith.HasClass("OverviewItemView").Focused()),
+		// Move the focused window to the next desk.
+		kb.AccelAction("Search+Shift+]"),
+	)(ctx); err != nil {
+		return err
+	}
+
+	if err := ash.WaitForAllWindowCondition(ctx, tconn, func(win *ash.Window) bool {
+		return win.OverviewInfo == nil
+	}); err != nil {
+		return errors.Wrap(err, "failed to wait for overview grid to be empty")
+	}
+	return nil
 }
