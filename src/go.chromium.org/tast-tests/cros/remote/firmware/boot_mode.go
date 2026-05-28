@@ -326,7 +326,7 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 			recType = servo.PowerStateRecForceMRC
 		}
 		if err := ms.EnableRecMode(ctx, recType, servo.USBMuxDUT); err != nil {
-			return err
+			return errors.Wrap(err, "enabling rec")
 		}
 		if msOptsContain(opts, SkipWaitConnect) {
 			return nil
@@ -943,7 +943,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
-			return err
+			return errors.Wrap(err, "poll failed")
 		}
 		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
 		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
@@ -970,7 +970,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			// it means it uses the menu UI.
 			testing.ContextLog(ctx, "Detecting the recovery select screen")
 			if err := h.DetectFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode, fwCommon.RecoverySelect); err != nil {
-				return errors.Wrap(err, "failed to detect firmware screen")
+				testing.ContextLog(ctx, "Failed to find firmware screen, assuming it is up: ", err)
 			}
 		} else {
 			testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")

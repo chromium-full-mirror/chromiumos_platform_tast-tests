@@ -1089,22 +1089,33 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	}
 
 	// TODO:(b/474614687) - servod power_state:cold_reset is flaky on ti50 if the WP has changed
-	gscVer, err := s.GSCVersionInfo(ctx)
-	if err != nil {
-		return errors.Wrap(err, "GSCVersionInfo failed")
-	}
-	if gscVer.IsTi50 && s.hasCCD && value == PowerStateReset {
-		testing.ContextLog(ctx, "Resetting EC via GSC console")
-		if err := s.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
-			return errors.Wrap(err, "ecrst pulse failed")
+	if s.hasCCD && value == PowerStateReset {
+		var gscVer GSCVersionInfoStruct
+		err := testing.Poll(ctx, func(ctx context.Context) error {
+			var err error
+			gscVer, err = s.GSCVersionInfo(ctx)
+			return err
+		}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 1 * time.Second})
+		if err != nil {
+			return errors.Wrap(err, "GSCVersionInfo failed")
 		}
-		if err := s.WaitForCCDState(ctx, true, 30*time.Second); err != nil {
-			return errors.Wrap(err, "wait for ccd failed")
+		if gscVer.IsTi50 {
+			testing.ContextLog(ctx, "Resetting EC via GSC console")
+			if err := s.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
+				return errors.Wrap(err, "ecrst pulse failed")
+			}
+			if err := s.WaitForCCDState(ctx, true, 30*time.Second); err != nil {
+				return errors.Wrap(err, "wait for ccd failed")
+			}
+			return nil
 		}
-		return nil
 	}
 	testing.ContextLogf(ctx, "Setting %q to %q", PowerState, value)
-	return s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
+	err := s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
+	if err != nil {
+		return errors.Wrap(err, "setting power state")
+	}
+	return nil
 }
 
 var srcCapsRe = regexp.MustCompile(`([\d]+)mV\/([\d]+)mA`)
