@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package network
+package wifi
 
 import (
 	"context"
@@ -37,7 +37,7 @@ type secureWiFiParams struct {
 	Problems []uint32
 }
 
-func wep104Keys() []string {
+func diagWep104Keys() []string {
 	return []string{
 		"0123456789abcdef0123456789", "mlk:ihgfedcba",
 		"d\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89\xe5\x9b\x9b",
@@ -59,10 +59,9 @@ func init() {
 		Func: DiagSecureWifi,
 		Desc: "Tests that the network diagnostic routine for secure WiFi connection gives correct results with different WiFi security protocols",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // network-health team
-			"khegde@chromium.org",                 // test maintainer
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:1166446",
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
@@ -78,7 +77,7 @@ func init() {
 		}, {
 			Name: "wep_psk",
 			Val: secureWiFiParams{
-				SecConf:  wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+				SecConf:  wep.NewConfigFactory(diagWep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
 				Verdict:  diag.VerdictProblem,
 				Problems: []uint32{problemSecurityTypeWepPsk},
 			},
