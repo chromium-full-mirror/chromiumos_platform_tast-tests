@@ -25,6 +25,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var enableBatteryLifeUsingPercentVar = testing.RegisterVarString(
+	"power.enableBatteryLifeUsingPercent",
+	"",
+	"A boolean string (true/false) signifying whether to calculate the minutes_battery_life metric using battery percent.",
+)
+
 // containEmpty is the helper function to check if there is an empty string among args.
 func containEmpty(strs ...string) bool {
 	for _, str := range strs {
@@ -126,7 +132,7 @@ func generateDashboardLink(powerLogDict map[string]interface{}) string {
 }
 
 // getMinutesBatteryLife calculates and returns the projected operating minutes.
-func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64, metrics *pb.OneTimeMetrics) (minutesBatteryLife float64) {
+func getMinutesBatteryLife(ctx context.Context, innerAverageMap map[string]float64, totalDurationSec float64, metrics *pb.OneTimeMetrics, chargeUsedInPercent float64) (minutesBatteryLife float64) {
 	errStr := func(metric string) string {
 		e := "Cannot compute battery life in minutes and defaulting to 0 minute because "
 		e += metric + " cannot be retrieved"
@@ -164,21 +170,26 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 
 		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
 
-		var chargeUsedInPercent float64
-		if chargeValue, exist := innerDataMap["battery_percent"]; exist && len(chargeValue) > 1 {
-			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
-		}
-		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
-		// For shorter tests (< 1hr), power integral (Wh) is more accurate for calculating projected battery life.
-		const MinReasonableDuration = 3600
-		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
-			// Use charge to project operation time when test run time > 1 hour.
-			chargeRate := chargeUsedInPercent / (totalDurationSec / 60.0)
+		const MinReasonableDuration = 60
+		durationMin := totalDurationSec / 60.0
+		// By default, the energy model (Wh) is used for shorter tests (< 1hr).
+		// The battery percent model (charge consumption) is only used for longer tests (>= 1hr)
+		// if enabled by the runtime variable.
+		usePercentModel := enableBatteryLifeUsingPercentVar.Value() == "true" &&
+			durationMin >= MinReasonableDuration &&
+			chargeUsedInPercent > 0
+		if usePercentModel {
+			testing.ContextLogf(ctx, "Calculating %s with battery percent", MinutesBatteryLifeKey)
+			// Use battery percent to project operation time when the percent model is enabled
+			// and the test run time is >= 1 hour.
+			// The chargeRate is converted from percentage rate to fractional rate.
+			chargeRate := chargeUsedInPercent / durationMin / 100.0
 			minutesBatteryLife = batSizeScale * (chargeFullDesign / chargeFull) / chargeRate
 		} else {
-			// Use energy to project operation time when test run time < 1 hour.
+			// Use energy to project operation time when the percent model is disabled
+			// or the test run time is < 1 hour.
 			// Notice energyUsed is in mWh and battery (design) size is in Wh. energyRate is in Wh/min.
-			energyRate := energyUsed / (totalDurationSec / 60.0) / 1000.0
+			energyRate := energyUsed / durationMin / 1000.0
 			minutesBatteryLife = energyFullDesign * batSizeScale / energyRate
 		}
 	} else {
@@ -403,7 +414,15 @@ func convertPerfValuesToPowerDicts(ctx context.Context, values *perf.Values, che
 		timelinePowerDict = nil
 		start = time.Now()
 	}
-	handleOneValueData(ctx, values, metrics, oneValuePowerDict)
+
+	var chargeUsedInPercent float64
+	if timelinePowerDict != nil {
+		chargeValue, exist := timelinePowerDict.InnerDataMap["battery_percent"]
+		if exist && len(chargeValue) > 1 {
+			chargeUsedInPercent = chargeValue[0] - chargeValue[len(chargeValue)-1]
+		}
+	}
+	handleOneValueData(ctx, values, metrics, oneValuePowerDict, chargeUsedInPercent)
 
 	var powerDicts []map[string]interface{}
 	if timelinePowerDict != nil {
@@ -457,7 +476,7 @@ func handleTimelineData(ctx context.Context, values *perf.Values, checkpoints *p
 	return nil
 }
 
-func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics, dict *Dict) {
+func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics, dict *Dict, chargeUsedInPercent float64) {
 	var totalDurationSec float64
 	batteryLifeTested, ok := dict.InnerAverageMap[MinutesBatteryLifeTestedKey]
 	if ok {
@@ -469,7 +488,7 @@ func handleOneValueData(ctx context.Context, values *perf.Values, metrics *pb.On
 	minutesBatteryLife, batteryLifeOk := dict.InnerAverageMap[MinutesBatteryLifeKey]
 	// Get battery life only when it is not available yet.
 	if !batteryLifeOk && metrics != nil {
-		minutesBatteryLife = getMinutesBatteryLife(ctx, dict.InnerDataMap, dict.InnerAverageMap, totalDurationSec, metrics)
+		minutesBatteryLife = getMinutesBatteryLife(ctx, dict.InnerAverageMap, totalDurationSec, metrics, chargeUsedInPercent)
 	}
 	// A value of 0 for minutesBatteryLife indicates that the battery life metrics could not be
 	// calculated. In this case, we skip adding them to the results.
