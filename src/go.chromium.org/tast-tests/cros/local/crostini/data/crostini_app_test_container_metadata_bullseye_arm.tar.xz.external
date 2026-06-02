@@ -1,0 +1,5 @@
+{
+    "sha256sum": "e5e05f19578bd59b66eb5570084884922a53e09de8492d359299255f5e73e1b8",
+    "size": 672,
+    "url": "gs://cros-containers-staging/151/images/debian/bullseye/arm64/app_test/20260602_18:18/lxd.tar.xz"
+}
