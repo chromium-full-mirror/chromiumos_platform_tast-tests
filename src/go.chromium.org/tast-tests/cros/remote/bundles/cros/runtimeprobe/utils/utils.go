@@ -21,7 +21,6 @@ var (
 	// fields that are also waived in the runtimeprobe.ProbeFunction test.
 	ProbeFunctionWaivedFields = map[string]map[string]struct{}{
 		"blacktip360": {"camera": {}},
-		"domilly":     {"display_panel": {}},
 		"santa":       {"battery": {}},
 		"wyrdeer":     {"battery": {}},
 	}

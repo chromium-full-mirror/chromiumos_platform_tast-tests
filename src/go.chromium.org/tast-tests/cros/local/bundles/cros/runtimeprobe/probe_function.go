@@ -329,7 +329,7 @@ func init() {
 				ExtraAttr: []string{"racc_encrypted_config_installed"},
 			}, {
 				Name:              "edid",
-				ExtraHardwareDeps: common.ReleasedDeviceDeps(hwdep.SkipOnModel("domilly")),
+				ExtraHardwareDeps: common.ReleasedDeviceDeps(),
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
