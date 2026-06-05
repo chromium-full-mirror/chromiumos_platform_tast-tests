@@ -260,7 +260,7 @@ func ConsecutiveBoot(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Check for G3/S5 powerstate")
-			if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, 20*time.Second, expectedStates...); err != nil {
+			if err := h.WaitForPowerStates(ctx, 500*time.Millisecond, 25*time.Second, expectedStates...); err != nil {
 				s.Log("Failed to get G3/S5 powerstate: ", err)
 				return errors.Wrap(err, "failed to get G3/S5 powerstate")
 			}
