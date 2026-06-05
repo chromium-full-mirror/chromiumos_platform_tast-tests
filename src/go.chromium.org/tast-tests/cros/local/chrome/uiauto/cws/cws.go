@@ -46,12 +46,20 @@ func InstallAppWithTimeout(ctx context.Context, cr *chrome.Chrome, app App, time
 
 // InstallApp installs the specified Chrome app from the Chrome Web Store.
 func InstallApp(ctx context.Context, cr *chrome.Chrome, app App) (retErr error) {
-	cws, err := cr.NewConn(ctx, app.URL)
+	cws, err := cr.NewConn(ctx, chrome.BlankURL)
 	if err != nil {
 		return err
 	}
 	defer cws.Close()
 	defer cws.CloseTarget(ctx)
+
+	if err := cws.Navigate(ctx, app.URL); err != nil {
+		return errors.Wrapf(err, "failed to navigate to %s", app.URL)
+	}
+
+	if err := cws.WaitForExpr(ctx, "document.readyState !== 'loading'"); err != nil {
+		return errors.Wrap(err, "failed to wait for page to load")
+	}
 
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
