@@ -608,6 +608,8 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 	installIcon := nodewith.NameStartingWith("Install").HasClass("PageActionView").Role(role.Button)
 	installAppDialog := nodewith.NameStartingWith("Install app").Role(role.Dialog).HasClass("Widget")
 	installButton := nodewith.Name("Install").Role(role.Button).Ancestor(installAppDialog)
+	nextButton := nodewith.Name("Next").Role(role.Button).Ancestor(installAppDialog)
+	openTabButton := nodewith.Name("Open tab in app").Role(role.Button).HasClass("MdTextButton")
 
 	installPWA := uiauto.NamedCombine("install PWA through omnibox",
 		// The status bubble indicates the page is still loading.
@@ -618,7 +620,12 @@ func InstallPWAForURL(ctx context.Context, cr *chrome.Chrome, pwaURL string, tim
 		ui.WithTimeout(timeout).WaitUntilExists(installIcon),
 		// Low-end DUTs may take longer to wait for the dialog to pop up.
 		ui.WithTimeout(2*time.Minute).LeftClickUntil(installIcon, ui.WaitUntilExists(installAppDialog)),
+		ui.WaitUntilAnyExists(nextButton, installButton),
+		uiauto.IfSuccessThen(ui.Exists(nextButton), ui.LeftClick(nextButton)),
 		ui.LeftClick(installButton),
+		uiauto.IfSuccessThen(
+			ui.WithTimeout(5*time.Second).WaitUntilExists(openTabButton),
+			ui.LeftClick(openTabButton)),
 	)
 
 	// The page might be stuck at loading, and the install icon will not pop up.
