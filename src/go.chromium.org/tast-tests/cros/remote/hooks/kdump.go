@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
@@ -74,7 +73,9 @@ func fetchKdumpFiles(ctx context.Context, d *dut.DUT, outDir string) {
 	}
 }
 
-// SetUp enables kdump if the corresponding var is set.
+// SetUp enables kdump if the corresponding var is set. The setup is in a
+// best-effort way so it won't return an err to avoid affecting the test
+// execution.
 func (h *kdumpHook) SetUp(ctx context.Context, s *HookState) error {
 	if kdumpEnable.Value() != "true" {
 		return nil
@@ -89,17 +90,20 @@ func (h *kdumpHook) SetUp(ctx context.Context, s *HookState) error {
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := h.dut.WaitConnect(waitCtx); err != nil {
-		return errors.Wrap(err, "failed to wait for DUT connection ready")
+		testing.ContextLog(ctx, "Failed to wait for DUT connection ready: ", err)
+		return nil
 	}
 
 	if supported, err := isKdumpSupported(ctx, h.dut); err != nil {
-		return errors.Wrap(err, "failed to check whether kdump is supported")
+		testing.ContextLog(ctx, "Failed to check whether kdump is supported: ", err)
+		return nil
 	} else if !supported {
 		return nil
 	}
 	cleanup, err := kdump.EnableKdump(ctx, h.dut)
 	if err != nil {
-		return errors.Wrap(err, "failed to enable kdump")
+		testing.ContextLog(ctx, "Failed to enable kdump: ", err)
+		return nil
 	}
 	h.cleanup = cleanup
 	return nil
@@ -113,7 +117,7 @@ func (h *kdumpHook) Reset(ctx context.Context) error {
 	// Only the first cleanup is necessary. It is expected for the cleanup
 	// to revert to the state of kdump before the test runs.
 	if _, err := kdump.EnableKdump(ctx, h.dut); err != nil {
-		return errors.Wrap(err, "failed to enable kdump")
+		testing.ContextLog(ctx, "Failed to enable kdump: ", err)
 	}
 	return nil
 }
@@ -137,7 +141,7 @@ func (h *kdumpHook) TearDown(ctx context.Context, s *HookState) error {
 	// as test result.
 	fetchKdumpFiles(ctx, h.dut, s.OutDir())
 	if err := h.cleanup(ctx); err != nil {
-		return errors.Wrap(err, "failed to disable kdump")
+		testing.ContextLog(ctx, "Failed to disable kdump: ", err)
 	}
 	return nil
 }
