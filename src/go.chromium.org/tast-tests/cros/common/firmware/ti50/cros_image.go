@@ -50,7 +50,7 @@ var (
 	// Group 1 is the branch name.
 	// Group 2 is the version sha
 	verRWCr50StrRE       = `cr50_([0-9_vpmefi\.]*)\.[0-9]*[\-\+]([[:xdigit:]]+)`
-	verRWTi50StrRE       = `ti50_common_([a-z]+)\S*:\S+[\-\+](\S+)`
+	verRWTi50StrRE       = `ti50a?_common_([a-z]+)\S*:\S+[\-\+](\S+)`
 	verRWLegacyTi50StrRE = `(ti50_common):\S+[\-\+](\S+)`
 	verRWGSCStrRE        = verRWCr50StrRE + `|` + verRWTi50StrRE + `|` + verRWLegacyTi50StrRE
 	hexRE                = `[0-9a-fA-F]+`

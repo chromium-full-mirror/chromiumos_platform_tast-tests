@@ -111,6 +111,31 @@ Build:   DBG/ti50_common_tot:v0.0.360+ef9becfc
 	testVersionInfoMatcher(t, input, expected)
 }
 
+func TestVersionCommandTi50Processor5(t *testing.T) {
+	input := `
+RO_A:  * 0.0.52/d1072955
+RO_B:    Empty
+RW_A:    0.24.20/ti50_common:v0.0.2888-c2eeb17e
+RW_B:  * 1.24.30/DBG/ti50a_common_tot:v0.0.360+ef9becfc
+BID A:   00000000:00000000:00000000 Yes
+BID B:   00000000:00000000:00000000 Yes
+Build:   DBG/ti50a_common_tot:v0.0.360+ef9becfc
+         libtock-rs:v0.0.915-10cf494
+         tock:v0.0.9632-b3a7d9d57
+         ms-tpm-20-ref:v0.0.306-ba9d73d
+`
+	expected := VersionCommandInfo{
+		RoA:   RoInfo{Active: true, Version: "0.0.52", ImageCheck: "d1072955"},
+		RoB:   RoInfo{},
+		RwA:   RwInfo{Empty: false, Active: false, Version: "0.24.20", Branch: Unknown, VersionStr: "ti50_common:v0.0.2888-c2eeb17e"},
+		RwB:   RwInfo{Empty: false, Active: true, Debug: true, Version: "1.24.30", Branch: ToT, VersionStr: "DBG/ti50a_common_tot:v0.0.360+ef9becfc"},
+		BID:   ImageBID{Empty: false, Type: 0, Mask: 0, Flags: 0},
+		Build: BuildInfo{Branch: ToT, Debug: true, VersionStr: "DBG/ti50a_common_tot:v0.0.360+ef9becfc"},
+	}
+
+	testVersionInfoMatcher(t, input, expected)
+}
+
 func TestVersionCommandCr50Processor1(t *testing.T) {
 	input := `
 Chip:    g cr50 B2-C
