@@ -429,30 +429,51 @@ func getAuthType(ctx context.Context, gaiaConn *driver.Conn) (config.AuthType, e
 
 // insertGAIAField fills a field of the GAIA login form.
 func insertGAIAField(ctx context.Context, gaiaConn *driver.Conn, selector, value string) error {
-	// Ensure that the input exists.
-	if err := gaiaConn.WaitForExpr(ctx, fmt.Sprintf(
-		"document.querySelector(%q)", selector)); err != nil {
+	// Wait until element exists.
+	waitExpr := fmt.Sprintf("document.querySelector(%q) !== null", selector)
+	if err := gaiaConn.WaitForExpr(ctx, waitExpr); err != nil {
 		return errors.Wrapf(err, "failed to wait for %q element", selector)
 	}
-	// Ensure the input field is empty.
-	// This confirms that we are not using the field before it is cleared.
-	fieldReady := fmt.Sprintf(`
-		(function() {
-			const field = document.querySelector(%q);
-			return field.value === "";
-		})()`, selector)
-	if err := gaiaConn.WaitForExpr(ctx, fieldReady); err != nil {
-		return errors.Wrapf(err, "failed to wait for %q element to be empty", selector)
+
+	// Fill the field and trigger input/change events so page listeners react to the update.
+	fillJS := fmt.Sprintf(`
+		(selector, value) => {
+			const field = document.querySelector(selector);
+			if (!field) return { ok: false, reason: "not_found" };
+
+			try {
+				field.focus();
+				field.value = "";
+				field.value = value;
+				field.dispatchEvent(new Event('input', { bubbles: true }));
+				field.dispatchEvent(new Event('change', { bubbles: true }));
+				field.blur();
+				return { ok: field.value === value };
+			} catch (e) {
+				return { ok: false, reason: e.toString() };
+			}
+		}
+	`)
+
+	// The GAIA login form sometimes fails to register the input value.
+	// This loop retries the input up to 3 times if the value is not correctly set.
+	const retryCount = 3
+	for i := 0; i < retryCount; i++ {
+		var (
+			result map[string]any
+			reason string
+		)
+		if err := gaiaConn.Call(ctx, &result, fillJS, selector, value); err != nil {
+			reason = err.Error()
+		} else if ok, _ := result["ok"].(bool); ok {
+			return nil
+		} else if r, ok := result["reason"].(string); ok {
+			reason = r
+		}
+		testing.ContextLogf(ctx, "Failed to fill %q (attempt %d/%d): %s", selector, i+1, retryCount, reason)
 	}
 
-	// Fill the field with value.
-	if err := gaiaConn.Call(ctx, nil, `(selector, value) => {
-	  const field = document.querySelector(selector);
-	  field.value = value;
-	}`, selector, value); err != nil {
-		return errors.Wrapf(err, "failed to use %q element", selector)
-	}
-	return nil
+	return errors.Errorf("failed to fill %q after %d attempts", selector, retryCount)
 }
 
 // clearGAIAField clears a field of the GAIA login form.
