@@ -28,7 +28,11 @@ var (
 	// unsetVal is the string gsctool prints to signal the value is unset and not just an empty string
 	unsetVal = "__unset__"
 	// unsetSize is the unininitialzed size value (max u8)
-	unsetSize          = "255"
+	unsetSize = "255"
+	// Before fields are set the RMA value should be NA
+	unsetRMA = "NA"
+	// Device IDs were not set using RMA. They should report RMA=N
+	setRMA             = "N"
 	deviceIDStrMax     = strings.Repeat("A", 32)
 	deviceIDStrTooLong = deviceIDStrMax + "B"
 )
@@ -210,8 +214,10 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 	for _, name := range deviceIDFields {
 		emptyFields[name] = unsetVal
 		emptyFields[name+"_size"] = unsetSize
+		emptyFields[name+"_rma"] = unsetRMA
 		setFields[name] = unsetVal
 		setFields[name+"_size"] = unsetSize
+		setFields[name+"_rma"] = unsetRMA
 	}
 
 	tpm := b.ResetAndTpmStartupForBus(ctx, i, bus, ti50.FfClamshell)
@@ -247,6 +253,7 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 					s.Logf("set: %q", arg)
 					setFields[name] = setCmd.fieldVal
 					setFields[name+"_size"] = fmt.Sprintf("%d", len(setCmd.fieldVal))
+					setFields[name+"_rma"] = setRMA
 				} else {
 					s.Logf("%s: failed to set: %q", desc, arg)
 				}
@@ -285,6 +292,7 @@ func GSCDeviceIDs(ctx context.Context, s *testing.State) {
 				for _, name := range deviceIDFields {
 					setFields[name] = unsetVal
 					setFields[name+"_size"] = unsetSize
+					setFields[name+"_rma"] = unsetRMA
 				}
 			}
 		case "factoryDisable":
