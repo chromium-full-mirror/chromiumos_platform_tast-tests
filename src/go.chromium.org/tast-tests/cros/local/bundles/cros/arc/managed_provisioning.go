@@ -46,6 +46,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcPolicy{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.GoogleLocationServicesEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -100,7 +101,8 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 		},
 	}
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true, Stat: policy.StatusSet}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+	glsEnabledPolicy := &policy.GoogleLocationServicesEnabled{Val: 1, Stat: policy.StatusSet}
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy, glsEnabledPolicy}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(dma.CredsFromPool(arcCommon.ManagedAccountPoolVarName))
