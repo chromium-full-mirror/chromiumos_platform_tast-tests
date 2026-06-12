@@ -528,7 +528,7 @@ func performGuestProvisionedBootTrace(ctx context.Context, outDir, packPath, log
 		return "", errors.Wrap(err, "failed to drop caches")
 	}
 
-	chromeArgs := append(arc.DisableSyncFlags(), "--arcvm-ureadahead-mode=generate")
+	chromeArgs := append(arc.DisableSyncFlags(), "--arcvm-ureadahead-mode=generate", "--disable-features=ArcOnDemandV2")
 	opts := []chrome.Option{
 		chrome.ARCSupported(), // ARC is started automatically since this isn't initial boot.
 		chrome.GAIALogin(creds),
