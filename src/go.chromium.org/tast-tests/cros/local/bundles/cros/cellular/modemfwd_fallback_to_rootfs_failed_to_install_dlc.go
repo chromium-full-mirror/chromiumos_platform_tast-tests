@@ -40,6 +40,11 @@ func ModemfwdFallbackToRootfsFailedToInstallDlc(ctx context.Context, s *testing.
 		s.Fatalf("Failed to get DLC ID: %s", err)
 	}
 
+	if dlcID == "" {
+		s.Log("Variant does not support DLC, skipping test")
+		return
+	}
+
 	if err := dlc.Purge(ctx, dlcID); err != nil {
 		s.Fatalf("Failed to purge dlc %q: %s", dlcID, err)
 	}
