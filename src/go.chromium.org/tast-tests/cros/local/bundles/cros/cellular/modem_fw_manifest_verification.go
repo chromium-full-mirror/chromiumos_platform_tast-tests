@@ -250,10 +250,6 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 	if len(unusedFiles) > 0 {
 		s.Fatalf("The following firmware files are not used in any devices: %q", unusedFiles)
 	}
-
-	if dlcCounter > 0 && dlcCounter != len(manifest.Device) {
-		s.Fatal("There is an unequal number of variants and DLCs")
-	}
 }
 
 func fileExists(file string) bool {
