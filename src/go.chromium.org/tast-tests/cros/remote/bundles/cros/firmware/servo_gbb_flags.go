@@ -153,6 +153,9 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("GBB flags from CDD do not match SSH'd GBB flags ", cmp.Diff(old.Set, ret.Set, sortSlice))
 	}
 	powerOnAndWait := func(ctx context.Context) {
+		// Switch the active dut controller to servo_micro/C2D2 if present for power on.
+		h.Servo.PreferDebugHeader(ctx)
+
 		// GoBigSleepLint: Flashrom usually restarts the dut, but on a few platforms it might require a power press to come back on.
 		// But you can't press the power button too soon, or it will be ignored.
 		if err := testing.Sleep(ctx, 13*time.Second); err != nil {
@@ -192,6 +195,11 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 
 	s.Log("Writing fw image over CCD")
 	h.DisconnectDUT(ctx) // Some of the dutControl commands will reboot
+
+	// Switch the active dut controller to CCD
+	if err := h.Servo.RequireCCD(ctx); err != nil {
+		s.Fatal("Servo does not have CCD: ", err)
+	}
 	if err := h.Servo.SetOnOff(ctx, servoSPIControl, servo.On); err != nil {
 		s.Fatalf("Failed to enable %v: %+v", servoSPIControl, err)
 	}
