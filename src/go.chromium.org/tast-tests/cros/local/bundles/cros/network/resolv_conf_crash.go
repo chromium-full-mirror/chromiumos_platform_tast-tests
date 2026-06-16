@@ -32,7 +32,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name: "shill_crash_proxy_disabled",
 			Val: resolvConfCrashTestParams{
