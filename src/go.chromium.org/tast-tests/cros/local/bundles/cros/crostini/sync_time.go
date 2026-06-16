@@ -64,20 +64,6 @@ func getTime(ctx context.Context, s *testing.State, cont *vm.Container) (time.Ti
 func SyncTime(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
-	// Register resume before pausing to ensure it runs even if s.Fatal is called.
-	defer func() {
-		s.Log("Resuming chronyd in VM")
-		if err := cont.VM.CommandAsRoot(ctx, "sh", "-c", "pkill -CONT chronyd || kill -CONT $(pidof chronyd)").Run(testexec.DumpLogOnError); err != nil {
-			s.Error("Failed to resume chronyd: ", err)
-		}
-	}()
-
-	// Pause chronyd in the VM to prevent it from racing with the test.
-	s.Log("Pausing chronyd in VM")
-	if err := cont.VM.CommandAsRoot(ctx, "sh", "-c", "pkill -STOP chronyd || kill -STOP $(pidof chronyd)").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to pause chronyd: ", err)
-	}
-
 	// Set the time back 15 minutes, don't make a huge clock change as that can
 	// cause other odd behaviors with timers.
 	pastTime := time.Now().Add(-15 * time.Minute)
