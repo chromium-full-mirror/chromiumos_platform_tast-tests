@@ -138,6 +138,8 @@ const (
 	// GpioTi50RecoveryOut is recovery mode switch output from GSC while in Box
 	// Mode (active low).
 	GpioTi50RecoveryOut GpioName = "EC_KSI_02"
+	// GpioTi50EcKsi2 is the KSI (row) override output from GSC to EC (active low).
+	GpioTi50EcKsi2 GpioName = "EC_KSI_02"
 	// GpioTi50KsiBack is the KSI (row) from KB to GSC that is connected to
 	// ChromeOS Back key (active low).
 	GpioTi50KsiBack GpioName = "KSI_00"
