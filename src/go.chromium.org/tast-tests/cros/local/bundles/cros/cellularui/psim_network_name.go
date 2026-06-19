@@ -33,6 +33,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
 		Fixture:      "cellularWithChrome",
+		TestBedDeps:  []string{"sim_features:SIM_FEATURE_PSIM"},
 	})
 }
 
