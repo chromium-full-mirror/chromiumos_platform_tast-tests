@@ -16,6 +16,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"go.chromium.org/chromiumos/config/go/api"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -23,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast/core/framework/protocol"
 	errors "go.chromium.org/tast/core/errors"
 	linuxssh "go.chromium.org/tast/core/ssh/linuxssh"
 	testing "go.chromium.org/tast/core/testing"
@@ -446,7 +448,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 				} else {
 					s.Logf("Completed flashing of backup AP fw, command output: %s", string(out))
 				}
-				if err := safeRebootDut(ctx, h); err != nil {
+				if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 					s.Fatal("Failed to reboot DUT after flashing: ", err)
 				}
 
@@ -478,7 +480,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 		s.Fatal("Failed to flash firmware bin file: ", err, "\nOutput:\n", string(out))
 	}
 	s.Logf("Completed flashing of downloaded fw, command output: %s", string(out))
-	if err := safeRebootDut(ctx, h); err != nil {
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 
@@ -542,7 +544,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 					s.Log("Failed preserving dev image: ", err)
 				}
 
-				if err := safeRebootDut(ctx, h); err != nil {
+				if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 					s.Fatal("Failed to reboot DUT after flashing: ", err)
 				}
 
@@ -570,7 +572,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 
 	s.Log("Completed flashing of downloaded fw")
-	if err := safeRebootDut(ctx, h); err != nil {
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 
@@ -630,14 +632,37 @@ func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 }
 
+// isDutHasAPIdle checks if the dut is chromebox that support AP_IDLE
+func isDutHasAPIdle(dutFeatures *protocol.DUTFeatures) (bool) {
+	switch dutFeatures.GetHardware().GetHardwareFeatures().GetFormFactor().GetFormFactor() {
+	case api.HardwareFeatures_FormFactor_CHROMEBOX:
+		return true
+	}
+	return false
+}
+
 // safeRebootDut will close RPC connection, reboot DUT and Open a new RPC connection.
-func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
+func safeRebootDut(ctx context.Context, h *firmware.Helper, dutFeatures *protocol.DUTFeatures) error {
 	// Close RPC connection before reboot.
 	h.CloseRPCConnection(ctx)
 
 	testing.ContextLog(ctx, "Power-cycling DUT with a cold reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT by servo")
+	}
+
+	if hasAPIdle := isDutHasAPIdle(dutFeatures); hasAPIdle == true {
+		// wait 5s for EC_RST released and EC finished init
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5 * time.Second, "G3"); err == nil {
+			testing.ContextLog(ctx, "The DUT is probably off for AP_IDLE")
+			testing.ContextLog(ctx, "Powering on the DUT")
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+				return errors.Wrap(err, "failed to power on DUT by servo")
+			}
+		}
 	}
 
 	testing.ContextLog(ctx, "Waiting for DUT to reconnect")
@@ -674,7 +699,7 @@ func getFWVersionsFromManifest(ctx context.Context, s *testing.State, h *firmwar
 		s.Fatal("Failed to read manifest data: ", err)
 	}
 	s.Logf("Got RO version from manifest: %s", versions.Ro)
-	if err := safeRebootDut(ctx, h); err != nil {
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 	if versions.Ro == "" {
@@ -723,7 +748,7 @@ func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper,
 	if err := h.ServoProxy.RunCommand(ctx, true, "bash", "-c", flashCmd); err != nil {
 		return false, errors.Wrap(err, "failed to backup EC firmware")
 	}
-	if err := safeRebootDut(ctx, h); err != nil {
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 		return false, errors.Wrap(err, "failed to reboot DUT after backup EC")
 	}
 	return true, nil
@@ -741,6 +766,19 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 	if err := h.ServoProxy.RunCommand(ctx, true, "flash_ec", flashECArgs...); err != nil {
 		s.Fatal("Failed to flash EC firmware bin file: ", err)
 	}
+	if hasAPIdle := isDutHasAPIdle(s.Features("")); hasAPIdle == true {
+		// wait 5s for EC_RST released and EC finished init
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			s.Fatal("failed to sleep", err)
+		}
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5 * time.Second, "G3"); err == nil {
+			testing.ContextLog(ctx, "The DUT is probably off for AP_IDLE")
+			testing.ContextLog(ctx, "Powering on the DUT")
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+				s.Fatal("failed to power on DUT by servo", err)
+			}
+		}
+	}
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Can't restore firmware, DUT is off: ", err)
 	}
@@ -754,7 +792,7 @@ func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.He
 		}
 		s.Log("Failed to flash firmware bin file: ", err)
 	}
-	if err := safeRebootDut(ctx, h); err != nil {
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
 		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 }
