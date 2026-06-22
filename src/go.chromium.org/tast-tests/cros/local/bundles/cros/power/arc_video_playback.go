@@ -220,10 +220,10 @@ func init() {
 				Name: "exoplayer_vp9_1080_30fps_ash_short",
 				Val: arcVideoTestParam{
 					App:        arcvpb.NewExoPlayerApp,
-					VideoName:  "h264_1080_30fps",
+					VideoName:  "vp9_1080_30fps",
 					TimeParams: videoPlaybackShortTimeParam,
 				},
-				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm", arcvpb.ExoPlayerAPKFileName},
 				ExtraAttr: []string{
 					"group:power",
 					"power_daily",
