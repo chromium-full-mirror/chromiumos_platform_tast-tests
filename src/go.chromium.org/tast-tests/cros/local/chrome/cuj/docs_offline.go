@@ -79,6 +79,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, cr *chrome.Chrome) error {
 // This function should be called before opening any docs if offline capability
 // is desired.
 func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
+	const driveSettingsURL = "https://drive.google.com/drive/settings"
 	if err := EnsureDocsOfflineInstalled(ctx, cr); err != nil {
 		return errors.Wrap(err, "failed to install Docs offline extension")
 	}
@@ -102,15 +103,16 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 		sctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 		defer cancel()
 		// Open Drive settings page.
-		conn, err := cr.NewConn(sctx, "https://drive.google.com/settings")
+		conn, err := cr.NewConn(sctx, driveSettingsURL)
 		if err != nil {
 			// The "Add another Google Account" dialog may block connection creation.
 			// Log the error instead of failing the test.
 			testing.ContextLog(ctx, "Failed to open Drive settings: ", err)
 		}
-		defer conn.Close()
-		defer conn.CloseTarget(closeCtx)
-
+		if conn != nil {
+			defer conn.Close()
+			defer conn.CloseTarget(closeCtx)
+		}
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to create Test API connection")
@@ -134,6 +136,19 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 			uiauto.NamedAction("check if the page redirected to Drive Settings", ui.WaitUntilExists(googleDriveRootWebArea)),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to ensure the Drive Settings page exist")
+		}
+
+		if conn == nil {
+			// The "Add another Google Account" dialog may appear when opening the
+			// Drive Settings page and prevent the connection from being established.
+			// Close the dialog and reconnect if needed.
+			matcher := chrome.MatchTargetURL(driveSettingsURL)
+			conn, err = cr.NewConnForTarget(ctx, matcher)
+			if err != nil {
+				return errors.Wrap(err, "failed to connect to Drive settings")
+			}
+			defer conn.Close()
+			defer conn.CloseTarget(closeCtx)
 		}
 
 		// Wait for settings page to load and sync the account settings.
