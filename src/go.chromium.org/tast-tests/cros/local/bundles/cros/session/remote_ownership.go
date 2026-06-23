@@ -52,9 +52,14 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare Chrome for testing: ", err)
 	}
 
-	// Initial policy set up.
-	settings := ownership.BuildTestSettings("")
-	if err := session.StoreSettings(ctx, sm, "", privKey, nil, settings); err != nil {
+	const (
+		testUser = "test@foo.com"
+		testPass = "test_password"
+	)
+
+	// 1. Initial policy set up (no session).
+	settings := ownership.BuildTestSettings(testUser)
+	if err := session.StoreSettings(ctx, sm, testUser, privKey, nil, settings); err != nil {
 		s.Fatal("Failed to store settings: ", err)
 	}
 	if retrieved, err := session.RetrieveSettings(ctx, sm); err != nil {
@@ -67,29 +72,26 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 		s.Fatal("Unexpected settings were retrieved. Diff is found in ", diffName)
 	}
 
-	// Force re-key the device.
-	privKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	// 2. Rotate key gracefully on the login screen (no session).
+	// This should succeed because graceful rotation (with oldKey) is always allowed.
+	newPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		s.Fatal("Failed to generate RSA key: ", err)
 	}
-	if err := session.StoreSettings(ctx, sm, "", privKey, nil, settings); err != nil {
-		s.Fatal("Failed to store rekeyed settings: ", err)
+	if err := session.StoreSettings(ctx, sm, testUser, newPrivKey, privKey, settings); err != nil {
+		s.Fatal("Failed to rotate key gracefully on login screen: ", err)
 	}
 	if retrieved, err := session.RetrieveSettings(ctx, sm); err != nil {
-		s.Fatal("Failed to retrieve rekeyed settings: ", err)
+		s.Fatal("Failed to retrieve rotated settings: ", err)
 	} else if diff := cmp.Diff(settings, retrieved, protocmp.Transform()); diff != "" {
-		const diffName = "diff-rekeyed.txt"
+		const diffName = "diff-rotated.txt"
 		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
-		s.Fatal("Unexpected rekeyed settings were retrieved. Diff is found in ", diffName)
+		s.Fatal("Unexpected rotated settings were retrieved. Diff is found in ", diffName)
 	}
 
-	// Rotate key gracefully.
-	const (
-		testUser = "test@foo.com"
-		testPass = "test_password"
-	)
+	// 3. Force re-key (clobber) in session (owner signed in).
 	// Create clean vault for the test user.
 	if err = cryptohome.RemoveVault(ctx, testUser); err != nil {
 		s.Fatal("Failed to remove vault: ", err)
@@ -97,24 +99,27 @@ func RemoteOwnership(ctx context.Context, s *testing.State) {
 	if err = cryptohome.CreateVault(ctx, testUser, testPass); err != nil {
 		s.Fatal("Failed to create vault: ", err)
 	}
-	newPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		s.Fatalf("Failed to generate RSA key for user %s: %v", testUser, err)
-	}
-	// Start a session for the user, then store the settings.
+	// Start a session for the owner user.
 	if err = sm.StartSession(ctx, testUser, ""); err != nil {
 		s.Fatal("Failed to start session: ", err)
 	}
-	if err := session.StoreSettings(ctx, sm, "", newPrivKey, privKey, settings); err != nil {
-		s.Fatal("Failed to store user settings: ", err)
+
+	// Force re-key the device (clobber).
+	// This should succeed now because the owner is signed in.
+	clobberPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		s.Fatal("Failed to generate RSA key: ", err)
+	}
+	if err := session.StoreSettings(ctx, sm, testUser, clobberPrivKey, nil, settings); err != nil {
+		s.Fatal("Failed to store clobbered settings with owner signed in: ", err)
 	}
 	if retrieved, err := session.RetrieveSettings(ctx, sm); err != nil {
-		s.Fatal("Failed to retrieve user settings: ", err)
+		s.Fatal("Failed to retrieve clobbered settings: ", err)
 	} else if diff := cmp.Diff(settings, retrieved, protocmp.Transform()); diff != "" {
-		const diffName = "diff-user.txt"
+		const diffName = "diff-clobbered.txt"
 		if err = os.WriteFile(filepath.Join(s.OutDir(), diffName), []byte(diff), 0644); err != nil {
 			s.Error("Failed to write diff: ", err)
 		}
-		s.Fatal("Unexpected user settings were retrieved. Diff is found in ", diffName)
+		s.Fatal("Unexpected clobbered settings were retrieved. Diff is found in ", diffName)
 	}
 }
