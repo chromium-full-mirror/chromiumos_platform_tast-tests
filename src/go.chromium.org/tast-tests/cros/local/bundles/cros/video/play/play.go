@@ -40,8 +40,10 @@ const (
 	NormalVideo VideoType = iota
 	// MSEVideo represents a video requiring Media Source Extensions (MSE).
 	MSEVideo
-	// DRMVideo represents a video requiring Digital Rights Management (DRM).
-	DRMVideo
+	// L1DRMVideo represents a video requiring hardware protected Digital Rights Management (DRM).
+	L1DRMVideo
+	// L3DRMVideo represents a video requiring software-based Digital Rights Management (DRM).
+	L3DRMVideo
 )
 
 // VerifyHWAcceleratorMode represents a mode of TestPlay.
@@ -134,7 +136,7 @@ func playClearVideo(ctx context.Context, cs ash.ConnSource, functionName, resour
 // screenshot and verifies the contents are all black.
 // mpdFile is the name of MPD file for the video stream.
 // url is the URL of the shaka player webpage.
-func playDRMVideo(ctx context.Context, s *testing.State, cr *chrome.Chrome, mpdFile, url string) (bool, error) {
+func playDRMVideo(ctx context.Context, s *testing.State, cr *chrome.Chrome, videotype VideoType, mpdFile, url string) (bool, error) {
 	ctx, st := timing.Start(ctx, "play_drm_video")
 	defer st.End()
 
@@ -150,7 +152,16 @@ func playDRMVideo(ctx context.Context, s *testing.State, cr *chrome.Chrome, mpdF
 		return false, errors.Wrap(err, "failed to retrieve a media DevTools observer")
 	}
 
-	if err := conn.Call(ctx, nil, "play_shaka_drm", mpdFile); err != nil {
+	var level string
+	if videotype == L1DRMVideo {
+		level = "L1"
+	} else if videotype == L3DRMVideo {
+		level = "L3"
+	} else {
+		return false, errors.New("invalid video type for PlayDRM test")
+	}
+
+	if err := conn.Call(ctx, nil, "play_shaka_drm", level, mpdFile); err != nil {
 		return false, err
 	}
 
@@ -198,17 +209,28 @@ func playDRMVideo(ctx context.Context, s *testing.State, cr *chrome.Chrome, mpdF
 		return false, errors.Wrap(err, "failed taking screenshot")
 	}
 
-	// Verify that over 85% of the image is solid black. This is true because for
-	// HW DRM, you cannot actually screenshot the video and it will be replaced by
-	// solid black in the compositor. From testing, we have seen this be as low as
-	// 0.92, so set the threshold at 0.85.
 	color, ratio := colorcmp.DominantColor(im)
-	if ratio < 0.85 || !colorcmp.ColorsMatch(color, colorcmp.RGB(0, 0, 0), 1) {
-		return false, errors.Errorf("screenshot did not have solid black, instead got %v at ratio %0.2f",
-			colorcmp.ColorStr(color), ratio)
+	if videotype == L1DRMVideo {
+		// Verify that over 85% of the image is solid black. This is true because for
+		// HW DRM, you cannot actually screenshot the video and it will be replaced by
+		// solid black in the compositor. From testing, we have seen this be as low as
+		// 0.92, so set the threshold at 0.85.
+		if ratio < 0.85 || !colorcmp.ColorsMatch(color, colorcmp.RGB(0, 0, 0), 1) {
+			return false, errors.Errorf("screenshot did not have solid black, instead got %v at ratio %0.2f",
+				colorcmp.ColorStr(color), ratio)
+		}
+		return devtools.CheckHWDRMPipeline(ctx, observer, url)
+	} else if videotype == L3DRMVideo {
+		// For L3, the screenshot tool should work. Verify that there is no dominant
+		// color with over 50% of screen coverage. This would indicate that the decode
+		// failed since none of the test clips contain solid images.
+		if ratio > 0.5 {
+			return false, errors.Errorf("screenshot was composed of mostly a solid color. Got %v at ratio %0.2f",
+				colorcmp.ColorStr(color), ratio)
+		}
+		return devtools.CheckSWDRMPipeline(ctx, observer, url)
 	}
-
-	return devtools.CheckHWDRMPipeline(ctx, observer, url)
+	return false, errors.New("not reached")
 }
 
 // seekVideoRepeatedly seeks video numSeeks times, saving some performance
@@ -439,9 +461,9 @@ func TestPlay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	case MSEVideo:
 		url = server.URL + "/shaka.html"
 		usesPlatformVideoDecoder, playErr = playClearVideo(ctx, cr, "startPlayingShaka", filename, url)
-	case DRMVideo:
+	case L1DRMVideo, L3DRMVideo:
 		url = server.URL + "/shaka_drm.html"
-		isHwDrmPipeline, playErr = playDRMVideo(ctx, s, cr, filename, url)
+		isHwDrmPipeline, playErr = playDRMVideo(ctx, s, cr, videotype, filename, url)
 	}
 	if playErr != nil {
 		return errors.Wrapf(err, "failed to play %v (%v): %v", filename, url, playErr)

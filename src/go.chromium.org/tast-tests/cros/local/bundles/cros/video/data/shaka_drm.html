@@ -2,7 +2,7 @@
 <html>
   <script src="third_party/shaka-player/shaka-player.compiled.debug.js"></script>
   <script>
-    function play_shaka_drm(mpdPath) {
+    function play_shaka_drm(level, mpdPath) {
       return new Promise((resolve, reject) => {
         let video = document.getElementById('video');
         let player = new shaka.Player(video);
@@ -12,15 +12,26 @@
         video.onerror = e => { return reject(e.error.ToString()); };
         video.onended = () => { resolve();};
 
+        const robustnessMap = {
+          L1: 'HW_SECURE_ALL',
+          L3: 'SW_SECURE_CRYPTO'
+        };
+
+        const videoRobustness = robustnessMap[level];
+
+        if (!videoRobustness) {
+          return reject('Invalid level');
+        }
+
         // Enable Widevine DRM w/ the UAT license servers and forcing L1 DRM.
         player.configure({
           drm: {
             servers: {
-              'com.widevine.alpha': 'https://proxy.uat.widevine.com/proxy?provider=widevine_test&video_id=GTS_HW_SECURE_ALL'
+              'com.widevine.alpha': `https://proxy.uat.widevine.com/proxy?provider=widevine_test&video_id=GTS_${videoRobustness}`
             },
             advanced: {
               'com.widevine.alpha': {
-                'videoRobustness': 'HW_SECURE_ALL',
+                'videoRobustness': videoRobustness,
                 'audioRobustness': 'SW_SECURE_CRYPTO'
               }
             }

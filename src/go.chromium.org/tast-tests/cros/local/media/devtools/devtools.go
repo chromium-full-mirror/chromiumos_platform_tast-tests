@@ -225,3 +225,78 @@ func CheckHWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChan
 	}
 	return true, nil
 }
+
+// CheckSWDRMPipeline waits for observer to produce a Player properties and
+// parses it to figure out if the pipeline matches what we expect for SW DRM
+// playback. That means the video is encrypted and the DecryptingVideoDecoder
+// is used. If the video decrypting demuxer is used, then there was an error
+// and fallback attempt. It returns true if expectations are met for SW DRM.
+func CheckSWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChangedClient, url string) (isSWDRMPipeline bool, err error) {
+	var hasCdm, hasDecoder, hasDemux, isDecryptingVideoDecoder, isVideoDecryptingDemuxer, isCdmAttached bool
+	// We may not get all the properties on the first call to recv(), so poll for
+	// a few seconds until we get them to account for that. This is due to how
+	// Chrome DevTools sends out media player property updates.
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		reply, err := observer.Recv()
+		if err != nil {
+			return err
+		}
+
+		for _, s := range reply.Properties {
+			if s.Name == "kFrameUrl" && s.Value != url {
+				return errors.New("failed to find the expected url in Media DevTools")
+			}
+
+			if s.Name == "kIsCdmAttached" {
+				hasCdm = true
+				isCdmAttached = s.Value == "true"
+				testing.ContextLogf(ctx, "%s: %s", s.Name, s.Value)
+			} else if s.Name == "kIsVideoDecryptingDemuxerStream" {
+				hasDemux = true
+				isVideoDecryptingDemuxer = s.Value == "true"
+				testing.ContextLogf(ctx, "%s: %s", s.Name, s.Value)
+			} else if s.Name == "kVideoDecoderName" {
+				hasDecoder = true
+				isDecryptingVideoDecoder = s.Value == "DecryptingVideoDecoder"
+				testing.ContextLogf(ctx, "%s: %s", s.Name, s.Value)
+			}
+
+			if hasCdm && hasDecoder && hasDemux {
+				break
+			}
+		}
+
+		if !hasCdm && !hasDecoder && !hasDemux {
+			// Marshall reply.Properties to add it to the error log for debugging.
+			var log string
+			for _, s := range reply.Properties {
+				log = fmt.Sprintf("%s, %s: %s", log, s.Name, s.Value)
+			}
+			return errors.Errorf("failed to find kIsCdmAttached, kIsVideoDecryptingDemuxerStream, and kVideoDecoderName in media DevTools Properties. Observed: %s", log)
+		}
+		if !hasCdm {
+			return errors.New("failed to find kIsCdmAttached in media DevTools Properties")
+		}
+		if !hasDecoder {
+			return errors.New("failed to find kVideoDecoderName in media DevTools Properties")
+		}
+		if !hasDemux {
+			return errors.New("failed to find kIsVideoDecryptingDemuxerStream in media DevTools Properties")
+		}
+		if !isCdmAttached {
+			return errors.New("video was not using a CDM in SW DRM pipeline")
+		}
+		if !isDecryptingVideoDecoder {
+			if isVideoDecryptingDemuxer {
+				return errors.New("video was not using DecryptingVideoDecoder and fell back to DecryptingDemuxStream in SW DRM pipeline")
+			}
+			return errors.New("video was not using DecryptingVideoDecoder in SW DRM pipeline")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
