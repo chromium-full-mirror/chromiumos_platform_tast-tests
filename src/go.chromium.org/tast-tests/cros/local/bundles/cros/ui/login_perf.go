@@ -282,6 +282,7 @@ func loginPerfStartToLoginScreen(
 			chrome.ARCSupported(),
 			chrome.DisableFeatures("ArcExternalStorageAccess"),
 			disableARCSyncOption,
+			chrome.DisableFeatures("ArcOnDemandV2"),
 		)
 	default:
 		panic(fmt.Sprintf("Unknown arcMode value=%v", param.arcMode))
@@ -585,7 +586,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	// Only enable arc if it's supported and enabled.
 	if isARCEnabled {
 		// We enable ARC initially to fully initialize it.
-		options = append(options, chrome.ARCSupported(), disableARCSyncOption)
+		options = append(options, chrome.ARCSupported(), disableARCSyncOption, chrome.DisableFeatures("ArcOnDemandV2"))
 	}
 
 	cr, err := chrome.New(ctx, options...)
