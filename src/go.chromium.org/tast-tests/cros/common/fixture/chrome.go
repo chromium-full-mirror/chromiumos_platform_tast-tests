@@ -68,8 +68,6 @@ const (
 	ChromeLoggedInDisableSearchEngineChoice = "chromeLoggedInDisableSearchEngineChoice"
 	// Logged in to a user session with Focus Mode feature enabled.
 	ChromeLoggedInWithFocusMode = "chromeLoggedInWithFocusMode"
-	// Logged in to a user session with DNS proxy running on the root network namespace.
-	ChromeLoggedInWithRootNsDnsProxy = "chromeLoggedInWithRootNsDnsProxy"
 	// Logged into a user session with Mouse Keys enabled, this is an accessibility feature.
 	ChromeLoggedInWithMouseKeys = "chromeLoggedInWithMouseKeys"
 )

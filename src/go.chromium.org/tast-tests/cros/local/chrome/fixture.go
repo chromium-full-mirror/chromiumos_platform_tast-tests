@@ -472,23 +472,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: fixture.ChromeLoggedInWithRootNsDnsProxy,
-		Desc: "Logged into a user session with DNS proxy running on the root network namespace",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"cros-networking@google.com",
-		},
-		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
-		BugComponent: "b:1493959",
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("EnableRootNsDnsProxy")}, nil
-		}),
-		SetUpTimeout:    FixtureSetUpTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInDisableSelectToSpeakManifestV3,
 		Desc:     "Logged into a user session with select to speak manifest v3 disabled",
 		Contacts: []string{"akihiroota@chromium.org"},

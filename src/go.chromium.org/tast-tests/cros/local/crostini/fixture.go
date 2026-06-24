@@ -227,29 +227,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "crostiniBookwormWithRootNsDnsProxy",
-		Desc: "Install Crostini with Bookworm, with Chrome logged in with DNS proxy running on the root network namespace",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"cros-networking@google.com",
-		},
-		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
-		BugComponent: "b:1493959",
-		Impl: &crostiniFixture{preData: preTestDataBookworm,
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("EnableRootNsDnsProxy"), chrome.DisableFeatures("CrostiniContainerless")}, nil
-			},
-		},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          fixture.ChromePolicyLoggedIn,
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "baguettePolicy",
 		Desc:            "Install Baguette, with Chrome logged in with policy",
 		Contacts:        []string{"clumptini+oncall@google.com"},

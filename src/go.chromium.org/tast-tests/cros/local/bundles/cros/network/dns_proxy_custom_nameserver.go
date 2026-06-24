@@ -31,12 +31,7 @@ func init() {
 		HardwareDeps: arc.ArcAppHwDeps,
 		Data:         []string{digExecutable()},
 		Timeout:      5 * time.Minute,
-		Params: []testing.Param{{
-			Fixture: "arcBooted",
-		}, {
-			Name:    "root_ns",
-			Fixture: "arcBootedWithRootNsDnsProxy",
-		}},
+		Fixture:      "arcBooted",
 	})
 }
 

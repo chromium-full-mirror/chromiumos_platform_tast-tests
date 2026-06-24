@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network/testhooks"
@@ -47,14 +46,6 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "root_ns_shill_crash",
-			Val: resolvConfCrashTestParams{
-				shillCrash:      true,
-				dnsProxyEnabled: true,
-			},
-			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name: "controller_crash_proxy_disabled",
 			Val: resolvConfCrashTestParams{
 				controllerCrash: true,
@@ -68,28 +59,12 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "root_ns_controller_crash",
-			Val: resolvConfCrashTestParams{
-				controllerCrash: true,
-				dnsProxyEnabled: true,
-			},
-			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational"},
-		}, {
 			Name: "system_proxy_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
 				systemProxyCrash: true,
 				dnsProxyEnabled:  true,
 			},
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "root_ns_system_proxy_crash",
-			Val: resolvConfCrashTestParams{
-				systemProxyCrash: true,
-				dnsProxyEnabled:  true,
-			},
-			Fixture:   fixture.ChromeLoggedInWithRootNsDnsProxy,
-			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
