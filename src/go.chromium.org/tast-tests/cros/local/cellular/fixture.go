@@ -705,6 +705,13 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Ensure that the primary SIM slot has a valid SIM.
 	if !(f.useTestESIM || f.sf != nil) {
 		if modem, err = modem.EnsureValidSIM(ctx, false); err != nil {
+			if isL850(ctx, s) && dutInfoSuggestsVerizon(dutInfo) {
+				// b/525406848: L850 + Verizon is a known unstable combination.
+				// Since EnsureValidSIM failed, we cannot query the modem for the
+				// carrier, so we rely on static DUT info.
+				testing.ContextLog(ctx, "L850 + Verizon detected from DUT info, marking as b/525406848")
+				err = TagKnownBug(ctx, err, "b/525406848")
+			}
 			s.Fatal("Failed to ensure valid SIM: ", err)
 		}
 	}
@@ -1274,6 +1281,16 @@ func isL850(ctx context.Context, s interface{}) bool {
 		s.(*testing.FixtState).Fatalf("Failed to get modem type: %s", err)
 	}
 	return modemType == cellularconst.ModemTypeL850
+}
+
+func dutInfoSuggestsVerizon(dutInfo *cellular.DUTInfo) bool {
+	if dutInfo == nil {
+		return false
+	}
+
+	// Check if the static DUT info shows that the DUT has a Verizon SIM. This is used when the
+	// modem is not able to report its carrier, for instance when the modem is unresponsive.
+	return strings.Contains(strings.ToLower(dutInfo.CarrierName), "verizon")
 }
 
 func triggerModemLoggingConditionally(ctx context.Context) (bool, error) {
