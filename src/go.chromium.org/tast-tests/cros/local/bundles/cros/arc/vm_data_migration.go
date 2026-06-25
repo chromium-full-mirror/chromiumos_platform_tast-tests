@@ -75,14 +75,16 @@ func init() {
 		Contacts: []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		Attr:         []string{"group:mainline", "informational"},
+		// Disabled since ARCVM data migrator is being deprecated.
+		// TODO(b/465619720): Remove this test entirely.
+		Attr: []string{},
 		SoftwareDeps: []string{
 			"android_vm",
 			"arcvm_data_migration",
 			"chrome",
 			// ARCVM /data migration currently does not support LVM-enabled devices.
 			"no_lvm_stateful_partition",
-			"gaia",
+			// "gaia",
 		},
 		Data: []string{
 			vmDataMigrationTestImageFilename,
@@ -432,7 +434,7 @@ func createFileWithEOFBLOCKS(ctx context.Context, androidDataDir string) error {
 	return nil
 }
 
-func createUpdatedFontFile(ctx context.Context, a *arc.ARC, fontTtfPath string, fontSigPath string) error {
+func createUpdatedFontFile(ctx context.Context, a *arc.ARC, fontTtfPath, fontSigPath string) error {
 	const (
 		fontTtfArcPath = "/data/local/tmp/NotoColorEmoji.ttf"
 		fontSigArcPath = "/data/local/tmp/NotoColorEmoji.sig"
