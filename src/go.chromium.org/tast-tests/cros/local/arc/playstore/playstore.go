@@ -111,6 +111,7 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		itemNotFoundText          = ".*item.*could not be found.*"
 		discountOfPlayPassText    = "Get .* off Play Pass"
 		tryPlayPassText           = "Try Google Play Pass"
+		stayInLoopText            = "Want to stay in the loop.*"
 
 		acceptButtonText       = "accept"
 		gotItButtonText        = "got it"
@@ -150,6 +151,8 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		{discountOfPlayPassText, noThanksButtonText},
 		// Press "Not now" to dismiss if the dialog of "Try Google Play Pass" pops up.
 		{tryPlayPassText, notNowButtonText},
+		// Press "Not now" to dismiss if the dialog of "Want to stay in the loop?" pops up.
+		{stayInLoopText, notNowButtonText},
 	} {
 		if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText); err != nil {
 			return err
