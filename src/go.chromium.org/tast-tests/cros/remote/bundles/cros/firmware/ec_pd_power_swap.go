@@ -36,7 +36,7 @@ func init() {
 			Name:      "normal",
 			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
-				NumIterations: 1,
+				NumIterations: 2,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
@@ -51,7 +51,7 @@ func init() {
 			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
-				NumIterations: 1,
+				NumIterations: 2,
 				DTS:           firmware.DTSModeOff,
 			},
 		}, {
@@ -67,7 +67,7 @@ func init() {
 			ExtraAttr: []string{"firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 			Val: firmware.PDTestParams{
 				DTS:           firmware.DTSModeOn,
-				NumIterations: 1,
+				NumIterations: 2,
 			},
 		}, {
 			Name:              "dts_stress",
@@ -83,7 +83,7 @@ func init() {
 			Val: firmware.PDTestParams{
 				CC:            firmware.CCPolarityFlipped,
 				DTS:           firmware.DTSModeOn,
-				NumIterations: 1,
+				NumIterations: 2,
 			},
 		}, {
 			Name:              "flipcc_dts_stress",
@@ -143,8 +143,8 @@ const (
 )
 
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
-	var curPowerRole string
-	var nowPowerRole string
+	var beforePowerRole string
+	var afterPowerRole string
 	var powerSwapSupported bool
 
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -172,7 +172,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	if pdState, err := h.Servo.GetDUTPDState(ctx); err != nil {
 		s.Fatal("Failed to get PD state: ", err)
 	} else {
-		curPowerRole = string(pdState.PowerRole)
+		beforePowerRole = string(pdState.PowerRole)
 	}
 
 	func() {
@@ -183,7 +183,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		}()
 
 		for i := 0; i < testParams.NumIterations; i++ {
-			testing.ContextLogf(ctx, "[%d] - DUT PD Role Before: %s", i, curPowerRole)
+			testing.ContextLogf(ctx, "[%d] - DUT PD Role Before: %s", i, beforePowerRole)
 			testing.ContextLogf(ctx, "[%d] - Servo PD Request Power Swap", i)
 			if dutResponseMsg, err := h.Servo.ServoSendPowerSwapRequest(ctx); err != nil {
 				if powerSwapSupported {
@@ -197,13 +197,16 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 			if powerSwapSupported {
 				if err := testing.Poll(ctx, func(ctx context.Context) error {
 					if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
-						nowPowerRole = string(pdState.PowerRole)
-						testing.ContextLogf(ctx, "[%d] - DUT PD Role After: %s (don't want %s)", i, nowPowerRole, curPowerRole)
-						if curPowerRole == nowPowerRole {
+						afterPowerRole = string(pdState.PowerRole)
+						nowPEState := pdState.GetStateName()
+						testing.ContextLogf(ctx, "[%d] - DUT PE State After: %s (don't want any form of %s)", i, nowPEState, beforePowerRole)
+						if beforePowerRole == string(servo.PowerRoleSRC) && !pdState.IsSinkReady() {
+							return errors.Wrap(err, "failed to switch power role")
+						} else if beforePowerRole == string(servo.PowerRoleSNK) && !pdState.IsSourceReady() {
 							return errors.Wrap(err, "failed to switch power role")
 						}
 					} else {
-						return errors.Wrap(err, "failed to get PD state")
+						return errors.Wrap(err, "failed to get PE State")
 					}
 
 					return nil
@@ -216,13 +219,13 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to sleep: ", err)
 				}
 				if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
-					nowPowerRole = string(pdState.PowerRole)
-					testing.ContextLogf(ctx, "[%d] - DUT PD Role After: %s", i, nowPowerRole)
-					if curPowerRole != nowPowerRole {
+					afterPowerRole = string(pdState.PowerRole)
+					testing.ContextLogf(ctx, "[%d] - DUT PD Role After: %s", i, afterPowerRole)
+					if beforePowerRole != afterPowerRole {
 						s.Fatal("Unexpected power role swap: ", err)
 					}
 				} else {
-					s.Fatal("Failed to get PD state: ", err)
+					s.Fatal("Failed to get PD Role: ", err)
 				}
 			}
 
@@ -230,7 +233,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 			if testParams.DTS == firmware.DTSModeOn {
 				pdSettleTime = pdSettleTimeDTSMode
 			}
-			curPowerRole = nowPowerRole
+			beforePowerRole = afterPowerRole
 			// GoBigSleepLint: Let PDC settle before initiating next PRS
 			if err := testing.Sleep(ctx, pdSettleTime); err != nil {
 				s.Fatal("Failed to sleep for PDC settle: ", err)
