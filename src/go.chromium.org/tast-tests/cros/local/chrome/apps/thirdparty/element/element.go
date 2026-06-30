@@ -206,7 +206,10 @@ func (e *Element) createRoom(ctx context.Context, roomName, roomID string, isPub
 	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	createRoomText := e.d.Object(ui.Text("Create Room"), ui.ResourceID(elementIDPrefix+"create_room"))
 	enterRoomCreationPage := uiauto.NamedCombine("enter room creation page",
-		apputil.FindAndClick(createRoomButton, defaultUITimeout),
+		e.ui.WithTimeout(longUITimeout).RetryUntil(
+			apputil.FindAndClick(createRoomButton, defaultUITimeout),
+			apputil.WaitForExists(createRoomText, shortUITimeout),
+		),
 		apputil.FindAndClick(createRoomText, defaultUITimeout),
 	)
 
@@ -404,7 +407,10 @@ func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
 	publicRoom := e.d.Object(ui.TextMatches(publicRoomText), ui.ClassName(textClass))
 	return uiauto.NamedCombine("explore public room with ID "+roomID,
 		e.navigateUpToObject(createRoomButton),
-		apputil.FindAndClick(createRoomButton, defaultUITimeout),
+		e.ui.WithTimeout(longUITimeout).RetryUntil(
+			apputil.FindAndClick(createRoomButton, defaultUITimeout),
+			apputil.WaitForExists(exploreRoomsText, shortUITimeout),
+		),
 		apputil.FindAndClick(exploreRoomsText, defaultUITimeout),
 		e.typeText(roomID, ui.ResourceID(searchFieldID)),
 		uiauto.NamedAction("wait for public room "+roomName,
