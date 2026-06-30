@@ -199,6 +199,9 @@ func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, o
 
 // DeprovisionAndVerify is a helper function to deprovision a device in a managed domain.
 func (c *client) DeprovisionAndVerify(ctx context.Context, opt DeprovisionOption) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 
 	err := c.Deprovision(ctx, opt)
 	if err != nil {
@@ -224,6 +227,10 @@ func (c *client) DeprovisionAndVerify(ctx context.Context, opt DeprovisionOption
 
 // MoveDeviceToOU is a helper function to move a device to an OU.
 func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, orgUnitPath string) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
+
 	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
 	deviceAndCustomerIDResponse, err := policyClient.DeviceAndCustomerID(ctx, &empty.Empty{})
 	if err != nil {
@@ -271,6 +278,9 @@ type AppKey struct {
 // GetClientFromLocalCredentials looks for service account credentials on the host
 // and creates a client from them and returns it.
 func GetClientFromLocalCredentials(ctx context.Context, paths []string) (*client, error) {
+	if _, _, err := parseProvidedAccount(); err == nil {
+		return &client{}, nil
+	}
 	if TapeToken.Value() != "" {
 		return getClientFromToken(ctx, []byte(TapeToken.Value()))
 	}

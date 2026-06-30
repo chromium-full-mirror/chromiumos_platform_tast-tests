@@ -56,6 +56,9 @@ func NewBaseTapeFixture() *tapeBaseFixt {
 }
 
 func (f *tapeBaseFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 	// Save off variable data since it can't be accessed in the pre or post test functions.
 	if configJSON, ok := s.Var(AuthenticationConfigJSONVar); !ok {
 		s.Fatal("Authentication config variable not set")
@@ -77,12 +80,17 @@ func (f *tapeBaseFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	// Remove the Token file.
-	if _, err := s.DUT().Conn().CommandContext(ctx, "rm", dutTokenFilePath).Output(); err != nil {
-		s.Fatal("Failed to remove Token file: ", err)
+	if ProvidedAccount.Value() == "" {
+		if _, err := s.DUT().Conn().CommandContext(ctx, "rm", dutTokenFilePath).Output(); err != nil {
+			s.Fatal("Failed to remove Token file: ", err)
+		}
 	}
 }
 func (f *tapeBaseFixt) Reset(ctx context.Context) error { return nil }
 func (f *tapeBaseFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if ProvidedAccount.Value() != "" {
+		return
+	}
 	if err := writeToken2Device(ctx, *s.DUT(), f.authenticationConfigJSON, f.localRefreshToken); err != nil {
 		s.Fatal("Failed to write token to device: ", err)
 	}

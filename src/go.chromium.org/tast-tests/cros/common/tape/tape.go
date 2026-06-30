@@ -38,6 +38,14 @@ var TapeToken = testing.RegisterVarString(
 	"Variable that contains an open id connect token for tape",
 )
 
+// ProvidedAccount is a variable that contains a username and password separated by a colon (e.g. username:password)
+// representing an account that should be returned directly.
+var ProvidedAccount = testing.RegisterVarString(
+	"tape.provided_account",
+	"",
+	"Variable that contains a provided account (username:password) for tape, which will bypass requests to the TAPE server",
+)
+
 // client is created with NewClient and holds a *http.Client struct with an oauth token
 // for authentication against the TAPE GCP.
 type client struct {
@@ -79,9 +87,25 @@ func getToken() ([]byte, error) {
 	return nil, err
 }
 
+func parseProvidedAccount() (string, string, error) {
+	val := ProvidedAccount.Value()
+	if val == "" {
+		return "", "", errors.New("provided account is empty")
+	}
+	parts := strings.SplitN(val, ":", 2)
+	if len(parts) != 2 {
+		return "", "", errors.Errorf("invalid provided account format %q; expected username:password", val)
+	}
+	return parts[0], parts[1], nil
+}
+
 // NewClient creates a http client which provides the necessary oauth token to authenticate with the TAPE
 // GCP from the service account credentials in credsJSON.
 func NewClient(ctx context.Context, credsJSON []byte) (*client, error) {
+	if _, _, err := parseProvidedAccount(); err == nil {
+		return &client{}, nil
+	}
+
 	token, err := getToken()
 	if err != nil {
 		return nil, err
@@ -239,6 +263,9 @@ func (c *client) requestAccount(ctx context.Context, endpoint string, params int
 }
 
 func (c *client) releaseAccount(ctx context.Context, account interface{}, endpoint string) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 	payloadBytes, err := json.Marshal(account)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
@@ -313,6 +340,17 @@ func NewRequestGenericAccountParams(timeoutInSeconds int32, poolID string) *requ
 
 // RequestGenericAccount sends a request for leasing a generic account and returns the account in a GenericAccount struct.
 func (c *client) RequestGenericAccount(ctx context.Context, opts ...RequestAccountOption) (*GenericAccount, error) {
+	if ProvidedAccount.Value() != "" {
+		username, password, err := parseProvidedAccount()
+		if err != nil {
+			return nil, err
+		}
+		return &GenericAccount{
+			Username: username,
+			Password: password,
+		}, nil
+	}
+
 	// Copy over all options.
 	options := requestAccountOption{
 		TimeoutInSeconds: DefaultAccountTimeoutInSeconds,
@@ -373,6 +411,19 @@ func NewRequestOwnedTestAccountParams(timeoutInSeconds int32, poolID string, loc
 
 // RequestOwnedTestAccount sends a request for leasing a generic account and returns the account in an OwnedTestAccount struct.
 func (c *client) RequestOwnedTestAccount(ctx context.Context, lock bool, opts ...RequestAccountOption) (*OwnedTestAccount, error) {
+	if ProvidedAccount.Value() != "" {
+		username, password, err := parseProvidedAccount()
+		if err != nil {
+			return nil, err
+		}
+		return &OwnedTestAccount{
+			GenericAccount: GenericAccount{
+				Username: username,
+				Password: password,
+			},
+		}, nil
+	}
+
 	// Copy over all options.
 	options := requestAccountOption{
 		TimeoutInSeconds: DefaultAccountTimeoutInSeconds,
@@ -429,6 +480,9 @@ type setPolicyRequest struct {
 // acknowledgement field to true. The acknowledgement field has also to be
 // added in the updateMask.
 func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updateMask []string, additionalTargetKeys interface{}, requestID string) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 	schemaJSONString, err := policySchema.Schema2JSON(updateMask, additionalTargetKeys)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal policy schema")
@@ -453,6 +507,9 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 
 // CleanUpAccount cleans up an owned test account identified by a requestID.
 func (c *client) CleanUpAccount(ctx context.Context, requestID string) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 	payloadBytes, err := json.Marshal(requestID)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
@@ -481,6 +538,10 @@ type storeDeprovisioningIDsRequest struct {
 // StoreDeprovisioningIDs stores the deviceID and customerID with the stableDeviceSecret as key in
 // the database of TAPE.
 func (c *client) StoreDeprovisioningIDs(ctx context.Context, deviceID, customerID, stableDeviceSecret string) error {
+
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
 
 	request := &storeDeprovisioningIDsRequest{
 		DeviceID:           deviceID,
@@ -536,6 +597,10 @@ type deprovisionRequest struct {
 
 // Deprovision calls TAPE to deprovision a device in DPanel.
 func (c *client) Deprovision(ctx context.Context, opt DeprovisionOption) error {
+	if ProvidedAccount.Value() != "" {
+		return nil
+	}
+
 	options := deprovisionOption{}
 	opt(&options)
 
@@ -576,6 +641,9 @@ func (c *client) Provisioned(ctx context.Context, opt DeprovisionOption) (bool, 
 // GetProvisionStatus calls TAPE to check if a device with a specific deviceID is
 // provisioned.
 func (c *client) GetProvisionStatus(ctx context.Context, opt DeprovisionOption) (string, error) {
+	if ProvidedAccount.Value() != "" {
+		return "", nil
+	}
 	options := deprovisionOption{}
 	opt(&options)
 
@@ -612,6 +680,9 @@ type getDeviceInfoRequest struct {
 // "serialNumber","status","tpmVersionInfo". For more information see:
 // https://developers.google.com/admin-sdk/directory/v1/guides/manage-chrome-devices#get_chrome_device
 func (c *client) GetDeviceInfo(ctx context.Context, deviceID, customerID string) (string, error) {
+	if ProvidedAccount.Value() != "" {
+		return "", nil
+	}
 	request := &getDeviceInfoRequest{
 		DeviceID:   deviceID,
 		CustomerID: customerID,
@@ -644,6 +715,9 @@ type listDevicesRequest struct {
 // ListDevices calls TAPE to retrieve a list of devices in the provided organizational unit
 // corresponding to orgUnitPath.
 func (c *client) ListDevices(ctx context.Context, orgUnitPath, customerID string) (string, error) {
+	if ProvidedAccount.Value() != "" {
+		return "", nil
+	}
 	request := &listDevicesRequest{
 		OrgUnitPath: orgUnitPath,
 		CustomerID:  customerID,
@@ -677,6 +751,9 @@ type MoveDevicesToOURequest struct {
 // MoveDevicesToOU calls TAPE to move devices, identified by their deviceIDs to an
 // organizational unit with the path orgUnitPath (e.g. "myOU/mySubOU").
 func (c *client) MoveDevicesToOU(ctx context.Context, deviceIDs []string, orgUnitPath, customerID string) (string, error) {
+	if ProvidedAccount.Value() != "" {
+		return "", nil
+	}
 	request := &MoveDevicesToOURequest{
 		DeviceIDs:   deviceIDs,
 		CustomerID:  customerID,
@@ -711,6 +788,9 @@ type MoveUserToOURequest struct {
 // organizational unit with the path orgUnitPath (e.g. "/myOU/mySubOU"). Moved users will
 // be moved back to their original OU when the account is released.
 func (c *client) MoveUserToOU(ctx context.Context, requestID, orgUnitPath string) (string, error) {
+	if ProvidedAccount.Value() != "" {
+		return "", nil
+	}
 	request := &MoveUserToOURequest{
 		RequestID:   requestID,
 		OrgUnitPath: orgUnitPath,
@@ -777,6 +857,9 @@ type IssueCommandResponse struct {
 // IssueCommand calls TAPE to issue a remote command to a device, identified by their deviceID.
 // For available remote commands see https://developers.google.com/admin-sdk/directory/reference/rest/v1/customer.devices.chromeos.commands#CommandType
 func (c *client) IssueCommand(ctx context.Context, deviceID, customerID string, remoteCommand RemoteCommand) (*IssueCommandResponse, error) {
+	if ProvidedAccount.Value() != "" {
+		return &IssueCommandResponse{}, nil
+	}
 	request := &IssueCommandRequest{
 		DeviceID:      deviceID,
 		CustomerID:    customerID,
@@ -839,6 +922,9 @@ type GetCommandResponse struct {
 // GetCommand calls TAPE to retrieve the status of a remote command identified by a commandID.
 // The status will be returned in a GetCommandResponse struct.
 func (c *client) GetCommand(ctx context.Context, deviceID, customerID, commandID string) (*GetCommandResponse, error) {
+	if ProvidedAccount.Value() != "" {
+		return &GetCommandResponse{}, nil
+	}
 	request := &GetCommandRequest{
 		DeviceID:   deviceID,
 		CustomerID: customerID,
