@@ -26,8 +26,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		Attr:         []string{"group:firmware", "firmware_pd", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro"},

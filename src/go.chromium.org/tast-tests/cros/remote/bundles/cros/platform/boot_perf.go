@@ -134,12 +134,11 @@ func init() {
 				Val:  bootPerfWarmReboot,
 			},
 			{
-				Name:      "fw_qual_warm",
-				Fixture:   fixture.NormalMode,
-				Val:       bootPerfWarmReboot,
-				ExtraAttr: []string{"group:firmware", "firmware_bios", "firmware_stressed"},
-				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				ExtraTestBedDeps: []string{tbdep.ServoPresent},
+				Name:             "fw_qual_warm",
+				Fixture:          fixture.NormalMode,
+				Val:              bootPerfWarmReboot,
+				ExtraAttr:        []string{"group:firmware", "firmware_bios", "firmware_stressed"},
+				ExtraTestBedDeps: tbdep.ServoPresentAndWorking,
 			},
 			{
 				Name:              "fw_qual_ec_reboot",
@@ -147,8 +146,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfEcReboot,
 				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
-				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				ExtraTestBedDeps: []string{tbdep.ServoPresent},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 			{
 				Name:              "fw_qual_from_g3",
@@ -156,8 +154,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromG3,
 				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
-				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				ExtraTestBedDeps: []string{tbdep.ServoPresent},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 			{
 				Name:              "fw_qual_from_s5",
@@ -166,8 +163,7 @@ func init() {
 				Fixture:           fixture.NormalMode,
 				Val:               bootPerfFromS5,
 				ExtraAttr:         []string{"group:firmware", "firmware_bios", "firmware_stressed"},
-				// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-				ExtraTestBedDeps: []string{tbdep.ServoPresent},
+				ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 			},
 		},
 

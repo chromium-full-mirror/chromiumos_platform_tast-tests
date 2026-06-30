@@ -20,10 +20,9 @@ func init() {
 		Desc:         "Test to verify that a warm reset can be performed by key combination: Alt+Volume Up+r (sysrq_r)",
 		Contacts:     []string{"chromeos-firmware@google.com", "digehlot@google.com"},
 		BugComponent: "b:167186", // ChromeOS > Platform > baseOS > Firmware > AP
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware", "firmware_unstable"},
-		Fixture:     fixture.NormalMode,
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Fixture:      fixture.NormalMode,
 	})
 }
 

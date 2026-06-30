@@ -29,8 +29,7 @@ func init() {
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_pd", "firmware_meets_kpi", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
 		Vars:         []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      15 * time.Minute,

@@ -30,8 +30,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.power.BatteryService",

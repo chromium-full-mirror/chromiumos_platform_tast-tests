@@ -33,9 +33,8 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      5 * time.Minute,
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware", "firmware_pd_unstable"},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Params: []testing.Param{{
 			Name: "normal_snk",
 			Val: firmware.PDTestParams{

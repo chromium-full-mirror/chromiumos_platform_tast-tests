@@ -29,8 +29,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+
+		TestBedDeps: tbdep.ServoPresentAndWorking,
 		Attr:        []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		Vars:        []string{"firmware_branch", "ro_versions"},
 		Data:        []string{"shipped-firmwares.json"},

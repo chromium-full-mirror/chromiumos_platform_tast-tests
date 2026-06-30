@@ -22,9 +22,8 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware", "firmware_smoke"},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware", "firmware_smoke"},
 		Params: []testing.Param{{
 			Fixture: fixture.NormalMode,
 			Val:     false,

@@ -24,8 +24,7 @@ func init() {
 			"asemjonovs@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery(), hwdep.ECBuildConfigOptions("PLATFORM_EC_CHARGER_HYBRID_POWER_BOOST")),
 		SoftwareDeps: []string{"chrome"},

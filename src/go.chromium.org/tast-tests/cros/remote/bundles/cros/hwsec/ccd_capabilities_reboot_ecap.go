@@ -40,10 +40,9 @@ func init() {
 		SoftwareDeps: []string{"gsc", "reboot"},
 		// This test can take a while since the DUT can reboot multiple times and
 		// that can be slow for certain devices
-		Timeout: 8 * time.Minute,
-		Vars:    []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		Timeout:     8 * time.Minute,
+		Vars:        []string{"servo"},
+		TestBedDeps: tbdep.ServoPresentAndWorking,
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesRebootECAP{

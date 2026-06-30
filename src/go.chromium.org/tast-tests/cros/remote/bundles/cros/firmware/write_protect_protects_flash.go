@@ -44,10 +44,9 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		// 10 minutes for the test, 21 minutes for cleanup.
-		Timeout: 31 * time.Minute,
-		Vars:    []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		Timeout:     31 * time.Minute,
+		Vars:        []string{"servo"},
+		TestBedDeps: tbdep.ServoPresentAndWorking,
 	})
 }
 

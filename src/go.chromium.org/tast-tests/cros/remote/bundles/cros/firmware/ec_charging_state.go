@@ -35,10 +35,9 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
 		// This test doesn't actually need CCD, but in the lab, devices that can
 		// control charging with servo v4.x type-C also have CCD.
-		TestBedDeps:  []string{tbdep.ServoPresent, tbdep.ServoComponent("ccd_gsc")},
+		TestBedDeps:  append([]string{tbdep.ServoComponent("ccd_gsc")}, tbdep.ServoPresentAndWorking...),
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},

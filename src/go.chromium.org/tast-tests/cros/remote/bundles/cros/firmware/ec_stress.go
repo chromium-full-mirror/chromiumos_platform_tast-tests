@@ -45,9 +45,8 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Fixture:     fixture.NormalMode,
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Fixture:      fixture.NormalMode,
 		Vars: []string{
 			"firmware.EcStress.suspend",
 			"firmware.EcStress.sensors",

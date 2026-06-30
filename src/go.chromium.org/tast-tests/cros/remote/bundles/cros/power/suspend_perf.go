@@ -174,9 +174,8 @@ func init() {
 			// 10 min for setting up (login and opening tabs) +(3 min for each suspend/resume) * 5 times
 			Timeout: 30 * time.Minute,
 		}, {
-			Name: "fw_qual",
-			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-			ExtraTestBedDeps: []string{tbdep.ServoPresent},
+			Name:             "fw_qual",
+			ExtraTestBedDeps: tbdep.ServoPresentAndWorking,
 			ExtraAttr:        []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw", "firmware_ec", "firmware_ec_ro", "firmware_ec_rw"},
 			Fixture:          fixture.NormalMode,
 			Val: testArgsForSuspendPerf{

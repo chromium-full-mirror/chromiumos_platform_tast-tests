@@ -43,10 +43,9 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw"},
-		Fixture:     fixture.NormalMode,
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_stressed", "firmware_meets_kpi", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios", "firmware_bios_ro", "firmware_bios_rw"},
+		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(
 			hwdep.ChromeEC(),
 			// Some meet devices don't support suspend. b/300024874

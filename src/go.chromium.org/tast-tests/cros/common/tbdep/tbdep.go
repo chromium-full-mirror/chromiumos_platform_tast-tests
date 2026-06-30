@@ -151,11 +151,8 @@ var (
 	// with the NORMAL state.
 	BluetoothStateNormal = BluetoothState("NORMAL")
 
-	// ServoPresent indicates that the servo is present, but doesn't tell you if it is healthy.
-	ServoPresent = keyValueDep("servo_deployed", "True")
-
 	// ServoPresentAndWorking is both ServoPresent and servo healthy.
-	ServoPresentAndWorking = []string{ServoPresent, servoState("WORKING")}
+	ServoPresentAndWorking = []string{keyValueDep("servo_deployed", "True"), servoState("WORKING")}
 )
 
 // keyValueDep returns a formatted a dependency with key depKey and an optional

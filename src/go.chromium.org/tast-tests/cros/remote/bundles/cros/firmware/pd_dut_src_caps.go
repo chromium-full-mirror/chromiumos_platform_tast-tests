@@ -29,8 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		// TODO(b/364648498): Add "group:firmware_pd" tag once the test is stable.
 		Attr: []string{"group:firmware", "firmware_pd_unstable"},
 

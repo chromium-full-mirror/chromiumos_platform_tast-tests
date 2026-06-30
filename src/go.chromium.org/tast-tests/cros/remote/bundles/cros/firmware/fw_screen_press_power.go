@@ -31,11 +31,10 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
-		Vars:        []string{"firmware.skipFlashUSB"},
-		Timeout:     2 * time.Hour,
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
+		Vars:         []string{"firmware.skipFlashUSB"},
+		Timeout:      2 * time.Hour,
 		Params: []testing.Param{{
 			Name:    "dev_screen",
 			Fixture: fixture.DevMode,

@@ -52,8 +52,7 @@ func init() {
 			ExtraAttr:         []string{"group:firmware", "firmware_cr50"},
 			ExtraSoftwareDeps: []string{"no_tpm2_simulator"},
 			Val:               integratedU2fParam{isSimulator: false},
-			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-			ExtraTestBedDeps: []string{tbdep.ServoPresent},
+			ExtraTestBedDeps:  tbdep.ServoPresentAndWorking,
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},

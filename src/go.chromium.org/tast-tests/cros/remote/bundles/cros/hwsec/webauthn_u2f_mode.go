@@ -53,8 +53,7 @@ func init() {
 			Val: webauthnU2fModeParam{
 				isSimulator: false,
 			},
-			// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-			ExtraTestBedDeps: []string{tbdep.ServoPresent},
+			ExtraTestBedDeps: tbdep.ServoPresentAndWorking,
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},

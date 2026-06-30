@@ -45,10 +45,9 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr: []string{},
-		Vars: []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		Attr:         []string{},
+		Vars:         []string{"servo"},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",

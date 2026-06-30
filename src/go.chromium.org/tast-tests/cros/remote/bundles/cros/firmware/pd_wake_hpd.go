@@ -28,8 +28,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps:  []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.MKBPEvent(), hwdep.SkipOnPlatform("corsola"), hwdep.SkipOnPlatform("skyrim"), hwdep.SkipOnPlatform("dedede")),

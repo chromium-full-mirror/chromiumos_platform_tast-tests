@@ -30,9 +30,8 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
-		Attr:        []string{"group:firmware"},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
+		Attr:         []string{"group:firmware"},
 		Params: []testing.Param{{
 			Name:      "normal",
 			ExtraAttr: []string{"firmware_enabled", "firmware_meets_kpi", "firmware_pd", "firmware_stressed", "firmware_ec_ro", "firmware_ec_rw", "firmware_bios_pdc"},
@@ -241,7 +240,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}()
 
 	if testParams.Shutdown {
-		if err := testing.Sleep(ctx, 500 * time.Millisecond); err != nil {
+		if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {

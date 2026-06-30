@@ -40,8 +40,7 @@ func init() {
 			"chromeos-faft@google.com", // Owning team list
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		// TODO(b/296600641): Add to firmware_unstable, and then when stable, move to firmware_bios.
 		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.DevMode,

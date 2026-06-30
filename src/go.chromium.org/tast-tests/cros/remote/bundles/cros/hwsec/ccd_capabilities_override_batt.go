@@ -38,8 +38,7 @@ func init() {
 		SoftwareDeps: []string{"gsc", "reboot"},
 		Timeout:      2 * time.Minute,
 		Vars:         []string{"servo"},
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Params: []testing.Param{{
 			Name: "cap_default",
 			Val: cCDCapabilitiesOverrideBatt{

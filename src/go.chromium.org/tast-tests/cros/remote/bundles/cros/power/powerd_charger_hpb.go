@@ -25,8 +25,7 @@ func init() {
 			"mqg@google.com",                 // test author
 		},
 		BugComponent: "b:1361410",
-		// TODO(b/427195218): Add servo-exists + servo_state:WORKING after bug resolved.
-		TestBedDeps: []string{tbdep.ServoPresent},
+		TestBedDeps:  tbdep.ServoPresentAndWorking,
 		Attr: []string{
 			"group:power",
 			"power_weekly_misc",
