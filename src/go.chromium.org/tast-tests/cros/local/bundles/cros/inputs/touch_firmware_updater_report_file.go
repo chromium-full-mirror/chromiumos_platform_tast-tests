@@ -25,8 +25,6 @@ var unsupportedReferenceModels = []string{
 var unstableModels = []string{
 	// TODO: b/311252896 - Undo skip after fix.
 	"ciri",
-	// TODO: b/376055193 - Undo skip after fix.
-	"wugtrio",
 }
 
 func init() {
