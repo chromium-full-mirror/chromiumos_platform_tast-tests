@@ -22,7 +22,7 @@ func init() {
 		Desc: "Measures the performance of tab-switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@google.com",
+			"vincentchiang@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
