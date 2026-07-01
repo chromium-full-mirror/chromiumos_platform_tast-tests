@@ -22,7 +22,7 @@ func init() {
 		Desc: "Measures the performance of the critical user journey for task switching",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"ramsaroop@google.com",
+			"vincentchiang@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
