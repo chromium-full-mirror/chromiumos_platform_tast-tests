@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/attenuator"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -227,6 +228,25 @@ func executeRoamDiagnosticsTest(ctx context.Context, s *testing.State, ap0Params
 	ap1, freq1, deconfig := wifiutil.ConfigureAP(ctx, s, ap1Params, 1, secConfFac)
 	defer deconfig(ctx, ap1)
 	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap1)
+	defer cancel()
+
+	// Setup capture on ap1 channel
+	s.Log("Capturing pcap logs for AP1")
+	pcapPrimCh := tf.PcapRouter()
+	freqOps1, err := ap1.Config().PcapFreqOptions()
+	if err != nil {
+		s.Fatal("Failed to get Freq Opts: ", err)
+	}
+	s.Logf("Starting pcap on channel - %d", ap1.Config().Channel)
+	capturer1, err1 := pcapPrimCh.StartCapture(ctx, tf.UniqueAPName(), ap1.Config().Channel, false /*is6GHz*/, freqOps1)
+	if err1 != nil {
+		s.Fatal("Failed to start capturer: ", err)
+	}
+	defer func(ctx context.Context) {
+		s.Log("Stopping pcap capture")
+		pcapPrimCh.StopCapture(ctx, capturer1)
+	}(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	wpaMonitor, stop, ctx, err := tf.StartWPAMonitor(ctx, wificell.DefaultDUT)
