@@ -109,8 +109,9 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		installAppsFromDeviceText = "Install apps from your devices"
 		internalProblemText       = "There.s an internal problem with your device.*"
 		itemNotFoundText          = ".*item.*could not be found.*"
-		discountOfPlayPassText    = "Get .* off Play Pass"
-		tryPlayPassText           = "Try Google Play Pass"
+		discountOfPlayPassText    = "Get .* off Play Pass"
+		trialOfPlayPassText       = "Get a 1-month trial of Google Play Pass"
+		tryPlayPassText           = "Try Google Play Pass"
 		stayInLoopText            = "Want to stay in the loop.*"
 
 		acceptButtonText       = "accept"
@@ -149,6 +150,8 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		{internalProblemText, okButtonText},
 		// Press "No thanks" to dismiss if the dialog of "Get X% off Play Pass" pops up.
 		{discountOfPlayPassText, noThanksButtonText},
+		// Press "Not now" to dismiss if the dialog of "Get a 1-month trial of Google Play Pass" pops up.
+		{trialOfPlayPassText, notNowButtonText},
 		// Press "Not now" to dismiss if the dialog of "Try Google Play Pass" pops up.
 		{tryPlayPassText, notNowButtonText},
 		// Press "Not now" to dismiss if the dialog of "Want to stay in the loop?" pops up.
