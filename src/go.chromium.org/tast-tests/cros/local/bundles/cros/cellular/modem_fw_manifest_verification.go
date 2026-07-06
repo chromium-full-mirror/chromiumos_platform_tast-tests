@@ -201,7 +201,11 @@ func ModemFWManifestVerification(ctx context.Context, s *testing.State) {
 			}
 			// Verify recovery on FM101, RW101, RW135
 			if modemType == cellularconst.ModemTypeFM101 || modemType == cellularconst.ModemTypeRW101 || modemType == cellularconst.ModemTypeRW135 {
-				recoveryFileList, recoveryDirPath, err := getRecoveryFileList(modemFirmwarePath, device.Variant, modemType)
+				recoveryDir := ""
+				if device.GetRecoveryDirectory() != nil {
+					recoveryDir = device.GetRecoveryDirectory().GetFilename()
+				}
+				recoveryFileList, recoveryDirPath, err := getRecoveryFileList(modemFirmwarePath, device.Variant, recoveryDir, modemType)
 				setFwPathAsUsed(recoveryDirPath)
 				if err != nil {
 					s.Fatalf("Failed to get recovery file list for variant %q: %s", device.Variant, err)
@@ -274,7 +278,7 @@ func getAllFilesInDir(s *testing.State, dirPath string) []string {
 	return files
 }
 
-func getRecoveryFileList(firmwarePath, variant string, modemType cellularconst.ModemType) ([]string, string, error) {
+func getRecoveryFileList(firmwarePath, variant, recoveryDir string, modemType cellularconst.ModemType) ([]string, string, error) {
 	type recoveryData struct {
 		XMLName xml.Name `xml:"data"`
 		Text    string   `xml:"chardata"`
@@ -300,22 +304,28 @@ func getRecoveryFileList(firmwarePath, variant string, modemType cellularconst.M
 		} `xml:"program"`
 	}
 
-	var modemName string
-	if modemType == cellularconst.ModemTypeFM101 {
-		modemName = "fm101"
-	} else if modemType == cellularconst.ModemTypeRW135 {
-		modemName = "rw135"
-	} else if modemType == cellularconst.ModemTypeRW101 {
-		modemName = "rw101"
+	var recoveryDirPath, modemFirmwareSubdir string
+	if recoveryDir != "" {
+		recoveryDirPath = filepath.Join(firmwarePath, recoveryDir)
+		// Resolve the modem firmware subdirectory from the recovery path. This is
+		// particularly important to differentiate between RW135 and RW135R, which
+		// share the _rw135 variant suffix, modemType property, and ModemTypeRW135
+		// in Tast, but use different firmware subdirectories (rw135 vs rw135r).
+		modemFirmwareSubdir = strings.Split(recoveryDir, "/")[0]
 	} else {
-		return nil, "", errors.New("invalid modem type")
-	}
+		if modemType == cellularconst.ModemTypeFM101 {
+			modemFirmwareSubdir = "fm101"
+		} else if modemType == cellularconst.ModemTypeRW135 {
+			modemFirmwareSubdir = "rw135"
+		} else if modemType == cellularconst.ModemTypeRW101 {
+			modemFirmwareSubdir = "rw101"
+		} else {
+			return nil, "", errors.New("invalid modem type")
+		}
 
-	recoveryDirPath := filepath.Join(firmwarePath, modemName, "download_agent"+"_"+variant)
-	if !fileExists(recoveryDirPath) {
-		recoveryDirPath = filepath.Join(firmwarePath, modemName, "download_agent")
+		recoveryDirPath = filepath.Join(firmwarePath, modemFirmwareSubdir, "download_agent"+"_"+variant)
 		if !fileExists(recoveryDirPath) {
-			return nil, "", errors.New("missing download_agent")
+			recoveryDirPath = filepath.Join(firmwarePath, modemFirmwareSubdir, "download_agent")
 		}
 	}
 
@@ -331,7 +341,7 @@ func getRecoveryFileList(firmwarePath, variant string, modemType cellularconst.M
 	var ret []string
 	for i := 0; i < len(data.Program); i++ {
 		if data.Program[i].Filename != "" {
-			fullPath := filepath.Join(firmwarePath, modemName, data.Program[i].Filename)
+			fullPath := filepath.Join(firmwarePath, modemFirmwareSubdir, data.Program[i].Filename)
 			ret = append(ret, fullPath)
 		}
 	}
