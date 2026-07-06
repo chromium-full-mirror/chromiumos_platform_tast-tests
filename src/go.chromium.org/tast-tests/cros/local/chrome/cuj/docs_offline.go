@@ -6,6 +6,7 @@ package cuj
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -100,10 +101,10 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 		ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 		defer cancel()
 
-		sctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-		defer cancel()
+		connCtx, connCancel := context.WithTimeout(ctx, time.Minute)
+		defer connCancel()
 		// Open Drive settings page.
-		conn, err := cr.NewConn(sctx, driveSettingsURL)
+		conn, err := cr.NewConn(connCtx, driveSettingsURL)
 		if err != nil {
 			// The "Add another Google Account" dialog may block connection creation.
 			// Log the error instead of failing the test.
@@ -129,12 +130,32 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 		addAnotherAccountHeading := nodewith.NameContaining("Add another Google Account for").Role(role.Heading).Ancestor(addAnotherAccountDialog)
 		closeButton := nodewith.Name("Close").Role(role.Button).HasClass("ImageButton").Ancestor(addAnotherAccountDialog)
 		googleDriveRootWebArea := nodewith.Name("Settings - Google Drive").Role(role.RootWebArea)
+
+		closeTabIfExists := func(ctx context.Context) {
+			tabSelector := nodewith.NameRegex(regexp.MustCompile(`(Google Drive|Untitled)`)).Role(role.Tab).First()
+			if err := ui.Exists(tabSelector)(ctx); err != nil {
+				// Tab doesn't exist; we can safely return early without logging an error.
+				return
+			}
+			closeTabButton := nodewith.Name("Close").Role(role.Button).Ancestor(tabSelector).First()
+			if err := uiauto.NamedAction("close tab "+tabSelector.Pretty(),
+				ui.LeftClickUntil(closeTabButton,
+					ui.WithTimeout(3*time.Second).WaitUntilGone(tabSelector),
+				),
+			)(ctx); err != nil {
+				testing.ContextLogf(ctx, "Failed to close tab %s", tabSelector.Pretty())
+			}
+		}
+
 		// It was found that during Lacros testing, the "Add another Google Account" dialog
 		// might pop up. Dismiss the dialog before checking the offline checkbox.
 		if err := uiauto.NamedCombine("dismiss 'Add another Google Account' dialog",
 			uiauto.IfSuccessThen(ui.Exists(addAnotherAccountHeading), ui.LeftClick(closeButton)),
-			uiauto.NamedAction("check if the page redirected to Drive Settings", ui.WaitUntilExists(googleDriveRootWebArea)),
+			uiauto.NamedAction("check if the page redirected to Drive Settings",
+				ui.WithTimeout(time.Minute).WaitUntilExists(googleDriveRootWebArea),
+			),
 		)(ctx); err != nil {
+			closeTabIfExists(ctx)
 			return errors.Wrap(err, "failed to ensure the Drive Settings page exist")
 		}
 
