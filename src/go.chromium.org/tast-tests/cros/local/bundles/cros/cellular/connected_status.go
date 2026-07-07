@@ -27,7 +27,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
 		SoftwareDeps:   []string{"chrome"},
-		Fixture:        "cellularEnforceConnectionRemote",
+		Fixture:        "cellularEnforceConnectionLocal",
+		Timeout:        5 * time.Minute,
 	})
 }
 
