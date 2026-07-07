@@ -60,7 +60,8 @@ TODO(b/179426205): Add the same license as test-25fps.mp4.
   * av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf generated using the
     following command:
     `aomenc --sb-size=64 -w 192 -h 288 --tile-columns=2 --tile-rows=2 --fps=25/1
-    --ivf -o test-25fps-192x288-tile-rows-3-tile-cols-3.ivf
+    --target-seq-level-idx=4 --ivf -o
+    test-25fps-192x288-tile-rows-3-tile-cols-3.ivf
     test-25fps-192x288.yuv`
   * av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf generated
     using the following command:
