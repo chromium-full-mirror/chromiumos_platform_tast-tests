@@ -224,6 +224,20 @@ const (
 // CCDCapState contains possible states for a CCD capability.
 type CCDCapState string
 
+// CCDCapInfo contains structured information about the CCD capability
+type CCDCapInfo struct {
+	State     CCDCapState
+	IsDefault bool
+}
+
+// CCDCapabilitiesInfo contains all of the capabilities states and bools that
+// specify if ccd is reset or if it's in factory mode.
+type CCDCapabilitiesInfo struct {
+	States         map[CCDCap]CCDCapInfo
+	IsReset        bool
+	IsFactoryReset bool
+}
+
 // CCD capability states
 const (
 	CapDefault      CCDCapState = "Default"
@@ -404,49 +418,67 @@ func (i *CrOSImage) CCDResetFactory(ctx context.Context) error {
 // CCDCapabilities uses the `ccd` GSC console command to return a map of all
 // CCD capability states. Capabilities that are in their default states will be
 // reported as their true states.
-func (i *CrOSImage) CCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapState, error) {
+func (i *CrOSImage) CCDCapabilities(ctx context.Context) (CCDCapabilitiesInfo, error) {
 	output, err := i.safeCommand(ctx, "ccd")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute ccd open")
+		return CCDCapabilitiesInfo{}, errors.Wrap(err, "failed to execute ccd")
 	}
 
 	return matchCCDCapabilities(output)
 }
 
-func matchCCDCapabilities(s string) (map[CCDCap]CCDCapState, error) {
-	var out map[CCDCap]CCDCapState
+func matchCCDCapabilities(s string) (CCDCapabilitiesInfo, error) {
+	out := CCDCapabilitiesInfo{}
 
 	matches := capDefaultRE.FindAllStringSubmatch(s, -1)
 	if matches == nil {
-		return nil, errors.New("failed to parse ccd output")
+		return out, errors.New("failed to parse ccd output")
 	}
 
 	// Map regex result to typed result
-	out = make(map[CCDCap]CCDCapState)
+	out.States = make(map[CCDCap]CCDCapInfo)
 	for i := 0; i < len(matches); i++ {
-		var cap CCDCap
-		var state CCDCapState
-		if matches[i][1] != "" {
-			cap = CCDCap(matches[i][1])
-			state = CCDCapState(matches[i][2])
-		} else {
-			cap = CCDCap(matches[i][3])
-			state = CCDCapState(matches[i][4])
+		var ccdCap CCDCap
+		var capInfo CCDCapInfo
+		if len(matches[i]) != 5 {
+			return CCDCapabilitiesInfo{}, errors.Errorf("invalid cap: %s", matches[i])
 		}
-		out[cap] = state
+		if matches[i][1] != "" {
+			ccdCap = CCDCap(matches[i][1])
+			capInfo.State = CCDCapState(matches[i][2])
+			capInfo.IsDefault = true
+		} else {
+			ccdCap = CCDCap(matches[i][3])
+			capInfo.State = CCDCapState(matches[i][4])
+			capInfo.IsDefault = false
+		}
+		out.States[ccdCap] = capInfo
 	}
-
+	isReset := true
+	isFactoryReset := true
+	for _, capInfo := range out.States {
+		// If any capabilities are not default, then ccd is not reset
+		if !capInfo.IsDefault {
+			isReset = false
+		}
+		// All capabilities have to be set to Always to be in factory mode
+		if capInfo.IsDefault || capInfo.State != CapAlways {
+			isFactoryReset = false
+		}
+	}
+	out.IsReset = isReset
+	out.IsFactoryReset = isFactoryReset
 	return out, nil
 }
 
 // CCDCapability uses the `ccd` GSC console command to return the state of
 // the requested CCD capability.
 func (i *CrOSImage) CCDCapability(ctx context.Context, capability CCDCap) (CCDCapState, error) {
-	states, err := i.CCDCapabilities(ctx)
+	caps, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		return CapDefault, err
 	}
-	return states[capability], nil
+	return caps.States[capability].State, nil
 }
 
 // SetCCDCapability uses the `ccd` GSC console command to set a specific
@@ -499,14 +531,14 @@ func (i *CrOSImage) Rollback(ctx context.Context) error {
 // SetCCDCapabilities uses the `ccd` GSC console command to set the device
 // capabilities to the given map.
 func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCDCap]CCDCapState) error {
-	currentStates, err := i.CCDCapabilities(ctx)
+	caps, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial CCD states")
 	}
 
 	// Update capabilities if needed
 	for c := range capabilities {
-		if capabilities[c] != currentStates[c] {
+		if capabilities[c] != caps.States[c].State {
 			if err = i.SetCCDCapability(ctx, c, capabilities[c]); err != nil {
 				return errors.Wrap(err, "failed to set CCD capability")
 			}

@@ -87,18 +87,18 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	states, err := i.CCDCapabilities(ctx)
+	caps, err := i.CCDCapabilities(ctx)
 	if err != nil {
 		s.Fatal("Failed to get CCD capabilities")
 	}
 
-	openNoDevMode := states[ti50.OpenNoDevMode]
-	if openNoDevMode != expectedOpenNoDevModeDefault {
-		s.Error("Expected OpenNoDevMode default " + expectedOpenNoDevModeDefault + ", but got " + openNoDevMode)
+	openNoDevMode := caps.States[ti50.OpenNoDevMode]
+	if openNoDevMode.State != expectedOpenNoDevModeDefault || !openNoDevMode.IsDefault {
+		s.Errorf("Expected OpenNoDevMode default %s but got %+v ", expectedOpenNoDevModeDefault, openNoDevMode)
 	}
 
-	openFromUSB := states[ti50.OpenFromUSB]
-	if openFromUSB != expectedOpenFromUSBDefault {
-		s.Error("Expected OpenFromUSB default " + expectedOpenFromUSBDefault + ", but got " + openFromUSB)
+	openFromUSB := caps.States[ti50.OpenFromUSB]
+	if openFromUSB.State != expectedOpenFromUSBDefault || !openFromUSB.IsDefault {
+		s.Errorf("Expected OpenFromUSB default %s but got %+v ", expectedOpenFromUSBDefault, openFromUSB)
 	}
 }

@@ -546,29 +546,30 @@ TPM:
 Use 'ccd help' to print subcommands
 	`
 
-	expected := map[CCDCap]CCDCapState{
-		UartGscRxAPTx:     CapAlways,
-		UartGscTxAPRx:     CapAlways,
-		UartGscRxECTx:     CapAlways,
-		UartGscTxECRx:     CapAlways,
-		UartGscRxFpmcuTx:  CapAlways,
-		UartGscTxFpmcuRx:  CapAlways,
-		FlashAP:           CapAlways,
-		FlashEC:           CapIfOpened,
-		OverrideWP:        CapAlways,
-		RebootECAP:        CapAlways,
-		GscFullConsole:    CapAlways,
-		UnlockNoReboot:    CapAlways,
-		UnlockNoShortPP:   CapAlways,
-		OpenNoTPMWipe:     CapAlways,
-		OpenNoLongPP:      CapAlways,
-		BatteryBypassPP:   CapAlways,
-		I2C:               CapAlways,
-		FlashRead:         CapAlways,
-		OpenNoDevMode:     CapAlways,
-		OpenFromUSB:       CapAlways,
-		OverrideBatt:      CapAlways,
-		AllowUnverifiedRO: CapAlways,
+	expected := CCDCapabilitiesInfo{IsReset: false, IsFactoryReset: false}
+	expected.States = map[CCDCap]CCDCapInfo{
+		UartGscRxAPTx:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxAPRx:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscRxECTx:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxECRx:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscRxFpmcuTx:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxFpmcuRx:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashAP:           CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashEC:           CCDCapInfo{State: CapIfOpened, IsDefault: false},
+		OverrideWP:        CCDCapInfo{State: CapAlways, IsDefault: false},
+		RebootECAP:        CCDCapInfo{State: CapAlways, IsDefault: false},
+		GscFullConsole:    CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoReboot:    CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoShortPP:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoTPMWipe:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoLongPP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		BatteryBypassPP:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		I2C:               CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashRead:         CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoDevMode:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenFromUSB:       CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideBatt:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		AllowUnverifiedRO: CCDCapInfo{State: CapAlways, IsDefault: false},
 	}
 
 	testCCDCapabilities(t, input, expected)
@@ -609,36 +610,223 @@ Capabilities are modified.
 Use 'ccd help' to print subcommands
 	`
 
-	expected := map[CCDCap]CCDCapState{
-		UartGscRxAPTx:   CapAlways,
-		UartGscTxAPRx:   CapAlways,
-		UartGscRxECTx:   CapAlways,
-		UartGscTxECRx:   CapIfOpened,
-		FlashAP:         CapUnlessLocked,
-		FlashEC:         CapIfOpened,
-		OverrideWP:      CapAlways,
-		RebootECAP:      CapAlways,
-		GscFullConsole:  CapAlways,
-		UnlockNoReboot:  CapAlways,
-		UnlockNoShortPP: CapAlways,
-		OpenNoTPMWipe:   CapAlways,
-		OpenNoLongPP:    CapAlways,
-		BatteryBypassPP: CapAlways,
-		UpdateNoTPMWipe: CapAlways,
-		I2C:             CapAlways,
-		FlashRead:       CapAlways,
-		OpenNoDevMode:   CapAlways,
-		OpenFromUSB:     CapAlways,
-		OverrideBatt:    CapAlways,
+	expected := CCDCapabilitiesInfo{IsReset: false, IsFactoryReset: false}
+	expected.States = map[CCDCap]CCDCapInfo{
+		UartGscRxAPTx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscTxAPRx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscRxECTx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscTxECRx:   CCDCapInfo{State: CapIfOpened, IsDefault: true},
+		FlashAP:         CCDCapInfo{State: CapUnlessLocked, IsDefault: false},
+		FlashEC:         CCDCapInfo{State: CapIfOpened, IsDefault: false},
+		OverrideWP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		RebootECAP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		GscFullConsole:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoReboot:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoShortPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoTPMWipe:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoLongPP:    CCDCapInfo{State: CapAlways, IsDefault: false},
+		BatteryBypassPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		UpdateNoTPMWipe: CCDCapInfo{State: CapAlways, IsDefault: false},
+		I2C:             CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashRead:       CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoDevMode:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenFromUSB:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideBatt:    CCDCapInfo{State: CapAlways, IsDefault: false},
 	}
 
 	testCCDCapabilities(t, input, expected)
 }
 
-func testCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDCapState) {
+func TestCCDCapabilitiesReset1(t *testing.T) {
+	input := `
+ccd
+State: Locked
+Password: none
+Flags: 0x400005
+Capabilities: 5555555555000000
+  UartGscRxAPTx   Y 0=Default (Always)
+  UartGscTxAPRx   Y 0=Default (Always)
+  UartGscRxECTx   Y 0=Default (Always)
+  UartGscTxECRx   Y 0=Default (IfOpened)
+  FlashAP         Y 0=Default (UnlessLocked)
+  FlashEC         Y 0=Default (IfOpened)
+  OverrideWP      Y 0=Default (Always)
+  RebootECAP      Y 0=Default (Always)
+  GscFullConsole  Y 0=Default (Always)
+  UnlockNoReboot  Y 0=Default (Always)
+  UnlockNoShortPP Y 0=Default (Always)
+  OpenNoTPMWipe   Y 0=Default (Always)
+  OpenNoLongPP    Y 0=Default (Always)
+  BatteryBypassPP Y 0=Default (Always)
+  UpdateNoTPMWipe Y 0=Default (Always)
+  I2C             Y 0=Default (Always)
+  FlashRead       Y 0=Default (Always)
+  OpenNoDevMode   Y 0=Default (Always)
+  OpenFromUSB     Y 0=Default (Always)
+  OverrideBatt    Y 0=Default (Always)
+read_tpm_nvmem: object at 0x100a not found
+[291.156501 Console unlock allowed]
+read_tpm_nvmem: object at 0x1007 not found
+TPM:
+Capabilities are modified.
+Use 'ccd help' to print subcommands
+	`
+
+	expected := CCDCapabilitiesInfo{IsReset: true, IsFactoryReset: false}
+	expected.States = map[CCDCap]CCDCapInfo{
+		UartGscRxAPTx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscTxAPRx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscRxECTx:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		UartGscTxECRx:   CCDCapInfo{State: CapIfOpened, IsDefault: true},
+		FlashAP:         CCDCapInfo{State: CapUnlessLocked, IsDefault: true},
+		FlashEC:         CCDCapInfo{State: CapIfOpened, IsDefault: true},
+		OverrideWP:      CCDCapInfo{State: CapAlways, IsDefault: true},
+		RebootECAP:      CCDCapInfo{State: CapAlways, IsDefault: true},
+		GscFullConsole:  CCDCapInfo{State: CapAlways, IsDefault: true},
+		UnlockNoReboot:  CCDCapInfo{State: CapAlways, IsDefault: true},
+		UnlockNoShortPP: CCDCapInfo{State: CapAlways, IsDefault: true},
+		OpenNoTPMWipe:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		OpenNoLongPP:    CCDCapInfo{State: CapAlways, IsDefault: true},
+		BatteryBypassPP: CCDCapInfo{State: CapAlways, IsDefault: true},
+		UpdateNoTPMWipe: CCDCapInfo{State: CapAlways, IsDefault: true},
+		I2C:             CCDCapInfo{State: CapAlways, IsDefault: true},
+		FlashRead:       CCDCapInfo{State: CapAlways, IsDefault: true},
+		OpenNoDevMode:   CCDCapInfo{State: CapAlways, IsDefault: true},
+		OpenFromUSB:     CCDCapInfo{State: CapAlways, IsDefault: true},
+		OverrideBatt:    CCDCapInfo{State: CapAlways, IsDefault: true},
+	}
+
+	testCCDCapabilities(t, input, expected)
+}
+
+func TestCCDCapabilitiesFactoryReset1(t *testing.T) {
+	input := `
+ccd
+State: Locked
+Password: none
+Flags: 0x400005
+Capabilities: 5555555555000000
+  UartGscRxAPTx   Y 1=Always
+  UartGscTxAPRx   Y 1=Always
+  UartGscRxECTx   Y 1=Always
+  UartGscTxECRx   Y 1=Always
+  FlashAP         Y 1=Always
+  FlashEC         Y 1=Always
+  OverrideWP      Y 1=Always
+  RebootECAP      Y 1=Always
+  GscFullConsole  Y 1=Always
+  UnlockNoReboot  Y 1=Always
+  UnlockNoShortPP Y 1=Always
+  OpenNoTPMWipe   Y 1=Always
+  OpenNoLongPP    Y 1=Always
+  BatteryBypassPP Y 1=Always
+  UpdateNoTPMWipe Y 1=Always
+  I2C             Y 1=Always
+  FlashRead       Y 1=Always
+  OpenNoDevMode   Y 1=Always
+  OpenFromUSB     Y 1=Always
+  OverrideBatt    Y 1=Always
+read_tpm_nvmem: object at 0x100a not found
+[291.156501 Console unlock allowed]
+read_tpm_nvmem: object at 0x1007 not found
+TPM:
+Capabilities are modified.
+Use 'ccd help' to print subcommands
+	`
+
+	expected := CCDCapabilitiesInfo{IsReset: false, IsFactoryReset: true}
+	expected.States = map[CCDCap]CCDCapInfo{
+		UartGscRxAPTx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxAPRx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscRxECTx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxECRx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashAP:         CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashEC:         CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideWP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		RebootECAP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		GscFullConsole:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoReboot:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoShortPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoTPMWipe:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoLongPP:    CCDCapInfo{State: CapAlways, IsDefault: false},
+		BatteryBypassPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		UpdateNoTPMWipe: CCDCapInfo{State: CapAlways, IsDefault: false},
+		I2C:             CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashRead:       CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoDevMode:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenFromUSB:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideBatt:    CCDCapInfo{State: CapAlways, IsDefault: false},
+	}
+
+	testCCDCapabilities(t, input, expected)
+}
+
+func TestCCDCapabilitiesFactoryReset2(t *testing.T) {
+	input := `
+ccd
+State: Locked
+Password: none
+Flags: 0x400005
+Capabilities: 5555555555000000
+  UartGscRxAPTx   Y 1=Always
+  UartGscTxAPRx   Y 1=Always
+  UartGscRxECTx   Y 1=Always
+  UartGscTxECRx   Y 1=Always
+  FlashAP         Y 1=Always
+  FlashEC         Y 1=Always
+  OverrideWP      Y 1=Always
+  RebootECAP      Y 1=Always
+  GscFullConsole  Y 1=Always
+  UnlockNoReboot  Y 1=Always
+  UnlockNoShortPP Y 1=Always
+  OpenNoTPMWipe   Y 1=Always
+  OpenNoLongPP    Y 1=Always
+  BatteryBypassPP Y 1=Always
+  UpdateNoTPMWipe Y 0=Default (Always)
+  I2C             Y 1=Always
+  FlashRead       Y 1=Always
+  OpenNoDevMode   Y 1=Always
+  OpenFromUSB     Y 1=Always
+  OverrideBatt    Y 1=Always
+read_tpm_nvmem: object at 0x100a not found
+[291.156501 Console unlock allowed]
+read_tpm_nvmem: object at 0x1007 not found
+TPM:
+Capabilities are modified.
+Use 'ccd help' to print subcommands
+	`
+
+	expected := CCDCapabilitiesInfo{IsReset: false, IsFactoryReset: false}
+	expected.States = map[CCDCap]CCDCapInfo{
+		UartGscRxAPTx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxAPRx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscRxECTx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		UartGscTxECRx:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashAP:         CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashEC:         CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideWP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		RebootECAP:      CCDCapInfo{State: CapAlways, IsDefault: false},
+		GscFullConsole:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoReboot:  CCDCapInfo{State: CapAlways, IsDefault: false},
+		UnlockNoShortPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoTPMWipe:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoLongPP:    CCDCapInfo{State: CapAlways, IsDefault: false},
+		BatteryBypassPP: CCDCapInfo{State: CapAlways, IsDefault: false},
+		UpdateNoTPMWipe: CCDCapInfo{State: CapAlways, IsDefault: true},
+		I2C:             CCDCapInfo{State: CapAlways, IsDefault: false},
+		FlashRead:       CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenNoDevMode:   CCDCapInfo{State: CapAlways, IsDefault: false},
+		OpenFromUSB:     CCDCapInfo{State: CapAlways, IsDefault: false},
+		OverrideBatt:    CCDCapInfo{State: CapAlways, IsDefault: false},
+	}
+
+	testCCDCapabilities(t, input, expected)
+}
+
+func testCCDCapabilities(t *testing.T, input string, expected CCDCapabilitiesInfo) {
 	output, err := matchCCDCapabilities(input)
 	if err != nil {
-		t.Fatal("error processing CCD capabilities:", err)
+		t.Fatal("error processing CCD capability info:", err)
 	}
 
 	if !reflect.DeepEqual(output, expected) {
