@@ -37,6 +37,22 @@ var (
 	meetRootWebArea      = nodewith.NameContaining("Meet").Role(role.RootWebArea)
 )
 
+type zoomLevel struct {
+	// percentage is the zoom percentage.
+	percentage int
+	// presses is the number of Ctrl+Minus keystrokes require to reach the zoom from 100%.
+	presses int
+}
+
+var zoomLevels = []*zoomLevel{
+	{100, 0},
+	{90, 1},
+	{80, 2},
+	{75, 3},
+	{67, 4},
+	{50, 5},
+}
+
 // AddBots adds |numBots| bots to the call.
 func AddBots(ctx context.Context, bc *bond.Client, numBots int, testDuration time.Duration, meetingCode string, botsOptions []bond.AddBotsOption) error {
 	const (
@@ -96,15 +112,30 @@ func ResetZoom(ui *uiauto.Context, kw *input.KeyboardEventWriter) uiauto.Action 
 	)
 }
 
-// AdjustBrowserZoomTo50Percent sets browser zoom to 50%.
-func AdjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWriter, ui *uiauto.Context) error {
-	// Zoom out on the browser to maximize the number of visible video
-	// feeds. This needs to be done before the final layout mode has been set,
-	// so that Meet can properly recalculate how many inbound videos should
-	// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
-	// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
-	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
-		return errors.Wrap(nil, "failed to repeatedly press Ctrl+Minus to zoom out")
+// determineZoomLevel calculates the optimal browser zoom level to ensure
+// the window width is not smaller than the expected width.
+func determineZoomLevel(ctx context.Context, windowWidth, expectedWidth float64) (*zoomLevel, error) {
+	// Calculate the maximum zoom percentage that still satisfies the width threshold.
+	targetZoomPercentage := windowWidth * 100 / expectedWidth
+	testing.ContextLogf(ctx, "Window width: %.2f, expected width: %.2f, target zoom percentage: %.2f", windowWidth, expectedWidth, targetZoomPercentage)
+
+	for _, level := range zoomLevels {
+		if float64(level.percentage) <= targetZoomPercentage {
+			return level, nil
+		}
+	}
+	return nil, errors.Errorf("window width %.2f is too small to reach the expected width %.2f", windowWidth, expectedWidth)
+}
+
+// setBrowserZoomLevel sets the browser zoom to the specified level
+// and verifies the change in the Chrome UI.
+func setBrowserZoomLevel(ctx context.Context, kw *input.KeyboardEventWriter, ui *uiauto.Context, zoom *zoomLevel) error {
+	if zoom.percentage == 100 {
+		return nil
+	}
+	expectedZoom := fmt.Sprintf("%d%%", zoom.percentage)
+	if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, zoom.presses); err != nil {
+		return errors.Wrapf(err, "failed to repeatedly press Ctrl+Minus to zoom out to %s", expectedZoom)
 	}
 
 	browserAppMenuButton := nodewith.Name("Chrome").HasClass("BrowserAppMenuButton").First()
@@ -113,7 +144,7 @@ func AdjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWr
 	if err := ui.LeftClickUntil(browserAppMenuButton,
 		ui.WithTimeout(3*time.Second).WaitUntilExists(zoomMenuItem),
 	)(ctx); err != nil {
-		return errors.Wrap(nil, "failed to open browser app menu")
+		return errors.Wrap(err, "failed to open browser app menu")
 	}
 
 	// Get zoom value text.
@@ -121,16 +152,29 @@ func AdjustBrowserZoomTo50Percent(ctx context.Context, kw *input.KeyboardEventWr
 	if err != nil {
 		return errors.Wrap(err, "failed to find the current browser zoom")
 	}
-	if zoomInfo.Name != "50%" {
-		return errors.Wrapf(err, `unexpected zoom value: got %s; want "50%%"`, zoomInfo.Name)
+	if zoomInfo.Name != expectedZoom {
+		return errors.Errorf("unexpected zoom value: got %s; want %s", zoomInfo.Name, expectedZoom)
 	}
 	if err := ui.LeftClickUntil(browserAppMenuButton,
 		ui.WithTimeout(3*time.Second).WaitUntilGone(zoomMenuItem),
 	)(ctx); err != nil {
-		return errors.Wrap(nil, "failed to close browser app menu")
+		return errors.Wrap(err, "failed to close browser app menu")
 	}
 
-	testing.ContextLog(ctx, "Zoomed browser window to 50%")
+	testing.ContextLog(ctx, "Zoomed browser window to ", expectedZoom)
+	return nil
+}
+
+// SetBrowserZoomToFitWidth calculates the optimal zoom level for the given window width
+// and target width, and then applies the zoom to the browser.
+func SetBrowserZoomToFitWidth(ctx context.Context, kw *input.KeyboardEventWriter, ui *uiauto.Context, windowWidth, expectedWidth float64) error {
+	zoomLevel, err := determineZoomLevel(ctx, windowWidth, expectedWidth)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine the zoom level")
+	}
+	if err := setBrowserZoomLevel(ctx, kw, ui, zoomLevel); err != nil {
+		return errors.Wrap(err, "failed to set the browser zoom level")
+	}
 	return nil
 }
 

@@ -61,6 +61,10 @@ const (
 	FakeCameraVideoFile720p = "camera_video_720p.y4m"
 
 	presentTabTitle = "Untitled document"
+
+	// ExpectedMeetWindowWidth is the minimum pixel width to render
+	// 16 participant grids in Google Meet without hiding feeds.
+	ExpectedMeetWindowWidth float64 = 1184
 )
 
 // FakeCameraHALCfg defines parameters that are used to generate the fake
@@ -432,13 +436,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 	defer meetHelper.Close(closeCtx)
 
-	// Match window titles `Google Meet` and `meet.google.com`.
-	meetRE := regexp.MustCompile(`\bMeet\b|\bmeet\.\b`)
-	meetWindow, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return meetRE.MatchString(w.Title) })
-	if err != nil {
-		return pv, errors.Wrap(err, "failed to find the Meet window")
-	}
-
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	testing.ContextLogf(ctx, "Is in tablet-mode: %t", inTabletMode)
 	if err != nil {
@@ -484,6 +481,13 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		defer mw.Close(ctx)
 	}
 	defer pc.Close(ctx)
+
+	// Match window titles `Google Meet` and `meet.google.com`.
+	meetRE := regexp.MustCompile(`\bMeet\b|\bmeet\.\b`)
+	meetWindow, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return meetRE.MatchString(w.Title) })
+	if err != nil {
+		return pv, errors.Wrap(err, "failed to find the Meet window")
+	}
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
@@ -582,8 +586,17 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	}
 
 	if meet.ZoomOut {
-		if err := AdjustBrowserZoomTo50Percent(ctx, kw, ui); err != nil {
-			return pv, errors.Wrap(err, "failed to adjust browser zoom to 50%")
+		meetWindowWidth := float64(meetWindow.BoundsInRoot.Width)
+		if meet.Split {
+			meetWindowWidth /= 2
+		}
+
+		// Zoom out on the browser to maximize the number of visible video
+		// feeds. This needs to be done before the final layout mode has been set,
+		// so that Meet can properly recalculate how many inbound videos should
+		// be visible.
+		if err := SetBrowserZoomToFitWidth(ctx, kw, ui, meetWindowWidth, ExpectedMeetWindowWidth); err != nil {
+			return pv, errors.Wrap(err, "failed to set browser zoom to fit the expected width")
 		}
 	}
 
