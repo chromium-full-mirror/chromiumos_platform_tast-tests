@@ -526,7 +526,7 @@ func GetFileEventDetails(ctx context.Context, testCase pb.TestCase, cr *chrome.C
 	case pb.TestCase_COOKIES:
 		userPath, _ := cryptohome.UserPath(ctx, normalizedUser)
 		rv := testDetails{syncText: makeWaitString(xdr.SensitiveFileType_USER_WEB_COOKIE)}
-		cookieNames := []string{"Cookies", "Cookies-journal", "Safe Browsing Cookies", "Safe Browsing Cookies-journal"}
+		cookieNames := []string{"Cookies", "Cookies-journal"}
 		for _, fileName := range cookieNames {
 			outputFile := filepath.Join(userPath, fileName)
 			rv.filesToRestore = append(rv.filesToRestore, &restoreFile{name: outputFile})
