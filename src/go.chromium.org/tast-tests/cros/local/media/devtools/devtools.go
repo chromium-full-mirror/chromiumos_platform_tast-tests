@@ -228,9 +228,9 @@ func CheckHWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChan
 
 // CheckSWDRMPipeline waits for observer to produce a Player properties and
 // parses it to figure out if the pipeline matches what we expect for SW DRM
-// playback. That means the video is encrypted and the DecryptingVideoDecoder
-// is used. If the video decrypting demuxer is used, then there was an error
-// and fallback attempt. It returns true if expectations are met for SW DRM.
+// playback. That means the video is encrypted and either DecryptingVideoDecoder
+// or DecryptingDemuxerStream was used. It returns true if expectations are met
+// for SW DRM.
 func CheckSWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChangedClient, url string) (isSWDRMPipeline bool, err error) {
 	var hasCdm, hasDecoder, hasDemux, isDecryptingVideoDecoder, isVideoDecryptingDemuxer, isCdmAttached bool
 	// We may not get all the properties on the first call to recv(), so poll for
@@ -286,11 +286,10 @@ func CheckSWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChan
 		if !isCdmAttached {
 			return errors.New("video was not using a CDM in SW DRM pipeline")
 		}
-		if !isDecryptingVideoDecoder {
-			if isVideoDecryptingDemuxer {
-				return errors.New("video was not using DecryptingVideoDecoder and fell back to DecryptingDemuxStream in SW DRM pipeline")
-			}
-			return errors.New("video was not using DecryptingVideoDecoder in SW DRM pipeline")
+		// TODO(b/533109218): Change this validation to only allow DecryptingVideoDemuxer or
+		// DecryptingDemuxerStream depending on the test conditions.
+		if !isDecryptingVideoDecoder && !isVideoDecryptingDemuxer {
+			return errors.New("video was not using DecryptingVideoDecoder or DecryptingDemuxerStream in SW DRM pipeline")
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
