@@ -45,7 +45,7 @@ func CheckClipboardBubble(ctx context.Context, ui *uiauto.Context, url string) e
 	bubbleClass := nodewith.ClassName("ClipboardBlockBubble")
 	bubbleButton := nodewith.Name("Got it").Role(role.Button).Ancestor(bubbleClass)
 	messageBlocked := "Pasting from " + url + " to this location is blocked by administrator policy. Learn more"
-	bubble := nodewith.Name(messageBlocked).Role(role.StaticText).Ancestor(bubbleClass)
+	bubble := nodewith.Name(messageBlocked).Ancestor(bubbleClass)
 
 	if err := uiauto.Combine("find bubble ",
 		ui.WaitUntilExists(bubbleButton),
@@ -63,7 +63,7 @@ func WarnBubble(ctx context.Context, ui *uiauto.Context, url string) (*nodewith.
 	cancelButton := nodewith.Name("Cancel").Role(role.Button).Ancestor(bubbleClass)
 	pasteButton := nodewith.Name("Paste anyway").Role(role.Button).Ancestor(bubbleClass)
 	message := "Pasting from " + url + " to this location is not recommended by administrator policy. Learn more"
-	bubble := nodewith.Name(message).Role(role.StaticText).Ancestor(bubbleClass)
+	bubble := nodewith.Name(message).Ancestor(bubbleClass)
 
 	if err := uiauto.Combine("find bubble ",
 		ui.WaitUntilExists(cancelButton),
