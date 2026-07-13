@@ -2601,6 +2601,24 @@ func (h *Helper) SaveECCrash(ctx context.Context, crashName string, listOfCrashF
 
 }
 
+// CheckAndLogECCrashes looks for new crashes, and fails the test or fixture if found.
+// Crashes that are handled will be cached to prevent future calls from handing them.
+func (h *Helper) CheckAndLogECCrashes(ctx context.Context, s ErrorHandler) {
+	crashLogs, err := h.GetNewECCrashes(ctx)
+	if err != nil {
+		s.Error("Failed to get latest ec crash logs: ", err)
+		return
+	}
+	if len(crashLogs) == 0 {
+		return
+	}
+
+	for crashName, listOfCrashFiles := range crashLogs {
+		h.SaveECCrash(ctx, crashName, listOfCrashFiles, s)
+		h.ecCrashFileCache[crashName] = true
+	}
+}
+
 // logECCrash returns a log string with a searchable prefix to find EC crash check issues in testhaus.
 // Allows optional error(s) to be passed in.
 func logECCrash(msg string, s ErrorHandler, errs ...error) string {

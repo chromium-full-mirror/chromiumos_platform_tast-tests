@@ -679,6 +679,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to repack chromeos-firmwareupdate-old: %+v", err)
 	}
 
+	// Check for crashes before we do anything.
+	h.CheckAndLogECCrashes(ctx, s)
+
 	// That was all setup, start testing now
 	if hasBattery {
 		if err := firmware.PollToSetChargerStatus(ctx, h, s.Param().(*testMode).Charging); err != nil {
@@ -729,6 +732,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to enable software write protect: ", err)
 		}
 	}
+	h.CheckAndLogECCrashes(ctx, s)
 
 	getCrossystemParams := func(ctx context.Context) (result map[reporters.CrossystemParam]string, retErr error) {
 		retErr = testing.Poll(ctx, func(ctx context.Context) error {
@@ -822,6 +826,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
 	s.Logf("After autoupdate: APRO:%s APRW:%s ECRO:%s ECRW:%s", updatedVersions[reporters.CrossystemParamRoFwid], updatedVersions[reporters.CrossystemParamFwid], updatedECRO, updatedECRW)
+	h.CheckAndLogECCrashes(ctx, s)
 
 	// Assertions
 	if updatedVersions[reporters.CrossystemParamMainfwType] != "normal" {
@@ -912,6 +917,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read ectool version: ", err)
 	}
 	s.Logf("After rollback: APRO:%s APRW:%s ECRO:%s ECRW:%s", rollbackVersions[reporters.CrossystemParamRoFwid], rollbackVersions[reporters.CrossystemParamFwid], rollbackECRO, rollbackECRW)
+	h.CheckAndLogECCrashes(ctx, s)
 
 	// Assertions
 	if rollbackVersions[reporters.CrossystemParamMainfwType] != "normal" {
