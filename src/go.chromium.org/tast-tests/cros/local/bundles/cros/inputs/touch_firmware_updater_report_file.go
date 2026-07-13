@@ -25,12 +25,6 @@ var unsupportedReferenceModels = []string{
 var unstableModels = []string{
 	// TODO: b/311252896 - Undo skip after fix.
 	"ciri",
-	// TODO: b/376054949 - Undo skip after fix.
-	"cozmo",
-	"fennel14",
-	"juniper",
-	"kenzo",
-	"willow",
 	// TODO: b/376055193 - Undo skip after fix.
 	"wugtrio",
 }
