@@ -139,11 +139,11 @@ func EnsureDocsOfflineEnabled(ctx context.Context, cr *chrome.Chrome) error {
 			}
 			closeTabButton := nodewith.Name("Close").Role(role.Button).Ancestor(tabSelector).First()
 			if err := uiauto.NamedAction("close tab "+tabSelector.Pretty(),
-				ui.LeftClickUntil(closeTabButton,
+				ui.DoDefaultUntil(closeTabButton,
 					ui.WithTimeout(3*time.Second).WaitUntilGone(tabSelector),
 				),
 			)(ctx); err != nil {
-				testing.ContextLogf(ctx, "Failed to close tab %s", tabSelector.Pretty())
+				testing.ContextLogf(ctx, "Failed to close tab %s: %v", tabSelector.Pretty(), err)
 			}
 		}
 
