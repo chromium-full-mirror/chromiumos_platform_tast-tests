@@ -17,7 +17,7 @@ import (
 
 const (
 	oldDTVersion string = "0.23.30"
-	oldH1Version string = "0.3.22"
+	oldH1Version string = "0.5.230"
 
 	testInvalidateRW string = "invalidate RW"
 	testSecondUpdate string = "second update"
