@@ -13,11 +13,14 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+const ensureValidSIMRetries = 3
 
 // Modem wraps a Modemmanager.Modem D-Bus object.
 type Modem struct {
@@ -292,6 +295,20 @@ func NewModemWithSim(ctx context.Context) (*Modem, error) {
 // select the slot with the active SIM.
 // On starfish setups, it ensures that a PSIM slot is active (valid or not)
 func (m *Modem) EnsureValidSIM(ctx context.Context, isStarfish bool) (*Modem, error) {
+	var validModem *Modem
+	retryAction := action.Retry(ensureValidSIMRetries, func(ctx context.Context) error {
+		var err error
+		validModem, err = m.ensureValidSIMOnce(ctx, isStarfish)
+		return err
+	}, 5*time.Second)
+
+	if err := retryAction(ctx); err != nil {
+		return nil, err
+	}
+	return validModem, nil
+}
+
+func (m *Modem) ensureValidSIMOnce(ctx context.Context, isStarfish bool) (*Modem, error) {
 	props, err := m.GetProperties(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to call GetProperties on modem")
