@@ -27,9 +27,8 @@ func init() {
 		Attr:         []string{"group:gsc", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.SystemDevboard,
 		Params: []testing.Param{{
-			Name:      "cr50_0_3_22",
-			Val:       "0.3.22",
-			ExtraAttr: []string{"gsc_h1_shield"},
+			Name: "cr50_0_3_22",
+			Val:  "0.3.22",
 		}, {
 			Name:      "ti50_0_21_1",
 			Val:       "0.21.1",
