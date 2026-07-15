@@ -430,7 +430,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		// the `Uninstall`button to appear means it has finished installing all of the
 		// necessary content.
 		testing.ContextLog(ctx, "Checking if the app content is installed")
-		if _, err := FindActionButton(ctx, d, uninstallButtonText, defaultUITimeout); err != nil {
+		installedStr := fmt.Sprintf("(?i)(%s|%s)", openButtonText, uninstallButtonText)
+		if _, err := FindActionButton(ctx, d, installedStr, defaultUITimeout); err != nil {
 			return errors.New("additional app content is still installing")
 		}
 

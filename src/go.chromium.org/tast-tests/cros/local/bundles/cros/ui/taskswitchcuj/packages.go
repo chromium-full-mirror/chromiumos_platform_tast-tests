@@ -22,6 +22,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,7 +38,7 @@ type packageInfo struct {
 const (
 	playStorePackageName  = "com.android.vending"
 	gmailPackageName      = "com.google.android.gm"
-	packageInstallTimeout = 10 * time.Minute
+	packageInstallTimeout = 12 * time.Minute
 )
 
 // getPackages returns a list of all the packages that should be opened
@@ -52,6 +54,21 @@ func getPackages(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) []pa
 
 // installPackages installs each package in |packages|.
 func installPackages(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, packages []packageInfo) error {
+	// Installation may take a long time and trigger idle suspend, which may
+	// interrupt the test. Keep the display awake to avoid this issue.
+	releaseKeepAwakeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+	releaseKeepAwake, err := power.RequestKeepAwake(ctx, tconn, power.Display)
+	if err != nil {
+		return errors.Wrap(err, "failed to request to keep the display awake")
+	}
+	defer func(ctx context.Context) {
+		if err := releaseKeepAwake(ctx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to release keep awake: ", err)
+		}
+	}(releaseKeepAwakeCtx)
+
 	pkgs, err := a.InstalledPackages(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to list the installed packages")
