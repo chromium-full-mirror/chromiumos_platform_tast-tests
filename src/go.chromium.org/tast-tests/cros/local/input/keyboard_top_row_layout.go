@@ -50,6 +50,7 @@ const (
 	LayoutWilco
 	LayoutDrallion
 	LayoutCustom
+	LayoutExternal1
 )
 
 // KeyboardTopRowLayout returns the layout of the top row (function keys) for a given keyboard.
@@ -155,6 +156,8 @@ func KeyboardTopRowLayout(ctx context.Context, ew *KeyboardEventWriter) (*TopRow
 		return &mappingWilcoAndDrallion, nil
 	case LayoutCustom:
 		return &mappingCustom, nil
+	case LayoutExternal1:
+		return &externalMapping1, nil
 	// If for some reason our layout does not match any of our known layouts, return mapping for Layout1.
 	default:
 		return &mapping1, nil
@@ -196,6 +199,10 @@ func GetTopRowLayoutType(ctx context.Context, ew *KeyboardEventWriter) (TopRowLa
 			default:
 				return Layout1, errors.Errorf("unexpected CROS_KEYBOARD_ROW_LAYOUT: got %s, want [1-4]", val)
 			}
+		}
+		// If keyboard cannot be identified, return LayoutExternal1 for external bus types.
+		if bus, ok := props["ID_BUS"]; ok && (bus == "usb" || bus == "bluetooth") {
+			return LayoutExternal1, nil
 		}
 		// If keyboard cannot be identified, return Layout1 as defined here:
 		// https://source.chromium.org/chromium/chromium/src/+/HEAD:ui/chromeos/events/event_rewriter_chromeos.h;l=172;drc=c537d05a0cc7b74258fe1474260094923b1e4f68
