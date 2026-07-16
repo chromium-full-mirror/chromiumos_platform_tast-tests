@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -48,27 +49,27 @@ func PolicyRefreshRate(ctx context.Context, s *testing.State) { // NOLINT "Polic
 	}{
 		{
 			name:          "min_allowed_value",
-			expectedValue: " 30 mins",
+			expectedValue: "30 mins",
 			value:         &policy.PolicyRefreshRate{Val: 1800000},
 		},
 		{
 			name:          "max_allowed_value",
-			expectedValue: " 1 day",
+			expectedValue: "1 day",
 			value:         &policy.PolicyRefreshRate{Val: 86400000},
 		},
 		{
 			name:          "below_min_allowed_value",
-			expectedValue: " 30 mins",
+			expectedValue: "30 mins",
 			value:         &policy.PolicyRefreshRate{Val: 100},
 		},
 		{
 			name:          "above_max_allowed_value",
-			expectedValue: " 1 day",
+			expectedValue: "1 day",
 			value:         &policy.PolicyRefreshRate{Val: 186400000},
 		},
 		{
 			name:          "unset",
-			expectedValue: " 3 hours",
+			expectedValue: "3 hours",
 			value:         &policy.PolicyRefreshRate{Stat: policy.StatusUnset},
 		},
 	} {
@@ -97,7 +98,7 @@ func PolicyRefreshRate(ctx context.Context, s *testing.State) { // NOLINT "Polic
 				s.Fatal("Could not read policy page: ", err)
 			}
 			// Check the refresh value.
-			if refreshValue != param.expectedValue {
+			if strings.TrimSpace(refreshValue) != param.expectedValue {
 				s.Errorf("Unexpected refresh value: got %v; want %v", refreshValue, param.expectedValue)
 			}
 
