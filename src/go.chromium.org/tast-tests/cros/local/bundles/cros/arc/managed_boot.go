@@ -41,6 +41,7 @@ func init() {
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.GoogleLocationServicesEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 		Params: []testing.Param{
 			{
@@ -91,6 +92,9 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 		login := chrome.GAIALogin(creds)
 
 		policies := []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}
+		if expectEnabled {
+			policies = append(policies, &policy.GoogleLocationServicesEnabled{Val: 1, Stat: policy.StatusSet})
+		}
 		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 		if err != nil {
 			return rl.Exit("setup fake policy server", err)
@@ -114,9 +118,15 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 			return rl.Exit("create test API Connection", err)
 		}
 
-		// Ensure chrome://policy shows correct ArcEnabled value.
-		if err := policyutil.Verify(ctx, tconn, []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}); err != nil {
-			return rl.Exit("verify ArcEnabled", err)
+		// Ensure chrome://policy shows correct values for the policies.
+		expectedPolicies := []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}
+		if expectEnabled {
+			expectedPolicies = append(expectedPolicies,
+				&policy.GoogleLocationServicesEnabled{Val: 1, Stat: policy.StatusSet},
+			)
+		}
+		if err := policyutil.Verify(ctx, tconn, expectedPolicies); err != nil {
+			return rl.Exit("verify policies", err)
 		}
 
 		// Wait for ARC to boot. It should succeed only if enabled by policy.
