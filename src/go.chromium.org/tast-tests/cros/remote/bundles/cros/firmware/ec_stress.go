@@ -900,7 +900,13 @@ func startFlashStressTask(ctx context.Context, h *firmware.Helper, timeout time.
 	if flashSize <= 0 {
 		return nil, errors.Errorf("flash size %d is invalid", flashSize)
 	}
-	cmd := fmt.Sprintf("while true; do ectool flashread 0 %d /dev/null; done;", flashSize)
+	// Limit read size per iteration so reads complete within seconds and log "done.",
+	// preventing premature SIGKILL termination mid-read on large flash sizes.
+	readSize := 256 * 1024
+	if flashSize < readSize {
+		readSize = flashSize
+	}
+	cmd := fmt.Sprintf("while true; do ectool flashread 0 %d /dev/null; done;", readSize)
 	remoteFlashStressCancel, err := startBackgroundProcess(ctx, h, cmd, logOutputPath, timeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start flash stress task")
