@@ -605,7 +605,7 @@ func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, output
 
 	// Background process killer runs in background on remote,
 	// and kills the above background process after wall clock timeout.
-	backgroundKillCmd := fmt.Sprintf("{ nohup bash -c 'declare -i END=$(date +%%s -d \"%v seconds\"); while [ $(date +%%s) -lt  $END ]; do sleep 0.1; done; pkill -9 -P %d; kill -9 %d;' </dev/null &> /dev/null & };", timeout.Seconds(), pid, pid)
+	backgroundKillCmd := fmt.Sprintf("{ nohup bash -c 'declare -i END=$(date +%%s -d \"%v seconds\"); while [ $(date +%%s) -lt  $END ]; do sleep 0.1; done; kill -9 %d $(pgrep -P %d 2>/dev/null);' </dev/null &> /dev/null & };", timeout.Seconds(), pid, pid)
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", backgroundKillCmd).Run(); err != nil {
 		return nil, errors.Wrap(err, "failed to start background process killer")
 	}
@@ -631,16 +631,19 @@ func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, output
 
 func killProcess(ctx context.Context, h *firmware.Helper, pid int) error {
 	testing.ContextLogf(ctx, "Killing background process %d", pid)
-	for _, sig := range []string{"", "-9"} {
-		// Terminate child processes alongside parent shell process.
-		killCmd := fmt.Sprintf("pkill %s -P %d; kill %s %d", sig, pid, sig, pid)
-		_ = h.DUT.Conn().CommandContext(ctx, "bash", "-c", killCmd).Run()
+	if running, err := processIsRunning(ctx, h, pid); err != nil {
+		return errors.Wrapf(err, "failed to check if process %d is running", pid)
+	} else if !running {
+		return nil
+	}
+	// Terminate parent shell and any child processes simultaneously to prevent orphan process creation.
+	killCmd := fmt.Sprintf("kill -9 %d $(pgrep -P %d 2>/dev/null) 2>/dev/null", pid, pid)
+	_ = h.DUT.Conn().CommandContext(ctx, "bash", "-c", killCmd).Run()
 
-		if running, err := processIsRunning(ctx, h, pid); err != nil {
-			return errors.Wrapf(err, "failed to check if process %d is running", pid)
-		} else if !running {
-			return nil
-		}
+	if running, err := processIsRunning(ctx, h, pid); err != nil {
+		return errors.Wrapf(err, "failed to check if process %d is running", pid)
+	} else if !running {
+		return nil
 	}
 	return errors.Errorf("failed to kill process %d", pid)
 }
