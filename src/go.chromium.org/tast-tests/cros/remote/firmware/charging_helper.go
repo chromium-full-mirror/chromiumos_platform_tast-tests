@@ -150,13 +150,14 @@ const (
 // ECBatteryState is a struct containing information about the current battery state
 // as reported by the ec console.
 type ECBatteryState struct {
-	StatusCode int64
-	Status     []string
-	Alarms     []string
-	Params     int64
-	Charging   string
-	Charge     float64
-	Display    float64
+	StatusCode  int64
+	Status      []string
+	Alarms      []string
+	Params      int64
+	Charging    string
+	Charge      float64
+	Display     float64
+	Temperature float64
 }
 
 // BatteryStatusCodeToName is a map of battery status to human readable name.
@@ -201,6 +202,7 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 	reCharging := regexp.MustCompile(`Charging:\s*(Allowed|Not Allowed)`)
 	reCharge := regexp.MustCompile(`Charge:\s*(\d+)\s*\%`)
 	reDisplay := regexp.MustCompile(`Display:\s*(\d+\.\d+)\s*\%`)
+	reTemp := regexp.MustCompile(`Temp:\s*\S+\s*=\s*\d+.\d+\s*K\s*\((\d+.\d+) C\)`)
 
 	var statusCode, params int64
 	var charge, display float64
@@ -292,14 +294,24 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 		}
 	}
 
+	tempMatch := reTemp.FindStringSubmatch(fullOutput)
+	if tempMatch == nil {
+		return nil, errors.Errorf("failed to parse temp in output: %s", fullOutput)
+	}
+	temp, err := strconv.ParseFloat(tempMatch[1], 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse temp as float")
+	}
+
 	state := &ECBatteryState{
-		StatusCode: statusCode,
-		Status:     status,
-		Alarms:     alarms,
-		Params:     params,
-		Charging:   charging,
-		Charge:     charge,
-		Display:    display,
+		StatusCode:  statusCode,
+		Status:      status,
+		Alarms:      alarms,
+		Params:      params,
+		Charging:    charging,
+		Charge:      charge,
+		Display:     display,
+		Temperature: temp,
 	}
 
 	return state, nil

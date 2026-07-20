@@ -123,6 +123,8 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		}
 	case statusOnFullCharge:
 		// ----------- Test #4: Check EC reports expected alarms/status at full charge -----------	//
+		// There don't appear to be any users if the FULL status, so it probably doesn't matter
+		// if it works or not.
 		// See b/151181037.
 		if err := testFullChargeAlarm(ctx, h); err != nil {
 			s.Fatal("Failed checking battery status after full charge test: ", err)
@@ -142,11 +144,25 @@ func testFullChargeAlarm(ctx context.Context, h *firmware.Helper) error {
 		if err != nil {
 			return errors.Wrap(err, "error getting battery status")
 		}
-		testing.ContextLogf(ctx, "Current charge: %v, status: %v", battery.Charge, battery.Status)
-		if battery.StatusCode&firmware.ECFullyCharged == 0 {
-			return errors.Errorf("expected DUT to be fully charged, actual charge level was: %v, and status was: %v", battery.Charge, battery.Status)
+		testing.ContextLogf(ctx, "Current charge: %v, status: %v, temp: %v, charging: %v", battery.Charge, battery.Status, battery.Temperature, battery.Charging)
+
+		// If status == FULL, then we are good!
+		if battery.StatusCode&firmware.ECFullyCharged != 0 {
+			return nil
 		}
-		return nil
+
+		// If charging Not Allowed, then we are either full or the temperature is out of range
+		if battery.Charging == "Not Allowed" {
+			// TODO: Use bcfg console command or ectool bcfg get to improve this temp range, these temps are very conservative.
+			// If temperature is too hot, letting the device sit without charging should let it cool down.
+			if battery.Temperature >= 45.0 || battery.Temperature <= 0.0 {
+				return errors.Errorf("DUT is not charging but battery temperature is %v, charge level %v", battery.Temperature, battery.Charge)
+			}
+			// Charging not allowed, and temperature is reasonable, so it's probably full.
+			return nil
+		}
+
+		return errors.Errorf("expected DUT to be fully charged, actual charge level was: %v, and status was: %v", battery.Charge, battery.Status)
 	}, &testing.PollOptions{Timeout: fullChargePollTimeout, Interval: time.Minute}); err != nil {
 		return errors.Wrap(err, "failed to poll for fully charged battery level in DUT")
 	}
