@@ -434,6 +434,7 @@ func (f *FilesApp) SelectFile(fileSelector interface{}) uiauto.Action {
 
 	return uiauto.Combine("select file",
 		f.WaitUntilExists(nodeMatcher),
+		f.ScrollToVisible(nodeMatcher),
 		f.LeftClickUntil(nodeMatcher, f.IsFileSelected(fileSelector)),
 	)
 }
