@@ -64,7 +64,9 @@ const (
 
 	// ExpectedMeetWindowWidth is the minimum pixel width to render
 	// 16 participant grids in Google Meet without hiding feeds.
-	ExpectedMeetWindowWidth float64 = 1184
+	// This value was determined by testing various zoom ratios across multiple devices to find
+	// the minimum effective width = (window width) / (zoom ratio) that passes on all devices.
+	ExpectedMeetWindowWidth float64 = 1250
 )
 
 // FakeCameraHALCfg defines parameters that are used to generate the fake
