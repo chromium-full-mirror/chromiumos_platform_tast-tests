@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type btNBSWarningTestCase struct {
@@ -31,6 +32,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "jrwu@google.com"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:bluetooth"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
