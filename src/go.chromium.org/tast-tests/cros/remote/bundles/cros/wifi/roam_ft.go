@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -300,8 +300,9 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
+		// GoBigSleepLint: Sleep to let the packet capture start.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
-			s.Error("interrupted while sleeping for capturer startup", err)
+			s.Error("interrupted while sleeping for capturer startup: ", err)
 		}
 
 		connResp, err := tf.ConnectWifi(ctx, ap0.Config().SSID, dutcfg.ConnSecurity(ap0SecConf))
@@ -377,12 +378,13 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
+		// GoBigSleepLint: Sleep to let the packet capture start.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
-			s.Error("interrupted while sleeping for capturer startup", err)
+			s.Error("interrupted while sleeping for capturer startup: ", err)
 		}
 
 		s.Logf("Sending BSS TM Request from AP %s to DUT %s", mac0, clientMAC)
-		req := hostapd.BSSTMReqParams{Neighbors: []string{mac1.String()}}
+		req := hostapd.BSSTMReqParams{Neighbors: []string{mac1.String()}, DisassocImminent: true}
 		if err := ap0.SendBSSTMRequest(ctx, clientMAC, req); err != nil {
 			s.Fatal("Failed to send BSS TM Request: ", err)
 		}
