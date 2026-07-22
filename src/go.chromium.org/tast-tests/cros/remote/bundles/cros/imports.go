@@ -66,7 +66,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/typec"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/ui"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/usb"
-	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/uwb"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/vm"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb"
@@ -82,5 +81,4 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/intel"            // import Intel fixtures.
 	_ "go.chromium.org/tast-tests/cros/remote/meta"             // import fixture for meta tests
 	_ "go.chromium.org/tast-tests/cros/remote/tape"
-	_ "go.chromium.org/tast-tests/cros/remote/uwb" // import fixture for local uwb tests
 )
