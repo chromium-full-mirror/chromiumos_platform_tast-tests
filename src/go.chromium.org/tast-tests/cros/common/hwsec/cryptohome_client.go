@@ -1103,21 +1103,6 @@ func (u *CryptohomeClient) AddPinAuthFactorWithHashInfo(ctx context.Context, aut
 	return err
 }
 
-// GetRecoverableKeyStores gets the recoverable key stores of the user.
-func (u *CryptohomeClient) GetRecoverableKeyStores(ctx context.Context, username string) (*uda.GetRecoverableKeyStoresReply, error) {
-	reply := &uda.GetRecoverableKeyStoresReply{}
-
-	binaryMsg, err := u.binary.getRecoverableKeyStores(ctx, username)
-	if err != nil {
-		return reply, errors.Wrap(err, "GetRecoverableKeyStores failed")
-	}
-	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
-		return reply, errors.Wrap(err, "failed to unmarshal GetRecoverableKeyStores reply")
-	}
-
-	return reply, nil
-}
-
 // IsPinWeaverPkEstablishmentBlocked checks whether PinWeaver PK establishment is blocked now.
 func (u *CryptohomeClient) IsPinWeaverPkEstablishmentBlocked(ctx context.Context) (bool, error) {
 	binaryMsg, err := u.binary.isPinWeaverPkEstablishmentBlocked(ctx)

@@ -428,12 +428,6 @@ func (c *cryptohomeBinary) createVaultKeyset(ctx context.Context, authSessionID,
 	return err
 }
 
-// getRecoverableKeyStores returns the responses by calling "cryptohome --action=get_recoverable_key_stores".
-func (c *cryptohomeBinary) getRecoverableKeyStores(ctx context.Context, username string) ([]byte, error) {
-	args := []string{"--output-format=binary-protobuf", "--action=get_recoverable_key_stores", "--user=" + username}
-	return c.call(ctx, args...)
-}
-
 // lockRecoveryFactorUntilReboot returns the responses by calling "cryptohome --action=lock_factor_until_reboot".
 func (c *cryptohomeBinary) lockRecoveryFactorUntilReboot(ctx context.Context) ([]byte, error) {
 	args := []string{"--output-format=binary-protobuf", "--action=lock_factor_until_reboot", "--recovery_mediator_pub_key"}

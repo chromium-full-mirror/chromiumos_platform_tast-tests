@@ -13,10 +13,9 @@ import (
 )
 
 const (
-	modernPinFeatureName                   = "CrOSLateBootEnableModernPin"
-	migrateToModenPinFeatureName           = "CrOSLateBootMigrateToModernPin"
-	generateRecoverableKeyStoreFeatureName = "CrOSLateBootGenerateRecoverableKeyStore"
-	pinweaverPasswordFeatureName           = "CrOSLateBootPinweaverForPassword"
+	modernPinFeatureName         = "CrOSLateBootEnableModernPin"
+	migrateToModenPinFeatureName = "CrOSLateBootMigrateToModernPin"
+	pinweaverPasswordFeatureName = "CrOSLateBootPinweaverForPassword"
 )
 
 // WithModernPin executes a block of code after enabling the ModernPin feature.
@@ -45,28 +44,6 @@ func WithModernPinDisabled(ctx context.Context, f func() error) error {
 // WithMigrationPin executes a code block after enabling the migration of pins.
 func WithMigrationPin(ctx context.Context, f func() error) error {
 	featureOption := chrome.EnableFeatures(migrateToModenPinFeatureName, modernPinFeatureName)
-	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome at the login screen")
-	}
-	defer cr.Close(ctx)
-	return f()
-}
-
-// WithGenerateRecoverableKeyStore executes a block of code after enabling the GenerateRecoverableKeyStore feature.
-func WithGenerateRecoverableKeyStore(ctx context.Context, f func() error) error {
-	featureOption := chrome.EnableFeatures(generateRecoverableKeyStoreFeatureName)
-	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome at the login screen")
-	}
-	defer cr.Close(ctx)
-	return f()
-}
-
-// WithGenerateRecoverableKeyStoreDisabled executes a block of code after disabling the GenerateRecoverableKeyStore feature.
-func WithGenerateRecoverableKeyStoreDisabled(ctx context.Context, f func() error) error {
-	featureOption := chrome.DisableFeatures(generateRecoverableKeyStoreFeatureName)
 	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome at the login screen")
