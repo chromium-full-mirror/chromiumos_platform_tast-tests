@@ -62,14 +62,14 @@ func init() {
 			{
 				Name:              "docked",
 				Fixture:           fixture.AnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsStableModelsForHandwriting...),
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				Val:               hwTestIMEs,
 			},
 			{
 				Name:              "docked_informational",
 				Fixture:           fixture.AnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModelsForHandwriting),
 				ExtraAttr:         []string{"informational"},
 				Val:               append(hwTestIMEs, hwTestIMEsUpstream...),
 				ExtraSearchFlags:  util.IMESearchFlags(hwTestIMEsUpstream),
@@ -77,14 +77,14 @@ func init() {
 			{
 				Name:              "floating",
 				Fixture:           fixture.AnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsStableModelsForHandwriting...),
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				Val:               hwTestIMEs,
 			},
 			{
 				Name:              "floating_informational",
 				Fixture:           fixture.AnyVK,
-				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModelsForHandwriting),
 				ExtraAttr:         []string{"informational"},
 				Val:               append(hwTestIMEs, hwTestIMEsUpstream...),
 				ExtraSearchFlags:  util.IMESearchFlags(hwTestIMEsUpstream),

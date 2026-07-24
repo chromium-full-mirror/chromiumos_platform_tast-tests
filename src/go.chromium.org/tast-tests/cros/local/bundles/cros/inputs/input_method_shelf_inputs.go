@@ -54,12 +54,12 @@ func init() {
 			{
 				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
 				ExtraAttr:         []string{"group:input-tools-upstream"},
-				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsStableModelsForHandwriting...),
 			},
 			{
 				Name:              "informational",
 				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
-				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
+				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModelsForHandwriting),
 				ExtraAttr:         []string{"informational"},
 			},
 		},

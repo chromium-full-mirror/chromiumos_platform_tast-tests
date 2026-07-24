@@ -98,3 +98,20 @@ var PhysicalKeyboardPerfModels = hwdep.Model(
 	"redrix", // High-end laptop
 	"krane",  // Low-end tablet
 )
+
+// ModelsWhereHandwritingIsFlaky is a list of models that experience consistent flakiness
+// or failures during handwriting input testing.
+// TODO(b/490986342): Re-enable once the flakiness is resolved.
+var ModelsWhereHandwritingIsFlaky = []string{
+	"birch", "hana", "maple", "maple14",
+	"sycamore", "sycamore360", "telesu",
+}
+
+// InputsStableModelsForHandwriting contains conditions for stable models, explicitly skipping flaky ones.
+var InputsStableModelsForHandwriting = []hwdep.Condition{
+	InputsStableModels,
+	hwdep.SkipOnModel(ModelsWhereHandwritingIsFlaky...),
+}
+
+// InputsUnstableModelsForHandwriting includes both the standard unstable models AND the flaky handwriting models.
+var InputsUnstableModelsForHandwriting = hwdep.Model(append(UnstableModels, ModelsWhereHandwritingIsFlaky...)...)
