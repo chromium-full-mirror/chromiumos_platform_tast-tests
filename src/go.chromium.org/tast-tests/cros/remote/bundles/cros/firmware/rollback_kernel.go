@@ -228,6 +228,13 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			s.Fatalf("Expected kernel version to be %d but was %d", prevKernAVer-1, currVersion)
 		}
 
+		// We need to do an additional reboot to restore the value of tpm_kernver. This is needed
+		// because some firmwares set it incorrectly (e.g. nissa: b/532606159)
+		s.Log("Performing mode aware reboot")
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+			s.Fatal("Failed to reboot: ", err)
+		}
+
 		// Since no rollback is expected to occur in dev mode, the test ends here.
 		return
 	}
