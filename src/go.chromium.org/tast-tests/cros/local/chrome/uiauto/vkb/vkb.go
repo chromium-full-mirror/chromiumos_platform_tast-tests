@@ -560,7 +560,7 @@ func (vkbCtx *VirtualKeyboardContext) selectFromSuggestionFunc(candidateText str
 
 	return uiauto.Combine("wait for suggestion and select",
 		ac.WaitUntilExists(suggestionFinder),
-		ac.LeftClick(suggestionFinder))
+		vkbCtx.TapNode(suggestionFinder))
 }
 
 // leftClickIfExist returns an action that checks the existence of a node within a short timeout,
