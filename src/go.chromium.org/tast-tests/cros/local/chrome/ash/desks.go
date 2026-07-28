@@ -289,12 +289,16 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 		return errors.New("unknown savedDeskType, must be `kTemplate' or 'kSaveAndRecall'")
 	}
 
+	focusedNameView := nodewith.ClassName("SavedDeskNameView").Ancestor(savedDeskGridView).Focused()
+
 	// Save a desk.
 	if err := uiauto.Combine(
 		"save a desk",
 		ac.DoDefault(saveDeskButton),
 		// Wait for the saved desk grid to show up.
 		ac.WaitUntilExists(savedDeskGridView),
+		// Wait for the name view of the newly added item to be focused.
+		ac.WaitUntilExists(focusedNameView),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to save a desk")
 	}
