@@ -189,7 +189,8 @@ func (h *CmdHelper) stopDaemons(ctx context.Context, includeTpm bool) error {
 		return nil
 	}
 	if err := h.daemonController.TryStop(ctx, TPM2SimulatorDaemon); err != nil {
-		return errors.Wrap(err, "failed to try to stop tpm2-simulator")
+		// Ignore the error as tpm2-simulator may panic during stop due to a race condition (b/505776070).
+		testing.ContextLog(ctx, "Failed to try to stop tpm2-simulator, maybe because of the race: ", err)
 	}
 	return nil
 }
