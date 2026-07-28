@@ -90,18 +90,24 @@ func HWIS(ctx context.Context, s *testing.State) {
 				s.Log("Warning: flex_hwis job did not finish, proceeding anyway: ", err)
 			}
 
-			s.Log("Run and test the HWIS service")
+			s.Log("Remove possible time file before running the command")
 			// The flex_hwis_tool service will check the /var/lib/flex_hwis_tool/time
 			// file before running and make sure that it has not been run within the
 			// specified time. To ensure that the service can run, remove possible
 			// time file before running the command.
-			os.Remove(hwisTimeFileName)
+			if errRemove := os.Remove(hwisTimeFileName); errRemove != nil && !os.IsNotExist(errRemove) {
+				s.Log("Failed to remove time file: ", errRemove)
+			}
+
+			s.Log("Run and test the HWIS service")
 			out, err := testexec.CommandContext(ctx, "flex_hwis_tool", "--debug", "--send").CombinedOutput()
 			// The flex_hwis_tool service will create a file to record the time after
 			// successfully running. The service will not run again within the specified
 			// time period. To ensure the test can run at any time, the time file must be
 			// removed after the test is complete.
-			os.Remove(hwisTimeFileName)
+			if errRemove := os.Remove(hwisTimeFileName); errRemove != nil && !os.IsNotExist(errRemove) {
+				s.Log("Failed to remove time file: ", errRemove)
+			}
 
 			outString := string(out)
 			if err != nil {
