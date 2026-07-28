@@ -8,14 +8,17 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	commonupstart "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -76,6 +79,15 @@ func HWIS(ctx context.Context, s *testing.State) {
 				if err := policyutil.ServeAndVerify(ctx, fdms, cr, test.policies); err != nil {
 					s.Fatal("Failed to update policies: ", err)
 				}
+			}
+
+			s.Log("Wait for background flex_hwis job to finish")
+			// Flex device periodically runs `flex_hwis` command in background by upstart.　This
+			// test might be ran at the same timing of the pediodical run.
+			// We use TolerateWrongGoal because the job might be running (StartGoal) when we check,
+			// and we want to wait until it finishes and transitions to StopGoal/WaitingState.
+			if err := upstart.WaitForJobStatus(ctx, "flex_hwis", commonupstart.StopGoal, commonupstart.WaitingState, upstart.TolerateWrongGoal, 30*time.Second); err != nil {
+				s.Log("Warning: flex_hwis job did not finish, proceeding anyway: ", err)
 			}
 
 			s.Log("Run and test the HWIS service")
