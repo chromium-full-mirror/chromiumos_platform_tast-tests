@@ -6,8 +6,10 @@ package arc
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -65,6 +67,13 @@ func UnhandledKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start app: ", err)
 	}
 
+	// Wait for the activity to have focus.
+	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
+		return window.ARCPackageName == pkg &&
+			window.IsVisible && window.HasFocus && window.IsActive
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for the app to be ready: ", err)
+	}
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
