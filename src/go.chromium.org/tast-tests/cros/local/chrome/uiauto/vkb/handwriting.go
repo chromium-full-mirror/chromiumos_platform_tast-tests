@@ -31,6 +31,13 @@ type HandwritingContext struct {
 
 // NewHandwritingContext creates a new context for handwriting.
 func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context) (*HandwritingContext, error) {
+	// Waiting for the handwriting input area to appear in the accessibility tree of the Virtual Keyboard.
+	// - role.Canvas corresponds to the Longform (modern Fluent Handwriting) canvas.
+	// - role.Application corresponds to the Legacy (non-Longform) handwriting canvas.
+	if err := vkbCtx.ui.WaitUntilAnyExists(NodeFinder.Role(role.Canvas), NodeFinder.Role(role.Application))(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for handwriting canvas")
+	}
+
 	hwCtx := &HandwritingContext{
 		VirtualKeyboardContext: *vkbCtx,
 		isLongForm:             false,
