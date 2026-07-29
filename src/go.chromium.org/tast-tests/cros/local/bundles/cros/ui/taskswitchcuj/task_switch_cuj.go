@@ -356,7 +356,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, isTablet bool, outD
 						return errors.Wrap(err, "failed to type text in Chromium issue")
 					}
 				} else if strings.Contains(activeWindow.Title, "Google Meet") {
-					meetTextField := nodewith.Name("Enter a code or link").Role(role.TextField)
+					meetTextField := nodewith.Name("Enter a code or link").Role(role.TextField).First()
 					if err := typeTextForKeypressMetric(ui, kw, meetTextField, "test1")(ctx); err != nil {
 						return errors.Wrap(err, "failed to type text in Google Meet")
 					}
