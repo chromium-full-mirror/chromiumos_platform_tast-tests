@@ -80,14 +80,14 @@ func LaunchAtInputsSettingsPage(ctx context.Context, tconn *chrome.TestConn, cr 
 
 // ClickAddInputMethodButton returns a function that clicks AddInputMethod button in inputs setting page.
 func (i *IMESettings) ClickAddInputMethodButton() uiauto.Action {
-	return i.LeftClick(addInputMethodButton)
+	return i.DoDefault(addInputMethodButton)
 }
 
 // SearchInputMethod returns a function that searches input method by typing keyboard into searchbox.
 // SearchInputMethod also waits for expected IME displayed on screen.
 func (i *IMESettings) SearchInputMethod(kb *input.KeyboardEventWriter, searchKeyword, inputMethodName string) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("SearchInputMethod(%s, %s)", searchKeyword, inputMethodName),
-		i.LeftClick(searchInputMethodField),
+		i.FocusAndWait(searchInputMethodField),
 		kb.TypeAction(searchKeyword),
 		i.WaitUntilExists(nodewith.Name(inputMethodName).Role(role.CheckBox).Onscreen()),
 	)
@@ -98,18 +98,18 @@ func (i *IMESettings) SelectInputMethod(inputMethodName string) uiauto.Action {
 	inputMethodOption := nodewith.Name(inputMethodName).Role(role.CheckBox)
 	return uiauto.Combine(fmt.Sprintf("SelectInputMethod(%s)", inputMethodName),
 		i.MakeVisible(inputMethodOption),
-		i.LeftClick(inputMethodOption),
+		i.DoDefault(inputMethodOption),
 	)
 }
 
 // ClickAddButtonToConfirm returns a function that clicks Add button to confirm adding one or more input methods.
 func (i *IMESettings) ClickAddButtonToConfirm() uiauto.Action {
-	return i.LeftClick(nodewith.Name("Add").Role(role.Button))
+	return i.DoDefault(nodewith.Name("Add").Role(role.Button))
 }
 
 // RemoveInputMethod returns a function that removes the input method by clicking cross button next to the input method on UI.
 func (i *IMESettings) RemoveInputMethod(inputMethodName string) uiauto.Action {
-	return i.LeftClick(nodewith.Name("Remove " + inputMethodName).Role(role.Button))
+	return i.DoDefault(nodewith.Name("Remove " + inputMethodName).Role(role.Button))
 }
 
 // WaitUntilMatchesToggleValue continuously checks if the toggle with the name toggleName has the value that matches the expected value
