@@ -117,8 +117,8 @@ func DragWindowFromShelfPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.DragWindowFromShelf.PresentationTime",
 		"Ash.DragWindowFromShelf.PresentationTime.MaxLatency",
-		"Ash.Overview.Enter.PresentationTime",
-		"Ash.Overview.Exit.PresentationTime")),
+		"Ash.Overview.Enter.PresentationTime2.UserInitiatedTablet",
+		"Ash.Overview.Exit.PresentationTime2")),
 		perfutil.StoreLatency,
 		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
 	); err != nil {
