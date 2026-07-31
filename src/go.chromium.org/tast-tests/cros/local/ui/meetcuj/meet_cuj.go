@@ -1011,7 +1011,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 			// Toggle the Google Docs File menu button for press and
 			// release metrics.
-			if err := toggleFileMenuButton(ctx, tconn, kw, ui, pc, inTabletMode); err != nil {
+			if err := toggleFileMenuButton(ctx, collaborationConn, tconn, kw, ui, pc); err != nil {
 				return errors.Wrap(err, "failed to toggle file menu button")
 			}
 
@@ -1453,19 +1453,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 }
 
 // toggleFileMenuButton toggles the "File" menu button for press and release metrics.
-func toggleFileMenuButton(ctx context.Context, tconn *chrome.TestConn, kw *input.KeyboardEventWriter,
-	ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
-	fileMenu := nodewith.Name("File").Role(role.MenuItem).HasClass("menu-button").First()
-	menuContainer := nodewith.Role(role.MenuBar).HasClass("goog-container").First()
-	clickFileMenu := pc.Click(fileMenu)
-	waitForFileMenu := ui.WithTimeout(10 * time.Second).WaitUntilExists(menuContainer)
-	moveMouseToFileMenu := func(ctx context.Context) error {
-		if !inTabletMode {
-			if err := ui.MouseMoveTo(fileMenu, 500*time.Millisecond)(ctx); err != nil {
-				return errors.Wrap(err, "failed to move mouse to File menu button")
-			}
-		}
-		return nil
+func toggleFileMenuButton(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, kw *input.KeyboardEventWriter,
+	ui *uiauto.Context, pc pointer.Context) error {
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for the page to quiesce")
 	}
 	return uiauto.NamedCombine("toggle file menu button",
 		// Show the menus before clicking the File menu button.
@@ -1476,10 +1467,7 @@ func toggleFileMenuButton(ctx context.Context, tconn *chrome.TestConn, kw *input
 		uiauto.IfSuccessThen(ui.Exists(googledocs.SlidesWindow), googledocs.ShowTheSlideMenus(tconn)),
 		// If the Google Sheets window exists, show the sheet menus.
 		uiauto.IfSuccessThen(ui.Exists(googledocs.SheetsWindow), googledocs.ShowTheSheetMenus(tconn)),
-		moveMouseToFileMenu,
-		// If the File menu doesn't appear, maybe it's because the click
-		// only focused the page. Then we just need to click again.
-		ui.WithTimeout(time.Minute).RetryUntil(clickFileMenu, waitForFileMenu),
+		googledocs.ClickFileMenuButtonWithJS(conn, tconn, ui, pc),
 	)(ctx)
 }
 
@@ -1549,7 +1537,7 @@ func scrollDownPage(ctx context.Context, conn *chrome.Conn, kw *input.KeyboardEv
 func generateMetrics(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, kw *input.KeyboardEventWriter,
 	ui *uiauto.Context, pc pointer.Context, inTabletMode bool) error {
 	// Collect mouse events by toggling "File" button.
-	if err := toggleFileMenuButton(ctx, tconn, kw, ui, pc, inTabletMode); err != nil {
+	if err := toggleFileMenuButton(ctx, conn, tconn, kw, ui, pc); err != nil {
 		return errors.Wrap(err, "failed to toggle the File menu button")
 	}
 	// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.

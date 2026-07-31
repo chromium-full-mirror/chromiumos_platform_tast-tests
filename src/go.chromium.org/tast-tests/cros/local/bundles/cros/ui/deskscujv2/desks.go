@@ -183,14 +183,12 @@ func setUpDesks(ctx context.Context, cr *chrome.Chrome, kw *input.KeyboardEventW
 
 		return toggleLauncher(ctx, tconn)
 	}
-	desk4VisitAction := func(ctx context.Context) error {
-		const notes = "The quick brown fox jumps over the lazy dog in the afternoon on Saturday!"
-		if err := googledocs.EditDoc(tconn, kw, notes)(ctx); err != nil {
-			return errors.Wrap(err, "failed to type notes")
-		}
 
-		return toggleFileMenuButton(ctx, ui, pc)
-	}
+	const notes = "The quick brown fox jumps over the lazy dog in the afternoon on Saturday!"
+	desk4VisitAction := uiauto.Combine("edit doc and click file menu",
+		googledocs.EditDoc(tconn, kw, notes),
+		googledocs.ClickFileMenuButtonWithFinder(ui, pc),
+	)
 
 	var (
 		tabs             []cuj.TabConn
@@ -429,19 +427,5 @@ func toggleLauncher(ctx context.Context, tconn *chrome.TestConn) error {
 	return uiauto.NamedCombine("toggle launcher",
 		launcher.Open(tconn),
 		launcher.CloseBubbleLauncher(tconn),
-	)(ctx)
-}
-
-// toggleFileMenuButton toggles the "File" menu button on Google docs for press and release metrics.
-func toggleFileMenuButton(ctx context.Context, ui *uiauto.Context, pc pointer.Context) error {
-	fileMenu := nodewith.Name("File").Role(role.MenuItem).HasClass("menu-button").First()
-	clickFileMenu := pc.Click(fileMenu)
-	menuContainer := nodewith.Role(role.MenuBar).HasClass("goog-container").First()
-	waitForFileMenu := ui.WithTimeout(10 * time.Second).WaitUntilExists(menuContainer)
-	return uiauto.NamedCombine("toggle file menu button",
-		ui.MouseMoveTo(fileMenu, 500*time.Millisecond),
-		// If the File menu doesn't appear, maybe it's because the click
-		// only focused the page. Then we just need to click again.
-		ui.WithTimeout(time.Minute).RetryUntil(clickFileMenu, waitForFileMenu),
 	)(ctx)
 }

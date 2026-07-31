@@ -6,14 +6,18 @@ package googledocs
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -115,4 +119,75 @@ func reloadIfLoadingIssueDialogAppears(ui *uiauto.Context, webArea *nodewith.Fin
 		ui.EnsureGoneFor(loadingIssueDialog, 5*time.Second),
 	)
 	return uiauto.Retry(3, uiauto.IfSuccessThen(ui.Exists(loadingIssueDialog), reloadPage))
+}
+
+// getElementScreenCenter returns the center point of a DOM element in screen coordinates.
+func getElementScreenCenter(ctx context.Context, conn *chrome.Conn, elementExpr string) (coords.Point, error) {
+	var point struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+	}
+
+	evalJS := fmt.Sprintf(`
+		(() => {
+			const el = %s;
+			if (!el) return null;
+			const r = el.getBoundingClientRect();
+			return {
+				x: window.screenX + r.left + r.width/2,
+				y: window.screenY + (window.outerHeight-window.innerHeight) + r.top + r.height/2,
+			};
+		})()
+	`, elementExpr)
+
+	if err := conn.Eval(ctx, evalJS, &point); err != nil {
+		return coords.Point{}, errors.Wrapf(err, "failed to calculate screen center for %q", elementExpr)
+	}
+
+	if point.X == 0 && point.Y == 0 {
+		return coords.Point{}, errors.Errorf("failed to find element: %q", elementExpr)
+	}
+	return coords.Point{
+		X: int(point.X),
+		Y: int(point.Y),
+	}, nil
+}
+
+func clickFileMenuButton(clickFileMenu action.Action, ui *uiauto.Context) action.Action {
+	menuContainer := nodewith.Role(role.Menu).HasClass("shell-primary-menu").First()
+	waitForFileMenu := ui.WithTimeout(10 * time.Second).WaitUntilExists(menuContainer)
+	return uiauto.NamedAction("click file menu button",
+		// If the File menu doesn't appear, maybe it's because the click
+		// only focused the page. Then we just need to click again.
+		ui.WithTimeout(time.Minute).RetryUntil(clickFileMenu, waitForFileMenu),
+	)
+}
+
+// ClickFileMenuButtonWithJS clicks the "File" menu button using JS-calculated
+// screen coordinates for accurate press and release metrics, since finder
+// bounds are inaccurate.
+func ClickFileMenuButtonWithJS(conn *chrome.Conn, tconn *chrome.TestConn, ui *uiauto.Context, pc pointer.Context) action.Action {
+	const elementExpr = `document.querySelector("#docs-file-menu")`
+	clickFileMenu := func(ctx context.Context) error {
+		pt, err := getElementScreenCenter(ctx, conn, elementExpr)
+		if err != nil {
+			return err
+		}
+		return uiauto.Combine("click file menu button with js",
+			mouse.Move(tconn, pt, 500*time.Millisecond),
+			pc.ClickAt(pt),
+		)(ctx)
+	}
+	return clickFileMenuButton(clickFileMenu, ui)
+}
+
+// ClickFileMenuButtonWithFinder clicks the "File" menu button using finder bounds
+// for press and release metrics.
+func ClickFileMenuButtonWithFinder(ui *uiauto.Context, pc pointer.Context) action.Action {
+	fileMenu := nodewith.Name("File").Role(role.MenuItem).HasClass("menu-button").First()
+	clickFileMenu := uiauto.Combine("click file menu button with finder",
+		ui.MouseMoveTo(fileMenu, 500*time.Millisecond),
+		pc.Click(fileMenu))
+	return clickFileMenuButton(clickFileMenu, ui)
+
 }
