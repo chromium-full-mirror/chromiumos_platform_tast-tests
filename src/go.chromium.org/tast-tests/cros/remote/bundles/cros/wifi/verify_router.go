@@ -44,7 +44,7 @@ func init() {
 			"justin.lee@cienet.com",
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:            []string{"group:wificell", "wificell_func"},
+		Attr:            []string{"group:wificell", "wificell_func", "group:bluetooth_wifi_testbed_update"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Requirements:    []string{tdreq.WiFiGenSupportWiFi},
