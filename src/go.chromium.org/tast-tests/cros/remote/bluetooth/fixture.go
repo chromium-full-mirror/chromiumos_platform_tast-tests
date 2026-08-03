@@ -781,8 +781,9 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 	// Register the btpeer hosts.
 	btpeerProvider := GetBtpeerProvider()
 	sshOptions := &ssh.Options{
-		KeyDir:  s.DUT().KeyDir(),
-		KeyFile: s.DUT().KeyFile(),
+		KeyDir:       s.DUT().KeyDir(),
+		KeyFile:      s.DUT().KeyFile(),
+		ProxyCommand: s.DUT().ProxyCommand(),
 	}
 	if btpeersVar, isSet := s.Var(fixtureVarBTPeers); isSet && btpeersVar != "" {
 		btpeerHosts := strings.Split(btpeersVar, ",")
