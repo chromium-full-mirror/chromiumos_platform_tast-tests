@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -47,6 +48,16 @@ func init() {
 
 func NestedVM(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
+
+	ver, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		s.Fatal("Failed to get kernel version and arch: ", err)
+	}
+
+	if ver.Is(5, 10) || ver.Is(5, 15) {
+		s.Log("Running kernel 5.10 or 5.15, skipping test. Nested Virt disabled due to CVE-2026-53359")
+		return
+	}
 
 	if strings.Contains(s.TestName(), "baguette") {
 		s.Log("Installing GCC")
