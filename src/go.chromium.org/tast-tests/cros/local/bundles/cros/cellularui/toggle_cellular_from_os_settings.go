@@ -19,17 +19,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ToggleCellularFromOSSettings,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Checks that Cellular can be enabled and disabled from the OS Settings",
+		Func: ToggleCellularFromOSSettings,
+		Desc: "Checks that Cellular can be enabled and disabled from the OS Settings",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
-		Fixture:      "cellularE2ELocal",
+		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		SoftwareDeps:   []string{"chrome"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic"},
+		Fixture:        "cellularE2ELocal",
 	})
 }
 

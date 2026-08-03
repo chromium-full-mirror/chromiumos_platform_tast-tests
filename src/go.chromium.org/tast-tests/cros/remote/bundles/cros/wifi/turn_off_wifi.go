@@ -25,11 +25,12 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify WiFi networks should not to be listed after WiFi is turned off and should not be able to ping through the previously assigned IP",
 		Contacts: []string{
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-device-enablement@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
 		},
-		BugComponent: "b:1578688",                                         // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"}, // Add "group:release-health", "release-health_wifi" after stabilized.
+		BugComponent: "b:1131912", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_e2e", "group:release-health", "release-health_wifi"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
