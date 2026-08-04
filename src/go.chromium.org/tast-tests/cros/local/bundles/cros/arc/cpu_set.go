@@ -46,7 +46,8 @@ func init() {
 			"chrome",
 			"no_qemu",
 		},
-		Attr: []string{"group:mainline"},
+		HardwareDeps: arc.ArcBootHwDeps,
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{
 			{
 				Name:              "vm",

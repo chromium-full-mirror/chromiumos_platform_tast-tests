@@ -40,6 +40,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcBootHwDeps,
 		Params: []testing.Param{
 			{
 				Name: "vm",

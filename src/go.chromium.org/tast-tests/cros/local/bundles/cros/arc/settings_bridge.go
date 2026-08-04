@@ -29,6 +29,7 @@ func init() {
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcBootHwDeps,
 		Fixture:      "arcBootedWithoutUIAutomator",
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{

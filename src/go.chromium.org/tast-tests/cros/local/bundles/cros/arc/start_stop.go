@@ -37,6 +37,7 @@ func init() {
 		},
 		BugComponent: "b:883059",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: arc.ArcBootHwDeps,
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{

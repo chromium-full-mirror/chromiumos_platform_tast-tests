@@ -21,6 +21,12 @@ import (
 // ResetTimeout is the timeout duration to trying reset of the current precondition.
 const ResetTimeout = 30 * time.Second
 
+// ArcBootHwDepConds is a list of the minimum hardware conditions to run ARC tests without additional harnesses (eg. UIAutomator, CTS, GTS, ...).
+var ArcBootHwDepConds = []hwdep.Condition{hwdep.MinStorage(16)}
+
+// ArcBootHwDeps is a minimum hardware dependency for ARC tests.
+var ArcBootHwDeps = hwdep.D(ArcBootHwDepConds...)
+
 // ArcAppHwDepConds is a list of the hardware conditions of the boards on which the ARC Apps tests run.
 // ARC testing uses a large storage for apps and harnesses (eg. UIAutomator, CTS, GTS, ...). Not all DUTs in the lab do not have enough space.
 var ArcAppHwDepConds = []hwdep.Condition{hwdep.MinStorage(24)}
