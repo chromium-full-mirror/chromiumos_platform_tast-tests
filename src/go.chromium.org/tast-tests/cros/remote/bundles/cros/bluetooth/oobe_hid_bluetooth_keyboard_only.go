@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"time"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/errors"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
@@ -36,7 +37,8 @@ func init() {
 		},
 		VarDeps:      []string{"servo"},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:bluetooth"},
 		TestBedDeps: append([]string{tbdep.Wificell, tbdep.BluetoothStateNormal,
 			tbdep.WorkingBluetoothPeers(1)}, tbdep.ServoPresentAndWorking...),
 		SoftwareDeps: []string{"chrome"},
@@ -49,29 +51,33 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel_chromebase_and_chromebox"}`,
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled_keyboard",
-				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeKeyboard,
+				Name:    "floss_disabled_keyboard",
+				Fixture: "chromeOobeWith1BTPeerFlossDisabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeKeyboard,
 			},
 
 			{
-				Name:      "floss_enabled_keyboard",
-				Fixture:   "chromeOobeWith1BTPeerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss", "group:release-health", "release-health_bt"},
-				Val:       cbt.DeviceTypeKeyboard,
+				Name:    "floss_enabled_keyboard",
+				Fixture: "chromeOobeWith1BTPeerFlossEnabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_floss", "group:release-health", "release-health_bt"},
+				Val: cbt.DeviceTypeKeyboard,
 			},
 			{
-				Name:      "floss_enabled_le_keyboard",
-				Fixture:   "chromeOobeWith1BTPeerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss", "group:release-health", "release-health_bt"},
-				Val:       cbt.DeviceTypeLEKeyboard,
+				Name:    "floss_enabled_le_keyboard",
+				Fixture: "chromeOobeWith1BTPeerFlossEnabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_floss", "group:release-health", "release-health_bt"},
+				Val: cbt.DeviceTypeLEKeyboard,
 			},
 			{
-				Name:      "floss_disabled_le_keyboard",
-				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeLEKeyboard,
+				Name:    "floss_disabled_le_keyboard",
+				Fixture: "chromeOobeWith1BTPeerFlossDisabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeLEKeyboard,
 			},
 		},
 		Timeout: time.Minute * 15,

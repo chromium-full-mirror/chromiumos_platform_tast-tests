@@ -33,7 +33,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth", "bluetooth_floss", "group:release-health", "release-health_bt"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:bluetooth", "bluetooth_floss", "group:release-health", "release-health_bt"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWith1BTPeerFlossEnabled",
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},

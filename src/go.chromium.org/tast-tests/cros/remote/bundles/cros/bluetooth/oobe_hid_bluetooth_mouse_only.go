@@ -8,9 +8,10 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/errors"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
@@ -33,7 +34,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:bluetooth"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:bluetooth"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
@@ -45,28 +47,32 @@ func init() {
 		VariantCategory: `{"name": "BT_Chipset_Kernel_chromebase_and_chromebox"}`,
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled_mouse",
-				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeMouse,
+				Name:    "floss_disabled_mouse",
+				Fixture: "chromeOobeWith1BTPeerFlossDisabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeMouse,
 			},
 			{
-				Name:      "floss_enabled_mouse",
-				Fixture:   "chromeOobeWith1BTPeerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss_flaky"},
-				Val:       cbt.DeviceTypeMouse,
+				Name:    "floss_enabled_mouse",
+				Fixture: "chromeOobeWith1BTPeerFlossEnabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: cbt.DeviceTypeMouse,
 			},
 			{
-				Name:      "floss_disabled_le_mouse",
-				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
-				ExtraAttr: []string{"bluetooth_flaky"},
-				Val:       cbt.DeviceTypeLEMouse,
+				Name:    "floss_disabled_le_mouse",
+				Fixture: "chromeOobeWith1BTPeerFlossDisabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeLEMouse,
 			},
 			{
-				Name:      "floss_enabled_le_mouse",
-				Fixture:   "chromeOobeWith1BTPeerFlossEnabled",
-				ExtraAttr: []string{"bluetooth_floss_flaky"},
-				Val:       cbt.DeviceTypeLEMouse,
+				Name:    "floss_enabled_le_mouse",
+				Fixture: "chromeOobeWith1BTPeerFlossEnabled",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"bluetooth_floss_flaky"},
+				Val: cbt.DeviceTypeLEMouse,
 			},
 		},
 		Timeout: time.Minute * 15,

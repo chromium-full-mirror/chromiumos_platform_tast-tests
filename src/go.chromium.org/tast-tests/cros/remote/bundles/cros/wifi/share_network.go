@@ -190,8 +190,9 @@ func init() {
 		},
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell", "wificell_e2e"},
-		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:wificell", "wificell_e2e"},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
@@ -271,8 +272,9 @@ func init() {
 				// There are a total of 6 test scenarios.
 				Timeout: 3*time.Minute + 6*testScenarioTimeout,
 			}, {
-				Name:      "set_shared_by_device_owner",
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				Name: "set_shared_by_device_owner",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"wificell_e2e_unstable"},
 				Val: []*shareNetworkTestScenario{
 					// Login as device owner, join 4 different networks and set as share network.
 					{
@@ -315,8 +317,9 @@ func init() {
 				// There are a total of 3 test scenarios.
 				Timeout: 3*time.Minute + 3*testScenarioTimeout,
 			}, {
-				Name:      "set_shared_by_normal_user",
-				ExtraAttr: []string{"wificell_e2e_unstable"},
+				Name: "set_shared_by_normal_user",
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr: []string{"wificell_e2e_unstable"},
 				Val: []*shareNetworkTestScenario{
 					// Login another user, join 4 different networks and set as share network.
 					{

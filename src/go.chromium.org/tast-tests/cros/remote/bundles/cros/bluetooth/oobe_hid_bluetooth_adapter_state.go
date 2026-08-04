@@ -31,7 +31,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:mainline", "informational"},
 		TestBedDeps:  []string{tbdep.BluetoothStateNormal},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{

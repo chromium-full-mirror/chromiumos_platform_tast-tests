@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
 	"go.chromium.org/tast-tests/cros/services/cros/debugd"
 	policypb "go.chromium.org/tast-tests/cros/services/cros/policy"
+
 	//lint:ignore ST1019 multiple imports with different identifiers help code readability
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	uipb "go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -49,9 +50,10 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesEnroll),
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		Fixture:     wificell.FixtureID(wificell.TFFeaturesEnroll),
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.policy.PolicyService",

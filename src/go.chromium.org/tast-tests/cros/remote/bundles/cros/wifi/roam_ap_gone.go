@@ -88,9 +88,10 @@ func init() {
 			"edgar.chang@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		LifeCycleStage:  testing.LifeCycleInDevelopment,
-		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
+		BugComponent:   "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
@@ -102,29 +103,33 @@ func init() {
 				Name:              "open",
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr:         []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name:              "wpa",
 				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr:         []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name:              "wep",
 				Val:               roamTestcaseWithTwoWEPAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP(), hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
-				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr:         []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel_WEP"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name:              "8021xwpa",
 				Val:               roamTestcaseWithTwo8021xWPAAP.setRoamTime(5 * time.Second),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				ExtraAttr:         []string{"wificell_unstable"},
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr:         []string{"wificell_unstable"},
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
 				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
@@ -132,8 +137,9 @@ func init() {
 				Name:              "flushbss",
 				Val:               roamTestcaseWithTwoOpenAP.setRoamTime(10 * time.Second).setEnableBSSFlush(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
-				ExtraAttr:         []string{"wificell_unstable"},
-				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
+				// TODO(b/542029943): Re-enable once the test is stable.
+				// ExtraAttr:         []string{"wificell_unstable"},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two APs in full view of it.
 				Name:              "marvell",
@@ -172,7 +178,7 @@ func init() {
 				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(5 * time.Second).setPerformSuspend(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				// TODO(b/362115332): Remove this attribute after the test is stable.
-				ExtraAttr:       []string{"wificell_unstable"},
+				// ExtraAttr:       []string{"wificell_unstable"},
 				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it after suspend/resume.
@@ -180,7 +186,7 @@ func init() {
 				Val:               roamTestcaseWithTwoWPAAP.setRoamTime(12 * time.Second).setPerformSuspend(true),
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
 				// TODO(b/362115332): Remove this attribute after the test is stable.
-				ExtraAttr:       []string{"wificell_unstable"},
+				// ExtraAttr:       []string{"wificell_unstable"},
 				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},

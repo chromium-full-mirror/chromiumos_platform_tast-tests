@@ -29,7 +29,8 @@ func init() {
 			"edgar.chang@cienet.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		TestBedDeps:  []string{tbdep.WifiStateNormal},
 		Fixture:      "chromeLoggedIn",
