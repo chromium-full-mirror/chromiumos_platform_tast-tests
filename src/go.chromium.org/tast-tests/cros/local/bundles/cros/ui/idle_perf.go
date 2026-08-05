@@ -51,8 +51,7 @@ func init() {
 		Desc: "Measures the CPU usage while the desktop is idle",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
-			"yichenz@chromium.org",
+			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

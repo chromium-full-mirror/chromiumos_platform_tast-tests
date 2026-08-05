@@ -37,7 +37,7 @@ func init() {
 		Desc: "Measures the total performance of critical user journey for Google Slides",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"yichenz@chromium.org",
+			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

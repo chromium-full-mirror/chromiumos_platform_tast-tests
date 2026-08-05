@@ -20,7 +20,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         GpuCUJ,
 		Desc:         "GPU performance CUJ tests",
-		Contacts:     []string{"cros-sw-perf@google.com", "yichenz@chromium.org"},
+		Contacts:     []string{
+			"cros-sw-perf@google.com",
+			"vincentchiang@chromium.org",
+		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},

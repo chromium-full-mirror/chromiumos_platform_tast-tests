@@ -25,7 +25,7 @@ func init() {
 		Desc: "Measures the performance of critical user journey for Google Meet",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"yichenz@chromium.org",
+			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		HardwareDeps: hwdep.D(

@@ -24,8 +24,7 @@ func init() {
 		Desc: "Run tab-switching CUJ test in chromewpr recording mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
-			"yichenz@chromium.org",
+			"vincentchiang@chromium.org",
 		},
 		// ChromeOS > Software > Performance > TPS
 		BugComponent: "b:1045832",

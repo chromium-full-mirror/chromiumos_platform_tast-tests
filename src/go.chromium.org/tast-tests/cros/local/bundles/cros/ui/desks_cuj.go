@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksCUJ,
 		Desc:         "Measures the performance of critical user journey for virtual desks",
-		Contacts:     []string{"cros-sw-perf@google.com", "yichenz@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "vincentchiang@chromium.org"},
 		BugComponent: "b:1045832",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),

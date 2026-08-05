@@ -15,7 +15,7 @@ func init() {
 	addHook(&Hook{
 		Name:         "cujCleanup",
 		Desc:         "Cleanup tmp cache files for CUJ tests",
-		Contacts:     []string{"yichenz@chromium.org"},
+		Contacts:     []string{"vincentchiang@chromium.org"},
 		BugComponent: "b:974567", // ChromeOS > Software > Performance > TPS
 		Impl:         &cujCleanup{},
 	})
