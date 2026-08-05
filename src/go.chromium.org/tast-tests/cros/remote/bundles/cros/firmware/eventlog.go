@@ -29,6 +29,7 @@ type eventLogParams struct {
 	bootToMode       fwCommon.BootMode
 	suspendResume    bool
 	hardwareWatchdog bool
+	ecPanic          bool
 	// All of the regexes in one of the sets must be present. Ex.
 	// [][]string{[]string{`Case 1A`, `Case 1B`}, []string{`Case 2A`, `Case 2[BC]`}}
 	// Any of these events would pass:
@@ -175,6 +176,19 @@ func init() {
 					},
 				},
 			},
+			// Test eventlog with EC panic (divide by zero).
+			{
+				Name:              "ec_panic",
+				ExtraAttr:         []string{"firmware_enabled", "firmware_meets_kpi"},
+				Fixture:           fixture.NormalMode,
+				ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECBuildConfigOptions("PANIC_HOST_EVENT", "PLATFORM_EC_PANIC_HOST_EVENT")),
+				Val: eventLogParams{
+					ecPanic: true,
+					requiredEventSets: [][]string{
+						{`Panic Reset`},
+					},
+				},
+			},
 		},
 	})
 }
@@ -298,6 +312,41 @@ func Eventlog(ctx context.Context, s *testing.State) {
 
 		s.Logf("Reconnecting to DUT (%s)", h.Config.DelayRebootToPing)
 		shortCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancel()
+		if err := h.WaitConnect(shortCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
+		s.Log("Reconnected to DUT")
+	} else if param.ecPanic {
+		oldCheckECCrash := h.CheckECCrash
+		defer func() { h.CheckECCrash = oldCheckECCrash }()
+		h.CheckECCrash = false
+
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+			s.Error("Failed to remove watchdog for ccd: ", err)
+		}
+		s.Log("Triggering EC divide-by-zero crash via UART console")
+		if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
+			s.Log("RunECCommand returned error (expected due to EC reset): ", err)
+		}
+		s.Log("Powering on AP via Servo after EC panic")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
+			s.Fatal("Failed to power on AP via Servo: ", err)
+		}
+		s.Log("Waiting for DUT to become unreachable")
+		h.CloseRPCConnection(ctx)
+
+		if err := h.DUT.WaitUnreachable(ctx); err != nil {
+			s.Fatal("Failed to wait for DUT to become unreachable: ", err)
+		}
+		// GoBigSleepLint: Wait for AP to finish coreboot and Linux boot sequence after EC panic before attempting SSH reconnect.
+		if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
+
+		reconnectTimeout := 2 * time.Minute
+		s.Logf("Reconnecting to DUT (%s)", reconnectTimeout)
+		shortCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
 		defer cancel()
 		if err := h.WaitConnect(shortCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
