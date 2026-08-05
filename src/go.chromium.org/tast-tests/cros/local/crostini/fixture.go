@@ -373,15 +373,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			}
 			s.Fatal("Failed to install Crostini: ", err)
 		}
-
-		// Accept to close the terminal window that is automatically launched after the installation completes.
-		if _, err := terminalapp.Find(ctx, f.tconn); err != nil {
-			s.Log("Failed to find auto-launched terminal: ", err)
-		} else if err := apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
-			s.Log("Failed to close auto-launched terminal: ", err)
-		} else if err := ash.WaitForAppClosed(ctx, f.tconn, apps.Terminal.ID); err != nil {
-			s.Log("Failed to wait for auto-launched terminal to close: ", err)
-		}
 	}
 	if f.values, err = perfRecorder.UpdateValues(ctx, f.tconn); err != nil {
 		s.Log("Can't update perf values: ", err)
@@ -679,15 +670,6 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 				termina.TrySaveContainerLogs(ctx, s.OutDir())
 			}
 			s.Fatal("Failed to install Crostini: ", err)
-		}
-
-		// Accept to close the terminal window that is automatically launched after the installation completes.
-		if _, err := terminalapp.Find(ctx, f.tconn); err != nil {
-			s.Log("Failed to find auto-launched terminal: ", err)
-		} else if err := apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
-			s.Log("Failed to close auto-launched terminal: ", err)
-		} else if err := ash.WaitForAppClosed(ctx, f.tconn, apps.Terminal.ID); err != nil {
-			s.Log("Failed to wait for auto-launched terminal to close: ", err)
 		}
 	}
 
