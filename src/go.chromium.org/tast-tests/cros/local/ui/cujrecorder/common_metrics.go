@@ -134,8 +134,6 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 
 		// Smoothness.
 		NewSmoothnessMetricConfig("Chrome.Tabs.AnimationSmoothness.TabLoading"),
-		NewSmoothnessMetricConfig("Chrome.Tabs.AnimationSmoothness.HoverCard.FadeOut"),
-		NewSmoothnessMetricConfig("Chrome.Tabs.AnimationSmoothness.HoverCard.FadeIn"),
 
 		// Browser Render Latency.
 		NewCustomMetricConfig("PageLoad.PaintTiming.NavigationToLargestContentfulPaint2", "ms", perf.SmallerIsBetter),
