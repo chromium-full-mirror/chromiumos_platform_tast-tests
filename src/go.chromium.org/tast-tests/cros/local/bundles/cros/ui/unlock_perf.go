@@ -29,7 +29,6 @@ func init() {
 		Desc: "Measures animation smoothness of screen unlock",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"oshima@chromium.org",
 		},
 		// ChromeOS > Software > Performance > TPS

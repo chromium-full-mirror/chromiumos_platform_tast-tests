@@ -22,7 +22,6 @@ func init() {
 		Desc: "Checks that session_manager respawns after exit",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"hidehiko@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

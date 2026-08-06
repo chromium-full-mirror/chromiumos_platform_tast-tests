@@ -33,7 +33,6 @@ func init() {
 		Desc: "Measures animation smoothness of resizing a window",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"oshima@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

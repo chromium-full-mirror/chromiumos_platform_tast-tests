@@ -34,7 +34,6 @@ func init() {
 			"cros-sw-perf@google.com",
 			"chromeos-wm@google.com",
 			"sammiequon@chromium.org",
-			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

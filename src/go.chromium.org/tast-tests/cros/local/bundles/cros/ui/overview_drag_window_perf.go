@@ -48,7 +48,6 @@ func init() {
 		Desc: "Measures the presentation time of window dragging in overview in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"chromeos-wm@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

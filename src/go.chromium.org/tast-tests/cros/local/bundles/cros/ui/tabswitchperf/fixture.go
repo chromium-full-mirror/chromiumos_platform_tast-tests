@@ -18,7 +18,6 @@ func init() {
 		Name: "tabSwitchPerfWPR",
 		Desc: "Base fixture for TabSwitchPerf with WPR",
 		Contacts: []string{
-			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -33,7 +32,6 @@ func init() {
 		Name: "tabSwitchPerfWPRAsh",
 		Desc: "Composed fixture for TabSwitchPerf with WPR",
 		Contacts: []string{
-			"xiyuan@chromium.org",
 			"cros-sw-perf@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

@@ -43,7 +43,6 @@ func init() {
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"oshima@chromium.org",
-			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},

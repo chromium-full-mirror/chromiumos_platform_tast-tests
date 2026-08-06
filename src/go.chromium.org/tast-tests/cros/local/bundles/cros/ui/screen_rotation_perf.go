@@ -30,7 +30,6 @@ func init() {
 		Desc: "Measures animation smoothness of screen rotation in tablet mode",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 			"oshima@chromium.org",
 		},
 		// ChromeOS > Software > Performance > TPS

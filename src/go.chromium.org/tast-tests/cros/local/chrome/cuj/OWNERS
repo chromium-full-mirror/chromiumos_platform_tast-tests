@@ -6,7 +6,6 @@ vincentchiang@chromium.org
 
 # Add only if none of the members above are available
 achuith@chromium.org
-xiyuan@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast

@@ -36,7 +36,6 @@ func init() {
 		Desc: "Measures the smoothess of screen unlock and open an gmail thread",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome", "arc"},
