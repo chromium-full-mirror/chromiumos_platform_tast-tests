@@ -779,8 +779,14 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 			}
 		}
 	}
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Can't restore firmware, DUT is off: ", err)
+	// Reset EC via GSC console post-flashing to ensure the EC CPU recovers from halted state.
+	testing.ContextLog(ctx, "Resetting EC via GSC console")
+	if err := h.Servo.RunGSCCommand(ctx, "ecreset"); err != nil {
+		s.Log("Failed to reset EC via GSC console: ", err)
+	}
+
+	if err := safeRebootDut(ctx, h, s.Features("")); err != nil {
+		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 }
 
