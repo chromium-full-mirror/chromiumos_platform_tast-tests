@@ -436,7 +436,7 @@ type ecStressParams struct {
 
 type cancelfunc func() error
 
-const defaultStressPeriod = 30 * time.Second
+const defaultStressPeriod = 60 * time.Second
 const timeoutPadding = 20 * time.Second
 const iioBasePath = "/sys/bus/iio/devices"
 const keyboardWakeupPath = "/sys/devices/platform/i8042/serio0/power/wakeup"
