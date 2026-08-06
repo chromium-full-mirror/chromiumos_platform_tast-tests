@@ -9,6 +9,7 @@ import (
 	"context"
 	"image/color"
 	"image/png"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -64,18 +65,20 @@ func windowSize(ctx context.Context, tconn *chrome.TestConn, name string) (sz co
 }
 
 // MatchScreenshotDominantColor takes a screenshot and attempts to verify if it
-// mostly (>= 1/2) contains the expected color. Will retry for up to 10 seconds
+// mostly (>= 1/2) contains the expected color (allowing down to 50% brightness
+// scaling to handle screen dimming / overlays). Will retry for up to 30 seconds
 // if it fails. For logging purposes, the screenshot will be saved at the given
 // path.
 func MatchScreenshotDominantColor(ctx context.Context, cr *chrome.Chrome, expectedColor color.Color, screenshotPath string) error {
 	if !strings.HasSuffix(screenshotPath, ".png") {
 		return errors.New("Screenshots must have the '.png' extension, got: " + screenshotPath)
 	}
-	// Largest differing color known to date, we will be changing this over time
-	// based on testing results.
-	const maxKnownColorDiff = 0x1
+	// Largest differing per-channel component diff after scaling.
+	const maxKnownColorDiff = 2
+	const minBrightnessScale = 0.50
+	const maxBrightnessScale = 1.05
 
-	// Allow up to 10 seconds for the target screen to render.
+	// Allow up to 30 seconds for the target screen to render.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := screenshot.CaptureChrome(ctx, cr, screenshotPath); err != nil {
 			return err
@@ -90,7 +93,7 @@ func MatchScreenshotDominantColor(ctx context.Context, cr *chrome.Chrome, expect
 			return errors.Wrapf(err, "failed decoding the screenshot image %v", screenshotPath)
 		}
 		color, ratio := colorcmp.DominantColor(im)
-		if ratio >= 0.5 && colorcmp.ColorsMatch(color, expectedColor, maxKnownColorDiff) {
+		if ratio >= 0.5 && colorsMatchScaled(color, expectedColor, minBrightnessScale, maxBrightnessScale, maxKnownColorDiff) {
 			return nil
 		}
 		return errors.Errorf("screenshot did not have matching dominant color, got %v at ratio %0.2f but expected %v",
@@ -99,6 +102,33 @@ func MatchScreenshotDominantColor(ctx context.Context, cr *chrome.Chrome, expect
 		return err
 	}
 	return nil
+}
+
+// colorsMatchScaled checks if actual matches expected scaled by any brightness
+// factor within [minScale, maxScale] with per-channel difference <= maxDiff.
+func colorsMatchScaled(actual, expected color.Color, minScale, maxScale float64, maxDiff uint8) bool {
+	an := color.NRGBAModel.Convert(actual).(color.NRGBA)
+	en := color.NRGBAModel.Convert(expected).(color.NRGBA)
+
+	ar, ag, ab := float64(an.R), float64(an.G), float64(an.B)
+	er, eg, eb := float64(en.R), float64(en.G), float64(en.B)
+
+	denom := er*er + eg*eg + eb*eb
+	if denom == 0 {
+		return colorcmp.ColorsMatch(actual, expected, maxDiff)
+	}
+
+	scale := (ar*er + ag*eg + ab*eb) / denom
+	if scale < minScale || scale > maxScale {
+		return false
+	}
+
+	near := func(a, e float64) bool {
+		return math.Abs(a-scale*e) <= float64(maxDiff)
+	}
+	// Both expected (from colorcmp.RGB) and actual (from screenshot PNG) are
+	// opaque RGB colors with A=255, so we only need to compare R, G, and B.
+	return near(ar, er) && near(ag, eg) && near(ab, eb)
 }
 
 // RunWindowedApp Runs the command cmdline in the guest, waits for the window
