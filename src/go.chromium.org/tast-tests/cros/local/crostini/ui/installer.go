@@ -17,6 +17,7 @@ import (
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -194,6 +195,19 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 			return errors.Errorf("error in installer dialog: %s", message)
 		}
 	}
+	// Terminal always automatically launches after installation.
+	// Close it before proceeding to ensure a clean env.
+	if _, err := terminalapp.Find(ctx, p.tconn); err != nil {
+		return errors.Wrap(err, "failed to find Crostini in terminal app")
+	}
+
+	if err := apps.Close(ctx, p.tconn, apps.Terminal.ID); err != nil {
+		return errors.Wrap(err, "failed to close Terminal app")
+	}
+	if err := ash.WaitForAppClosed(ctx, p.tconn, apps.Terminal.ID); err != nil {
+		return errors.Wrap(err, "failed to wait for Terminal app to close")
+	}
+
 	return nil
 }
 
@@ -297,16 +311,6 @@ func InstallCrostini(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chr
 	}
 	if err := installer.Install(ctx, iOptions.DebianVersion); err != nil {
 		return 0, errors.Wrap(err, "failed to install Crostini from UI")
-	}
-
-	// Terminal always automatically launches after installation.
-	// Close it before proceeding to ensure a clean env.
-	if _, err := terminalapp.Find(ctx, tconn); err != nil {
-		return 0, errors.Wrap(err, "failed to find Crostini in terminal app")
-	}
-
-	if err := apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
-		return 0, errors.Wrap(err, "failed to close Terminal app")
 	}
 
 	// The VM should now be running, check that all the host daemons are also running to catch any errors in our init scripts etc.
