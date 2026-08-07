@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -35,6 +36,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",

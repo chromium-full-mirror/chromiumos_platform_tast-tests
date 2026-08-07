@@ -30,7 +30,7 @@ func init() {
 		Fixture:      fixture.Install3pDiag,
 		SoftwareDeps: []string{"chrome"},
 		// The OEMs align with the setting in Chrome: chrome/common/chromeos/extensions/chromeos_system_extension_info.cc.
-		HardwareDeps: hwdep.D(hwdep.OEM("ASUS", "Google", "HP")),
+		HardwareDeps: hwdep.D(hwdep.OEM("ASUS", "Google", "HP"), hwdep.MinStorage(16)),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name: "audio_driver",

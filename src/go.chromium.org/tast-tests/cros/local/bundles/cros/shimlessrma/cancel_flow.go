@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "b:1002147",
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		HardwareDeps: hwdep.D(hwdep.GSCUART(), hwdep.Battery()),
+		HardwareDeps: hwdep.D(hwdep.GSCUART(), hwdep.Battery(), hwdep.MinStorage(16)),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
