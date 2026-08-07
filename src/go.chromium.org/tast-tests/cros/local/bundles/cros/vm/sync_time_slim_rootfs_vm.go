@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -20,6 +21,7 @@ func init() {
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "uekawa@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
 		SoftwareDeps: []string{"chrome", "vm_host"},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch()),
 		Fixture:      "chromeLoggedIn",
