@@ -10,12 +10,14 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
 	"unsafe"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -200,8 +202,12 @@ func GetTopRowLayoutType(ctx context.Context, ew *KeyboardEventWriter) (TopRowLa
 				return Layout1, errors.Errorf("unexpected CROS_KEYBOARD_ROW_LAYOUT: got %s, want [1-4]", val)
 			}
 		}
-		// If keyboard cannot be identified, return LayoutExternal1 for external bus types.
-		if bus, ok := props["ID_BUS"]; ok && (bus == "usb" || bus == "bluetooth") {
+		// If keyboard cannot be identified, return LayoutExternal1 for external bus types,
+		// unless it's a Google detachable device.
+		bus := props["ID_BUS"]
+		vendorID := strings.ToLower(props["ID_VENDOR_ID"])
+		googleVendorID := fmt.Sprintf("%04x", usbdevice.VendorIDGoogle)
+		if (bus == "usb" || bus == "bluetooth") && vendorID != googleVendorID {
 			return LayoutExternal1, nil
 		}
 		// If keyboard cannot be identified, return Layout1 as defined here:
