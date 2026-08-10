@@ -98,7 +98,8 @@ func LanguagepacksHandwritingDlcDownload(ctx context.Context, s *testing.State) 
 				s.Fatal("Failed to trigger vk: ", err)
 			}
 
-			if _, err := vkbCtx.SwitchToHandwriting(ctx); err != nil {
+			expectLongform := vkb.IsLongformHandWritingEngineID(inputMethod.ID)
+			if _, err := vkbCtx.SwitchToHandwriting(ctx, expectLongform); err != nil {
 				s.Fatal("Failed to switch to handwriting mode: ", err)
 			}
 

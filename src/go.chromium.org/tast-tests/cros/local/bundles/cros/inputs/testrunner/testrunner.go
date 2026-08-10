@@ -36,7 +36,7 @@ const (
 // RunSubtestsPerInputMethodAndMessage runs subtest that uses testName and inputdata on
 // every combination of given input methods and messages.
 func RunSubtestsPerInputMethodAndMessage(ctx context.Context, uc *useractions.UserContext, s *testing.State,
-	inputMethods []ime.InputMethod, messages []data.Message, subtest func(testName string, inputData data.InputData) func(ctx context.Context, s *testing.State)) {
+	inputMethods []ime.InputMethod, messages []data.Message, subtest func(testName string, inputData data.InputData, im ime.InputMethod) func(ctx context.Context, s *testing.State)) {
 	for _, im := range inputMethods {
 		// Setup input method.
 		s.Logf("Set current input method to: %q", im)
@@ -52,7 +52,7 @@ func RunSubtestsPerInputMethodAndMessage(ctx context.Context, uc *useractions.Us
 			}
 			testName := string(im.Name) + "-" + string(inputData.ExpectedText)
 
-			s.Run(ctx, testName, subtest(testName, inputData))
+			s.Run(ctx, testName, subtest(testName, inputData, im))
 		}
 
 		// Remove the input method after testing if it is not the default one.

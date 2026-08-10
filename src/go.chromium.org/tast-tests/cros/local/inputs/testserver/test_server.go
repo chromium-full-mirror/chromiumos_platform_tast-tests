@@ -542,14 +542,14 @@ func (its *InputsTestServer) validateVoiceInField(uc *useractions.UserContext, i
 	)
 }
 
-func (its *InputsTestServer) validateHandwritingInField(uc *useractions.UserContext, inputField InputField, inputData data.InputData, dataPath func(string) string) uiauto.Action {
+func (its *InputsTestServer) validateHandwritingInField(uc *useractions.UserContext, inputField InputField, inputData data.InputData, dataPath func(string) string, expectLongform bool) uiauto.Action {
 	action := func(ctx context.Context) error {
 		vkbCtx := vkb.NewContext(its.cr, its.tconn)
 		if err := its.CleanFieldAndTriggerVK(inputField)(ctx); err != nil {
 			return err
 		}
 
-		hwCtx, err := vkbCtx.SwitchToHandwriting(ctx)
+		hwCtx, err := vkbCtx.SwitchToHandwriting(ctx, expectLongform)
 		if err != nil {
 			return err
 		}
@@ -601,6 +601,7 @@ func (its *InputsTestServer) ValidateInputFieldForMode(uc *useractions.UserConte
 			return errors.Errorf("%s is not supported for %s", inputModality, inputField)
 		}
 	}
+
 	// TODO(b/195083581): Enable ValidateInputFieldForMode for physical keyboard and emoji.
 	switch inputModality {
 	case util.InputWithVK:
@@ -608,7 +609,9 @@ func (its *InputsTestServer) ValidateInputFieldForMode(uc *useractions.UserConte
 	case util.InputWithVoice:
 		return its.validateVoiceInField(uc, inputField, inputData, dataPath)
 	case util.InputWithHandWriting:
-		return its.validateHandwritingInField(uc, inputField, inputData, dataPath)
+		return its.validateHandwritingInField(uc, inputField, inputData, dataPath, false)
+	case util.InputWithHandWritingLongForm:
+		return its.validateHandwritingInField(uc, inputField, inputData, dataPath, true)
 	case util.InputWithPK:
 		return its.validatePKTypingInField(uc, inputField, inputData)
 	}
@@ -620,7 +623,7 @@ func (its *InputsTestServer) ValidateInputFieldForMode(uc *useractions.UserConte
 
 func (inputField InputField) isSupported(inputModality util.InputModality) bool {
 	if inputField == PasswordInputField {
-		if inputModality == util.InputWithHandWriting || inputModality == util.InputWithVoice {
+		if inputModality == util.InputWithHandWriting || inputModality == util.InputWithHandWritingLongForm || inputModality == util.InputWithVoice {
 			return false
 		}
 	}

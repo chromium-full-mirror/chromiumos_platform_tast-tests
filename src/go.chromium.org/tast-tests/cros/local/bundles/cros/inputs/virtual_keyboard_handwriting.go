@@ -139,7 +139,7 @@ func VirtualKeyboardHandwriting(ctx context.Context, s *testing.State) {
 	}
 
 	// Creates subtest that runs the test logic using inputData.
-	subtest := func(testName string, inputData data.InputData) func(ctx context.Context, s *testing.State) {
+	subtest := func(testName string, inputData data.InputData, currentIME ime.InputMethod) func(ctx context.Context, s *testing.State) {
 		return func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			// Use a shortened context for test operations to reserve time for cleanup.
@@ -155,11 +155,19 @@ func VirtualKeyboardHandwriting(ctx context.Context, s *testing.State) {
 				}
 			}(cleanupCtx)
 
-			if err := its.ValidateInputFieldForMode(uc, inputField, util.InputWithHandWriting, inputData, s.DataPath)(ctx); err != nil {
+			expectLongform := vkb.IsLongformHandWritingEngineID(currentIME.ID)
+
+			inputModality := util.InputWithHandWriting
+			if expectLongform {
+				inputModality = util.InputWithHandWritingLongForm
+			}
+
+			if err := its.ValidateInputFieldForMode(uc, inputField, inputModality, inputData, s.DataPath)(ctx); err != nil {
 				s.Fatal("Failed to validate handwriting input: ", err)
 			}
 		}
 	}
+
 	// Run defined subtest per input method and message combination.
 	testrunner.RunSubtestsPerInputMethodAndMessage(ctx, uc, s, testIMEs, hwTestMessages, subtest)
 }

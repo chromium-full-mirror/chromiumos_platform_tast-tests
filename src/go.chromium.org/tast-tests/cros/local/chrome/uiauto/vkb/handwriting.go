@@ -29,33 +29,55 @@ type HandwritingContext struct {
 	isLongForm bool
 }
 
-// NewHandwritingContext creates a new context for handwriting.
-func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context) (*HandwritingContext, error) {
-	// Waiting for the handwriting input area to appear in the accessibility tree of the Virtual Keyboard.
-	// - role.Canvas corresponds to the Longform (modern Fluent Handwriting) canvas.
-	// - role.Application corresponds to the Legacy (non-Longform) handwriting canvas.
-	if err := vkbCtx.ui.WaitUntilAnyExists(NodeFinder.Role(role.Canvas), NodeFinder.Role(role.Application))(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for handwriting canvas")
+// IsLongformHandWritingEngineID checks if the given IME engine ID supports Longform handwriting.
+// The Engine IDs which support the long form can be found in go/cros-vk-longform-enabled-engine-ids
+func IsLongformHandWritingEngineID(engineID string) bool {
+	switch engineID {
+	case "xkb:us::eng",
+		"xkb:us:altgr-intl:eng",
+		"xkb:us:colemak:eng",
+		"xkb:us:dvorak:eng",
+		"xkb:us:dvp:eng",
+		"xkb:us:intl_pc:eng",
+		"xkb:us:intl:eng",
+		"xkb:us:workman-intl:eng",
+		"xkb:us:workman:eng",
+		"xkb:ca:eng:eng",
+		"xkb:gb:extd:eng",
+		"xkb:gb:dvorak:eng",
+		"xkb:za:gb:eng",
+		"xkb:pk::eng",
+		"xkb:in::eng":
+		return true
+	default:
+		return false
 	}
+}
 
+// NewHandwritingContext creates a new context for handwriting.
+// It relies on the expectLongform parameter to determine which keyboard container to wait for,
+// eliminating heuristics and flakiness caused by startup races or offscreen elements.
+//
+// Note on Multiple Nodes: The accessibility tree may contain multiple nodes with the same ID
+// (specifically `htmlId="lfhwt"` sometimes shows multiple matches due to cached or hidden placeholder views).
+// This can cause ambiguous finder errors. We use `.First()` on the finders below to avoid these errors.
+func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context, expectLongform bool) (*HandwritingContext, error) {
 	hwCtx := &HandwritingContext{
 		VirtualKeyboardContext: *vkbCtx,
-		isLongForm:             false,
+		isLongForm:             expectLongform,
 	}
 
-	testing.Poll(ctx, func(ctx context.Context) error {
-		if err := hwCtx.ui.Exists(NodeFinder.HasClass("lf-keyboard"))(ctx); err == nil {
-			testing.ContextLog(ctx, "Identified as longform handwriting")
-			hwCtx.isLongForm = true
-			return nil
+	if expectLongform {
+		testing.ContextLog(ctx, "Expecting Longform handwriting. Waiting for 'lfhwt' to become visible")
+		if err := hwCtx.ui.WaitUntilExists(NodeFinder.Attribute("htmlId", "lfhwt").First())(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to wait for longform handwriting canvas to become visible")
 		}
-		if err := hwCtx.ui.Exists(NodeFinder.HasClass("canvas-view"))(ctx); err == nil {
-			testing.ContextLog(ctx, "Identified as non-longform handwriting")
-			return nil
+	} else {
+		testing.ContextLog(ctx, "Expecting Legacy handwriting. Waiting for 'hwt' to become visible")
+		if err := hwCtx.ui.WaitUntilExists(NodeFinder.Attribute("htmlId", "hwt").First())(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to wait for legacy handwriting canvas to become visible")
 		}
-		return errors.New("neither longform nor non-longform handwriting found")
-	}, &testing.PollOptions{
-		Timeout: 10 * time.Second})
+	}
 
 	return hwCtx, nil
 }

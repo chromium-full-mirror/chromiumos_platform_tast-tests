@@ -116,7 +116,8 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 				ui.DoDefaultUntil(handwritingPrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(handwritingPrivacyConfirmButton)),
 			),
 			func(ctx context.Context) error {
-				hwCtx, err := vkb.NewContext(cr, tconn).NewHandwritingContext(ctx)
+				expectLongform := vkb.IsLongformHandWritingEngineID(testIME.ID)
+				hwCtx, err := vkb.NewContext(cr, tconn).NewHandwritingContext(ctx, expectLongform)
 				if err != nil {
 					return errors.Wrap(err, "failed to initiate handwriting context")
 				}

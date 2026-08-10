@@ -110,7 +110,7 @@ func PhysicalKeyboardBasicTyping(ctx context.Context, s *testing.State) {
 
 	defer its.CloseAll(cleanupCtx)
 
-	subtest := func(testName string, inputData data.InputData) func(ctx context.Context, s *testing.State) {
+	subtest := func(testName string, inputData data.InputData, _ ime.InputMethod) func(ctx context.Context, s *testing.State) {
 		return func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			// Use a shortened context for test operations to reserve time for cleanup.

@@ -471,7 +471,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToVoiceInput() uiauto.Action {
 }
 
 // SwitchToHandwriting changes to handwriting layout and returns a handwriting context.
-func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context) (*HandwritingContext, error) {
+func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context, expectLongform bool) (*HandwritingContext, error) {
 	// Set local storage to override the LF first time tutorial prompt.
 	// It does not apply to legacy handwriting.
 	bconn, err := vkbCtx.UIConn(ctx)
@@ -489,7 +489,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToHandwriting(ctx context.Context) (
 		return nil, err
 	}
 
-	return vkbCtx.NewHandwritingContext(ctx)
+	return vkbCtx.NewHandwritingContext(ctx, expectLongform)
 }
 
 // SwitchToSymbolNumberLayout returns an action changing to symbol number layout.

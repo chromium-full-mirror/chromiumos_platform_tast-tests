@@ -31,10 +31,11 @@ type InputModality string
 
 // Valid values for InputModality.
 const (
-	InputWithVK          InputModality = "Virtual Keyboard"
-	InputWithVoice       InputModality = "Voice"
-	InputWithHandWriting InputModality = "Handwriting"
-	InputWithPK          InputModality = "Physical Keyboard"
+	InputWithVK                  InputModality = "Virtual Keyboard"
+	InputWithVoice               InputModality = "Voice"
+	InputWithHandWriting         InputModality = "Handwriting"
+	InputWithHandWritingLongForm InputModality = "Handwriting Longform"
+	InputWithPK                  InputModality = "Physical Keyboard"
 )
 
 // PKCandidatesFinder is the finder for candidates in the IME candidates window.
