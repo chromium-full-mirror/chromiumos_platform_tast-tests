@@ -23,7 +23,7 @@ func init() {
 		Desc:           "Verifies that Crostini has network connectivity via cellular interface",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic", "cellular_ota_avl"},
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
 		SoftwareDeps:   []string{"chrome", "vm_host"},
 		HardwareDeps:   crostini.CrostiniMinDiskSize,
 		Params: []testing.Param{
