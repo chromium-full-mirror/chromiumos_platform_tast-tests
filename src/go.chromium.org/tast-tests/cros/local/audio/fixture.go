@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,23 +22,6 @@ func init() {
 		BugComponent:    "b:776546",
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:         fixture.FakeCrasClient,
-		Desc:         "Use fake cras client for Chrome to avoid UI manipulating volume and mute",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@google.com"},
-		BugComponent: "b:776546",
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				// Prevent interference of audio preferences.
-				// See go/tast-fakecrasaudioclient.
-				chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
 	})
 }
 

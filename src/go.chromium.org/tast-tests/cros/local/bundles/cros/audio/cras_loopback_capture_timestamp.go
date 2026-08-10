@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/audio/crastests"
@@ -20,10 +19,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:            CrasLoopbackCaptureTimestamp,
-		Desc:            "Flexible loopback should provide samples in correct timestamp order",
-		Contacts:        []string{"htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		Fixture:         audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
+		Func:     CrasLoopbackCaptureTimestamp,
+		Desc:     "Flexible loopback should provide samples in correct timestamp order",
+		Contacts: []string{"htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Fixture: audiofixture.AloopLoaded{
+			Channels: 2,
+			Parent:   audiofixture.UIStopped{}.Instance(),
+		}.Instance(),
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational"},
 		VariantCategory: `{"name": "Audio_Board"}`,

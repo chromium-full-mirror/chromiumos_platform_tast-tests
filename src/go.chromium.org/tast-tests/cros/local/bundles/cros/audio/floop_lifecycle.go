@@ -7,7 +7,6 @@ package audio
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/loopback/lifecycle"
 	"go.chromium.org/tast/core/testing"
@@ -25,8 +24,11 @@ func init() {
 		//   - hasn't started yet
 		//   - has ended
 
-		Contacts:        []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
-		Fixture:         audiofixture.AloopLoaded{Channels: 2, Parent: fixture.FakeCrasClient}.Instance(),
+		Contacts: []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Fixture: audiofixture.AloopLoaded{
+			Channels: 2,
+			Parent:   audiofixture.UIStopped{}.Instance(),
+		}.Instance(),
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational"},
 		VariantCategory: `{"name": "Audio_Board"}`,

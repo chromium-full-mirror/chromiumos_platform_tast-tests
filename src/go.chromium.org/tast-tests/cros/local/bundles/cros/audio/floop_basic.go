@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	audiofixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/testing"
@@ -25,7 +25,7 @@ func init() {
 			"aaronyu@google.com",
 			"htcheong@google.com",
 		},
-		Fixture:      fixture.FakeCrasClient,
+		Fixture:      audiofixture.UIStopped{}.Instance(),
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

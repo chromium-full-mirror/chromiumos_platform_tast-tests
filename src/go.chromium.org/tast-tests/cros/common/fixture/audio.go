@@ -13,6 +13,4 @@ const (
 
 	// For Audio Latency Toolkit Teensy
 	AudioLatencyToolkit = "audioLatencyToolkit"
-
-	FakeCrasClient = "fakeCrasClient"
 )
