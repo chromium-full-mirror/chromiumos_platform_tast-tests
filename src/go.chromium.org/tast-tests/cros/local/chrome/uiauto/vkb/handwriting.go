@@ -44,11 +44,16 @@ func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context)
 	}
 
 	testing.Poll(ctx, func(ctx context.Context) error {
-		if err := hwCtx.ui.Exists(NodeFinder.HasClass("lf-keyboard"))(ctx); err != nil {
-			return err
+		if err := hwCtx.ui.Exists(NodeFinder.HasClass("lf-keyboard"))(ctx); err == nil {
+			testing.ContextLog(ctx, "Identified as longform handwriting")
+			hwCtx.isLongForm = true
+			return nil
 		}
-		hwCtx.isLongForm = true
-		return nil
+		if err := hwCtx.ui.Exists(NodeFinder.HasClass("canvas-view"))(ctx); err == nil {
+			testing.ContextLog(ctx, "Identified as non-longform handwriting")
+			return nil
+		}
+		return errors.New("neither longform nor non-longform handwriting found")
 	}, &testing.PollOptions{
 		Timeout: 10 * time.Second})
 
