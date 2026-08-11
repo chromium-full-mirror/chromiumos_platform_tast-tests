@@ -75,7 +75,7 @@ type Server struct {
 // After getting a Server instance, s, the caller should call s.Close() at the end, and use the
 // shortened ctx (provided by s.ReserveForClose()) before s.Close() to reserve time for it to run.
 func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir string, config *Config, environmentVars map[string]string) (server *Server, retErr error) {
-	return StartServerOnIface(ctx, host, name, workDir, []*Iface{&Iface{iface, config}}, environmentVars)
+	return StartServerOnIface(ctx, host, name, workDir, []*Iface{{iface, config}}, environmentVars)
 }
 
 // StartServerOnIface creates a new Server object and runs hostapd on multiple interfaces specified by
@@ -353,10 +353,31 @@ func (s *Server) DeauthClient(ctx context.Context, clientMAC string) error {
 	return nil
 }
 
+// BSSTMNeighbor defines a candidate neighbor AP in a BSS Transition Management Request.
+type BSSTMNeighbor struct {
+	// BSSID is the MAC address of the candidate neighbor AP.
+	BSSID string
+	// BSSIDInfo represents the 4-byte BSSID Information field (IEEE 802.11-2020 §9.4.2.36).
+	BSSIDInfo uint32
+	// OperatingClass is the global operating class of the candidate neighbor AP.
+	OperatingClass uint8
+	// Channel is the operating channel of the candidate neighbor AP.
+	Channel int
+	// PHYType is the PHY type of the candidate neighbor AP.
+	PHYType uint8
+}
+
+// String returns the hostapd_cli formatted neighbor string: <bssid>,<bssid_info>,<operating_class>,<channel>,<phy_type>.
+func (n BSSTMNeighbor) String() string {
+	return fmt.Sprintf("%s,%d,%d,%d,%d", n.BSSID, n.BSSIDInfo, n.OperatingClass, n.Channel, n.PHYType)
+}
+
 // BSSTMReqParams defines the parameters for a BSS Transition Management Request.
 type BSSTMReqParams struct {
-	// Neighbors is the list of neighboring APs
+	// Neighbors is the list of neighboring APs (supports BSSID strings or formatted strings for backward compatibility).
 	Neighbors []string
+	// NeighborList is the structured list of candidate neighboring APs.
+	NeighborList []BSSTMNeighbor
 	// DisassocImminent indicates whether or not the AP will disassociate the STA soon.
 	DisassocImminent bool
 	// DisassocTimer is the time (in 100ms) before the AP will disassoc the STA.
@@ -370,10 +391,17 @@ type BSSTMReqParams struct {
 // SendBSSTMRequest sends a BSS Transition Management Request to the specified client.
 func (s *Server) SendBSSTMRequest(ctx context.Context, clientMAC string, params BSSTMReqParams) error {
 	// Construct the arguments for:
-	//   `hostapd_cli -p${ctrlPath} BSS_TM_REQ ${clientMAC} neighbor=${n},0,0,0,0 pref=1`
+	//   `hostapd_cli -p${ctrlPath} BSS_TM_REQ ${clientMAC} neighbor=${n} pref=1`
 	args := []string{"BSS_TM_REQ", clientMAC}
+	for _, n := range params.NeighborList {
+		args = append(args, fmt.Sprintf("neighbor=%s", n.String()))
+	}
 	for _, n := range params.Neighbors {
-		args = append(args, fmt.Sprintf("neighbor=%s,0,0,0,0", n))
+		if strings.Contains(n, ",") {
+			args = append(args, fmt.Sprintf("neighbor=%s", n))
+		} else {
+			args = append(args, fmt.Sprintf("neighbor=%s,0,0,0,0", n))
+		}
 	}
 	args = append(args, "pref=1")
 	if params.DisassocImminent {

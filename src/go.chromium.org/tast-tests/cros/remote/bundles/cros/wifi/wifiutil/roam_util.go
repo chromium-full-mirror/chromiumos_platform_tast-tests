@@ -227,6 +227,14 @@ func (rt *RoamTest) SendBSSTMReqAndWaitConnected(ctx context.Context, dut wifice
 	waitCtx, cancel := context.WithTimeout(ctx, BSSTMRequestTimeout)
 	defer cancel()
 	waitForProps, _ := rt.tf.DUTWifiClient(dut).GenerateRoamPropertyWatcher(waitCtx, toBSSID, servicePath)
+	// If no candidate neighbors were explicitly specified, populate the target AP with its channel.
+	if len(req.NeighborList) == 0 && len(req.Neighbors) == 0 {
+		req.NeighborList = []hostapd.BSSTMNeighbor{{
+			BSSID:   toBSSID,
+			Channel: toAP.Config().Channel,
+		}}
+	}
+
 	// Send BSS Transition Management Request to client.
 	testing.ContextLogf(ctx, "Sending BSS Transition Management Request from AP %s to DUT %s", fromBSSID, dutMAC)
 	if err := fromAP.SendBSSTMRequest(ctx, dutMAC, req); err != nil {

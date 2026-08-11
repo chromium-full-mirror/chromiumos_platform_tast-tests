@@ -273,7 +273,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 		s.Log("AP 2 BSSID: ", roamBSSID)
 
 		req := requestParams
-		req.Neighbors = []string{roamBSSID}
+		req.NeighborList = []hostapd.BSSTMNeighbor{{BSSID: roamBSSID, Channel: rt.AP2().Config().Channel}}
 
 		if err := rt.SetupDUTForRoaming(ctx, wificell.DefaultDUT, fromBSSID, roamBSSID, testSSID, waitForScan); err != nil {
 			s.Fatal("DUT: failed to roam and wait for connection: ", err)
@@ -296,7 +296,7 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 			// without any additional parameters to test that the
 			// connection fails. Otherwise, the reassoc delay will
 			// disable the current AP as well and trigger a deauth.
-			if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), hostapd.BSSTMReqParams{Neighbors: []string{fromBSSID}}, rt.ServicePathOfDUT(wificell.DefaultDUT), true); err != nil {
+			if err := rt.SendBSSTMReqAndWaitConnected(ctx, wificell.DefaultDUT, roamBSSID, fromBSSID, rt.AP2(), rt.AP1(), hostapd.BSSTMReqParams{NeighborList: []hostapd.BSSTMNeighbor{{BSSID: fromBSSID, Channel: rt.AP1().Config().Channel}}}, rt.ServicePathOfDUT(wificell.DefaultDUT), true); err != nil {
 				s.Fatal("DUT: failed to roam and wait for connection: ", err)
 			}
 			if sleepDur := requestParams.ReassocDelay + bssTMReassocBuffer - time.Since(t); sleepDur > 0 {
@@ -307,7 +307,14 @@ func BSSTMRequest(ctx context.Context, s *testing.State) {
 				}
 			}
 		}
-		req.Neighbors = []string{fromBSSID}
+
+		if requestParams.BSSTerm > 0 || (params.secConfFac1 != nil && params.secConfFac2 != nil) {
+			// Do not attempt to roam back if the AP was terminated or if security
+			// configurations differ (e.g. WPA3-SAE to WPA2-PSK downgrade).
+			return
+		}
+
+		req.NeighborList = []hostapd.BSSTMNeighbor{{BSSID: fromBSSID, Channel: rt.AP1().Config().Channel}}
 
 		// Before we transition back to the original BSSID, add the current
 		// BSSID into the ignore list. We add it twice purposely to ensure the
