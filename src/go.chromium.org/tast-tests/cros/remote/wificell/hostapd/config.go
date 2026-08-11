@@ -589,6 +589,14 @@ func BeaconInterval(bi int) Option {
 	}
 }
 
+// FILSDiscoveryMaxInterval returns an Option which sets fils_discovery_max_interval in hostapd config.
+// The unit is TUs (1 TU = 1024 us = 1.024 ms). Allowed range is 0..10000.
+func FILSDiscoveryMaxInterval(interval int) Option {
+	return func(c *Config) {
+		c.FILSDiscoveryMaxInterval = interval
+	}
+}
+
 // BSSID returns an Option which sets bssid in hostapd config.
 func BSSID(bssid string) Option {
 	return func(c *Config) {
@@ -774,41 +782,42 @@ type ApConfig struct {
 
 // Config is the configuration to start hostapd on a router.
 type Config struct {
-	SSID               string
-	Mode               ModeEnum
-	Channel            int
-	Is6GHz             bool
-	HTCaps             HTCap
-	VHTCaps            []VHTCap
-	VHTCenterChannel   int
-	VHTChWidth         VHTChWidthEnum
-	HEChWidth          HEChWidthEnum
-	HECaps             []HECap
-	HECenterChannel    int
-	EHTChWidth         EHTChWidthEnum
-	EHTCaps            []EHTCap
-	EHTCenterChannel   int
-	Hidden             bool
-	SpectrumManagement bool
-	BeaconInterval     int
-	SecurityConfig     security.Config
-	PMF                PMFEnum
-	DTIMPeriod         int
-	BSSID              string
-	OBSSInterval       uint16
-	Bridge             string
-	MobilityDomain     string
-	NASIdentifier      string
-	R1KeyHolder        string
-	R0KHs              []string
-	R1KHs              []string
-	MBO                bool
-	RRMBeaconReport    bool
-	APSD               bool
-	AdditionalBSSs     []AdditionalBSS
-	SupportedRates     []float32
-	BasicRates         []float32
-	Interworking       bool
+	SSID                     string
+	Mode                     ModeEnum
+	Channel                  int
+	Is6GHz                   bool
+	HTCaps                   HTCap
+	VHTCaps                  []VHTCap
+	VHTCenterChannel         int
+	VHTChWidth               VHTChWidthEnum
+	HEChWidth                HEChWidthEnum
+	HECaps                   []HECap
+	HECenterChannel          int
+	EHTChWidth               EHTChWidthEnum
+	EHTCaps                  []EHTCap
+	EHTCenterChannel         int
+	Hidden                   bool
+	SpectrumManagement       bool
+	BeaconInterval           int
+	FILSDiscoveryMaxInterval int
+	SecurityConfig           security.Config
+	PMF                      PMFEnum
+	DTIMPeriod               int
+	BSSID                    string
+	OBSSInterval             uint16
+	Bridge                   string
+	MobilityDomain           string
+	NASIdentifier            string
+	R1KeyHolder              string
+	R0KHs                    []string
+	R1KHs                    []string
+	MBO                      bool
+	RRMBeaconReport          bool
+	APSD                     bool
+	AdditionalBSSs           []AdditionalBSS
+	SupportedRates           []float32
+	BasicRates               []float32
+	Interworking             bool
 	VenueInfo
 	VenueNames         []VenueName
 	RoamingConsortiums []string
@@ -907,6 +916,9 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	}
 	if c.BeaconInterval != 0 {
 		configure("beacon_int", strconv.Itoa(c.BeaconInterval))
+	}
+	if c.FILSDiscoveryMaxInterval != 0 {
+		configure("fils_discovery_max_interval", strconv.Itoa(c.FILSDiscoveryMaxInterval))
 	}
 
 	if c.DTIMPeriod != 0 {
@@ -1272,6 +1284,9 @@ func (c *Config) validate() error {
 	}
 	if c.BeaconInterval != 0 && (c.BeaconInterval > 65535 || c.BeaconInterval < 15) {
 		return errors.Errorf("invalid beacon interval setting %d", c.BeaconInterval)
+	}
+	if c.FILSDiscoveryMaxInterval < 0 || c.FILSDiscoveryMaxInterval > 10000 {
+		return errors.Errorf("invalid FILS discovery max interval setting %d", c.FILSDiscoveryMaxInterval)
 	}
 	if c.SecurityConfig == nil {
 		return errors.New("no SecurityConfig set")

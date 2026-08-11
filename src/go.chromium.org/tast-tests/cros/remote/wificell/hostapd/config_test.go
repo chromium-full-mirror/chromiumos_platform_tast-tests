@@ -807,6 +807,24 @@ func TestConfigFormat(t *testing.T) {
 				"ieee80211be": "1",
 			},
 		},
+		// verify fils_discovery_max_interval
+		{
+			conf: &Config{
+				SSID:                     "ssid",
+				Mode:                     Mode80211axPure,
+				Channel:                  21,
+				Is6GHz:                   true,
+				HTCaps:                   HTCapHT20,
+				FILSDiscoveryMaxInterval: 20,
+				SecurityConfig:           wpa3Conf,
+			},
+			verify: map[string]string{
+				"hw_mode":                     "a",
+				"channel":                     "21",
+				"ieee80211ax":                 "1",
+				"fils_discovery_max_interval": "20",
+			},
+		},
 
 		// verify eht_capab
 		{

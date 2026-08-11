@@ -162,9 +162,6 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap6GHzOpts, SecConfFac: secConfFac})
 			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap5GHzOpts, SecConfFac: nil})
 		} else {
-			// Intel driver doesn't support FILS Discovery frame or unsolicited broadcast Probe Response frame transmission,
-			// set beacon interval to 20 TUs so that the DUT receives beacon frames within the channel dwell time
-			ap6GHzOpts = append(ap6GHzOpts, hostapd.BeaconInterval(20))
 			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap6GHzOpts, SecConfFac: secConfFac})
 		}
 		ap, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, 0, apConfigs, "", true, false, false)

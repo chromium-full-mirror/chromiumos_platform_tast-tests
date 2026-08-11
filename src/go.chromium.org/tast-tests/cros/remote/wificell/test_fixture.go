@@ -1095,6 +1095,16 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfsDNSOpts(ctx context.Context
 		if err != nil {
 			return nil, err
 		}
+		// For 6GHz APs, configure fast discovery if not explicitly specified.
+		// OpenWrt routers (e.g. BPi-R4 with MT7996) support FILS Discovery frames.
+		// Intel/Ubuntu routers do not support FILS discovery, so use a 20 TU beacon interval.
+		if config.Is6GHz && config.FILSDiscoveryMaxInterval == 0 && config.BeaconInterval == 0 {
+			if r.RouterType() == support.OpenWrtT {
+				config.FILSDiscoveryMaxInterval = 20
+			} else {
+				config.BeaconInterval = 20
+			}
+		}
 		configs = append(configs, config)
 		var capturer *pcap.Capturer
 		if tf.options.EnablePacketCapture {
