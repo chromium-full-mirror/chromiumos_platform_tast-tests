@@ -565,6 +565,18 @@ func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces [
 	ctx, st := timing.Start(ctx, "router.startHostapdOnIfaces")
 	defer st.End()
 	for _, iface := range ifaces {
+		if iface.Config().BSSID != "" {
+			mac, err := net.ParseMAC(iface.Config().BSSID)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse BSSID %q for interface %s", iface.Config().BSSID, iface.Name())
+			}
+			if err := r.ipr.SetLinkDown(ctx, iface.Name()); err != nil {
+				return nil, errors.Wrapf(err, "failed to set %s down", iface.Name())
+			}
+			if err := r.ipr.SetMAC(ctx, iface.Name(), mac); err != nil {
+				return nil, errors.Wrapf(err, "failed to set MAC address on %s to %s", iface.Name(), iface.Config().BSSID)
+			}
+		}
 		if err := iface.Config().SecurityConfig.InstallRouterCredentials(ctx, r.host, r.workDir()); err != nil {
 			return nil, errors.Wrapf(err, "failed to install router credentials for interface %s", iface.Name())
 		}

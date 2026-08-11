@@ -239,7 +239,11 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Sending BSS TM Request from AP %s to DUT %s", ap1BSSID, connMAC)
-	req := hostapd.BSSTMReqParams{Neighbors: []string{ap2BSSID}}
+	req := hostapd.BSSTMReqParams{
+		Neighbors:        []string{ap2BSSID},
+		DisassocImminent: true,
+		DisassocTimer:    10 * time.Second,
+	}
 	if err := ap1.SendBSSTMRequest(ctx, connMAC.String(), req); err != nil {
 		s.Fatal("Failed to send BSS TM Request: ", err)
 	}
