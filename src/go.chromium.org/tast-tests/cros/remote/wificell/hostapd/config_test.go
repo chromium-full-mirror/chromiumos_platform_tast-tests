@@ -771,8 +771,40 @@ func TestConfigFormat(t *testing.T) {
 				"vht_oper_chwidth":             "1",
 				"vht_oper_centr_freq_seg0_idx": "42",
 				"he_oper_chwidth":              "1",
-				"he_oper_centr_freq_seg0_idx":  "42",
 				"vht_capab":                    "",
+			},
+		},
+		// verify 2.4GHz 802.11ax uses hw_mode=g
+		{
+			conf: &Config{
+				SSID:           "ssid",
+				Mode:           Mode80211axPure,
+				Channel:        1,
+				HTCaps:         HTCapHT20,
+				SecurityConfig: &base.Config{},
+			},
+			verify: map[string]string{
+				"hw_mode":     "g",
+				"channel":     "1",
+				"ieee80211n":  "1",
+				"ieee80211ax": "1",
+			},
+		},
+		// verify 2.4GHz 802.11be uses hw_mode=g
+		{
+			conf: &Config{
+				SSID:           "ssid",
+				Mode:           Mode80211bePure,
+				Channel:        6,
+				HTCaps:         HTCapHT20,
+				SecurityConfig: wpa3Conf,
+			},
+			verify: map[string]string{
+				"hw_mode":     "g",
+				"channel":     "6",
+				"ieee80211n":  "1",
+				"ieee80211ax": "1",
+				"ieee80211be": "1",
 			},
 		},
 

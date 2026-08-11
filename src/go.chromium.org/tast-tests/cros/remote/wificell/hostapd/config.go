@@ -1429,12 +1429,6 @@ func (c *Config) hwMode() (string, error) {
 		}
 		if f > 5000 {
 			return string(Mode80211a), nil
-		} else if c.is80211ax() {
-			// 80211ax on 2.4ghz operates with 80211b hwmode as fallback.
-			return string(Mode80211b), nil
-		} else if c.is80211be() {
-			// 80211be on 2.4ghz operates with 80211b hwmode as fallback.
-			return string(Mode80211b), nil
 		}
 		return string(Mode80211g), nil
 	}
