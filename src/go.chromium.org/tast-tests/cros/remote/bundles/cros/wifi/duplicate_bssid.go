@@ -25,7 +25,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func", "group:release-health", "release-health_wifi"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
@@ -40,42 +40,42 @@ func DuplicateBSSID(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to generate random BSSID: ", err)
 	}
 
-	// Configure an AP on the specific channel with given SSID. It returns a shortened
-	// ctx, the channel's mapping frequency, a callback to deconfigure the AP and an
-	// error object. Note that it directly uses s and tf from the outer scope.
-	configureAP := func(ctx context.Context, channel int) (context.Context, *wificell.APIface, func(context.Context), error) {
-		s.Logf("Setting up the AP on channel %d", channel)
-		options := []hostapd.Option{hostapd.Mode(hostapd.Mode80211nPure), hostapd.Channel(channel), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.BSSID(bssid.String())}
-		ap, err := tf.ConfigureAP(ctx, options, nil)
-		if err != nil {
-			return ctx, nil, nil, err
+	// Create an AP on each router, manually specifying both the SSID and BSSID.
+	// Router 0 runs on channel 1, Router 1 runs on channel 36 with the same BSSID
+	// but different SSIDs. These APs together are meant to emulate situations
+	// that occur with some types of APs which broadcast or respond with more
+	// than one (non-empty) SSID across bands.
+	type apParams struct {
+		routerIdx wificell.RouterIdx
+		channel   int
+	}
+	routers := []apParams{
+		{routerIdx: 0, channel: 1},
+		{routerIdx: 1, channel: 36},
+	}
+	var aps []*wificell.APIface
+	for _, r := range routers {
+		s.Logf("Setting up the AP on router %d, channel %d", r.routerIdx, r.channel)
+		options := []hostapd.Option{
+			hostapd.Mode(hostapd.Mode80211nPure),
+			hostapd.Channel(r.channel),
+			hostapd.HTCaps(hostapd.HTCapHT20),
+			hostapd.BSSID(bssid.String()),
 		}
-		sCtx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
-		deferFunc := func(ctx context.Context) {
-			s.Logf("Deconfiguring the AP on channel %d", channel)
+		ap, err := tf.ConfigureAPOnRouterID(ctx, r.routerIdx, options, nil, false, false)
+		if err != nil {
+			s.Fatalf("Failed to set up AP on router %d: %v", r.routerIdx, err)
+		}
+		aps = append(aps, ap)
+		defer func(ctx context.Context, ap *wificell.APIface, r apParams) {
+			s.Logf("Deconfiguring the AP on router %d, channel %d", r.routerIdx, r.channel)
 			if err := tf.DeconfigAP(ctx, ap); err != nil {
 				s.Error("Failed to deconfig AP: ", err)
 			}
-			cancel()
-		}
-		return sCtx, ap, deferFunc, nil
-	}
-
-	// Create an AP, manually specifying both the SSID and BSSID.
-	// Then create a second AP that responds to probe requests with
-	// the same BSSID but a different SSID. These APs together are
-	// meant to emulate situations that occur with some types of APs
-	// which broadcast or respond with more than one (non-empty) SSID.
-	channels := []int{1, 36}
-	var aps []*wificell.APIface
-	for _, ch := range channels {
-		sCtx, ap, deconfig, err := configureAP(ctx, ch)
-		if err != nil {
-			s.Fatal("Failed to set up AP: ", err)
-		}
-		defer deconfig(ctx)
-		aps = append(aps, ap)
-		ctx = sCtx
+		}(ctx, ap, r)
+		var cancel context.CancelFunc
+		ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap)
+		defer cancel()
 	}
 
 	for _, ap := range aps {
