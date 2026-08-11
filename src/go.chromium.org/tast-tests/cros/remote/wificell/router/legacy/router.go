@@ -548,7 +548,7 @@ func (r *Router) StartCapture(ctx context.Context, name string, ch int, is6GHz b
 	if err != nil {
 		return nil, err
 	}
-	return common.StartCapture(ctx, nd, r.host, r.ipr, r.im, r.iwr, r.workDir(), name, ch, freqOps, pcapOps...)
+	return common.StartCapture(ctx, nd, r.host, r.ipr, r.im, r.iwr, r.workDir(), name, ch, is6GHz, freqOps, pcapOps...)
 }
 
 // ReserveForStopCapture returns a shortened ctx with cancel function.

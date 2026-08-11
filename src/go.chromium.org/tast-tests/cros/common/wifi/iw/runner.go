@@ -1382,6 +1382,48 @@ func parseBand(attrs *sectionAttributes, sectionName, contents string) error {
 	return nil
 }
 
+func parseTopLevelFrequencies(attrs *sectionAttributes, sectionName, contents string) error {
+	freqFlags, err := parseFrequencyFlags(contents)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse top-level frequency flags")
+	}
+	for freq, flags := range freqFlags {
+		bandNum, err := frequencyToBandNum(freq)
+		if err != nil {
+			return errors.Wrapf(err, "failed to determine band number for frequency %d", freq)
+		}
+		found := false
+		for i := range attrs.bands {
+			if attrs.bands[i].Num == bandNum {
+				if attrs.bands[i].FrequencyFlags == nil {
+					attrs.bands[i].FrequencyFlags = make(map[int][]string)
+				}
+				attrs.bands[i].FrequencyFlags[freq] = flags
+				found = true
+				break
+			}
+		}
+		if !found {
+			attrs.bands = append(attrs.bands, Band{
+				Num:            bandNum,
+				FrequencyFlags: map[int][]string{freq: flags},
+			})
+		}
+	}
+	return nil
+}
+
+func frequencyToBandNum(freq int) (int, error) {
+	if freq >= 5955 && freq <= 7115 {
+		return 4, nil // 6 GHz (Band 4)
+	} else if freq >= 5000 && freq < 5955 {
+		return 2, nil // 5 GHz (Band 2)
+	} else if freq >= 2400 && freq < 2500 {
+		return 1, nil // 2.4 GHz (Band 1)
+	}
+	return 0, errors.Errorf("unknown frequency %d", freq)
+}
+
 func parseHT(attrs *sectionAttributes, sectionName, content string) {
 	if strings.Contains(content, "HT20/HT40") {
 		attrs.supportHT2040 = true
@@ -1555,6 +1597,10 @@ var parsers = []struct {
 	{
 		prefix: "valid interface combinations",
 		parse:  parseIfaceCombinations,
+	},
+	{
+		prefix: "Frequencies",
+		parse:  parseTopLevelFrequencies,
 	},
 }
 

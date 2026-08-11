@@ -22,11 +22,11 @@ import (
 // After getting a Capturer instance, c, the caller should call r.StopCapture(ctx, c) at the end,
 // and use the shortened ctx (provided by r.ReserveForStopCapture(ctx, c)) before r.StopCapture()
 // to reserve time for it to run.
-func StartCapture(ctx context.Context, nd *iw.NetDev, host *ssh.Conn, ipr *ip.Runner, im *IfaceManager, iwr *iw.Runner, workDir, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
+func StartCapture(ctx context.Context, nd *iw.NetDev, host *ssh.Conn, ipr *ip.Runner, im *IfaceManager, iwr *iw.Runner, workDir, name string, ch int, is6GHz bool, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
 	ctx, st := timing.Start(ctx, "router.StartCapture")
 	defer st.End()
 
-	freq, err := hostapd.ChannelToFrequency(ch)
+	freq, err := hostapd.ChannelToFrequencyWithBand(ch, is6GHz)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +70,9 @@ func StartCapture(ctx context.Context, nd *iw.NetDev, host *ssh.Conn, ipr *ip.Ru
 
 // StopCapture stops the packet capturer and releases related resources.
 func StopCapture(ctx context.Context, ipr *ip.Runner, im *IfaceManager, capturer *pcap.Capturer) error {
+	if capturer == nil {
+		return nil
+	}
 	ctx, st := timing.Start(ctx, "router.StopCapture")
 	defer st.End()
 

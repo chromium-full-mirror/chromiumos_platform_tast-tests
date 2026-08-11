@@ -1140,3 +1140,40 @@ func TestParseWiFiSignalLevelAllChains(t *testing.T) {
 		})
 	}
 }
+
+func TestParseTopLevelFrequencies(t *testing.T) {
+	const sampleTopLevelFrequencies = `
+		* 5955.0 MHz [1] (12.0 dBm)
+		* 5975.0 MHz [5] (12.0 dBm)
+		* 6115.0 MHz [33] (12.0 dBm)
+		* 7115.0 MHz [233] (12.0 dBm)
+`
+	attrs := &sectionAttributes{
+		bands: []Band{
+			{Num: 1},
+			{Num: 2},
+			{Num: 4},
+		},
+	}
+
+	if err := parseTopLevelFrequencies(attrs, "Frequencies", sampleTopLevelFrequencies); err != nil {
+		t.Fatalf("parseTopLevelFrequencies failed: %v", err)
+	}
+
+	var band4 *Band
+	for i := range attrs.bands {
+		if attrs.bands[i].Num == 4 {
+			band4 = &attrs.bands[i]
+			break
+		}
+	}
+	if band4 == nil {
+		t.Fatal("Band 4 not found in attrs.bands")
+	}
+
+	for _, freq := range []int{5955, 5975, 6115, 7115} {
+		if _, ok := band4.FrequencyFlags[freq]; !ok {
+			t.Errorf("expected frequency %d in Band 4, but not found", freq)
+		}
+	}
+}

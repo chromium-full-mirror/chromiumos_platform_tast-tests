@@ -674,7 +674,7 @@ func (r *Router) StartCapture(ctx context.Context, name string, ch int, is6GHz b
 	if err != nil {
 		return nil, err
 	}
-	c, err := common.StartCapture(ctx, nd, r.host, r.ipr, r.im, r.iwr, r.workDir(), name, ch, freqOps, pcapOps...)
+	c, err := common.StartCapture(ctx, nd, r.host, r.ipr, r.im, r.iwr, r.workDir(), name, ch, is6GHz, freqOps, pcapOps...)
 	if err != nil {
 		r.activeServices.capture = append(r.activeServices.capture, c)
 	}

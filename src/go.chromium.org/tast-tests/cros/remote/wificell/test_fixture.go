@@ -1107,7 +1107,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfsDNSOpts(ctx context.Context
 				return nil, errors.Wrap(err, "failed to start capturer")
 			}
 			defer func() {
-				if retErr != nil {
+				if retErr != nil && capturer != nil && tf.PcapRouter() != nil {
 					tf.PcapRouter().StopCapture(ctx, capturer)
 				}
 			}()
