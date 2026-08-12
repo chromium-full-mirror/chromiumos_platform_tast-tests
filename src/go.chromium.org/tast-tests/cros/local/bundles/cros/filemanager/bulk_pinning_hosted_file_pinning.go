@@ -32,7 +32,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",
-			"fdegros@google.com",
 		},
 		SoftwareDeps: []string{
 			"chrome",
