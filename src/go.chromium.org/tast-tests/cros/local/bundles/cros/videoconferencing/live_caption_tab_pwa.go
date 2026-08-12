@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
-	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -71,12 +70,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "pwa",
-				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
+				Fixture: a11y.LoggedInWithFakeHALAndEffectsDisabledWithSoda,
 				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "web",
-				Fixture: fixture.LoggedInWithFakeHALAndEffectsDisabled,
+				Fixture: a11y.LoggedInWithFakeHALAndEffectsDisabledWithSoda,
 				Val:     common.LaunchAppInWeb,
 			},
 		},

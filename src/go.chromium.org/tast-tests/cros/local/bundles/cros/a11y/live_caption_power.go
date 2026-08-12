@@ -30,7 +30,7 @@ func init() {
 			"amoylan@chromium.org",
 			"chenjih@google.com",
 		},
-		Fixture: "powerAsh",
+		Fixture: a11y.PowerAshWithSoda,
 		// Software > Machine Intelligence > libsoda & ChromeOS Live Caption.
 		BugComponent: "b:1116342",
 		Timeout:      10*time.Minute + power.RecorderTimeout,

@@ -32,6 +32,7 @@ func init() {
 		},
 		BugComponent: "b:1272895",
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
+		Fixture:      a11y.SodaDLCInstalled,
 		Attr:         []string{"group:mainline", "informational"},
 		Data: []string{
 			"live_caption_power.html",

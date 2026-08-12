@@ -38,11 +38,11 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Params: []testing.Param{{
 			Name:    "captions_only",
-			Fixture: setup.PowerAsh,
+			Fixture: a11y.PowerAshWithSoda,
 			Val:     false,
 		}, {
 			Name:    "captions_on_braille",
-			Fixture: setup.PowerAshCaptionsOnBraille,
+			Fixture: a11y.PowerAshCaptionsOnBrailleWithSoda,
 			Val:     true,
 		}},
 		Data: []string{

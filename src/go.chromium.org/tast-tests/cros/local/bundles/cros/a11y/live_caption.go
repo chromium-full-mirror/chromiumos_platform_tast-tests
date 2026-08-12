@@ -40,6 +40,7 @@ func init() {
 		BugComponent: "b:1116342",
 		Timeout:      5 * time.Minute,
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
+		Fixture:      a11y.SodaDLCInstalled,
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{
 			{

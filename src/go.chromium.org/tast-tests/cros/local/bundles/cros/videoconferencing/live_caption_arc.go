@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -38,7 +37,7 @@ func init() {
 		},
 		TestBedDeps:  []string{tbdep.Cbx(true)},
 		Data:         []string{fakearc.AppNameArc},
-		Fixture:      fixture.LoggedInARCWithInternalCameraAndEffectsDisabled,
+		Fixture:      a11y.LoggedInARCWithInternalCameraAndEffectsDisabledWithSoda,
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{
 			{

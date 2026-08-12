@@ -10,6 +10,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/dictation"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -30,6 +31,7 @@ func init() {
 		Data:         []string{"voice_en_hello.wav"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone(), hwdep.Keyboard()),
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
+		Fixture:      a11y.SodaDLCInstalled,
 		Params: []testing.Param{{
 			Name: "ash_textarea",
 			Val: dictation.TestParam{
