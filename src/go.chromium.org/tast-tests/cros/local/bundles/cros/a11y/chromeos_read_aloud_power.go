@@ -81,7 +81,7 @@ func ChromeosReadAloudPower(ctx context.Context, s *testing.State) {
 	}
 
 	moreToolsItem := nodewith.Name("More tools").ClassName("MenuItemView")
-	readingModeItem := nodewith.Name("Reading mode").ClassName("MenuItemView")
+	readingModeItem := nodewith.NameStartingWith("Reading mode").ClassName("MenuItemView")
 	playAudioButton := nodewith.Name("Play / pause, keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 	pauseAudioButton := nodewith.Name("Play / pause, keyboard shortcut k").Role(role.Button).ClassName("toolbar-button audio-controls")
 
