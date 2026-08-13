@@ -605,11 +605,11 @@ func reportMetric(name, unit string, value float64, direction perf.Direction, p 
 	}, value)
 }
 
-func parseAndReportCounter(ctx context.Context, counters map[string]time.Duration, counterName string, p perfValueInterface) {
+func parseAndReportCounter(ctx context.Context, counters map[string]time.Duration, counterName string, p perfValueInterface, direction perf.Direction) {
 	if counter, ok := counters[counterName]; ok && counter.Seconds() != 0 {
 		usage := 100 * counter.Seconds() / counters["total"].Seconds()
 		testing.ContextLogf(ctx, "%s: %f%%", counterName, usage)
-		reportMetric(fmt.Sprintf("%s_usage", counterName), "percent", usage, perf.SmallerIsBetter, p)
+		reportMetric(fmt.Sprintf("%s_usage", counterName), "percent", usage, direction, p)
 	}
 }
 
@@ -676,12 +676,14 @@ func MeasureGPUCounters(ctx context.Context, t time.Duration, p perfValueInterfa
 		testing.ContextLogf(ctx, "Average frequency: %fMHz", frequencyMHz)
 		reportMetric("frequency", "MHz", frequencyMHz, perf.SmallerIsBetter, p)
 	}
-	parseAndReportCounter(ctx, counters, "rcs", p)
-	parseAndReportCounter(ctx, counters, "vcs", p)
-	parseAndReportCounter(ctx, counters, "vecs", p)
-	parseAndReportCounter(ctx, counters, "rc6", p)
+	parseAndReportCounter(ctx, counters, "rcs", p, perf.SmallerIsBetter)
+	parseAndReportCounter(ctx, counters, "vcs", p, perf.SmallerIsBetter)
+	parseAndReportCounter(ctx, counters, "vecs", p, perf.SmallerIsBetter)
+	// rc6 counter represents the deep idle state of the GPU, so it has
+	// the improvement direction as bigger is better.
+	parseAndReportCounter(ctx, counters, "rc6", p, perf.BiggerIsBetter)
 	// Report an unified "gpu" counter for non-Intel platforms.
-	parseAndReportCounter(ctx, counters, "gpu", p)
+	parseAndReportCounter(ctx, counters, "gpu", p, perf.SmallerIsBetter)
 
 	return nil
 }
