@@ -17,10 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type resolvConfLowerPriorityConfigUpdateTestParams struct {
-	dnsProxyEnabled bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     ResolvConfLowerPriorityConfigUpdate,
@@ -29,12 +25,9 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "proxy_enabled",
-			Val: resolvConfLowerPriorityConfigUpdateTestParams{
-				dnsProxyEnabled: true,
-			},
-			Fixture: "chromeLoggedIn",
 		}},
 	})
 }
@@ -69,7 +62,6 @@ func ResolvConfLowerPriorityConfigUpdate(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
 
-	params := s.Param().(resolvConfLowerPriorityConfigUpdateTestParams)
 	pool := subnet.NewPool()
 
 	// Set up base network.
@@ -110,7 +102,7 @@ func ResolvConfLowerPriorityConfigUpdate(ctx context.Context, s *testing.State) 
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
@@ -140,7 +132,7 @@ func ResolvConfLowerPriorityConfigUpdate(ctx context.Context, s *testing.State) 
 
 	// Assert /etc/resolv.conf content to not be changed after the lower priority network is updated.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after lower priority network update: ", err)
 	}

@@ -877,9 +877,23 @@ func NewShillService(ctx context.Context, opts virtualnet.EnvOptions, pool *subn
 	return svc, r, nil
 }
 
-// VerifyResolvConfContents returns an error if /etc/resolv.conf contents does not match the expected config.
-// When DNS proxy is enabled, /etc/resolv.conf is expected to be replaced by the proxy's addresses.
-func VerifyResolvConfContents(ctx context.Context, config Config, proxyEnabled bool) error {
+// VerifyResolvConfContents returns an error if /etc/resolv.conf contents does
+// not match the expected config.
+// /etc/resolv.conf is expected to be replaced by the DNS proxy's addresses.
+func VerifyResolvConfContents(ctx context.Context, config Config) error {
+	return verifyResolvConfContents(ctx, config, true /* proxyEnabled */)
+}
+
+// VerifyResolvConfContentsWithoutProxy returns an error if /etc/resolv.conf
+// contents does not match the expected config.
+// /etc/resolv.conf is expected to not be replaced by the DNS proxy's addresses.
+func VerifyResolvConfContentsWithoutProxy(ctx context.Context, config Config) error {
+	return verifyResolvConfContents(ctx, config, false /* proxyEnabled */)
+}
+
+// verifyResolvConfContents returns an error if /etc/resolv.conf contents does
+// not match the expected config.
+func verifyResolvConfContents(ctx context.Context, config Config, proxyEnabled bool) error {
 	var nameservers []template.HTML
 	if proxyEnabled {
 		nameservers = expectedNameserversWithDNSProxy(ctx, config)

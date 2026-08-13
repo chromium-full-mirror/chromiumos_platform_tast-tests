@@ -21,7 +21,6 @@ type resolvConfCrashTestParams struct {
 	shillCrash       bool
 	controllerCrash  bool
 	systemProxyCrash bool
-	dnsProxyEnabled  bool
 }
 
 func init() {
@@ -32,27 +31,22 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "shill_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
-				shillCrash:      true,
-				dnsProxyEnabled: true,
+				shillCrash: true,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "controller_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
 				controllerCrash: true,
-				dnsProxyEnabled: true,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "system_proxy_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
 				systemProxyCrash: true,
-				dnsProxyEnabled:  true,
 			},
-			Fixture: "chromeLoggedIn",
 		}},
 	})
 }
@@ -113,7 +107,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
@@ -181,7 +175,7 @@ func ResolvConfCrash(ctx context.Context, s *testing.State) {
 
 	// Assert /etc/resolv.conf content after the new network is added.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, newConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, newConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after adding a new network: ", err)
 	}

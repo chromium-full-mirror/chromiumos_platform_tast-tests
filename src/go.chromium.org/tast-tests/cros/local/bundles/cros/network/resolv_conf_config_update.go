@@ -19,9 +19,8 @@ import (
 )
 
 type resolvConfConfigUpdateTestParams struct {
-	ipv4            bool
-	ipv6            bool
-	dnsProxyEnabled bool
+	ipv4 bool
+	ipv6 bool
 }
 
 func init() {
@@ -32,28 +31,23 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "ipv4_only_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
-				ipv4:            true,
-				dnsProxyEnabled: true,
+				ipv4: true,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "ipv6_only_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
-				ipv6:            true,
-				dnsProxyEnabled: true,
+				ipv6: true,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "dual_stack_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
-				ipv4:            true,
-				ipv6:            true,
-				dnsProxyEnabled: true,
+				ipv4: true,
+				ipv6: true,
 			},
-			Fixture: "chromeLoggedIn",
 		}},
 	})
 }
@@ -119,7 +113,7 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
@@ -163,7 +157,7 @@ func ResolvConfConfigUpdate(ctx context.Context, s *testing.State) {
 
 	// Assert /etc/resolv.conf content after the network is updated.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, newConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, newConfig)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after applying the StaticIPConfig: ", err)
 	}

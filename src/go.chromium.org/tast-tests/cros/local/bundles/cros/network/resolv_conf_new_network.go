@@ -19,9 +19,8 @@ import (
 )
 
 type resolvConfNewNetworkTestParams struct {
-	priority        int
-	vpn             bool
-	dnsProxyEnabled bool
+	priority int
+	vpn      bool
 }
 
 func init() {
@@ -32,28 +31,23 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:release-health", "release-health_network"},
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "low_priority_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{
-				priority:        dns.LowPriority,
-				dnsProxyEnabled: true,
+				priority: dns.LowPriority,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "high_priority_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{
-				priority:        dns.HighPriority,
-				dnsProxyEnabled: true,
+				priority: dns.HighPriority,
 			},
-			Fixture: "chromeLoggedIn",
 		}, {
 			Name: "vpn_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{
-				priority:        dns.HighPriority,
-				vpn:             true,
-				dnsProxyEnabled: true,
+				priority: dns.HighPriority,
+				vpn:      true,
 			},
-			Fixture: "chromeLoggedIn",
 		}},
 	})
 }
@@ -114,7 +108,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	// Assert that /etc/resolv.conf is correct.
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
@@ -185,7 +179,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	if params.priority == dns.HighPriority {
 		expectedConfig = newConfig
 	}
-	if params.vpn && params.dnsProxyEnabled {
+	if params.vpn {
 		// With DNS proxy and VPN enabled, system proxy will update /etc/resolv.conf
 		// based on IP address content of the default physical network.
 		expectedConfig = dns.Config{
@@ -194,7 +188,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 			IPv4DomainSearchList: newConfig.IPv4DomainSearchList}
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, expectedConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, expectedConfig)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after adding a new network: ", err)
 	}
@@ -208,7 +202,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 
 	// Assert /etc/resolv.conf content after the new network is removed.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
+		return dns.VerifyResolvConfContents(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after removing the new network: ", err)
 	}

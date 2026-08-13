@@ -26,9 +26,9 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name:    "proxy_enabled",
-			Fixture: "chromeLoggedIn",
+			Name: "proxy_enabled",
 		}},
 	})
 }
@@ -107,7 +107,7 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 	// DNS proxy should not be used on non-online networks.
 	// Give shill and dns-proxy sufficient time to respond to the loss of connectivity.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, baseConfig, false /* dnsProxyEnabled */)
+		return dns.VerifyResolvConfContentsWithoutProxy(ctx, baseConfig)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
@@ -145,7 +145,7 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 
 	// Assert /etc/resolv.conf content after the new network is added.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return dns.VerifyResolvConfContents(ctx, newConfig, false /* dnsProxyEnabled */)
+		return dns.VerifyResolvConfContentsWithoutProxy(ctx, newConfig)
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after adding a new network: ", err)
 	}
