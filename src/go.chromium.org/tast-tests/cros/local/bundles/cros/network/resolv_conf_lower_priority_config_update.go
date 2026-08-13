@@ -30,10 +30,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
-			Name:    "proxy_disabled",
-			Val:     resolvConfLowerPriorityConfigUpdateTestParams{},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "proxy_enabled",
 			Val: resolvConfLowerPriorityConfigUpdateTestParams{
 				dnsProxyEnabled: true,

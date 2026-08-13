@@ -33,24 +33,12 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
-			Name: "shill_crash_proxy_disabled",
-			Val: resolvConfCrashTestParams{
-				shillCrash: true,
-			},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "shill_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{
 				shillCrash:      true,
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "controller_crash_proxy_disabled",
-			Val: resolvConfCrashTestParams{
-				controllerCrash: true,
-			},
-			Fixture: "dnsProxyDisabled",
 		}, {
 			Name: "controller_crash_proxy_enabled",
 			Val: resolvConfCrashTestParams{

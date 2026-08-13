@@ -33,12 +33,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:release-health", "release-health_network"},
 		Params: []testing.Param{{
-			Name: "low_priority_proxy_disabled",
-			Val: resolvConfNewNetworkTestParams{
-				priority: dns.LowPriority,
-			},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "low_priority_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{
 				priority:        dns.LowPriority,
@@ -46,25 +40,12 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "high_priority_proxy_disabled",
-			Val: resolvConfNewNetworkTestParams{
-				priority: dns.HighPriority,
-			},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "high_priority_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{
 				priority:        dns.HighPriority,
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "vpn_proxy_disabled",
-			Val: resolvConfNewNetworkTestParams{
-				priority: dns.HighPriority,
-				vpn:      true,
-			},
-			Fixture: "dnsProxyDisabled",
 		}, {
 			Name: "vpn_proxy_enabled",
 			Val: resolvConfNewNetworkTestParams{

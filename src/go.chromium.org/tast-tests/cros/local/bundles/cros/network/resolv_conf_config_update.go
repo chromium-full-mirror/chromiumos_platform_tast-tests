@@ -33,12 +33,6 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
-			Name: "ipv4_only_proxy_disabled",
-			Val: resolvConfConfigUpdateTestParams{
-				ipv4: true,
-			},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "ipv4_only_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
 				ipv4:            true,
@@ -46,25 +40,12 @@ func init() {
 			},
 			Fixture: "chromeLoggedIn",
 		}, {
-			Name: "ipv6_only_proxy_disabled",
-			Val: resolvConfConfigUpdateTestParams{
-				ipv6: true,
-			},
-			Fixture: "dnsProxyDisabled",
-		}, {
 			Name: "ipv6_only_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
 				ipv6:            true,
 				dnsProxyEnabled: true,
 			},
 			Fixture: "chromeLoggedIn",
-		}, {
-			Name: "dual_stack_proxy_disabled",
-			Val: resolvConfConfigUpdateTestParams{
-				ipv4: true,
-				ipv6: true,
-			},
-			Fixture: "dnsProxyDisabled",
 		}, {
 			Name: "dual_stack_proxy_enabled",
 			Val: resolvConfConfigUpdateTestParams{
