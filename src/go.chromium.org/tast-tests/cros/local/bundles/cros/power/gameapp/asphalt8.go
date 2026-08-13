@@ -18,6 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -81,17 +84,39 @@ func (as *Asphalt8) IsLaunched() bool {
 func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	kb := as.kb
 	ud := uidetection.NewDefault(as.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	ui := uiauto.New(as.tconn)
 	profileDismissReg := `(Not now|Cancel)`
 	profileDismissButton := as.d.Object(androidui.TextMatches(profileDismissReg), androidui.ClassName("android.widget.Button"))
 	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene), uidetection.MinConfidence(0.65))
 	raceNow := uidetection.TextBlock([]string{"RACE", "NOW!"})
+
+	var targetFinder *uidetection.Finder
+	var err error
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := cuj.ClickIfExist(profileDismissButton, 3*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to check whether the profile dismiss button exist or not")
+		}
+
+		targetFinder, err = ud.FindAnyExists(ctx, raceNow, gameScene)
+		if err != nil {
+			return errors.Wrap(err, "failed to find game scene or race now button")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: time.Second,
+		// On low-end devices, keep checking the profile prompt in 3 minutes for the 'RACE-NOW' button or mini game scene.
+		Timeout: 3 * time.Minute,
+	}); err != nil {
+		return err
+	}
+
+	if targetFinder == gameScene {
+		return nil
+	}
+
+	ui := uiauto.New(as.tconn)
 	learnToDrive := uidetection.TextBlock([]string{"LEARN", "TO", "DRIVE"})
 	return uiauto.NamedCombine("enter game scene",
-		// On low-end devices, keep checking the profile prompt in 2 minutes for the 'RACE-NOW' button.
-		ui.WithTimeout(2*time.Minute).RetryUntil(
-			cuj.ClickIfExist(profileDismissButton, 3*time.Second),
-			ud.Exists(raceNow)),
 		uiauto.NamedAction("press 'RACE-NOW' button",
 			ui.WithTimeout(2*time.Minute).RetryUntil(
 				uiauto.Combine("press enter twice to play 'MINI-GAME'",
