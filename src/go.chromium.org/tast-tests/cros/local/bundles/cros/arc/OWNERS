@@ -46,7 +46,7 @@ per-file play_files.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNER
 per-file quota_project_id.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
 per-file removable_media.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
 per-file selinux_host_side_restorecon.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
-per-file vm_data_migration.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
+per-file vm_data_migration_state.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.storage
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
