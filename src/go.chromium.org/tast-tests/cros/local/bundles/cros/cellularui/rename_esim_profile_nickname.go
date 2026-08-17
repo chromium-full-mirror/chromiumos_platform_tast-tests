@@ -9,13 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hermesconst"
-	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -27,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RenameESimProfileNickname,
-		Desc: "Renames connected and disconnected eSIM profiles name via the UI",
+		Desc: "Renames eSIM profiles name via the UI",
 		Contacts: []string{
 			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
@@ -61,8 +60,12 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not enable any profiles: ", err)
 	}
 
-	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
-		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
+	modem, err := modemmanager.NewModemWithSim(ctx)
+	if err != nil {
+		s.Fatal("Failed to create modem: ", err)
+	}
+	if _, err := modem.SetPrimarySimSlot(ctx, 2); err != nil {
+		testing.ContextLog(ctx, "Failed to set primary SIM slot to 2 (eSIM): ", err)
 	}
 
 	cleanupCtx := ctx
@@ -74,16 +77,6 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
-
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
-
-	connectedIccid, err := helper.GetCurrentICCID(ctx)
-	if err != nil {
-		s.Fatal("Could not get iccid: ", err)
-	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -101,58 +94,39 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 	defer mdp.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ossettings")
 
-	hasConnectedProfile := false
-	hasDisconnectedProfile := false
-	for _, profilex := range profiles {
-		propsx, _ := dbusutil.NewDBusProperties(ctx, profilex.DBusObject)
-
-		iccid, err := propsx.GetString(hermesconst.ProfilePropertyIccid)
-		if err != nil {
-			s.Fatal("Failed to read profile ICCID: ", err)
-		}
-
-		hasConnectedProfile = hasConnectedProfile || (iccid == connectedIccid)
-		hasDisconnectedProfile = hasDisconnectedProfile || (iccid != connectedIccid)
-	}
-
-	if !hasConnectedProfile {
-		s.Fatal("No connected eSIM profile")
-	}
-
-	if !hasDisconnectedProfile {
-		s.Fatal("No disconnected eSIM profile")
-	}
-
-	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
-		s.Fatal("Failed to go to connected network details: ", err)
-	}
-
-	if err := testRenameProfile(ctx, tconn); err != nil {
-		s.Fatal("Failed to rename profile: ", err)
-	}
-
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	// Go back to mobile data page
-	if err := ui.LeftClick(ossettings.BackArrowBtn)(ctx); err != nil {
-		s.Fatal("Could not go back to mobile data page: ", err)
-	}
+	for i := range profiles {
+		if err := ossettings.WaitUntilRefreshCellularProfileCompletes(ctx, tconn); err != nil {
+			s.Fatal("Failed to wait until refresh profile complete: ", err)
+		}
 
-	if err := ui.WaitUntilExists(ossettings.MobileDataToggle)(ctx); err != nil {
-		s.Fatal("Did not navigate to mobile data page: ", err)
-	}
+		profileDetailBtn := nodewith.HasClass("subpage-arrow").Role(role.Button).Focusable().Nth(i)
+		if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(profileDetailBtn)(ctx); err != nil {
+			s.Fatalf("Failed to find eSIM profile %d in list: %v", i, err)
+		}
 
-	if err := ossettings.GoToFirstInactiveNetworkDetails(ctx, tconn); err != nil {
-		s.Fatal("Failed to go to disconnected network details: ", err)
-	}
+		if err := ui.LeftClick(profileDetailBtn)(ctx); err != nil {
+			s.Fatalf("Failed to click into eSIM profile %d details: %v", i, err)
+		}
 
-	// GoBigSleepLint: Give some time to modem and shill to stabilize.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to wait for 10 seconds: ", err)
-	}
+		// GoBigSleepLint: Give some time to modem and shill to stabilize.
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			s.Fatal("Failed to wait for 10 seconds: ", err)
+		}
 
-	if err := testRenameProfile(ctx, tconn); err != nil {
-		s.Fatal("Failed to rename profile: ", err)
+		if err := testRenameProfile(ctx, tconn); err != nil {
+			s.Fatalf("Failed to rename profile %d: %v", i, err)
+		}
+
+		// Go back to mobile data page.
+		if err := ui.LeftClick(ossettings.BackArrowBtn)(ctx); err != nil {
+			s.Fatal("Could not go back to mobile data page: ", err)
+		}
+
+		if err := ui.WaitUntilExists(ossettings.MobileDataToggle)(ctx); err != nil {
+			s.Fatal("Did not navigate to mobile data page: ", err)
+		}
 	}
 }
 
