@@ -57,10 +57,12 @@ import (
 //     selected automatically by the variant's TPM hardware dependency.
 //
 // How to run:
-// Provide a GAC-managed account (username:password) via the tape.provided_account
-// runtime variable:
+// This test uses an account from the TAPE pool gcac_cert_provisioning (via
+// managedclientcert.LoggedInFixture) and runs with:
 //
-//	tast run -var tape.provided_account='user@domain:password' <dut> network.ClientCertificate.*
+//	tast run <dut> network.ClientCertificate.*
+//
+// (An account can also be provided manually via -var tape.provided_account='user@domain:password').
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -72,9 +74,7 @@ func init() {
 			"seblalancette@chromium.org",     // Test owner
 		},
 		BugComponent: "b:1000044",
-		// Run manually / on demand: requires a real account (with the policy
-		// enabled) via -var tape.provided_account.
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      managedclientcert.LoggedInFixture,
 		Timeout:      5 * time.Minute,
 		// The managed client certificate key is hardware-backed on devices with a

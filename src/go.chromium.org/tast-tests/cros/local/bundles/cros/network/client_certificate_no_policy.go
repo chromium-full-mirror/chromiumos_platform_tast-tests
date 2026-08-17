@@ -48,10 +48,13 @@ import (
 //   - Outbound internet access (GAIA login).
 //
 // How to run:
-// Provide a GAC-managed account (username:password) whose OU has the policy
-// disabled, via the tape.provided_account runtime variable:
+// This test uses a default GAC-managed account (without the client certificate
+// provisioning policy enabled) from the TAPE pool default_managed (via
+// managedclientcert.NoPolicyLoggedInFixture) and runs with:
 //
-//	tast run -var tape.provided_account='user@domain:password' <dut> network.ClientCertificateNoPolicy
+//	tast run <dut> network.ClientCertificateNoPolicy
+//
+// (An account can also be provided manually via -var tape.provided_account='user@domain:password').
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -63,10 +66,8 @@ func init() {
 			"seblalancette@chromium.org",     // Test owner
 		},
 		BugComponent: "b:1000044",
-		// Run manually / on demand: requires a real account (with the policy
-		// disabled) via -var tape.provided_account.
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      managedclientcert.LoggedInFixture,
+		SoftwareDeps: []string{"chrome", "gaia"},
+		Fixture:      managedclientcert.NoPolicyLoggedInFixture,
 		Timeout:      5 * time.Minute,
 	})
 }

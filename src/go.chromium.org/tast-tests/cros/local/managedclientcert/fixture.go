@@ -8,39 +8,59 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast/core/testing"
 )
 
-// LoggedInFixture is the fixture shared by the network.ClientCertificate and
-// network.ClientCertificateNoPolicy tests. It requests a GAC-managed account
-// from TAPE and logs into Chrome via GAIA, so the tests only contain their
-// (positive / negative) certificate verification.
-//
-// The specific account is provided per run via the tape.provided_account runtime
-// variable, so the same fixture serves both the policy-enabled
-// (ClientCertificate) and policy-disabled (ClientCertificateNoPolicy) tests; the
-// account, not the fixture, determines which policy state is exercised.
+// LoggedInFixture is the fixture for the network.ClientCertificate test. It
+// requests a GAC-managed account with the client certificate provisioning policy
+// enabled from the gcac_cert_provisioning TAPE pool and logs into Chrome via GAIA.
 const LoggedInFixture = "managedClientCertLoggedIn"
+
+// NoPolicyLoggedInFixture is the fixture for the network.ClientCertificateNoPolicy
+// test. It requests a default GAC-managed account without the client certificate
+// provisioning policy enabled from the default_managed TAPE pool and logs into
+// Chrome via GAIA.
+const NoPolicyLoggedInFixture = "managedClientCertNoPolicyLoggedIn"
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInFixture,
-		Desc: "Requests a GAC-managed account from TAPE and logs into Chrome via GAIA for managed client certificate tests",
+		Desc: "Requests a GAC-managed account from TAPE (gcac_cert_provisioning pool) and logs into Chrome via GAIA for managed client certificate tests",
 		Contacts: []string{
 			"cbe-cep-eng@google.com",         // Team
 			"vishwa.kalubowila@codimite.com", // Test author
 			"seblalancette@chromium.org",     // Test owner
 		},
 		BugComponent: "b:1000044",
+		Parent:       fixture.TAPERemoteBase,
 		// Leasing a TAPE account can take up to tape's request timeout (5 minutes)
 		// on top of the GAIA login.
 		SetUpTimeout:    chrome.GAIALoginTimeout + 5*time.Minute,
 		PostTestTimeout: time.Minute,
 		TearDownTimeout: chrome.ResetTimeout + time.Minute,
-		Impl:            &fixtureImpl{},
+		Impl:            &fixtureImpl{poolID: tape.GCACCertProvisioning},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: NoPolicyLoggedInFixture,
+		Desc: "Requests a default GAC-managed account from TAPE (default_managed pool) and logs into Chrome via GAIA for managed client certificate negative tests",
+		Contacts: []string{
+			"cbe-cep-eng@google.com",         // Team
+			"vishwa.kalubowila@codimite.com", // Test author
+			"seblalancette@chromium.org",     // Test owner
+		},
+		BugComponent: "b:1000044",
+		Parent:       fixture.TAPERemoteBase,
+		// Leasing a TAPE account can take up to tape's request timeout (5 minutes)
+		// on top of the GAIA login.
+		SetUpTimeout:    chrome.GAIALoginTimeout + 5*time.Minute,
+		PostTestTimeout: time.Minute,
+		TearDownTimeout: chrome.ResetTimeout + time.Minute,
+		Impl:            &fixtureImpl{poolID: tape.DefaultManaged},
 	})
 }
 
@@ -63,12 +83,13 @@ func (v FixtValue) TestAPIConn() *chrome.TestConn { return v.tconn }
 func (v FixtValue) Username() string { return v.username }
 
 type fixtureImpl struct {
-	accountManager *tape.GenericAccountManager
+	poolID         string
+	accountManager *tape.OwnedTestAccountManager
 	value          FixtValue
 }
 
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	manager, account, err := tape.NewGenericAccountManager(ctx, nil, tape.WithTimeout(5*60))
+	manager, account, err := tape.NewOwnedTestAccountManager(ctx, []byte{}, false /*lock*/, tape.WithTimeout(5*60), tape.WithPoolID(f.poolID))
 	if err != nil {
 		s.Fatal("Failed to request an account: ", err)
 	}
@@ -88,6 +109,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 
 	cr, err := chrome.New(ctx,
 		chrome.GAIALogin(chrome.Creds{User: account.Username, Pass: account.Password}),
+		chrome.ProdPolicy(),
 		chrome.ExtraArgs("--allow-insecure-localhost"),
 	)
 	if err != nil {
