@@ -2520,6 +2520,16 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 			Unit:      "seconds",
 			Direction: perf.SmallerIsBetter,
 		}, float64(resp.ConfigurationTime)/1e9)
+		// For 6GHz tests, warm up the link with initial unicast traffic to allow
+		// post-association Dynamic SMPS antenna wake-up to settle.
+		if apIface.Config().Is6GHz {
+			if res, err := tf.PingFromSpecificDUT(ctx, wificell.DefaultDUT, apIface.ServerIP().String(), ping.Count(6), ping.Interval(1)); err != nil {
+				s.Log("Initial 6GHz ping warm-up non-fatal error: ", err)
+			} else {
+				s.Logf("Initial 6GHz ping warm-up: %d/%d received (loss: %.1f%%)", res.Received, res.Sent, res.Loss)
+			}
+		}
+
 		ping := func(ctx context.Context) error {
 			return tf.PingFromDUT(ctx, apIface.ServerIP().String(), pingOps...)
 		}

@@ -875,13 +875,22 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	}
 	if c.is80211ax() || c.is80211be() {
 		configure("ieee80211ax", "1")
-		configure("he_oper_chwidth", strconv.Itoa(int(c.HEChWidth)))
 		configure("he_default_pe_duration", "0") // 0us value in PE (packet extension) field
 		// TODO(b/337225932): Set this value dynamically depending on AP/STA capabilities
 		configure("he_basic_mcs_nss_set", "65530") // Enable MCS index 0-11 on spatial streams 1 and 2 (0xfffa)
 		configure("he_bss_color", "42")            // Set default bss color
 
-		if c.HECenterChannel != 0 {
+		chWidth := c.HEChWidth
+		if c.is80211be() {
+			chWidth = ehtToHEChWidth(c.EHTChWidth)
+		}
+		configure("he_oper_chwidth", strconv.Itoa(int(chWidth)))
+
+		centerChannel := c.HECenterChannel
+		if c.is80211be() {
+			centerChannel = c.EHTCenterChannel
+		}
+		if centerChannel != 0 {
 			configure("he_oper_centr_freq_seg0_idx", strconv.Itoa(c.HECenterChannel))
 		}
 		if c.Mode == Mode80211axPure {
@@ -1519,6 +1528,20 @@ func (c *Config) validateEHTChWidth() error {
 		return nil
 	default:
 		return errors.Errorf("invalid eht_oper_chwidth %d", int(c.EHTChWidth))
+	}
+}
+
+// ehtToHEChWidth maps EHT channel width to corresponding HE channel width for 802.11be operation.
+func ehtToHEChWidth(w EHTChWidthEnum) HEChWidthEnum {
+	switch w {
+	case EHTChWidth80:
+		return HEChWidth80
+	case EHTChWidth160:
+		return HEChWidth160
+	case EHTChWidth80Plus80:
+		return HEChWidth80Plus80
+	default:
+		return HEChWidth20Or40
 	}
 }
 
