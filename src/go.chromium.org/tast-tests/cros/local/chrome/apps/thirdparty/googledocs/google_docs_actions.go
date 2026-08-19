@@ -66,19 +66,15 @@ func UpdatePagelessModeAction(pc pointer.Context, docsConn *chrome.Conn, ac *uia
 	if isEnabled {
 		toggle = "Pageless"
 	}
-
-	file := nodewith.Name("File").Role(role.MenuItem)
-	menu := nodewith.Role(role.Menu).Ancestor(DocsWebArea)
 	pageSetup := nodewith.NameStartingWith("Page setup").Role(role.MenuItem)
 	mode := nodewith.NameStartingWith(toggle).Role(role.Tab)
 	pageSetupDialog := nodewith.NameStartingWith("Page setup").Role(role.Dialog)
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(pageSetupDialog)
 	return uiauto.Combine(
 		fmt.Sprintf("set pageless mode to %t", isEnabled),
-		pc.Click(file),
+		ClickFileMenuButtonWithFinder(ac, pc),
 		// In chromevox subcase pageSetup would be hidden,
 		// so we need to add keyboard actions to make it show up.
-		ac.WaitForLocation(menu),
 		uiauto.IfFailThen(
 			ac.Exists(pageSetup.Onscreen()),
 			ac.RetryUntil(
