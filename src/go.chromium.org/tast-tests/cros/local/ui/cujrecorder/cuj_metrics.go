@@ -151,9 +151,9 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 
 		// GPU metrics.
 		NewCustomMetricConfig("Compositing.Display.PendingSwaps", "swaps", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysPromoted", "overlay_candidates", perf.BiggerIsBetter),
-		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysFailed", "overlay_candidates", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysAttempted", "overlay_candidates", perf.BiggerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysPromotedV2", "overlay_candidates", perf.BiggerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysFailedV2", "overlay_candidates", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysAttemptedV2", "overlay_candidates", perf.BiggerIsBetter),
 		NewCustomMetricConfig("Viz.FrameSink.GpuBusyDuration", "microseconds", perf.SmallerIsBetter),
 		NewEnumCustomMetricConfig("Compositing.Display.HardwareDisplayController.SchedulePageFlipResult",
 			map[int64]string{

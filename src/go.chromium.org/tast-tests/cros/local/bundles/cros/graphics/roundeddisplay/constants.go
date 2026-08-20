@@ -7,7 +7,7 @@ package roundeddisplay
 const (
 	// PromotedOverlayHistogramName is the name of histogram that captures
 	// information about promoted overlays/
-	PromotedOverlayHistogramName = "Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysPromoted"
+	PromotedOverlayHistogramName = "Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysPromotedV2"
 
 	// ExpectedNumberOfPromotedOverlays is how many overlays should be promoted.
 	// We expect to promote three overlays planes each frame. (one plane
