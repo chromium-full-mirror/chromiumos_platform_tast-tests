@@ -66,6 +66,7 @@ func init() {
 			"seblalancette@chromium.org",     // Test owner
 		},
 		BugComponent: "b:1000044",
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia"},
 		Fixture:      managedclientcert.NoPolicyLoggedInFixture,
 		Timeout:      5 * time.Minute,
