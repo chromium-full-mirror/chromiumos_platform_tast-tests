@@ -7,9 +7,9 @@ package internal
 // Model list.
 var (
 	// Models that support DSP AEC.
-	DSPAECModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
+	DSPAECModels = []string{"yaviks", "yavikso"}
 	// Models that support both DSP AEC and DSP NC.
-	DSPAECNCModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
+	DSPAECNCModels = []string{"yaviks", "yavikso"}
 	// Models that support DSP NC but not DSP AEC.
 	DSPNCOnlyModels = []string{"dojo"}
 	// Models that support Waves output processing.
