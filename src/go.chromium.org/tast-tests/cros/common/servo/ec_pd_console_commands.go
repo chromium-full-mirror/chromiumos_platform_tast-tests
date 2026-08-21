@@ -361,7 +361,7 @@ func (s *Servo) SetPDPowerRole(ctx context.Context, role string) error {
 			}
 
 			return nil
-		}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: 1 * time.Second}); err != nil {
 			return errors.Wrap(err, "expected PD power swap")
 		}
 
