@@ -1004,12 +1004,29 @@ func getSuspendTargetCmd(ctx context.Context, h *firmware.Helper) (string, error
 	return "", errors.New("neither S0ix (freeze) nor S3 (deep) suspend states are supported by this system")
 }
 
+func getKernelSuspendCount(ctx context.Context, h *firmware.Helper) (int, error) {
+	out, err := h.DUT.Conn().CommandContext(ctx, "cat", "/sys/power/suspend_stats/success").Output()
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to read /sys/power/suspend_stats/success")
+	}
+	count, err := strconv.Atoi(strings.TrimSpace(string(out)))
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse suspend count %q", string(out))
+	}
+	return count, nil
+}
+
 func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod time.Duration) (cancelfunc, error) {
 	testing.ContextLogf(ctx, "Starting Suspend Stress Task with wakePeriod=%v, suspendPeriod=%v", wakePeriod, suspendPeriod)
 
 	suspendTargetCmd, err := getSuspendTargetCmd(ctx, h)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to determine suspend command")
+	}
+
+	initialCount, err := getKernelSuspendCount(ctx, h)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get initial suspend count")
 	}
 
 	// powerd_dbus_suspend is not used because user input from the keyboard prevents suspend
@@ -1020,31 +1037,32 @@ func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wa
 		return nil, errors.Wrap(err, "failed to start suspend stress task")
 	}
 
-	var suspendCount = 0
-	return startTask(ctx, timeout,
-		func(suspendCtx context.Context) error {
-			if err := h.WaitForPowerStates(suspendCtx, firmware.PowerStateInterval, timeout, "S0ix", "S3"); err != nil {
-				return errors.Wrap(err, "DUT failed to suspend")
-			}
-			suspendCount++
-			testing.ContextLogf(ctx, "DUT suspended #%d", suspendCount)
-			if err := h.WaitForPowerStates(suspendCtx, firmware.PowerStateInterval, timeout, "S0"); err != nil {
-				return errors.Wrap(err, "DUT failed wake")
-			}
-			testing.ContextLogf(ctx, "DUT awake #%d", suspendCount)
-			return nil
-		},
-		func(suspendCtx context.Context) error {
-			testing.ContextLogf(ctx, "Suspend Stress Task Done; %v suspend cycles;", suspendCount)
+	var (
+		once   sync.Once
+		retErr error
+	)
+	return func() error {
+		once.Do(func() {
 			if err := remoteSuspendStressCancel(); err != nil {
-				return err
+				retErr = err
+				return
 			}
+
+			finalCount, err := getKernelSuspendCount(ctx, h)
+			if err != nil {
+				retErr = errors.Wrap(err, "failed to get final suspend count")
+				return
+			}
+
+			suspendCount := finalCount - initialCount
+			testing.ContextLogf(ctx, "Suspend Stress Task Done; %d suspend cycles", suspendCount)
 			if suspendCount < 1 {
-				return errors.New("DUT never suspended")
+				retErr = errors.New("DUT never suspended")
+				return
 			}
-			return nil
-		},
-	), nil
+		})
+		return retErr
+	}, nil
 }
 
 func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Duration) (cancelfunc, error) {
