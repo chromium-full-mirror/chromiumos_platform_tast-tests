@@ -24,9 +24,8 @@ func init() {
 			"wisniewskib@google.com",
 		},
 		BugComponent: "b:715469",
-		// TODO(b/513305476): enable after crrev.com/i/9347641
-		// Attr:         []string{"group:gsc", "gsc_image_ti50", "gsc_nightly"},
-		Fixture: fixture.GSCOpenCCD,
+		Attr:         []string{"group:gsc", "gsc_image_ti50", "gsc_nightly"},
+		Fixture:      fixture.GSCOpenCCD,
 	})
 }
 
