@@ -56,7 +56,7 @@ func init() {
 				Val: verifyRouterParams{
 					isConductive: false,
 				},
-				Fixture: wificell.FixtureID(wificell.TFFeaturesRouters),
+				Fixture: wificell.FixtureID(wificell.TFFeaturesRoutersWithoutBT),
 			},
 			{
 				Name: "conductive",
@@ -64,7 +64,7 @@ func init() {
 					isConductive: true,
 				},
 				ExtraTestBedDeps: []string{tbdep.Conductive},
-				Fixture:          wificell.FixtureID(wificell.TFFeaturesRouters),
+				Fixture:          wificell.FixtureID(wificell.TFFeaturesRoutersWithoutBT),
 			},
 		},
 	})

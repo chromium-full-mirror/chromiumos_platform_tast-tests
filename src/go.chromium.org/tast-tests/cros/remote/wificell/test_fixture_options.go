@@ -130,6 +130,11 @@ type TFOptions struct {
 	//
 	// Default is ["wifi"].
 	DutWifiLogTags []string
+
+	// EnableBluetooth when true, will setup bluetooth facade and power on bluetooth on the duts.
+	//
+	// Default is true.
+	EnableBluetooth bool
 }
 
 // newTFOptions creates a new TFOptions with all default values populated.
@@ -153,6 +158,7 @@ func newTFOptions() *TFOptions {
 		SetDutWifiLogging:    true,
 		DutWifiLogLevel:      -2,
 		DutWifiLogTags:       []string{"wifi"},
+		EnableBluetooth:      true,
 	}
 }
 
@@ -307,5 +313,11 @@ func (b *TFOptionsBuilder) DutWifiLogTags(dutWifiLogTags []string) *TFOptionsBui
 // DutWifiLogLevel sets TFOptions.DutWifiLogLevel.
 func (b *TFOptionsBuilder) DutWifiLogLevel(dutWifiLogLevel int) *TFOptionsBuilder {
 	b.options.DutWifiLogLevel = dutWifiLogLevel
+	return b
+}
+
+// EnableBluetooth sets TFOptions.EnableBluetooth.
+func (b *TFOptionsBuilder) EnableBluetooth(enableBluetooth bool) *TFOptionsBuilder {
+	b.options.EnableBluetooth = enableBluetooth
 	return b
 }

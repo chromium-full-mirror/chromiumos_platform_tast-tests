@@ -335,13 +335,15 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 		d.wifiClient = &WifiClient{
 			ShillServiceClient: wifi.NewShillServiceClient(d.rpc.Conn),
 		}
-		d.bluetoothClient = bluetooth.NewBluetoothServiceClient(d.rpc.Conn)
+		if tf.options.EnableBluetooth {
+			d.bluetoothClient = bluetooth.NewBluetoothServiceClient(d.rpc.Conn)
 
-		if _, err := d.bluetoothClient.SetupBluetoothFacade(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to setup bluetooth facade on DUT")
-		}
-		if _, err := d.bluetoothClient.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
-			return errors.Wrap(err, "failed to enable bluetooth on DUT")
+			if _, err := d.bluetoothClient.SetupBluetoothFacade(ctx, &empty.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to setup bluetooth facade on DUT")
+			}
+			if _, err := d.bluetoothClient.SetPowered(ctx, &bluetooth.SetPoweredRequest{Powered: true}); err != nil {
+				return errors.Wrap(err, "failed to enable bluetooth on DUT")
+			}
 		}
 
 		if _, err := d.wifiClient.InitDUT(ctx, &wifi.InitDUTRequest{WithUi: tf.options.EnableDutUI}); err != nil {

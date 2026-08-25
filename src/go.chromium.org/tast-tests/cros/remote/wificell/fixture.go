@@ -104,6 +104,7 @@ func init() {
 	params[TFFeaturesBridgeAndVeth|TFFeaturesCapture] = "Wificell setup with bridge and veth support on router and Capturer on pcap"
 	params[TFFeaturesRouters] = "Wificell setup with multiple routers"
 	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi roaming setup with multiple routers and attenuators"
+	params[TFFeaturesRoutersWithoutBT] = "Wificell setup with multiple routers without bluetooth"
 	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
 	params[TFFeaturesEnroll|TFFeaturesCapture] = "Wificell setup with router and pcap object and chrome enrolled with Capturer on pcap"
 	params[TFFeaturesCompanionDUT] = "Wificell setup with companion Chromebook DUT"
@@ -121,6 +122,10 @@ func init() {
 
 	fixtures := make(map[TFFeatures]*testing.Fixture)
 	for f, desc := range params {
+		serviceDeps := []string{ShillServiceName, BluetoothServiceName, CrashServiceName}
+		if f&TFFeaturesRoutersWithoutBT != 0 {
+			serviceDeps = []string{ShillServiceName, CrashServiceName}
+		}
 		fixtures[f] = &testing.Fixture{
 			Name: f.String(),
 			Desc: desc,
@@ -136,7 +141,7 @@ func init() {
 			PreTestTimeout:  preTestTimeout,
 			PostTestTimeout: postTestTimeout,
 			TearDownTimeout: tearDownTimeout,
-			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName, CrashServiceName},
+			ServiceDeps:     serviceDeps,
 			Vars: []string{
 				fixtureVarRouter,
 				fixtureVarPcap,
@@ -145,7 +150,7 @@ func init() {
 		}
 
 		// Typical fixture extensions.
-		if f&TFFeaturesRouters != 0 {
+		if f&(TFFeaturesRouters|TFFeaturesRoutersWithoutBT) != 0 {
 			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarRoutersMultiple)
 		}
 		if f&TFFeaturesAttenuator != 0 {
@@ -192,7 +197,9 @@ const (
 	TFFeaturesCapture = 1 << iota
 	// TFFeaturesBridgeAndVeth to configure bridge and veth setup on top of default setup.
 	TFFeaturesBridgeAndVeth
-	// TFFeaturesRouters allows to configure more than one router.
+	// TFFeaturesRouters allows configuring more than one router. Note that standard
+	// wificell fixtures initialize and enable the DUT Bluetooth adapter by default
+	// for Wi-Fi/BT coexistence.
 	TFFeaturesRouters
 	// TFFeaturesAttenuator feature facilitates attenuator handling.
 	TFFeaturesAttenuator
@@ -214,6 +221,9 @@ const (
 	TFFeaturesWithUI
 	// TFFeaturesNoResetAfterTest is a feature that skips the Reset step after each test.
 	TFFeaturesNoResetAfterTest
+	// TFFeaturesRoutersWithoutBT allows configuring more than one router without initializing
+	// the DUT Bluetooth facade or adding BluetoothService dependency (e.g. for router-only verification tests).
+	TFFeaturesRoutersWithoutBT
 )
 
 // String returns name component corresponding to enum value(s).
@@ -234,6 +244,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesRouters != 0 {
 		ret = append(ret, "Routers")
 		enum ^= TFFeaturesRouters
+	}
+	if enum&TFFeaturesRoutersWithoutBT != 0 {
+		ret = append(ret, "RoutersWithoutBT")
+		enum ^= TFFeaturesRoutersWithoutBT
 	}
 	if enum&TFFeaturesAttenuator != 0 {
 		ret = append(ret, "Attenuator")
@@ -516,8 +530,12 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	ops := NewTFOptionsBuilder()
 	ops.DutTarget(s.DUT(), s.RPCHint())
 
+	if f.features&TFFeaturesRoutersWithoutBT != 0 {
+		ops.EnableBluetooth(false)
+	}
+
 	// Read fixture vars for router host(s) identification.
-	if f.features&TFFeaturesRouters != 0 {
+	if f.features&(TFFeaturesRouters|TFFeaturesRoutersWithoutBT) != 0 {
 		var routers []string
 		if routersStr, ok := s.Var(fixtureVarRoutersMultiple); ok && routersStr != "" {
 			testing.ContextLog(ctx, "routers: ", routersStr)
