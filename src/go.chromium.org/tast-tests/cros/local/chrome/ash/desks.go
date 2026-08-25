@@ -299,6 +299,8 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 		ac.WaitUntilExists(savedDeskGridView),
 		// Wait for the name view of the newly added item to be focused.
 		ac.WaitUntilExists(focusedNameView),
+		// Wait for the animation of the saved desk grid item to finish.
+		ac.WaitForLocation(focusedNameView),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to save a desk")
 	}
@@ -312,6 +314,22 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 	if err := kb.Type(ctx, savedDeskName); err != nil {
 		return errors.Wrapf(err, "cannot type %q: ", savedDeskName)
 	}
+
+	// Verify that the text field's value has been fully and correctly updated.
+	// This helps catch partial or dropped keystrokes before pressing "Enter".
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, err := ac.Info(ctx, focusedNameView)
+		if err != nil {
+			return err
+		}
+		if info.Value != savedDeskName {
+			return errors.Errorf("got %q, want %q", info.Value, savedDeskName)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 3 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
+		return errors.Wrapf(err, "saved desk name not correctly fully typed: %q", savedDeskName)
+	}
+
 	if err := kb.Accel(ctx, "Enter"); err != nil {
 		return errors.Wrap(err, "cannot press 'Enter'")
 	}
