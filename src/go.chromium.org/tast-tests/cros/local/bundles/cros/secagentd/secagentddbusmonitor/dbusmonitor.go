@@ -12,6 +12,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -45,6 +46,15 @@ func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get DBus object")
 	}
+
+	// Trigger a synthetic process event. Since missived uses speculative queues,
+	// secagentd does not establish a DBus connection until it sends the first event.
+	// This generated event forces secagentd to establish the DBus connection instantly so
+	// we do not time out polling for the connection name.
+	if err := testexec.CommandContext(ctx, "true").Run(testexec.DumpLogOnError); err != nil {
+		return nil, errors.Wrap(err, "failed to trigger a synthetic process event")
+	}
+
 	var dbusConn string
 	// secagentd may have just been restarted so Poll for a bit until it
 	// establishes a dbus connection. (Batch interval can be up to 5s + load delays)
@@ -74,6 +84,15 @@ func SetupDbusWatcherWithTimeout(ctx context.Context, agentPid uint64, timeout t
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "unable to get DBus object")
 	}
+
+	// Trigger a synthetic process event. Since missived uses speculative queues,
+	// secagentd does not establish a DBus connection until it sends the first event.
+	// This generated event forces secagentd to establish the DBus connection instantly so
+	// we do not time out polling for the connection name.
+	if err := testexec.CommandContext(ctx, "true").Run(testexec.DumpLogOnError); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to trigger a synthetic process event")
+	}
+
 	var dbusConn string
 	// secagentd may have just been restarted so Poll for a bit until it
 	// establishes a dbus connection. (Batch interval can be up to 5s + load delays)
