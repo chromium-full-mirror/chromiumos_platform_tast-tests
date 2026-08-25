@@ -47,10 +47,10 @@ func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.
 	}
 	var dbusConn string
 	// secagentd may have just been restarted so Poll for a bit until it
-	// establishes a dbus connection.
+	// establishes a dbus connection. (Batch interval can be up to 5s + load delays)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return getSecagentdDbusConn(ctx, dbo, agentPid, &dbusConn)
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "timed out waiting for secagentd to be available")
 	}
 
@@ -76,10 +76,10 @@ func SetupDbusWatcherWithTimeout(ctx context.Context, agentPid uint64, timeout t
 	}
 	var dbusConn string
 	// secagentd may have just been restarted so Poll for a bit until it
-	// establishes a dbus connection.
+	// establishes a dbus connection. (Batch interval can be up to 5s + load delays)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return getSecagentdDbusConn(ctx, dbo, agentPid, &dbusConn)
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		return nil, nil, errors.Wrap(err, "timed out waiting for secagentd to be available")
 	}
 
