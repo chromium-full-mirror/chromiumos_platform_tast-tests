@@ -50,12 +50,20 @@ func VerifyWindowCount(ctx context.Context, tconn *chrome.TestConn, windowCount 
 			}
 		}
 		// Verify that there is now the correct number of windows.
-		wc, err := ash.GetAllWindows(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get all open windows")
-		}
-		if len(wc) != windowCount {
-			return errors.Wrapf(err, "found inconsistent number of window(s): got %v, want %v", len(wc), windowCount)
+		// We use testing.Poll because window closures are asynchronous.
+		// The dismissed popup or other closing windows may take a brief moment
+		// to fully disappear from Ash's window hierarchy.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			wc, err := ash.GetAllWindows(ctx, tconn)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get all open windows"))
+			}
+			if len(wc) != windowCount {
+				return errors.Errorf("found inconsistent number of window(s): got %v, want %v", len(wc), windowCount)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+			return err
 		}
 	}
 
