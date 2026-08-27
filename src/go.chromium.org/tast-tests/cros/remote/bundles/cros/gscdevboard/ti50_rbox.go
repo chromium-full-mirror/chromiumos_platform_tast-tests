@@ -105,7 +105,7 @@ func withinTolerance(want, got time.Duration) bool {
 
 func Ti50RBOX(ctx context.Context, s *testing.State) {
 	params := s.Param().(ti50ValidRBOXParam)
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)

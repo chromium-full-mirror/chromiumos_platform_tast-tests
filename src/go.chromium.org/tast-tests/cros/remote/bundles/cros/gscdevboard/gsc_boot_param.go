@@ -42,7 +42,7 @@ func init() {
 
 // GSCBootParam verifies boot_param_test passes
 func GSCBootParam(ctx context.Context, s *testing.State) {
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

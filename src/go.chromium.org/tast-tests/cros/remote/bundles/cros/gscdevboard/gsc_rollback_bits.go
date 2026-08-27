@@ -48,7 +48,7 @@ func init() {
 // GSCRollbackBits requires HW setup with SuzyQ cable from devboard to drone/workstation.
 func GSCRollbackBits(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

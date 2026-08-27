@@ -165,7 +165,7 @@ func init() {
 
 // GSCWPAtBoot verifies WP atboot
 func GSCWPAtBoot(ctx context.Context, s *testing.State) {
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	defer i.Close(ctx)

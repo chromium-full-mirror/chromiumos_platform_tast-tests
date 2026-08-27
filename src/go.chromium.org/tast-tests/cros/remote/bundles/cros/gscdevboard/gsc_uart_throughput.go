@@ -90,7 +90,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 
 	var consoles []consoleChannel
 
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	gscProps := b.GscProperties()
 	testOption := s.Param().(throughputTest)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}

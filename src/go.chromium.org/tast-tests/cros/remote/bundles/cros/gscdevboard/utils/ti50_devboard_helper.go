@@ -238,8 +238,7 @@ type DevboardHelper struct {
 }
 
 // NewDevboardHelper creates a new object from testing state provided by fixture
-func NewDevboardHelper(s *testing.State) DevboardHelper {
-	f := s.FixtValue().(*fixture.Value)
+func NewDevboardHelper(s FirmwareTestingHelperDelegate, f *fixture.Value) DevboardHelper {
 	b := f.DevBoard()
 	gscConsole := b.PhysicalUart(ti50.UartConsole)
 	return DevboardHelper{b, gscConsole, s, f.TestbedProperties.TestbedType}

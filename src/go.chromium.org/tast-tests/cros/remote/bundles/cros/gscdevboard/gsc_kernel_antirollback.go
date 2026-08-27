@@ -45,7 +45,7 @@ func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 	// 5. Verify against 0 hash. Should succeed.
 	// 6. Undefine space.
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	ecUart := b.PhysicalUart(ti50.UartEC)
 	th.MustSucceed(ecUart.Open(ctx), "Open EC UART")
 	defer ecUart.Close(ctx)

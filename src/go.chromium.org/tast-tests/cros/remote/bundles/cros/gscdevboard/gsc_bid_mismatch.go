@@ -46,7 +46,7 @@ func init() {
 // Update to the DBG image, flash an image with a BID mismatch, and rollback to it.
 func GSCBIDMismatch(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

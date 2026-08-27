@@ -124,7 +124,7 @@ func runI2CTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBusName, 
 
 func GSCI2CBridge(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(gSCI2CBridgeParam)
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	r := rand.New(rand.NewSource(42))

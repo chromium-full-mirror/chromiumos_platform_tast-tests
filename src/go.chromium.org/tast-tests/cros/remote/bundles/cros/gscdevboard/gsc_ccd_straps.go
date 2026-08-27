@@ -168,7 +168,7 @@ func eventsMustBe(events utils.GpioEvents, expected []utils.GpioEdge, caseStr st
 
 func GSCCCDStraps(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(gSCCCDStrapsParam)
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

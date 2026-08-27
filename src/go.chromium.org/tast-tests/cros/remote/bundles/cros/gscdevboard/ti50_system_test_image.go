@@ -83,7 +83,7 @@ func processBackground(ctx context.Context, s *testing.State, match string) {
 
 func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	config := s.Param().(testSystemTestConfig)
 
 	th.MustSucceed(b.Open(ctx), "Open gsc UART")

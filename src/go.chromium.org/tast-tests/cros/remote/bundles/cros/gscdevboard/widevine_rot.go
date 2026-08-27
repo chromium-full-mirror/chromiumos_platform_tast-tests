@@ -76,7 +76,7 @@ func (f *wvRotFields) init(s *testing.State, w ti50.WvRotReadResponse) {
 
 func WidevineRot(ctx context.Context, s *testing.State) {
 	// 1. Setup Board connection (SPI/I2C/GPIO)
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

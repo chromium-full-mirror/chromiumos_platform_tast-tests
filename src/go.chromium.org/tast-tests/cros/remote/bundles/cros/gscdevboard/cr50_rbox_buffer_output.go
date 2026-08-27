@@ -150,7 +150,7 @@ func waitForPulse(ctx context.Context, b utils.DevboardHelper, gpioMonitor utils
 // Cr50RBOXBufferOutput verifies GSC RBOX buffers the outputs of the power
 // button, key0, and key1 signals correctly.
 func Cr50RBOXBufferOutput(ctx context.Context, s *testing.State) {
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)

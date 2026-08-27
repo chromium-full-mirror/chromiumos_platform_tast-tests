@@ -69,7 +69,7 @@ func waitForUpdate(ctx context.Context, b utils.DevboardHelper, i *ti50.CrOSImag
 // GSCUpdatePostReset requires HW setup with SuzyQ cable from devboard to drone/workstation.
 func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 

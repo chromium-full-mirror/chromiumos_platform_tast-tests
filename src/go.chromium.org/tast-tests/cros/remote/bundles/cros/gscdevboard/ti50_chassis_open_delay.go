@@ -72,7 +72,7 @@ func verifyOpenTimeout(ctx context.Context, i *ti50.CrOSImage, th utils.Firmware
 // Ti50ChassisOpenDelay verifies chassis open delayed 5 minutes for some board ID.
 func Ti50ChassisOpenDelay(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 	addDelay := s.Param().(bool)

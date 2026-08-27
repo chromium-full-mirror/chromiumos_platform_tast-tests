@@ -94,7 +94,7 @@ func runI2CCornerTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBus
 }
 
 func GSCI2CBridgeCorners(ctx context.Context, s *testing.State) {
-	b := utils.NewDevboardHelper(s)
+	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	r := rand.New(rand.NewSource(42))
 
 	i2cBusses := b.GscProperties().GscHostI2cBusses()
