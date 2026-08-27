@@ -99,7 +99,7 @@ func VirtualKeyboardJapaneseInputMode(ctx context.Context, s *testing.State) {
 	}
 
 	omniboxFinder := nodewith.Role(role.TextField).ClassName("OmniboxViewViews")
-	omniboxFirstResultFinder := nodewith.ClassName("OmniboxResultView").First()
+	omniboxFirstResultFinder := nodewith.Role(role.ListBoxOption).First()
 
 	const loadNewSettingDuration = 2 * time.Second
 

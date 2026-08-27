@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -121,7 +122,7 @@ func TriggerSearchSuggestion(ctx context.Context, params networkrequestmonitor.O
 	}
 
 	// Get all the omnibox results.
-	omniboxResults, err := ui.NodesInfo(ctx, nodewith.ClassName("OmniboxResultView"))
+	omniboxResults, err := ui.NodesInfo(ctx, nodewith.Role(role.ListBoxOption))
 	if err != nil {
 		return errors.Wrap(err, "failed to get omnibox results")
 	}
