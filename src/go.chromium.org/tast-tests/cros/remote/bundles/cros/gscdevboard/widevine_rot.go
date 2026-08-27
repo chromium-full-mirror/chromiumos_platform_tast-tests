@@ -103,7 +103,7 @@ func WidevineRot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read Widevine ROT NVMEM after PCR extend: ", err2)
 	}
 
-	b.SimulateApS3(ctx, s, tpm)
+	b.SimulateApS3(ctx, tpm)
 
 	// Read Widevine ROT again, GSC counter seed should be different now
 	wvResp3, err3 := tpm.ReadWidevineRot(0x60, 0)

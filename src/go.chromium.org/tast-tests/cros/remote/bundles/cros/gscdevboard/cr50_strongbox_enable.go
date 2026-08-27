@@ -56,7 +56,7 @@ func Cr50StrongboxEnable(ctx context.Context, s *testing.State) {
 	checkStrongboxEnable(ctx, s, b, i, tpm, ti50.StrongboxDisabled, "Reject strongbox enable")
 
 	// Simulate S3 reset with SUState
-	b.SimulateApS3(ctx, s, tpm)
+	b.SimulateApS3(ctx, tpm)
 
 	err = tpm.TpmvSetStrongboxState(true)
 	if err == nil {

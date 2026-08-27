@@ -619,13 +619,13 @@ func (h DevboardHelper) WaitForTpm(ctx context.Context, tpmHandle *TpmHelper) {
 
 // SimulateApS3 simulates changing AP state from S0 to S3 and back, including
 // sending the approrpiate TPM commands.
-func (h DevboardHelper) SimulateApS3(ctx context.Context, s *testing.State, tpm *TpmHelper) {
+func (h DevboardHelper) SimulateApS3(ctx context.Context, tpm *TpmHelper) {
 	// Simulate AP S3 reset with SUState
 	shutdown := tpm2.Shutdown{
 		ShutdownType: tpm2.TPMSUState,
 	}
 	if _, err := shutdown.Execute(tpm); err != nil {
-		s.Fatal("TPM shutdown SUState error: ", err)
+		h.Fatalf("TPM shutdown SUState error: %s", err)
 	}
 
 	h.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
@@ -635,7 +635,7 @@ func (h DevboardHelper) SimulateApS3(ctx context.Context, s *testing.State, tpm 
 		StartupType: tpm2.TPMSUState,
 	}
 	if _, err := startup.Execute(tpm); err != nil {
-		s.Fatal("TPM startup SUState error: ", err)
+		h.Fatalf("TPM startup SUState error: %s", err)
 	}
 }
 

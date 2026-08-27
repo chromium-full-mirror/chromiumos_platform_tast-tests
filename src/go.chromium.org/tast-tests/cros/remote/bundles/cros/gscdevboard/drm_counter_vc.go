@@ -156,7 +156,7 @@ func DrmCounterVc(ctx context.Context, s *testing.State) {
 		}
 		if iter&7 == 4 {
 			// Toggle AP reset twice during the test.
-			b.SimulateApS3(ctx, s, tpm)
+			b.SimulateApS3(ctx, tpm)
 			counterSeed = readWidevineGscCounterSeed(s, tpm)
 		}
 	}
