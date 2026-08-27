@@ -744,6 +744,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			if result[reporters.CrossystemParamFWResult] == "trying" {
 				return errors.New("firmware not ready, fw_result = trying")
 			}
+			if result[reporters.CrossystemParamFWResult] == "unknown" {
+				return errors.New("firmware not ready, fw_result = unknown")
+			}
 			return nil
 		}, &testing.PollOptions{Timeout: 90 * time.Second, Interval: 5 * time.Second})
 		return
@@ -760,6 +763,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	s.Logf("Before autoupdate: APRO:%s APRW:%s ECRO:%s ECRW:%s", initialVersions[reporters.CrossystemParamRoFwid], initialVersions[reporters.CrossystemParamFwid], initialECRO, initialECRW)
 	if initialVersions[reporters.CrossystemParamMainfwType] != "normal" {
 		s.Errorf("Expected to be in normal mode, got %q", initialVersions[reporters.CrossystemParamMainfwType])
+	}
+	if initialVersions[reporters.CrossystemParamFWResult] != "success" {
+		s.Errorf("Expected fw_result = success, got %q", initialVersions[reporters.CrossystemParamFWResult])
 	}
 
 	pv := perf.NewValues()
@@ -820,6 +826,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	updatedVersions, err := getCrossystemParams(ctx)
 	if err != nil {
 		s.Fatalf("Failed to call crossystem: %+v", err)
+	}
+	if updatedVersions[reporters.CrossystemParamFWResult] != "success" {
+		s.Errorf("Expected fw_result = success, got %q", updatedVersions[reporters.CrossystemParamFWResult])
 	}
 	updatedECRO, updatedECRW, err := ectool.RORWVersion(ctx)
 	if err != nil {
@@ -911,6 +920,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	rollbackVersions, err := getCrossystemParams(ctx)
 	if err != nil {
 		s.Fatalf("Failed to call crossystem: %+v", err)
+	}
+	if rollbackVersions[reporters.CrossystemParamFWResult] != "success" {
+		s.Errorf("Expected fw_result = success, got %q", rollbackVersions[reporters.CrossystemParamFWResult])
 	}
 	rollbackECRO, rollbackECRW, err := ectool.RORWVersion(ctx)
 	if err != nil {
