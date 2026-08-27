@@ -11,8 +11,8 @@ import (
 	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/utils"
 
 	"go.chromium.org/tast/core/testing"
 )
