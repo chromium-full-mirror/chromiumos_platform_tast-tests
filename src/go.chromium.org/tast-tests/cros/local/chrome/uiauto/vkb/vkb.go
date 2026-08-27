@@ -515,6 +515,7 @@ func (vkbCtx *VirtualKeyboardContext) DeleteMultipasteItem(touchCtx *touch.Conte
 	itemFinder := MultipasteItemFinder.Name(itemName)
 	return uiauto.Combine("Delete item in multipaste virtual keyboard",
 		touchCtx.LongPress(itemFinder),
+		vkbCtx.ui.WithTimeout(3*time.Second).WaitUntilExists(MultipasteTrashFinder),
 		touchCtx.Tap(MultipasteTrashFinder),
 		vkbCtx.ui.WithTimeout(3*time.Second).WaitUntilGone(itemFinder))
 }

@@ -113,6 +113,7 @@ func VirtualKeyboardMultipaste(ctx context.Context, s *testing.State) {
 			its.ClickFieldUntilVKShown(inputField),
 			vkbCtx.SwitchToMultipaste(),
 			uiauto.RetrySilently(3, uiauto.Combine("click on multipaste items",
+				its.ClickFieldByDoDefault(inputField),
 				its.Clear(inputField),
 				vkbCtx.TapMultipasteItem(text1),
 				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), text1),

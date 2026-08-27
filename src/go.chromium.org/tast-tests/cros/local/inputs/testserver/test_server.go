@@ -410,6 +410,18 @@ func (its *InputsTestServer) ClickField(inputField InputField) uiauto.Action {
 	)
 }
 
+// ClickFieldByDoDefault returns an action invoking the default action on the input field.
+// This is equivalent to ClickField but uses DoDefault (accessibility action) instead of a physical LeftClick.
+func (its *InputsTestServer) ClickFieldByDoDefault(inputField InputField) uiauto.Action {
+	fieldFinder := inputField.Finder()
+	return uiauto.Combine(
+		"make input field visible on the screen and invoke default action on it",
+		its.ui.WaitUntilExists(fieldFinder),
+		its.ui.MakeVisible(fieldFinder),
+		its.ui.DoDefault(fieldFinder),
+	)
+}
+
 // RightClickFieldAndWaitForActive returns an action right clicking the input field.
 func (its *InputsTestServer) RightClickFieldAndWaitForActive(inputField InputField) uiauto.Action {
 	fieldFinder := inputField.Finder()
