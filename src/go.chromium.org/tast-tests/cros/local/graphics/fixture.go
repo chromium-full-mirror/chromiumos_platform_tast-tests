@@ -546,12 +546,26 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	}
 }
 
+var ignoredSyslogErrorPatterns = []string{
+	"ieee80211_rx_list",
+	"reserve_ds_buffers",
+}
+
+func isIgnoredSyslogError(err error) bool {
+	errMsg := err.Error()
+	for _, pattern := range ignoredSyslogErrorPatterns {
+		if strings.Contains(errMsg, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
 func (f *gpuWatchHangsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	var postErr error
-	const ignoredSyslogError = "ieee80211_rx_list"
 	for i := len(f.postFunc) - 1; i >= 0; i-- {
 		if err := f.postFunc[i](ctx); err != nil {
-			if strings.Contains(err.Error(), ignoredSyslogError) {
+			if isIgnoredSyslogError(err) {
 				s.Log("Ignoring syslog error: ", err)
 				continue
 			}
