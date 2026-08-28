@@ -1,7 +1,7 @@
 set noparent
 
-# Owner of HMR tests
-include chromiumos/owners:v1:/platform/OWNERS.hmr
+# Platform Inputs team
+include chromiumos/owners:v1:/platform/OWNERS.p12s
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
