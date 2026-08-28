@@ -264,6 +264,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	if keepState == "true" {
 		opts = append(opts, KeepState())
 	}
+
+	// Bypass the OOBE HWID check in testing to evade malformed HWIDs (e.g. KANO-VJXU) on test lab devices.
+	opts = append(opts, ExtraArgs("--force-hwid-check-result-for-test=success"))
 	shouldTryReuse, err := strconv.ParseBool(chromeReuseSession.Value())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse %v(%v) to bool", chromeReuseSession.Name(), chromeReuseSession.Value())
