@@ -115,6 +115,10 @@ func New(ctx context.Context, outDir string) (*FakeDMS, error) {
 		// See exec.Cmd for more info.
 		"--startup-pipe=3",
 		"--min-log-level=0",
+		// Pass port=0 to let fake_dmserver bind to an ephemeral port.
+		// Otherwise, it defaults to a hardcoded port (6112) which might
+		// cause net::ERR_ADDRESS_IN_USE if a stale process is lingering on the DUT.
+		"--port=0",
 	}
 
 	cmd := testexec.CommandContext(ctx, fakeDMServerPath, args...)
