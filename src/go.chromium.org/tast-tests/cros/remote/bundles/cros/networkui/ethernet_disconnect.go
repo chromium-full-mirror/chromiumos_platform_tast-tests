@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package network
+package networkui
 
 import (
 	"context"
@@ -43,7 +43,8 @@ func init() {
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:network", "network_e2e_unstable"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:network", "network_e2e_unstable"},
 		// The servo_v4p1 is required to use the servo.OnOff() API with servo.DutEthPwrEn.
 		// See b/359743894 for more details.
 		TestBedDeps:  append([]string{tbdep.ServoComponent("servo_v4p1")}, tbdep.ServoPresentAndWorking...),

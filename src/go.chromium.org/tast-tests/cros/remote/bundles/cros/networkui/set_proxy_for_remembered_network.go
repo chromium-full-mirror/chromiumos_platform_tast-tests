@@ -41,9 +41,10 @@ func init() {
 		},
 		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell_network_cellular"},
-		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:wificell_network_cellular"},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		VarDeps:     []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.wifi.WifiService",

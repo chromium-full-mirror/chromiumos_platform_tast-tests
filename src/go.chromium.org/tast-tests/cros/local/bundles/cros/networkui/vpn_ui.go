@@ -49,8 +49,9 @@ func init() {
 		},
 		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:mainline", "informational"},
-		SoftwareDeps:   []string{"chrome"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:    "ikev2_cert",
 			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",

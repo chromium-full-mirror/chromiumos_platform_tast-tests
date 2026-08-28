@@ -11,8 +11,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/go-cmp/cmp"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/testing/protocmp"
+
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/services/cros/networkui"
@@ -31,8 +32,9 @@ func init() {
 		},
 		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:wificell_network_cellular"}, // Add "group:release-health", "release-health_wifi" after stabilized.
-		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:wificell_network_cellular"}, // Add "group:release-health", "release-health_wifi" after stabilized.
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
 			wificell.ProxyFixtServiceDepsChromeBrowser,

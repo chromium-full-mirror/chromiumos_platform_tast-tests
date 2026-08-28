@@ -61,9 +61,10 @@ func init() {
 		},
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:network", "network_e2e_unstable"},
-		SoftwareDeps:   []string{"chrome"},
-		Fixture:        fixture.ChromeLoggedIn,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:network", "network_e2e_unstable"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedIn,
 		Params: []testing.Param{
 			{
 				Name: "are_disabled_from_ui",

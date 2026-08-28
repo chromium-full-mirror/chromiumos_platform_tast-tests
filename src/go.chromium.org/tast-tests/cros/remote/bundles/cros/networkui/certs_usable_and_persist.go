@@ -36,9 +36,10 @@ func init() {
 			"cros-networking@google.com",
 			"miersh@google.com",
 		},
-		BugComponent: "b:156085",                                  // ChromeOS > Platform > baseOS > Networking
-		Attr:         []string{"group:wificell_network_cellular"}, // Add "group:release-health", "release-health_wifi" after stabilized.
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:wificell_network_cellular"}, // Add "group:release-health", "release-health_wifi" after stabilized.
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.ui.ChromeUIService",
