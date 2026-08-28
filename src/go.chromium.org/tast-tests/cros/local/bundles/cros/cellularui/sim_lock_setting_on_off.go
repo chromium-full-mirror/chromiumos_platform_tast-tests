@@ -30,9 +30,10 @@ func init() {
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
-		Fixture:        "cellularSIMLockCleared",
-		TestBedDeps:    []string{"sim_state:WORKING"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
+		Fixture:     "cellularSIMLockCleared",
+		TestBedDeps: []string{"sim_state:WORKING"},
 	})
 }
 

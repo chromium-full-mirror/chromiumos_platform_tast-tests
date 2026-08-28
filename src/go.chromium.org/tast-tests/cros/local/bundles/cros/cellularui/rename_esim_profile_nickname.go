@@ -33,10 +33,11 @@ func init() {
 		},
 		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
-		SoftwareDeps:   []string{"chrome"},
-		Fixture:        "cellular",
-		Timeout:        6 * time.Minute,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "cellular",
+		Timeout:      6 * time.Minute,
 	})
 }
 

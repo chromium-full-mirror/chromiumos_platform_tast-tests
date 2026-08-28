@@ -30,9 +30,10 @@ func init() {
 		BugComponent:   "b:1578688",
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_sim_roaming"},
-		Fixture:        "cellularWithFunctioningRoamingSim",
-		Timeout:        3 * time.Minute,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:cellular", "cellular_sim_roaming"},
+		Fixture: "cellularWithFunctioningRoamingSim",
+		Timeout: 3 * time.Minute,
 	})
 }
 

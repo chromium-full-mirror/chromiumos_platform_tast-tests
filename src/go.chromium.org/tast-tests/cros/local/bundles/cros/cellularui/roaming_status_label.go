@@ -31,19 +31,20 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "group:release-health", "release-health_cellular"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "group:release-health", "release-health_cellular"},
 		Params: []testing.Param{
 			{
-				Name:      "on_roaming_sim",
-				ExtraAttr: []string{"cellular_sim_roaming"},
+				Name: "on_roaming_sim",
+				// ExtraAttr: []string{"cellular_sim_roaming"},
 				Val: testParameters{
 					roamingSubLabel: "Currently roaming",
 				},
 				Fixture: "cellularWithFunctioningRoamingSim",
 			},
 			{
-				Name:      "on_non_roaming_sim",
-				ExtraAttr: []string{"cellular_sim_prod_esim"},
+				Name: "on_non_roaming_sim",
+				// ExtraAttr: []string{"cellular_sim_prod_esim"},
 				Val: testParameters{
 					roamingSubLabel: "Not currently roaming",
 				},

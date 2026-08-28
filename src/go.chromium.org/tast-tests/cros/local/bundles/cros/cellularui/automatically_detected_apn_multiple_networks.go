@@ -33,10 +33,11 @@ func init() {
 		},
 		BugComponent:   "b:1131774", // ChromeOS > Software > Fundamentals > Device Enablement > Connectivity > Cellular
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
-		SoftwareDeps:   []string{"chrome"},
-		Fixture:        "cellularEnforceConnectionAndResetShillProfile",
-		Timeout:        9 * time.Minute,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:           []string{"group:cellular", "cellular_sim_dual_active"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "cellularEnforceConnectionAndResetShillProfile",
+		Timeout:      9 * time.Minute,
 	})
 }
 

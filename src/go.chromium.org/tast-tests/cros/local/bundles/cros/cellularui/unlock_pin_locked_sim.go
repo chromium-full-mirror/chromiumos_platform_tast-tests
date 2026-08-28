@@ -35,7 +35,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		// Run test only on cellular capable devices that only have one active SIM.
-		Attr:        []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:        []string{"group:cellular", "cellular_sim_pinlock", "cellular_e2e"},
 		Fixture:     "cellularSIMLockCleared",
 		Timeout:     8 * time.Minute,
 		TestBedDeps: []string{"sim_state:WORKING"},

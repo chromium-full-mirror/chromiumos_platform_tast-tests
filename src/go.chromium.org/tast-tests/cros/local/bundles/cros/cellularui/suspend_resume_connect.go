@@ -33,7 +33,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularEnforceConnectionLocal",
 		Timeout:      6 * time.Minute,

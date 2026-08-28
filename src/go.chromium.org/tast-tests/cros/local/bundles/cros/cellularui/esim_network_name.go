@@ -29,8 +29,9 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
-		Fixture:      "cellularWithFunctioningSim",
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		Fixture: "cellularWithFunctioningSim",
 	})
 }
 

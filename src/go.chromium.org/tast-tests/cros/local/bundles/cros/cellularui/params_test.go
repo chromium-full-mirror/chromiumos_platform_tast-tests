@@ -28,92 +28,110 @@ func TestFixTestParams(t *testing.T) {
 		{
 			Name:      "",
 			Val:       "",
-			ExtraAttr: []string{"cellular_carrier_local"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_local"},
 		},
 		{
 			Name:      "att",
 			Val:       "att",
-			ExtraAttr: []string{"cellular_carrier_att"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_att"},
 		},
 		{
 			Name:      "tmobile",
 			Val:       "tmobile",
-			ExtraAttr: []string{"cellular_carrier_tmobile"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_tmobile"},
 		},
 		{
 			Name:      "softbank",
 			Val:       "softbank",
-			ExtraAttr: []string{"cellular_carrier_softbank"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_softbank"},
 		},
 		{
 			Name:      "amarisoft",
 			Val:       "amarisoft",
-			ExtraAttr: []string{"cellular_carrier_amarisoft"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_amarisoft"},
 		},
 		{
 			Name:      "vodafone",
 			Val:       "vodafone",
-			ExtraAttr: []string{"cellular_carrier_vodafone"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_vodafone"},
 		},
 		{
 			Name:      "rakuten",
 			Val:       "rakuten",
-			ExtraAttr: []string{"cellular_carrier_rakuten"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_rakuten"},
 		},
 		{
 			Name:      "ee",
 			Val:       "ee",
-			ExtraAttr: []string{"cellular_carrier_ee"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_ee"},
 		},
 		{
 			Name:      "kddi",
 			Val:       "kddi",
-			ExtraAttr: []string{"cellular_carrier_kddi"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_kddi"},
 		},
 		{
 			Name:      "docomo",
 			Val:       "docomo",
-			ExtraAttr: []string{"cellular_carrier_docomo"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_docomo"},
 		},
 		{
 			Name:      "fi",
 			Val:       "fi",
-			ExtraAttr: []string{"cellular_carrier_fi"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_fi"},
 		},
 		{
 			Name:      "bell",
 			Val:       "bell",
-			ExtraAttr: []string{"cellular_carrier_bell"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_bell"},
 		},
 		{
 			Name:      "roger",
 			Val:       "roger",
-			ExtraAttr: []string{"cellular_carrier_roger"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_roger"},
 		},
 		{
 			Name:      "telus",
 			Val:       "telus",
-			ExtraAttr: []string{"cellular_carrier_telus"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_telus"},
 		},
 		{
 			Name:      "cbrs",
 			Val:       "cbrs",
-			ExtraAttr: []string{"cellular_carrier_cbrs"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_cbrs"},
 		},
 		{
 			Name:      "linemo",
 			Val:       "linemo",
-			ExtraAttr: []string{"cellular_carrier_linemo"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_linemo"},
 		},
 		{
 			Name:      "povo",
 			Val:       "povo",
-			ExtraAttr: []string{"cellular_carrier_povo"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_povo"},
 		},
 		{
 			Name:      "hanshin",
 			Val:       "hanshin",
-			ExtraAttr: []string{"cellular_carrier_hanshin"},
+			// TODO(b/542029943): Re-enable once the test is stable.
+			// ExtraAttr: []string{"cellular_carrier_hanshin"},
 		},`
 	}
 

@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/cellular/hotspotutil"
@@ -18,7 +20,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func init() {
@@ -31,8 +32,9 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.BrowserChromeServiceName,
 			wificell.OsSettingsServiceName,

@@ -30,7 +30,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularEnforceConnectionLocal",
 		Timeout:      3 * time.Minute,

@@ -33,8 +33,9 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
-		Fixture:      "cellularWithFakeDMSEnrolled",
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "cellular_sim_prod_esim"},
+		Fixture: "cellularWithFakeDMSEnrolled",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},

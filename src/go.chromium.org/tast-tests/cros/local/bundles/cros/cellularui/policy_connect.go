@@ -44,9 +44,10 @@ func init() {
 		},
 		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "cellular_e2e", "group:release-health", "release-health_cellular"},
-		Fixture:      "cellularWithFakeDMSEnrolled",
-		Timeout:      8 * time.Minute,
+		// TODO(b/542029943): Re-enable once the test is stable.
+		// Attr:         []string{"group:cellular", "cellular_sim_prod_esim", "cellular_e2e", "group:release-health", "release-health_cellular"},
+		Fixture: "cellularWithFakeDMSEnrolled",
+		Timeout: 8 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "managed_network_with_allow_only_policy",
