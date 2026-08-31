@@ -142,7 +142,7 @@ func (h *HRTelemetryHelper) IsInMeeting(ctx context.Context, timeout time.Durati
 	if err := webutil.WaitForQuiescence(ctx, h.meetConn, time.Minute); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for meet page to achieve quiescence: ", err)
 	}
-	err := h.meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", 10*time.Second)
+	err := h.meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", timeout)
 	return h.checkError(ctx, err)
 }
 
