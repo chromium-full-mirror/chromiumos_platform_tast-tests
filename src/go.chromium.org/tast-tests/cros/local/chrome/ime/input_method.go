@@ -1353,7 +1353,8 @@ func (im InputMethod) Install(tconn *chrome.TestConn) action.Action {
 // WaitUntilInstalled waits for the input method to be installed.
 func (im InputMethod) WaitUntilInstalled(tconn *chrome.TestConn) action.Action {
 	f := func(ctx context.Context, fullyQualifiedIMEID string) error {
-		return WaitForInputMethodInstalled(ctx, tconn, fullyQualifiedIMEID, 20*time.Second)
+		// Installation may take a time to download DLCs, so we set longer timeout.
+		return WaitForInputMethodInstalled(ctx, tconn, fullyQualifiedIMEID, 60*time.Second)
 	}
 	return im.actionWithFullyQualifiedID(tconn, f)
 }

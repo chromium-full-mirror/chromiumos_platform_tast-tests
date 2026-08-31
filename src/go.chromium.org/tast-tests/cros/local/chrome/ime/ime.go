@@ -41,7 +41,8 @@ func AddInputMethod(ctx context.Context, tconn *chrome.TestConn, imeID string) e
 	if err := tconn.Call(ctx, nil, `chrome.languageSettingsPrivate.addInputMethod`, imeID); err != nil {
 		return errors.Wrapf(err, "failed to add input method %q", imeID)
 	}
-	if err := WaitForInputMethodInstalled(ctx, tconn, imeID, 30*time.Second); err != nil {
+	// Installation may take a time to download DLCs, so we set longer timeout.
+	if err := WaitForInputMethodInstalled(ctx, tconn, imeID, 60*time.Second); err != nil {
 		return errors.Wrapf(err, "failed to wait for IME %q installed", imeID)
 	}
 

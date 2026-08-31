@@ -33,6 +33,8 @@ var typingModeTestIMEs = []ime.InputMethod{
 }
 var typingModeTestMessages = []data.Message{data.TypingMessageHello}
 
+var typingModeTestIMEInstallTimeout = 2 * time.Minute
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VirtualKeyboardTypingUserMode,
@@ -48,7 +50,7 @@ func init() {
 			}),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
-		Timeout:      time.Duration(len(typingModeTestIMEs)) * time.Duration(len(typingModeTestMessages)) * time.Minute,
+		Timeout:      time.Duration(len(typingModeTestIMEs)) * (time.Duration(len(typingModeTestMessages))*time.Minute + typingModeTestIMEInstallTimeout),
 		Params: []testing.Param{
 			{
 				Name:      "guest",
