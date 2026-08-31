@@ -601,6 +601,7 @@ func (its *InputsTestServer) WaitForHandwritingEngineReadyOnField(hwCtx *vkb.Han
 		util.WaitForFieldNotEmpty(its.tconn, inputField.Finder()),
 		hwCtx.ClearHandwritingCanvas(),
 		its.Clear(inputField),
+		util.WaitForFieldEmpty(its.tconn, inputField.Finder()),
 	)
 	return hwCtx.WaitForHandwritingEngineReady(checkEngineReady)
 }

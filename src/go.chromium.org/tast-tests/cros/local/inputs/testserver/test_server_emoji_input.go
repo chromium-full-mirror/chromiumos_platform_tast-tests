@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime/emojipicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 )
 
 var emojiMenuFinder = nodewith.NameStartingWith("Emoji")
@@ -31,7 +31,17 @@ func (its *InputsTestServer) TriggerEmojiPickerFromContextMenu(inputField InputF
 // DismissGifNudgeOverlay returns a user action to dismiss gif nudge overlay in PK emoji picker.
 func (its *InputsTestServer) DismissGifNudgeOverlay() uiauto.Action {
 	return uiauto.Combine("Dismiss gif nudge overlay",
-		its.ui.LeftClickUntil(emojipicker.SearchFieldFinder, its.ui.WithTimeout(5*time.Second).WaitUntilGone(emojipicker.NudgeOverlay)),
+		// Give the emoji picker a chance to fully render the search field.
+		its.ui.WaitUntilExists(emojipicker.SearchFieldFinder),
+		// Note: A real mouse click is necessary here rather than DoDefault:
+		// 1. It dispatches a pointer event to dismiss the GIF nudge overlay in WebUI.
+		// 2. It activates and focuses the search box as the active TextInputClient in Ash IME.
+		//    EmojiPageHandler's InsertObserver in Chromium requires the emoji picker to have
+		//    text input focus so that closing the picker registers two focus changes (picker blur,
+		//    then target field focus) before inserting the emoji (see emoji_page_handler.cc).
+		its.ui.LeftClick(emojipicker.SearchFieldFinder),
+		// Wait for the nudge overlay to be dismissed.
+		its.ui.WaitUntilGone(emojipicker.NudgeOverlay),
 	)
 }
 
