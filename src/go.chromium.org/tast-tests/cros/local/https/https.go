@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/certpageutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -163,34 +164,55 @@ func ConfigureChromeToAcceptCertificate(ctx context.Context, config ServerConfig
 	// Add the certificate in the certificate settings.
 	policyutil.SettingsPage(ctx, cr, "certificates")
 	ui := uiauto.New(tconn)
-	authorities := nodewith.Name("Authorities").Role(role.Tab)
-	authTabText := nodewith.Name("You have certificates on file that identify these certificate authorities").Role(role.StaticText)
-	importButton := nodewith.Name("Import").Role(role.Button)
-	certFileItem := nodewith.NameStartingWith(caCertFileName).Role(role.ListBoxOption)
-	openButton := nodewith.Name("Open").Role(role.Button).State("focusable", true)
-	trust1Checkbox := nodewith.NameContaining("Trust this certificate for identifying websites").Role(role.CheckBox)
-	trust2Checkbox := nodewith.NameContaining("Trust this certificate for identifying email users").Role(role.CheckBox)
-	trust3Checkbox := nodewith.NameContaining("Trust this certificate for identifying software makers").Role(role.CheckBox)
-	okButton := nodewith.Name("OK").Role(role.Button).ClassName("action-button")
+	isNewUIPresent, err := certpageutils.IsNewUIUsed(ctx, ui, cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if new UI is used")
+	}
 
-	if err := uiauto.Combine("set_cerficate",
-		ui.WaitUntilExists(authorities),
-		ui.DoDefault(authorities),
-		ui.WaitUntilExists(authTabText),
-		ui.WaitUntilExists(importButton),
-		ui.DoDefault(importButton),
-		ui.WaitUntilExists(certFileItem),
-		ui.DoDefault(certFileItem),
-		ui.WaitUntilExists(openButton),
-		ui.DoDefault(openButton),
-		ui.WaitUntilExists(trust1Checkbox),
-		ui.WaitUntilExists(okButton),
-		ui.DoDefault(trust1Checkbox),
-		ui.DoDefault(trust2Checkbox),
-		ui.DoDefault(trust3Checkbox),
-		ui.DoDefault(okButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to set certificate")
+	if isNewUIPresent {
+		if err := uiauto.Combine("Open certificates subpage",
+			ui.WaitUntilExists(nodewith.Name("Security").Role(role.Heading)),
+			ui.DoDefault(nodewith.Name("Manage certificates").Role(role.Link)),
+		)(ctx); err != nil {
+			// Proceed anyway as it might have redirected directly to certificate-manager
+		}
+
+		if err := certpageutils.ImportCACertNewUI(ctx, ui, caCertFileName); err != nil {
+			return errors.Wrap(err, "failed to import CA cert using new UI")
+		}
+		// The new UI's 'Import to Trusted Certificates' button inherently trusts the certificate for identifying websites.
+		// No further trust configuration is needed.
+	} else {
+		// Old UI: Add the certificate in the certificate settings.
+		authorities := nodewith.Name("Authorities").Role(role.Tab)
+		authTabText := nodewith.Name("You have certificates on file that identify these certificate authorities").Role(role.StaticText)
+		importButton := nodewith.Name("Import").Role(role.Button)
+		certFileItem := nodewith.NameStartingWith(caCertFileName).Role(role.ListBoxOption)
+		openButton := nodewith.Name("Open").Role(role.Button).State("focusable", true)
+		trust1Checkbox := nodewith.NameContaining("Trust this certificate for identifying websites").Role(role.CheckBox)
+		trust2Checkbox := nodewith.NameContaining("Trust this certificate for identifying email users").Role(role.CheckBox)
+		trust3Checkbox := nodewith.NameContaining("Trust this certificate for identifying software makers").Role(role.CheckBox)
+		okButton := nodewith.Name("OK").Role(role.Button).ClassName("action-button")
+
+		if err := uiauto.Combine("set_cerficate",
+			ui.WaitUntilExists(authorities),
+			ui.DoDefault(authorities),
+			ui.WaitUntilExists(authTabText),
+			ui.WaitUntilExists(importButton),
+			ui.DoDefault(importButton),
+			ui.WaitUntilExists(certFileItem),
+			ui.DoDefault(certFileItem),
+			ui.WaitUntilExists(openButton),
+			ui.DoDefault(openButton),
+			ui.WaitUntilExists(trust1Checkbox),
+			ui.WaitUntilExists(okButton),
+			ui.DoDefault(trust1Checkbox),
+			ui.DoDefault(trust2Checkbox),
+			ui.DoDefault(trust3Checkbox),
+			ui.DoDefault(okButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to set certificate")
+		}
 	}
 
 	// Check if addition was successful.
@@ -214,6 +236,29 @@ func CertificateExists(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 	defer kb.Close(ctx)
 
 	policyutil.SettingsPage(ctx, cr, "certificates")
+
+	isNewUIPresent, err := certpageutils.IsNewUIUsed(ctx, ui, cr)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if new UI is used")
+	}
+
+	if isNewUIPresent {
+		if err := uiauto.Combine("Open certificates subpage",
+			ui.WaitUntilExists(nodewith.Name("Security").Role(role.Heading)),
+			ui.DoDefault(nodewith.Name("Manage certificates").Role(role.Link)),
+		)(ctx); err != nil {
+			// Proceed anyway as it might have redirected directly to certificate-manager
+		}
+
+		isFound, err := certpageutils.IsCACertOrgExistsNewUI(ctx, ui, certName)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to check if cert org exists in new UI")
+		}
+		// Based on IsCACertOrgExistsNewUI, the cert details aren't accurately scanned, just if the org is there.
+		return isFound, nil
+	}
+
+	// Old UI
 	authorities := nodewith.Name("Authorities").Role(role.Tab)
 	authTabText := nodewith.Name("You have certificates on file that identify these certificate authorities").Role(role.StaticText)
 

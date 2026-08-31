@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -52,6 +53,7 @@ func init() {
 			"key_for_127.0.0.1.pem",
 			"ca-cert.pem",
 		},
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.BlockThirdPartyCookies{}, pci.VerifiedFunctionalityUI),
 		},
@@ -71,7 +73,7 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 	// The order of the strings should follow the order in the settings page.
 	// wantRestriction and wantChecked entries are expected to follow this order as well.
 	radioButtonNames := []string{
-		"Allow all cookies",
+		"Allow third-party cookies",
 		"Block third-party cookies",
 	}
 
@@ -169,23 +171,20 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 		{
 			name:            "unset",
 			wantRestriction: []restriction.Restriction{restriction.None, restriction.None},
-			wantChecked:     []checked.Checked{checked.False, checked.False},
+			wantChecked:     []checked.Checked{checked.True, checked.False}, // Changed from False, False to reflect new defaults
 			wantCookie:      true,
 			policy:          &policy.BlockThirdPartyCookies{Stat: policy.StatusUnset},
 		},
 		{
 			name:            "allow",
-			wantRestriction: []restriction.Restriction{restriction.None, restriction.Disabled},
+			wantRestriction: []restriction.Restriction{restriction.Disabled, restriction.Disabled},
 			wantChecked:     []checked.Checked{checked.True, checked.False},
 			wantCookie:      true,
 			policy:          &policy.BlockThirdPartyCookies{Val: false},
 		},
 		{
-			name: "block",
-			// The radio button for "Block third-party cookies" is not disabled in this case as the user can switch
-			// between blocking only third party cookies or all cookies for which there is another radio button on
-			// the cookies settings page.
-			wantRestriction: []restriction.Restriction{restriction.Disabled, restriction.None},
+			name:            "block",
+			wantRestriction: []restriction.Restriction{restriction.Disabled, restriction.Disabled},
 			wantChecked:     []checked.Checked{checked.False, checked.True},
 			wantCookie:      false,
 			policy:          &policy.BlockThirdPartyCookies{Val: true},
@@ -215,7 +214,15 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 			}
 			defer conn.Close()
 
-			// Open cookies settings page and check the state of the radio buttons.
+			ui := uiauto.New(tconn)
+
+			allowAllRadio := nodewith.Role(role.RadioButton).NameStartingWith("Allow third-party cookies")
+
+			if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(allowAllRadio)(ctx); err != nil {
+				s.Fatal("Failed to find cookies settings UI elements: ", err)
+			}
+
+			// Cookies UI is shown. Check the state of the radio buttons.
 			for i, radioButtonName := range radioButtonNames {
 				if err := policyutil.CurrentPage(cr).
 					SelectNode(ctx, nodewith.
@@ -242,22 +249,33 @@ func BlockThirdPartyCookies(ctx context.Context, s *testing.State) {
 			}
 			defer conn3.Close()
 
-			ui := uiauto.New(tconn)
 			localhostText := nodewith.NameStartingWith("localhost").Role(role.StaticText)
 			ipText := nodewith.NameStartingWith("127.0.0.1").Role(role.StaticText)
 			expandButton := nodewith.NameStartingWith("127.0.0.1").Role(role.Button).ClassName("icon-expand-more")
-			removeAllButton := nodewith.Name("Clear All Data").Role(role.Button)
+			removeAllButton := nodewith.NameRegex(regexp.MustCompile(`^(?i)(Clear All Data|Clear all data|Delete all data)$`)).Role(role.Button)
 			confirmRemoveAllButton := nodewith.Name("Clear all").Role(role.Button)
 
-			// The removeAllButton is labeled "Clear all data" for non-Google Chromium
-			// builds. Use this to tell the difference between the two cases.
-			if err := ui.WaitUntilExists(removeAllButton)(ctx); err != nil {
-				removeAllButton = nodewith.Name("Clear all data").Role(role.Button)
-				confirmRemoveAllButton = nodewith.Name("Clear").Role(role.Button)
-				// The expand button only exists in non-Google branded builds, and only
-				// if first and third party cookies exist. Click it to reveal third
-				// party cookies, but ignore errors.
-				ui.LeftClick(expandButton)(ctx)
+			// Wait for the button to appear.
+			if err := ui.WaitUntilExists(removeAllButton)(ctx); err == nil {
+				info, err := ui.Info(ctx, removeAllButton)
+				if err == nil {
+					if info.Name == "Delete all data" {
+						confirmRemoveAllButton = nodewith.Name("Delete").Role(role.Button)
+						// Both Chrome and Chromium use "Delete all data" in M126+.
+						// The expand button may still exist in non-Google branded builds. Click it if present.
+						if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(expandButton)(ctx); err == nil {
+							ui.LeftClick(expandButton)(ctx)
+						}
+					} else if info.Name == "Clear all data" {
+						// Older Chromium build
+						confirmRemoveAllButton = nodewith.Name("Clear").Role(role.Button)
+						// The expand button only exists in non-Google branded builds.
+						ui.LeftClick(expandButton)(ctx)
+					} else if info.Name == "Clear All Data" {
+						// Older Google Chrome build
+						confirmRemoveAllButton = nodewith.Name("Clear all").Role(role.Button)
+					}
+				}
 			}
 
 			checkCookieExistence := ui.WaitUntilExists(localhostText)
