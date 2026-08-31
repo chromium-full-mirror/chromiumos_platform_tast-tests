@@ -311,6 +311,12 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 		return errors.Wrap(err, "cannot create keyboard")
 	}
 	defer kb.Close(ctx)
+
+	// Set a delay of 50ms between keystrokes to prevent dropping characters.
+	// Certain UI fields may drop rapid keystrokes if the view is still settling
+	// or performing layout updates.
+	kb.AdditionDelay10msIncrementCounter = 5
+
 	if err := kb.Type(ctx, savedDeskName); err != nil {
 		return errors.Wrapf(err, "cannot type %q: ", savedDeskName)
 	}
