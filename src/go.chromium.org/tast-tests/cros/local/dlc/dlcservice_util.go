@@ -58,11 +58,16 @@ func Install(ctx context.Context, id, omahaURL string) error {
 	return errors.Wrap(err, "failed to install")
 }
 
-// Purge calls the DBus method to Purge a DLC.
+// Purge calls the DBus method to Purge a DLC and deletes its cached images.
 func Purge(ctx context.Context, id string) error {
 	testing.ContextLog(ctx, "Purging DLC: ", id)
 	if err := testexec.CommandContext(ctx, "dlcservice_util", "--purge", "--id="+id).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to purge")
+	}
+	// Remove the DLC from the cache directory as well to prevent storage shortage,
+	// especially on low-end devices.
+	if err := os.RemoveAll(filepath.Join(CacheDir, id)); err != nil {
+		return errors.Wrapf(err, "failed to remove DLC (%s) from cache directory", id)
 	}
 	return nil
 }
