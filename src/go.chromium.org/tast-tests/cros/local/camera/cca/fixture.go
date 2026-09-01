@@ -31,8 +31,12 @@ import (
 )
 
 const (
-	ccaSetUpTimeout        = 25 * time.Second
-	ccaTearDownTimeout     = 5 * time.Second
+	ccaSetUpTimeout = 25 * time.Second
+	// ccaTearDownTimeout is set to 15s to allow sufficient time for post-test
+	// teardown on slower VM targets (e.g. reven-vmtest), which includes JS
+	// code coverage collection/serialization, SWA window closure, and
+	// SharedWorker Comlink synchronization.
+	ccaTearDownTimeout     = 15 * time.Second
 	testBridgeSetUpTimeout = 20 * time.Second
 	cleanupTimeout         = 10 * time.Second
 	setUpTimeout           = chrome.LoginTimeout + testBridgeSetUpTimeout + cleanupTimeout

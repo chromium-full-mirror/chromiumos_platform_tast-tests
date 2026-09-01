@@ -395,7 +395,10 @@ func (a *App) Close(ctx context.Context) (retErr error) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	// 15 seconds matches ccaTearDownTimeout to provide enough budget for
+	// code coverage serialization, SWA target closure, and Comlink SharedWorker
+	// synchronization on slower VM targets.
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	defer func(ctx context.Context) {
