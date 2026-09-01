@@ -34,7 +34,7 @@ var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "ka
 
 // AEC requires the processing data in s16le format while the present SOF does not respect the capabilities for processing modules. The client will still get available formats s16,s24,s32le on querying PCM capabilities (device info).
 // TODO(b/244418775): remove this when b/244418775 is fixed
-var fixFormatS16CaptureModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
+var fixFormatS16CaptureModels = []string{"yaviks", "yavikso"}
 
 var mergeThresholdSize480Boards = []string{"volteer", "brya", "nissa", "nirul", "nirva"}
 var mergeThresholdSize480Models = []string{"jubilant", "jubileum"}
