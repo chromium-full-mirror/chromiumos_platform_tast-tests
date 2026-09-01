@@ -74,11 +74,11 @@ func expectedSendData(ctx context.Context, metadataPath, payloadPath, payloadKin
 	}
 	board := lsb[lsbrelease.Board]
 
-	// On some devices like betty crossystem will fail. Fall back to "undefined" in such cases.
-	out, _ := testexec.CommandContext(ctx, "crossystem", "hwid").Output()
-	hwid := string(out)
-	if hwid == "" {
-		hwid = "undefined"
+	hwid := "undefined"
+	if out, err := testexec.CommandContext(ctx, "runtime_hwid_tool", "get").Output(); err == nil && len(out) > 0 {
+		hwid = string(out)
+	} else if out, err := testexec.CommandContext(ctx, "crossystem", "hwid").Output(); err == nil && len(out) > 0 {
+		hwid = string(out)
 	}
 
 	exp := &SendData{
