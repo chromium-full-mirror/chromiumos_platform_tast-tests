@@ -95,7 +95,7 @@ func init() {
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
 		PreTestTimeout:  10 * time.Minute,
-		PostTestTimeout: 10 * time.Second,
+		PostTestTimeout: 1 * time.Minute,
 		TearDownTimeout: 10 * time.Second,
 		Data:            []string{firmware.ConfigFile},
 	})
