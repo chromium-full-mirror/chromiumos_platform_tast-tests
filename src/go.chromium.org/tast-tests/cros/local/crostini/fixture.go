@@ -357,7 +357,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	if checkKeepState(s) && terminaDiskExists(ownerID) {
 		s.Log("keepState attempting to start the existing VM and container by launching Terminal")
-		if err = f.launchExitTerminal(ctx); err != nil {
+		if err = launchExitTerminal(ctx, f.tconn); err != nil {
 			s.Fatal("KeepState error: ", err)
 		}
 	} else {
@@ -433,7 +433,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Launching Terminal after restart container by lxc is needed to
 	// ensure a bunch of things work, e.g., mouting files in FilesApp.
 	// See b/271947202.
-	if err := f.launchExitTerminal(ctx); err != nil {
+	if err := launchExitTerminal(ctx, f.tconn); err != nil {
 		s.Fatal("Failed to re-launch terminal and exit after creating snapshot: ", err)
 	}
 
@@ -473,42 +473,9 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 	defer func() {
 		f.preData.startedOK = resetSucceeds
 	}()
-	// Check container.
-	// It returns error in the following situations:
-	// 1. no container
-	// 2. container does not work
-	// 3. the container snapshot could not be restored
-	// 4. chrome is not responsive
-	// 5. fail to reset chrome.
-	// Note that 4 and 5 is already done by the parent fixture.
-	// Otherwise, return nil.
-	if f.cont == nil {
-		return errors.New("There is no container")
-	}
-	if err := f.cont.Connect(ctx, f.cr.NormalizedUser()); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the running VM")
-	}
 
-	// 1. stop the container.
-	// 2. restore the snapshot.
-	// 3. start the container.
-	if err := f.cont.RestoreCopy(ctx, snapshotName); err != nil {
-		return errors.Wrap(err, "failed to restore snapshot")
-	}
-	// Launching Terminal after storing snapshot by lxc is needed to ensure
-	// a bunch of things work, e.g., mouting files in FilesApp.
-	// See b/271947202.
-	if err := f.launchExitTerminal(ctx); err != nil {
-		return errors.Wrap(err, "failed to re-launch terminal and exit")
-	}
-
-	if err := BasicCommandWorks(ctx, f.cont); err != nil {
-		return errors.Wrap(err, "failed to check basic commands in the existing container")
-	}
-
-	// Make sure the clipboard is empty.
-	if err := ash.SetClipboard(ctx, f.tconn, ""); err != nil {
-		return errors.Wrap(err, "failed to clear clipboard")
+	if err := resetContainer(ctx, f.cont, f.cr, f.tconn, true); err != nil {
+		return err
 	}
 
 	resetSucceeds = true
@@ -578,17 +545,6 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	f.tconn = nil
 
 	f.cr = nil
-}
-
-func (f *crostiniFixture) launchExitTerminal(ctx context.Context) error {
-	_, err := terminalapp.Launch(ctx, f.tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to launch Terminal")
-	}
-	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
-		return errors.Wrap(err, "failed to exit Terminal window")
-	}
-	return nil
 }
 
 type baguetteFixture struct {
@@ -710,7 +666,7 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to get user's Downloads path: ", err)
 	}
 
-	if err := f.launchExitTerminal(ctx); err != nil {
+	if err := launchExitTerminal(ctx, f.tconn); err != nil {
 		s.Fatal("Failed to re-launch terminal and exit: ", err)
 	}
 
@@ -759,12 +715,11 @@ func (f *baguetteFixture) Reset(ctx context.Context) error {
 	}()
 
 	// TODO(b/377351450): need to look into snapshotting - not as quick/simple without lxc snapshots?
-
-	// Make sure the clipboard is empty.
-	if err := ash.SetClipboard(ctx, f.tconn, ""); err != nil {
-		return errors.Wrap(err, "failed to clear clipboard")
+	if err := resetContainer(ctx, f.cont, f.cr, f.tconn, false); err != nil {
+		return err
 	}
 
+	resetSucceeds = true
 	return nil
 }
 
@@ -819,14 +774,60 @@ func (f *baguetteFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	f.cr = nil
 }
 
-func (f *baguetteFixture) launchExitTerminal(ctx context.Context) error {
-	_, err := terminalapp.Launch(ctx, f.tconn)
+func launchExitTerminal(ctx context.Context, tconn *chrome.TestConn) error {
+	_, err := terminalapp.Launch(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch Terminal")
 	}
-	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
+	if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
 		return errors.Wrap(err, "failed to exit Terminal window")
 	}
+	return nil
+}
+
+// resetContainer checks that the container is reachable, runs basic commands, and clears the clipboard.
+// If restoreSnapshot is true, it restores the container snapshot and cycles Terminal before checking basic commands.
+func resetContainer(ctx context.Context, cont *vm.Container, cr *chrome.Chrome, tconn *chrome.TestConn, restoreSnapshot bool) error {
+	// Check container.
+	// It returns error in the following situations:
+	// 1. no container
+	// 2. container does not work
+	// 3. the container snapshot could not be restored
+	// 4. chrome is not responsive
+	// 5. fail to reset chrome.
+	// Note that 4 and 5 is already done by the parent fixture.
+	// Otherwise, return nil.
+	if cont == nil {
+		return errors.New("there is no container")
+	}
+	if err := cont.Connect(ctx, cr.NormalizedUser()); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the running VM")
+	}
+
+	if restoreSnapshot {
+		// 1. stop the container.
+		// 2. restore the snapshot.
+		// 3. start the container.
+		if err := cont.RestoreCopy(ctx, snapshotName); err != nil {
+			return errors.Wrap(err, "failed to restore snapshot")
+		}
+		// Launching Terminal after storing snapshot by lxc is needed to ensure
+		// a bunch of things work, e.g., mounting files in FilesApp.
+		// See b/271947202.
+		if err := launchExitTerminal(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to re-launch terminal and exit")
+		}
+	}
+
+	if err := BasicCommandWorks(ctx, cont); err != nil {
+		return errors.Wrap(err, "failed to check basic commands in the existing container")
+	}
+
+	// Make sure the clipboard is empty.
+	if err := ash.SetClipboard(ctx, tconn, ""); err != nil {
+		return errors.Wrap(err, "failed to clear clipboard")
+	}
+
 	return nil
 }
 
