@@ -252,6 +252,12 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	var testEnv *routing.SimpleNetworkEnv
 	var addr *net.IP
 
+	initialOffset, err := secagentdcommon.GetSecagentdLogSize()
+	if err != nil {
+		s.Log("Failed to get size of secagentd log file, defaulting to 0: ", err)
+		initialOffset = 0
+	}
+
 	// Set up virtual network.
 	testEnv, addr, err = setupTestNetwork(ctx, netType)
 	if err != nil {
@@ -270,6 +276,13 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		err = setupL4server(ctx, netFam, testEnv, addr)
 		if err != nil {
 			s.Fatal("Failed to setup router: ", err)
+		}
+
+		// Wait for secagentd to register the router interface in its BPF external device map.
+		syncText := fmt.Sprintf("ifname: %s ifindex:", testEnv.Router.VethOutName)
+		s.Logf("Waiting for %q in secagentd.log starting from offset %d to ensure external device is registered", syncText, initialOffset)
+		if err := secagentdcommon.WaitForStringInLog(ctx, syncText, initialOffset, s.Logf); err != nil {
+			s.Fatal("Failed to wait for external device to be registered in secagentd: ", err)
 		}
 	} else {
 		addrStr, err = getPrimaryDeviceAddress(ctx, netType)
