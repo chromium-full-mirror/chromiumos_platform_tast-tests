@@ -29,7 +29,7 @@ func init() {
 			"cros-networking@google.com",
 			"miersh@google.com",
 		},
-		BugComponent: "b:156085", // ChromeOS > Platform > baseOS > Networking
+		BugComponent: "b:1000044", // ChromeOSSoftwareCommercialCommercial Networking
 		Attr:         []string{"group:network", "network_e2e", "group:release-health", "release-health_network"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedIn,

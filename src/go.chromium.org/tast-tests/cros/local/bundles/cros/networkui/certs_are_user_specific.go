@@ -45,7 +45,7 @@ func init() {
 			"cros-networking@google.com",
 			"miersh@google.com",
 		},
-		BugComponent:   "b:156085", // ChromeOS > Platform > baseOS > Networking
+		BugComponent:   "b:1000044", // ChromeOSSoftwareCommercialCommercial Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:network", "network_e2e"},
 		SoftwareDeps:   []string{"chrome"},
