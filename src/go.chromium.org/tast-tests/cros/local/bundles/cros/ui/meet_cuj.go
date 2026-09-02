@@ -630,32 +630,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			},
-			// TODO(b/331565548): Remove if VsyncDecoding is launched.
-			{
-				Name:      "9p_mute_camera",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:          []int{8},
-					Layout:        googlemeet.TiledLayout,
-					Cam:           false,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			},
-			// TODO(b/331565548): Remove if VsyncDecoding is launched.
-			{
-				Name:      "9p_mute_camera_vsync_decoding",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:          []int{8},
-					Layout:        googlemeet.TiledLayout,
-					Cam:           false,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithVsyncDecoding",
-			},
 			{
 				Name:    "coral",
 				Timeout: meetcuj.DefaultTestTimeout,
