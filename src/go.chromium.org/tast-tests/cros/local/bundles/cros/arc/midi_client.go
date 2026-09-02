@@ -15,6 +15,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -38,6 +40,16 @@ func init() {
 }
 
 func MIDIClient(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := upstart.StopJob(ctx, "midis"); err != nil {
+			s.Log("Failed to stop midis: ", err)
+		}
+	}(cleanupCtx)
+
 	port, err := getMIDIPort(ctx)
 	if err != nil {
 		s.Fatal("Couldn't find MIDI port: ", err)
