@@ -8,7 +8,10 @@ import (
 	"encoding/hex"
 	"strconv"
 
+	"github.com/google/go-tpm/tpm2"
+
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (
@@ -48,6 +51,60 @@ func (t *TpmHelper) WriteRegister(register ti50.TpmRegister, data []byte) {
 	if err != nil {
 		t.h.Fatalf("failed to write TPM register %s: %s", register, err)
 	}
+}
+
+// SendGo triggers command execution by setting tpmGo (0x20) in TPM_STS register.
+func (t *TpmHelper) SendGo() error {
+	_, err := t.OpenTitanToolTpmCommand("write-register", string(ti50.TpmRegSts), "--hexdata", "20000000")
+	return err
+}
+
+// SendCancel sends commandReady (0x40) to TPM_STS register to trigger cooperative cancellation.
+func (t *TpmHelper) SendCancel() error {
+	_, err := t.OpenTitanToolTpmCommand("write-register", string(ti50.TpmRegSts), "--hexdata", "40000000")
+	return err
+}
+
+// ReadSts reads the TPM_STS register and returns byte 0 (primary status flags).
+func (t *TpmHelper) ReadSts() (byte, error) {
+	resp, err := t.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegSts))
+	if err != nil {
+		return 0, err
+	}
+	if len(resp) == 0 {
+		return 0, errors.New("empty STS response")
+	}
+	return resp[0], nil
+}
+
+// WriteFifo writes raw command bytes into the TPM DATA_FIFO register.
+func (t *TpmHelper) WriteFifo(data []byte) error {
+	_, err := t.OpenTitanToolTpmCommand("write-register", string(ti50.TpmRegDataFifo), "--hexdata", hex.EncodeToString(data))
+	return err
+}
+
+// ReadFifo reads bytes from the TPM DATA_FIFO register.
+func (t *TpmHelper) ReadFifo(length int) ([]byte, error) {
+	return t.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDataFifo), "--length", strconv.Itoa(length))
+}
+
+// RawCaptureTransport captures serialized TPM 2.0 command bytes from tpm2.Command.Execute.
+type RawCaptureTransport struct {
+	Captured []byte
+}
+
+// Send captures the serialized command bytes without transmitting them.
+func (r *RawCaptureTransport) Send(cmd []byte) ([]byte, error) {
+	r.Captured = make([]byte, len(cmd))
+	copy(r.Captured, cmd)
+	return nil, nil
+}
+
+// SerializeCommand captures the complete marshaled wire command packet from a tpm2.Command.
+func SerializeCommand[R any, PR *R](cmd tpm2.Command[R, PR]) []byte {
+	var capturer RawCaptureTransport
+	_, _ = cmd.Execute(&capturer)
+	return capturer.Captured
 }
 
 // MakeFWMPFile creates the 40 bytes FWMP file with the specified flags
