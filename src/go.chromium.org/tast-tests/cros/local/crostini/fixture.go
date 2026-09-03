@@ -385,6 +385,14 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to connect to running container: ", err)
 	}
 
+	// Disable cros-motd for tast tests
+	if err := f.cont.Command(ctx, "mkdir", "-p", ".local/share").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to mkdir ~/.local/share/: ", err)
+	}
+	if err := f.cont.Command(ctx, "touch", ".local/share/cros-motd.disable").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to write cros-motd.disable file: ", err)
+	}
+
 	// Report disk size again after successful install.
 	if err := reportDiskUsage(ctx); err != nil {
 		s.Log("Failed to gather disk usage: ", err)
@@ -431,14 +439,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if err := f.cr.ResetState(ctx); err != nil {
 		s.Fatal("Failed to reset chrome's state: ", err)
-	}
-
-	// Disable cros-motd for tast tests
-	if err := f.cont.Command(ctx, "mkdir", "-p", "${XDG_DATA_DIR:-\"${HOME}/.local/share\"}").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to mkdir ~/.local/share/: ", err)
-	}
-	if err := f.cont.Command(ctx, "touch", "${XDG_DATA_DIR:-\"${HOME}/.local/share\"}/cros-motd.disable").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to write cros-motd.disable file: ", err)
 	}
 
 	f.preData.startedOK = true
@@ -692,6 +692,14 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to connect to running container: ", err)
 	}
 
+	// Disable baguette-motd for tast tests
+	if err := f.cont.Command(ctx, "mkdir", "-p", ".local/share").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to mkdir ~/.local/share/: ", err)
+	}
+	if err := f.cont.Command(ctx, "touch", ".local/share/baguette-motd.disable").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to write baguette-motd.disable file: ", err)
+	}
+
 	// Report disk size again after successful install.
 	if err := reportDiskUsage(ctx); err != nil {
 		s.Log("Failed to gather disk usage: ", err)
@@ -700,14 +708,6 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user's Downloads path: ", err)
-	}
-
-	// Disable baguette-motd for tast tests
-	if err := f.cont.Command(ctx, "mkdir", "-p", "${XDG_DATA_DIR:-\"${HOME}/.local/share\"}").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to mkdir ~/.local/share/: ", err)
-	}
-	if err := f.cont.Command(ctx, "touch", "${XDG_DATA_DIR:-\"${HOME}/.local/share\"}/baguette-motd.disable").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to write baguette-motd.disable file: ", err)
 	}
 
 	if err := f.launchExitTerminal(ctx); err != nil {
