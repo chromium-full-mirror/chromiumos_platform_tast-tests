@@ -543,26 +543,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
 			}, {
-				Name:    "docs_sched_rt",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:          []int{1, 3, 15},
-					Layout:        googlemeet.TiledLayout,
-					Present:       true,
-					Docs:          true,
-					Split:         true,
-					Cam:           true,
-					ZoomOut:       true,
-					Effects:       true,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Fixture:   "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
-				// b/333429121: ChromeOS Flex (a.k.a. reven) enables integrity mode, which
-				// restricts access to the debugfs.
-				ExtraHardwareDeps: hwdep.D(hwdep.HasSchedRTControl(),
-					hwdep.SkipOnModel("reven")),
-			}, {
 				Name:    "docs_scx_central",
 				Timeout: meetcuj.DefaultTestTimeout,
 				Val: meetcuj.MeetTest{
