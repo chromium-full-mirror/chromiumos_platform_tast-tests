@@ -14,7 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -167,9 +169,13 @@ func testEphemeralCollection(ctx context.Context, s *testing.State) {
 }
 
 func Ephemeral(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+
 	// Restart ui to always be in a logged out state before the test to mimic general usage conditions.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart UI job")
+		s.Fatal("Failed to restart UI job: ", err)
 	}
 
 	params := s.Param().(ephemeralCollectionParams)
@@ -189,7 +195,24 @@ func Ephemeral(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start chrome: ", err)
 		}
-		defer cr.Close(ctx)
+		defer func(ctx context.Context) {
+			if err := cr.Close(ctx); err != nil {
+				s.Log("Failed to close Chrome: ", err)
+			}
+			// Stop UI before removing Local State and cryptohome.
+			if err := upstart.StopJob(ctx, "ui"); err != nil {
+				s.Log("Failed to stop UI job: ", err)
+			}
+			if err := os.Remove("/home/chronos/Local State"); err != nil && !errors.Is(err, os.ErrNotExist) {
+				s.Log("Failed to remove Local State: ", err)
+			}
+			if err := cryptohome.RemoveUserDir(ctx, chrome.DefaultUser); err != nil {
+				s.Log("Failed to remove user cryptohome: ", err)
+			}
+			if err := upstart.RestartJob(ctx, "ui"); err != nil {
+				s.Log("Failed to restart UI job: ", err)
+			}
+		}(cleanupCtx)
 	}
 
 	var opts []crash.Option
@@ -203,7 +226,7 @@ func Ephemeral(ctx context.Context, s *testing.State) {
 	if err := crash.SetUpCrashTest(ctx, opts...); err != nil {
 		s.Fatal("SetUpCrashTest failed: ", err)
 	}
-	defer crash.TearDownCrashTest(ctx)
+	defer crash.TearDownCrashTest(cleanupCtx)
 
 	if !params.consent {
 		// Revoke the consent.
@@ -217,8 +240,9 @@ func Ephemeral(ctx context.Context, s *testing.State) {
 	// recreates the conditions expected at boot deterministically.
 	if params.oobeComplete {
 		if err := os.WriteFile("/home/chronos/.oobe_completed", []byte(""), 0644); err != nil {
-			s.Fatal("Could not create OOBE completed marker file")
+			s.Fatal("Could not create OOBE completed marker file: ", err)
 		}
+		defer os.Remove("/home/chronos/.oobe_completed")
 	}
 
 	s.Run(ctx, "PreservationAcrossClobber", testEphemeralPreservationAcrossClobber)
