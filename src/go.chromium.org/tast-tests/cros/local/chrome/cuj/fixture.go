@@ -641,48 +641,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "prepareForCUJSchedRT",
-		Desc: "The fixture to set sched RT before CUJ tests",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		Impl:            &prepareCUJFixture{},
-		PreTestTimeout:  CPUStabilizationTimeout + 3*time.Second,
-		PostTestTimeout: postTestTimeout,
-		Parent:          "gpuWatchHangs",
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
-		Desc: "CUJ test fixture with WebRTC event logging and deadline server",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: append(
-				webRTCOpts,
-				chrome.EnableFeatures(
-					"CrOSLateBootInitDLServer",
-					"CrOSLateBootSetRtForDisplayThreads",
-					"SetThreadBgForBgProcess",
-					"SetRtForDisplayThreads",
-				),
-			),
-			docsBlocker: true,
-			disableARC:  true,
-		},
-		Parent:          "prepareForCUJSchedRT",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrials",
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{
