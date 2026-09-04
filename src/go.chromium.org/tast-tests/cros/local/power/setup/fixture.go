@@ -1258,8 +1258,9 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		threshold := DefaultDischargeThreshold + lowBatteryShutdownPercent
 
 		chargeParams := power.ChargeParams{
-			MinChargePercentage: threshold,
-			MaxChargePercentage: 100.0,
+			MinChargePercentage:   threshold,
+			MaxChargePercentage:   100.0,
+			DischargeOnCompletion: !power.IsLinePowerConnected(status),
 		}
 		if err := PrepareBattery(ctx, chargeParams); err != nil {
 			s.Fatal("Failed to prepare battery: ", err)
