@@ -36,6 +36,8 @@ const (
 	ChromeLoggedInWithUpcomingCalendarEvents = "chromeLoggedInWithUpcomingCalendarEvents"
 	// Logged into a session with Gaia user.
 	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
+	// Logged into a session with Gaia user with --disable-sync flag.
+	ChromeLoggedInWithGaiaDisableSync = "chromeLoggedInWithGaiaDisableSync"
 	// Logged into a user session to support thunderbolt devices.
 	ChromeLoggedInThunderbolt = "chromeLoggedInThunderbolt"
 	// Logged into a user session with OS Feedback enabled.

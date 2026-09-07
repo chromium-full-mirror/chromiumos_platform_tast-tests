@@ -210,6 +210,19 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromeLoggedInWithGaiaDisableSync,
+		Desc:         "Logged into a session with Gaia user with --disable-sync flag",
+		Contacts:     []string{"yoshiki@google.com"},
+		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)), ExtraArgs("--disable-sync")}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInThunderbolt,
 		Desc:     "Logged into a user session to support thunderbolt devices",
 		Contacts: []string{"pathan.jilani@intel.com", "intel-chrome-system-automation-team@intel.com"},

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/ui"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -46,7 +47,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "gaia"},
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},
 		// GAIA is required to install an app from Chrome Webstore.
-		Fixture: "chromeLoggedInWithGaia",
+		Fixture: fixture.ChromeLoggedInWithGaiaDisableSync,
 		// There are 10 tabs to be opened.
 		Timeout: 10*taskmanager.ChromeTabQuiescenceTimeout + 2*time.Minute,
 	})
