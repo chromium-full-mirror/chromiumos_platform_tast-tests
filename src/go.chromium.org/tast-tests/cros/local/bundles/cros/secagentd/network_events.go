@@ -240,7 +240,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
 
-	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid, true)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}

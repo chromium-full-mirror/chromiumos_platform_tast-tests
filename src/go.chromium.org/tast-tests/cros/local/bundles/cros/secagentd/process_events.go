@@ -204,7 +204,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Installing DBus monitor")
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 2*time.Minute)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 2*time.Minute, true)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}

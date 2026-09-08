@@ -84,7 +84,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 
 	ewTimeout := 90 * time.Second
 	s.Logf("Starting dbus watcher with timeout of %s seconds", ewTimeout)
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, ewTimeout)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, ewTimeout, true)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}

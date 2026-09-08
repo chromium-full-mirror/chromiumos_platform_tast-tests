@@ -13,6 +13,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -38,21 +39,26 @@ func getSecagentdDbusConn(ctx context.Context, dbo *dbusutil.DBusObject, agentPi
 	return errors.New("Unable to determine the dbus connection name of /usr/sbin/secagentd")
 }
 
-// SetupDbusMonitor sets up dbus monitoring between secagentd and missive and
-// returns the resulting DbusEventMonitor.
-func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.CalledMethod, error), error) {
+func secagentdMissivedMatchSpec(ctx context.Context, agentPid uint64, waitForBpf bool) ([]dbusutil.MatchSpec, error) {
 	dbo, err := dbusutil.NewDBusObject(ctx, "org.freedesktop.DBus", "org.freedesktop.DBus",
 		"/org/freedesktop/DBus")
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get DBus object")
 	}
 
-	// Trigger a synthetic process event. Since missived uses speculative queues,
-	// secagentd does not establish a DBus connection until it sends the first event.
-	// This generated event forces secagentd to establish the DBus connection instantly so
-	// we do not time out polling for the connection name.
-	if err := testexec.CommandContext(ctx, "true").Run(testexec.DumpLogOnError); err != nil {
-		return nil, errors.Wrap(err, "failed to trigger a synthetic process event")
+	if waitForBpf {
+		// Wait for secagentd to finish initializing its BPF maps.
+		if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
+			return nil, errors.Wrap(err, "failed to wait for secagentd BPF maps")
+		}
+
+		// Trigger a synthetic process event. Since missived uses speculative queues,
+		// secagentd does not establish a DBus connection until it sends the first event.
+		// This generated event forces secagentd to establish the DBus connection instantly so
+		// we do not time out polling for the connection name.
+		if err := testexec.CommandContext(ctx, "true").Run(testexec.DumpLogOnError); err != nil {
+			return nil, errors.Wrap(err, "failed to trigger a synthetic process event")
+		}
 	}
 
 	var dbusConn string
@@ -66,11 +72,20 @@ func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.
 
 	// Match rules so that we only monitor EnqueueRecord method calls
 	// originating from secagentd.
-	m := []dbusutil.MatchSpec{{Type: "method_call",
+	return []dbusutil.MatchSpec{{Type: "method_call",
 		Path:      dbus.ObjectPath("/org/chromium/Missived"),
 		Interface: "org.chromium.Missived",
 		Member:    "EnqueueRecord",
-		Sender:    dbusConn}}
+		Sender:    dbusConn}}, nil
+}
+
+// SetupDbusMonitor sets up dbus monitoring between secagentd and missive and
+// returns the resulting DbusEventMonitor.
+func SetupDbusMonitor(ctx context.Context, agentPid uint64, waitForBpf bool) (func() ([]dbusutil.CalledMethod, error), error) {
+	m, err := secagentdMissivedMatchSpec(ctx, agentPid, waitForBpf)
+	if err != nil {
+		return nil, err
+	}
 
 	// Start monitoring dbus.
 	return dbusutil.DbusEventMonitor(ctx, m)
@@ -78,37 +93,11 @@ func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.
 
 // SetupDbusWatcherWithTimeout sets up dbus monitoring between secagentd and missive and
 // returns the resulting DBusEventWatcher and the cancel function.
-func SetupDbusWatcherWithTimeout(ctx context.Context, agentPid uint64, timeout time.Duration) (*dbusutil.EventWatcher, context.CancelFunc, error) {
-	dbo, err := dbusutil.NewDBusObject(ctx, "org.freedesktop.DBus", "org.freedesktop.DBus",
-		"/org/freedesktop/DBus")
+func SetupDbusWatcherWithTimeout(ctx context.Context, agentPid uint64, timeout time.Duration, waitForBpf bool) (*dbusutil.EventWatcher, context.CancelFunc, error) {
+	m, err := secagentdMissivedMatchSpec(ctx, agentPid, waitForBpf)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "unable to get DBus object")
+		return nil, nil, err
 	}
-
-	// Trigger a synthetic process event. Since missived uses speculative queues,
-	// secagentd does not establish a DBus connection until it sends the first event.
-	// This generated event forces secagentd to establish the DBus connection instantly so
-	// we do not time out polling for the connection name.
-	if err := testexec.CommandContext(ctx, "true").Run(testexec.DumpLogOnError); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to trigger a synthetic process event")
-	}
-
-	var dbusConn string
-	// secagentd may have just been restarted so Poll for a bit until it
-	// establishes a dbus connection. (Batch interval can be up to 5s + load delays)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return getSecagentdDbusConn(ctx, dbo, agentPid, &dbusConn)
-	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		return nil, nil, errors.Wrap(err, "timed out waiting for secagentd to be available")
-	}
-
-	// Match rules so that we only monitor EnqueueRecord method calls
-	// originating from secagentd.
-	m := []dbusutil.MatchSpec{{Type: "method_call",
-		Path:      dbus.ObjectPath("/org/chromium/Missived"),
-		Interface: "org.chromium.Missived",
-		Member:    "EnqueueRecord",
-		Sender:    dbusConn}}
 
 	// Start monitoring dbus.
 	evCtx, cancel := context.WithTimeout(ctx, timeout)

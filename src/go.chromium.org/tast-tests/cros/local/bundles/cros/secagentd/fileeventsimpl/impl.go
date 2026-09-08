@@ -157,7 +157,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		f.Logf("Detected %q in log file, file plugin should be activated..starting test", tc.syncText)
 	}
 
-	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
+	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid, true)
 	if err != nil {
 		f.Fatal("Failed to setup dbus monitoring: ", err)
 		return

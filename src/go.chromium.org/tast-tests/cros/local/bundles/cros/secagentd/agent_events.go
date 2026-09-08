@@ -234,7 +234,7 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 30*time.Second, /*waitForBpf=*/false)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
