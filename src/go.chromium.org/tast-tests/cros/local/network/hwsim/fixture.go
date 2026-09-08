@@ -114,6 +114,27 @@ func init() {
 		}),
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "shillSimulatedWiFiWithArcBootedWithoutUIAutomator",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures ARC is booted without UI Automator",
+		Contacts: []string{
+			"damiendejean@google.com", // fixture maintainer
+			"cros-networking@google.com",
+		},
+		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
+		SetUpTimeout:    hwsimTimeout,
+		TearDownTimeout: hwsimTimeout,
+		ResetTimeout:    hwsimTimeout,
+		Parent:          "arcBootedWithoutUIAutomator",
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			preData := s.ParentValue().(*arc.PreData)
+			return ShillSimulatedWiFi{
+				Chrome: preData.Chrome,
+				ARC:    preData.ARC,
+			}
+		}),
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "shillSimulatedWiFiWithChromeLoggedIn",
 		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Chrome is logged in",
 		Contacts: []string{

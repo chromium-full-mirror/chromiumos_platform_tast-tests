@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1493959",
 		// We don't use ARC to do anything directly in this test, just to make sure
 		// that packets with ARC addresses also won't be sent out.
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
+		Fixture:      "shillSimulatedWiFiWithArcBootedWithoutUIAutomator",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		HardwareDeps: arc.ArcAppHwDeps,

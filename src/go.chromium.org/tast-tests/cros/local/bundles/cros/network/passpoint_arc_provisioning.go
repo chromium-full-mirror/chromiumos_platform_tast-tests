@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
+		Fixture:      "shillSimulatedWiFiWithArcBootedWithoutUIAutomator",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		HardwareDeps: arc.ArcAppHwDeps,

@@ -57,7 +57,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "wifi", "arc", "no_android_p"},
 		HardwareDeps: arc.ArcAppHwDeps,
 		Timeout:      10 * time.Minute,
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
+		Fixture:      "shillSimulatedWiFiWithArcBootedWithoutUIAutomator",
 		Params: []testing.Param{
 			{
 				Name: "game_app_tcp4",

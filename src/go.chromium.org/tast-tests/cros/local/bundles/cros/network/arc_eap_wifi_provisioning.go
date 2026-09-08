@@ -48,7 +48,7 @@ func init() {
 		HardwareDeps: arc.ArcAppHwDeps,
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Fixture:      "shillSimulatedWiFiWithArcBooted",
+		Fixture:      "shillSimulatedWiFiWithArcBootedWithoutUIAutomator",
 		Timeout:      7 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportWiFi},
 		Params: []testing.Param{
