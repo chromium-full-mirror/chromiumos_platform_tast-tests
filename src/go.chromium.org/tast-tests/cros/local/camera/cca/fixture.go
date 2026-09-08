@@ -627,12 +627,18 @@ func (f *fixture) stopApp(ctx context.Context, hasError bool) (retErr error) {
 	if f.app == nil {
 		return
 	}
+	saveFolderCtx := ctx
+	if f.debugParams.SaveCameraFolderWhenFail {
+		var cancel context.CancelFunc
+		ctx, cancel = ctxutil.Shorten(ctx, 2*time.Second)
+		defer cancel()
+	}
 	defer func(ctx context.Context) {
 		if err := f.app.Close(ctx); err != nil {
 			retErr = errors.Wrap(retErr, err.Error())
 		}
 		if (hasError || retErr != nil) && f.debugParams.SaveCameraFolderWhenFail {
-			if err := f.app.SaveCameraFolder(ctx); err != nil {
+			if err := f.app.SaveCameraFolder(saveFolderCtx); err != nil {
 				retErr = errors.Wrap(retErr, err.Error())
 			}
 		}

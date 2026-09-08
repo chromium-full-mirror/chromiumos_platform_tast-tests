@@ -416,9 +416,6 @@ func (a *App) Close(ctx context.Context) (retErr error) {
 		if err := a.conn.Close(); err != nil {
 			reportOrLogError(errors.Wrap(err, "failed to Conn.Close()"))
 		}
-		if err := a.appWindow.WaitUntilClosed(ctx); err != nil {
-			reportOrLogError(errors.Wrap(err, "failed to wait for appWindow close"))
-		}
 		if err := a.checkJSError(ctx); err != nil {
 			reportOrLogError(errors.Wrap(err, "There are JS errors when running CCA"))
 		}

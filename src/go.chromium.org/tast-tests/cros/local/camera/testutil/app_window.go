@@ -59,11 +59,6 @@ func (a *AppWindow) NotifyReady(ctx context.Context) error {
 	return a.jsObj.Call(ctx, nil, "function() { return this.notifyReadyOnTastSide(); }")
 }
 
-// WaitUntilClosed waits until the corresponding CCA window is closed.
-func (a *AppWindow) WaitUntilClosed(ctx context.Context) error {
-	return a.jsObj.Call(ctx, nil, "function() { return this.waitUntilClosed(); }")
-}
-
 // ClosingItself checks if CCA intends to close itself.
 func (a *AppWindow) ClosingItself(ctx context.Context) (bool, error) {
 	var closing bool
