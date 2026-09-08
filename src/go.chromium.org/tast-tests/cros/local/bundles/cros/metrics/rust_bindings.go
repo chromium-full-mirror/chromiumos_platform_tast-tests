@@ -6,6 +6,7 @@ package metrics
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"time"
 
@@ -29,7 +30,7 @@ func init() {
 		BugComponent: "b:1087262", // ChromeOS > Data > Engineering > Metrics
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      chrome.MinLoginTimeout + time.Minute + 7*waitHistogramTimeout,
+		Timeout:      chrome.MinLoginTimeout + time.Minute + 8*waitHistogramTimeout,
 	})
 }
 
@@ -103,11 +104,25 @@ func RustBindings(ctx context.Context, s *testing.State) {
 	// waitHistogramUpdate() returns the diff to hOld. The histogram before calling SendCrosEventToUMA would be excluded.
 	checkHistogram(s, h, indexVMDiskEraseFailed, noRepeatCount)
 
+	// Ensure any leftover UMA events file is removed on test exit so that
+	// unconsumed events do not leak into subsequent tests.
+	defer os.Remove("/var/lib/metrics/uma-events")
+
 	// These are not histograms. It's not necessary to verify the result on Chrome.
 	// These binding functions always return error when not on the DUT. Check if they return OK on the DUT.
 	// The rust program would abort and fail this test when a binding function returns error.
+	// Note: SendCrashToUMA must pass a crash type recognized by Chrome's
+	// ChromeOSMetricsProvider::LogCrash ("user", "kernel", or "uncleanshutdown")
+	// to avoid hitting NOTREACHED() when ExternalMetrics collects uma-events.
 	executeRustBinding(ctx, s, "SendUserActionToUMA", prefix+"SendUserActionToUMA")
-	executeRustBinding(ctx, s, "SendCrashToUMA", prefix+"SendCrashToUMA")
+	executeRustBinding(ctx, s, "SendCrashToUMA", "user")
+
+	// Emit and wait for a final histogram sample to ensure Chrome's ExternalMetrics
+	// collector consumes the preceding SendUserActionToUMA and SendCrashToUMA events
+	// before the test exits.
+	const histogramFlush = prefix + "Flush"
+	executeRustBinding(ctx, s, commandSendPercentageToUMA, histogramFlush, strconv.Itoa(sampleSendPercentageToUMA))
+	waitCheckHistogram(ctx, s, tconn, histogramFlush, sampleSendPercentageToUMA, noRepeatCount)
 }
 
 func executeRustBinding(ctx context.Context, s *testing.State, args ...string) {
