@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/diagnosticsapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -38,6 +39,11 @@ func init() {
 	})
 }
 
+var (
+	folderPickerDialog     = filesapp.WindowFinder(filesapp.FolderSelectPseudoAppID)
+	folderPickerSaveButton = nodewith.Name("Save").Role(role.Button).Ancestor(folderPickerDialog)
+)
+
 func attemptToSaveSessionLog(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := ensureSaveButtonEnabled(ctx, tconn); err != nil {
 		return err
@@ -51,10 +57,10 @@ func attemptToSaveSessionLog(ctx context.Context, tconn *chrome.TestConn) error 
 
 func clickSaveButton(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	saveButton := nodewith.Name("Save").Role(role.Button)
-	if err := uiauto.Combine("click Save",
-		ui.WithTimeout(10*time.Second).WaitUntilExists(saveButton),
-		ui.LeftClick(saveButton),
+	if err := uiauto.Combine("click Save and wait for dialog to close",
+		ui.WithTimeout(10*time.Second).WaitUntilExists(folderPickerSaveButton),
+		ui.DoDefault(folderPickerSaveButton),
+		ui.WithTimeout(10*time.Second).WaitUntilGone(folderPickerDialog),
 	)(ctx); err != nil {
 		return err
 	}
@@ -63,13 +69,12 @@ func clickSaveButton(ctx context.Context, tconn *chrome.TestConn) error {
 }
 
 func ensureSaveButtonEnabled(ctx context.Context, tconn *chrome.TestConn) error {
-	saveButton := nodewith.Name("Save").Role(role.Button)
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(saveButton)(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(folderPickerSaveButton)(ctx); err != nil {
 		return errors.Wrap(err, "Unable to get save button")
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.CheckRestriction(saveButton, restriction.Disabled)(ctx); err == nil {
+		if err := ui.CheckRestriction(folderPickerSaveButton, restriction.Disabled)(ctx); err == nil {
 			return errors.Errorf("Save button state %s", restriction.Disabled)
 		}
 
