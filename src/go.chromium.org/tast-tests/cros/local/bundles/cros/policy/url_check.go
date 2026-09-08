@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -156,30 +157,42 @@ func URLCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Run actual test.
-			urlBlocked := func(url string) bool {
+			urlBlocked := func(url string) (bool, string) {
 				conn, err := cr.NewConn(ctx, url)
 				if err != nil {
 					s.Fatal("Failed to connect to chrome: ", err)
 				}
 				defer conn.Close()
+				defer conn.CloseTarget(ctx)
 
 				var message string
-				if err := conn.Eval(ctx, `document.getElementById("main-message").innerText`, &message); err != nil {
-					return false // Missing #main-message.
-				}
+				err = testing.Poll(ctx, func(ctx context.Context) error {
+					if err := conn.Eval(ctx, `document.getElementById("main-message").innerText`, &message); err != nil {
+						return err
+					}
+					if strings.Contains(message, "ERR_BLOCKED_BY_ADMINISTRATOR") || strings.Contains(message, "blocked") {
+						return nil
+					}
+					return errors.New("error message not rendered yet")
+				}, &testing.PollOptions{Timeout: 5 * time.Second})
 
-				return strings.Contains(message, "ERR_BLOCKED_BY_ADMINISTRATOR")
+				return err == nil, message
 			}
 
 			for _, allowed := range tc.allowedURLs {
-				if urlBlocked(allowed) {
+				blocked, _ := urlBlocked(allowed)
+				if blocked {
 					s.Errorf("Expected %q to load", allowed)
 				}
 			}
 
 			for _, blocked := range tc.blockedURLs {
-				if !urlBlocked(blocked) {
-					s.Errorf("Expected %q to be blocked", blocked)
+				blockedResult, message := urlBlocked(blocked)
+				if !blockedResult {
+					if len(message) > 100 {
+						message = message[:100] + "..."
+					}
+					s.Errorf("Expected %q to be blocked, but was not. Page content snippet: %q", blocked, message)
 				}
 			}
 		})
