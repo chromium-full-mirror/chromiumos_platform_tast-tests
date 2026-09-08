@@ -43,6 +43,7 @@ func init() {
 			"play_store",
 			"gaia",
 		},
+		HardwareDeps: arc.ArcAppHwDeps,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcPolicy{}, pci.VerifiedFunctionalityOS),
