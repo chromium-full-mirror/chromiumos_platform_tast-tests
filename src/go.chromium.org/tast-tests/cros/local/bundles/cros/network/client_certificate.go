@@ -28,8 +28,7 @@ import (
 // It logs in as the provided GAC-managed user, then confirms the certificate
 // through four independent surfaces:
 //  1. chrome://connectors-internals: a managed client certificate identity
-//     exists with the expected key trust level (HW on devices with a TPM, OS
-//     otherwise; selected by the test parameter).
+//     exists with the expected key trust level (HW on devices with a TPM).
 //  2. Certificate Manager (Platform Client Certs): the certificate is listed.
 //  3. A local HTTPS server that requires a TLS client certificate (see
 //     managedclientcert.StartClientAuthServer): Chrome auto-selects the managed
@@ -52,15 +51,13 @@ import (
 //
 // DUT requirements:
 //   - Outbound internet access (GAIA login).
-//   - A TPM is optional: the key is hardware-backed (HW) with a TPM and
-//     software-backed (OS) without one. The matching variant (.hw / .os) is
-//     selected automatically by the variant's TPM hardware dependency.
+//   - A TPM is required: the key is hardware-backed (HW).
 //
 // How to run:
 // This test uses an account from the TAPE pool gcac_cert_provisioning (via
 // managedclientcert.LoggedInFixture) and runs with:
 //
-//	tast run <dut> network.ClientCertificate.*
+//	tast run <dut> network.ClientCertificate
 //
 // (An account can also be provided manually via -var tape.provided_account='user@domain:password').
 
@@ -76,23 +73,9 @@ func init() {
 		BugComponent: "b:1000044",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "gaia"},
+		HardwareDeps: hwdep.D(hwdep.HasTpm()),
 		Fixture:      managedclientcert.LoggedInFixture,
 		Timeout:      5 * time.Minute,
-		// The managed client certificate key is hardware-backed on devices with a
-		// TPM and falls back to software otherwise. Each variant runs only on the
-		// matching hardware and asserts its expected Key Trust Level.
-		Params: []testing.Param{
-			{
-				Name:              "hw",
-				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-				Val:               "HW",
-			},
-			{
-				Name:              "os",
-				ExtraHardwareDeps: hwdep.D(hwdep.HasNoTpm()),
-				Val:               "OS",
-			},
-		},
 	})
 }
 
@@ -101,11 +84,7 @@ func ClientCertificate(ctx context.Context, s *testing.State) {
 	cr := v.Chrome()
 	tconn := v.TestAPIConn()
 
-	// wantTrust is the expected Key Trust Level for this variant: "HW" on devices
-	// with a TPM, "OS" otherwise.
-	wantTrust := s.Param().(string)
-
-	info := verifyConnectorsInternals(ctx, s, cr, wantTrust)
+	info := verifyConnectorsInternals(ctx, s, cr)
 
 	verifyListedInCertManager(ctx, s, cr, tconn, info)
 
@@ -118,8 +97,8 @@ func ClientCertificate(ctx context.Context, s *testing.State) {
 
 // verifyConnectorsInternals opens chrome://connectors-internals, waits for the
 // managed client certificate to be provisioned, and verifies its key trust level
-// matches wantTrust ("HW" on TPM devices, "OS" otherwise).
-func verifyConnectorsInternals(ctx context.Context, s *testing.State, cr *chrome.Chrome, wantTrust string) managedclientcert.Info {
+// is hardware-backed ("HW").
+func verifyConnectorsInternals(ctx context.Context, s *testing.State, cr *chrome.Chrome) managedclientcert.Info {
 	conn, err := cr.NewConn(ctx, managedclientcert.MCCURL)
 	if err != nil {
 		s.Fatalf("Failed to open %s: %v", managedclientcert.MCCURL, err)
@@ -154,6 +133,7 @@ func verifyConnectorsInternals(ctx context.Context, s *testing.State, cr *chrome
 
 	s.Logf("Managed client certificate: %+v", info)
 
+	const wantTrust = "HW"
 	if info.TrustLevel != wantTrust {
 		s.Errorf("Key Trust Level = %q, want %q", info.TrustLevel, wantTrust)
 	}
