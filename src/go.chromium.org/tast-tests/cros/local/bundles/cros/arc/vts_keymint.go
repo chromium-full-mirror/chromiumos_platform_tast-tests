@@ -63,9 +63,16 @@ func VTSKeymint(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure SELinux in ARC is in Permissive mode.
-	res, error := a.ShellCommand(ctx, "getenforce").Output(testexec.DumpLogOnError)
-	if error != nil {
-		s.Fatal("Failed to get SELinux state inside ARC: ", error)
+	// Wait for the "getenforce" command to succeed because restarting adbd as root
+	// asynchronously disconnects the ADB socket inside ARCVM, which can cause immediate
+	// shell commands to fail with "error: closed" until adbd reconnects.
+	var res []byte
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		res, err = a.ShellCommand(ctx, "getenforce").Output(testexec.DumpLogOnError)
+		return err
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to get SELinux state inside ARC: ", err)
 	}
 
 	// Check if SELinux is in Enforcing mode.

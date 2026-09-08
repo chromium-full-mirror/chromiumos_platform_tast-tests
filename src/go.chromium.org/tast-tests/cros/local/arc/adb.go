@@ -91,5 +91,22 @@ func (a *ARC) Root(ctx context.Context) error {
 	if err := a.device.Root(ctx); err != nil {
 		return err
 	}
-	return a.device.WaitForState(ctx, adb.StateDevice, ctxutil.MaxTimeout)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := a.device.WaitForState(ctx, adb.StateDevice, 5*time.Second); err != nil {
+			return err
+		}
+		// By default, adbd runs as the shell user (uid=2000). When "adb root" is called,
+		// it instructs adbd to restart with root privileges (uid=0) and exits on the host
+		// before adbd actually finishes restarting inside ARC. Polling "id -u" until it
+		// returns "0" ensures we wait until the new root adbd instance is up and serving
+		// commands rather than returning early against the old non-root connection.
+		out, err := a.Command(ctx, "id", "-u").Output()
+		if err != nil {
+			return err
+		}
+		if strings.TrimSpace(string(out)) != "0" {
+			return errors.Errorf("adbd is not running as root yet (got uid %q)", strings.TrimSpace(string(out)))
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 30 * time.Second})
 }
