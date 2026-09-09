@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
 
@@ -40,6 +41,7 @@ import (
 const (
 	installationTimeout   = 40 * time.Minute
 	resetTimeout          = time.Minute
+	preTestTimeout        = 15 * time.Second
 	postTestTimeout       = 30 * time.Second
 	uninstallationTimeout = 2 * time.Minute
 
@@ -99,6 +101,7 @@ func init() {
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
+		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
@@ -112,6 +115,7 @@ func init() {
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
+		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          fixture.ChromePolicyLoggedInBruschetta,
@@ -137,6 +141,7 @@ func init() {
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
+		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
@@ -157,10 +162,11 @@ type bruschettaFixture struct {
 	// tconn is the test connection to chrome.
 	tconn *chrome.TestConn
 	// How far into the VM log we've read.
-	logOffset    int
-	bruschettaVM *vm.BruschettaVM
-	kb           *input.KeyboardEventWriter
-	concierge    *vm.Concierge
+	logOffset        int
+	bruschettaVM     *vm.BruschettaVM
+	kb               *input.KeyboardEventWriter
+	concierge        *vm.Concierge
+	releaseKeepAwake func(ctx context.Context, tconn *chrome.TestConn) error
 }
 
 type bruschettaAppsFixture struct {
@@ -408,9 +414,28 @@ func (f *bruschettaFixture) Reset(ctx context.Context) error {
 }
 
 func (f *bruschettaFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Ensure the display is awake and powered on after potentially long VM setup.
+	if err := power.TurnOnDisplay(ctx); err != nil {
+		s.Log("Failed to turn on display: ", err)
+	}
+
+	// Keep the display awake to prevent dimming or sleeping during tests.
+	cleanup, err := power.RequestKeepAwake(ctx, f.tconn, power.Display)
+	if err != nil {
+		s.Log("Failed to request keep awake: ", err)
+	} else {
+		f.releaseKeepAwake = cleanup
+	}
 }
 
 func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.releaseKeepAwake != nil {
+		if err := f.releaseKeepAwake(ctx, f.tconn); err != nil {
+			s.Log("Failed to release keep awake: ", err)
+		}
+		f.releaseKeepAwake = nil
+	}
+
 	if err := f.saveLogs(ctx, s.OutDir(), "post_test"); err != nil {
 		s.Error("Failed to save VM logs from test: ", err)
 	}
