@@ -120,7 +120,20 @@ func testForwardingUARTs(ctx context.Context, s *testing.State, b utils.Devboard
 	if !gscProps.HasFpmcuUart() {
 		return
 	}
-	if err := b.TestUARTForwarding(ctx, r, ti50.UartFPMCU, expectUartToUsb, expectUsbToUart, caseStr); err != nil {
-		s.Errorf("FPMCU UART failed: %s", err)
+	// When AP is on, both old and new firmware versions forward FPMCU UART.
+	// When AP is off, newer firmware gates FPMCU UART behind AP power state (matching AP UART),
+	// while older firmware forwarded FPMCU UART unconditionally. Accept both behaviors when AP is off.
+	// TODO(b/545005646, 2027-09-09): Drop support for old behavior (forwarding when AP is off).
+	if apOn {
+		if err := b.TestUARTForwarding(ctx, r, ti50.UartFPMCU, expectUartToUsb, expectUsbToUart, caseStr); err != nil {
+			s.Errorf("FPMCU UART failed: %s", err)
+		}
+	} else {
+		// Try new behavior first (FPMCU UART blocked when AP is off). If that fails, allow old behavior (forwarded).
+		if err := b.TestUARTForwarding(ctx, r, ti50.UartFPMCU, false, false, caseStr); err != nil {
+			if oldErr := b.TestUARTForwarding(ctx, r, ti50.UartFPMCU, expectUartToUsb, expectUsbToUart, caseStr); oldErr != nil {
+				s.Errorf("FPMCU UART failed: neither gated (%s) nor ungated (%s) forwarding matched", err, oldErr)
+			}
+		}
 	}
 }
