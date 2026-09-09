@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	mountPointTimeout = 15 * time.Second // timeout waiting for CrosDisks to mount Drivefs.
+	mountPointTimeout = 60 * time.Second // timeout waiting for CrosDisks to mount Drivefs.
 	fuseIoTimeout     = 40 * time.Second // timeout waiting for the FUSE to be operational.
 	restartDelay      = 4 * time.Second  // delay waiting for DriveFS to restart.
 )
