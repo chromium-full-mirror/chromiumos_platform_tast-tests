@@ -57,6 +57,9 @@ const (
 	// insetSlopDP indicates how much to inset the work area (display area) to avoid window snapping to the
 	// edges of the screen interfering with drag-move and drag-resize of windows.
 	insetSlopDP int = 40
+
+	// minWindowWidth is the minimum width of a Chrome window.
+	minWindowWidth = 500
 )
 
 type page struct {
@@ -113,28 +116,34 @@ func toggleThreeDotMenu(ctx context.Context) error {
 	return nil
 }
 
-func setWindowBounds(ctx context.Context, tconn *chrome.TestConn, windowID int, to coords.Rect) error {
+func setWindowBounds(ctx context.Context, tconn *chrome.TestConn, windowID int, to coords.Rect) (coords.Rect, error) {
+	// Ensure the window width is at least the minimum supported width.
+	if to.Width < minWindowWidth {
+		testing.ContextLogf(ctx, "Adjusting target width from %d to %d", to.Width, minWindowWidth)
+		to.Width = minWindowWidth
+	}
+
 	w, err := ash.GetWindow(ctx, tconn, windowID)
 	if err != nil {
-		return err
+		return to, err
 	}
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		return err
+		return to, err
 	}
 
 	b, d, err := ash.SetWindowBounds(ctx, tconn, w.ID, to, info.ID)
 	if err != nil {
-		return err
+		return to, err
 	}
 	if b != to {
-		return errors.Errorf("unable to set window bounds; got: %v, want: %v", b, to)
+		return to, errors.Errorf("unable to set window bounds; got: %v, want: %v", b, to)
 	}
 	if d != info.ID {
-		return errors.Errorf("unable to set window display; got: %v, want: %v", d, info.ID)
+		return to, errors.Errorf("unable to set window display; got: %v, want: %v", d, info.ID)
 	}
-	return nil
+	return to, nil
 }
 
 func reduceDisplayZoomFactor(ctx context.Context, tconn *chrome.TestConn) (
@@ -237,7 +246,8 @@ func runTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, inv
 		// Create a landscape rectangle. Avoid snapping by insetting by insetSlopDP.
 		ms := math.Min(float64(info.WorkArea.Width), float64(info.WorkArea.Height))
 		sb := coords.NewRect(info.WorkArea.Left, info.WorkArea.Top, int(ms), int(ms*0.6)).WithInset(insetSlopDP, insetSlopDP)
-		if err := setWindowBounds(ctx, tconn, w.ID, sb); err != nil {
+		sb, err = setWindowBounds(ctx, tconn, w.ID, sb)
+		if err != nil {
 			return errors.Wrap(err, "failed to set window initial bounds")
 		}
 
@@ -274,7 +284,8 @@ func runTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, inv
 			sbl = coords.NewRect(info.WorkArea.Left, info.WorkArea.Top, info.WorkArea.Width, info.WorkArea.Height/2)
 		}
 		sbl = sbl.WithInset(insetSlopDP, insetSlopDP)
-		if err := setWindowBounds(ctx, tconn, w.ID, sbl); err != nil {
+		sbl, err = setWindowBounds(ctx, tconn, w.ID, sbl)
+		if err != nil {
 			return errors.Wrap(err, "failed to set non-blank window initial bounds")
 		}
 
@@ -283,7 +294,8 @@ func runTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, inv
 		if isp {
 			sbr = sbl.WithOffset(0, sbl.Height)
 		}
-		if err := setWindowBounds(ctx, tconn, wb.ID, sbr); err != nil {
+		sbr, err = setWindowBounds(ctx, tconn, wb.ID, sbr)
+		if err != nil {
 			return errors.Wrap(err, "failed to set blank window initial bounds")
 		}
 		perfFn = func(ctx context.Context) error {
