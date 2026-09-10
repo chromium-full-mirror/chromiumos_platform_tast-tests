@@ -221,36 +221,46 @@ func testPerfETMPerThread(ctx context.Context, s *testing.State) {
 
 // testPerfETMSystemWide records ETM trace in system-wide mode and verifies the raw dump.
 func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-	defer cr.Close(ctx)
-
 	// Test ETM profiling of Chrome.
 	perfData := filepath.Join(s.OutDir(), "system-wide-perf.data")
-	perfCommand := []string{"record", "-e", "cs_etm/autofdo/uk", "-N", "-o", perfData, "-a", "--", "sleep", "2"}
-	cmd := testexec.CommandContext(ctx, "perf", perfCommand...)
-	// Launch perf but don't wait.
-	err = cmd.Start()
-	if err != nil {
-		s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
-	}
-	// Open search result page
-	conn, err := cr.NewConn(ctx, "https://google.com/search?q=Google")
-	if err != nil {
-		s.Logf("Failed to create new Chrome connection: %v. Skipping the test", err)
+	// -m ,2M bounds AUX buffer size to prevent memory exhaustion during decoding.
+	perfCommand := []string{"record", "-e", "cs_etm/autofdo/uk", "-N", "-m", ",2M", "-o", perfData, "-a", "--", "sleep", "2"}
+
+	recordTrace := func() bool {
+		cr, err := chrome.New(ctx)
+		if err != nil {
+			s.Fatal("Chrome login failed: ", err)
+		}
+		// Close Chrome as soon as the recording phase completes to free up ~1.5-2 GB
+		// of memory before perf inject and perf report run.
+		defer cr.Close(ctx)
+
+		cmd := testexec.CommandContext(ctx, "perf", perfCommand...)
+		// Launch perf but don't wait.
+		err = cmd.Start()
+		if err != nil {
+			s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
+		}
+		// Open search result page
+		conn, err := cr.NewConn(ctx, "https://google.com/search?q=Google")
+		if err != nil {
+			s.Logf("Failed to create new Chrome connection: %v. Skipping the test", err)
+			_ = cmd.Wait(testexec.DumpLogOnError)
+			return false
+		}
+		defer conn.Close()
+		// Wait until perf completes. No need to check the status because it can
+		// give an error status for unrelated reason and still produce a profile.
+		// If the profile is invalid we will see it later in the verification.
 		_ = cmd.Wait(testexec.DumpLogOnError)
+		return true
+	}
+	if !recordTrace() {
 		return
 	}
-	defer conn.Close()
-	// Wait until perf completes. No need to check the status because it can
-	// give an error status for unrelated reason and still produce a profile.
-	// If the profile is invalid we will see it later in the verification.
-	_ = cmd.Wait(testexec.DumpLogOnError)
 
 	// Test ETM data in the raw profile dump.
-	cmd = testexec.CommandContext(ctx, "perf", "report", "-D", "-i", perfData)
+	cmd := testexec.CommandContext(ctx, "perf", "report", "-D", "-i", perfData)
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
@@ -263,7 +273,7 @@ func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
 	// Test ETM trace decoding and sample synthesis.
 	perfInjectData := filepath.Join(s.OutDir(), "system-wide-perf-inject.data")
 	// Don't use timeless decoding (itrace=Z) when UI is On.
-	cmd = testexec.CommandContext(ctx, "perf", "inject", "--itrace=i1024il", "--strip", "-i", perfData, "-o", perfInjectData)
+	cmd = testexec.CommandContext(ctx, "perf", "inject", "--itrace=i10000il", "--strip", "-i", perfData, "-o", perfInjectData)
 	err = cmd.Run(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
