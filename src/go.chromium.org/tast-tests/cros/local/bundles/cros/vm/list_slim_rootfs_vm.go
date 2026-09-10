@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/slimrootfsutils"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -26,18 +26,16 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch()),
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "slimRootfs",
 	})
 }
 
 // ListSlimRootfsVM is used as one of the standard SW gates (go/pe-sw-gates).
 // Please ask to crosvm-core@ if you want to modify or delete this test.
 func ListSlimRootfsVM(ctx context.Context, s *testing.State) {
-	user := s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser()
-	concierge, err := vm.NewConcierge(ctx, user)
-	if err != nil {
-		s.Error("Failed to get concierge instance: ", err)
-	}
+	fixtData := s.FixtValue().(*slimrootfsutils.FixtData)
+	user := fixtData.Chrome().NormalizedUser()
+	concierge := fixtData.Concierge()
 
 	kernelAndRootfsFiles := slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch())
 	vmNames := []string{slimrootfsutils.DefaultVMName + "one", slimrootfsutils.DefaultVMName + "two"}

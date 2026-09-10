@@ -109,6 +109,24 @@ func GetEncodedName(name string) string {
 	return base64.URLEncoding.WithPadding(base64.StdPadding).EncodeToString([]byte(name))
 }
 
+// ListAllVMDisks returns all VmDiskInfo protos for the user via ListVmDisks.
+func (c *Concierge) ListAllVMDisks(ctx context.Context) ([]*vmpb.VmDiskInfo, error) {
+	resp := &vmpb.ListVmDisksResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".ListVmDisks",
+		&vmpb.ListVmDisksRequest{
+			CryptohomeId: c.ownerID,
+			AllLocations: true,
+		}, resp); err != nil {
+		return nil, err
+	}
+
+	if !resp.GetSuccess() {
+		return nil, errors.Errorf("could not fetch VM disks info: %v", resp.GetFailureReason())
+	}
+
+	return resp.GetImages(), nil
+}
+
 // GetVMDiskInfo returns a VmDiskInfo proto for the given VM via ListVmDisks
 func (c *Concierge) GetVMDiskInfo(ctx context.Context, vmName string) (*vmpb.VmDiskInfo, error) {
 	resp := &vmpb.ListVmDisksResponse{}
@@ -364,20 +382,21 @@ func (c *Concierge) stopVM(ctx context.Context, vm *VM) error {
 	return nil
 }
 
-func (c *Concierge) destroyDiskImage(ctx context.Context, vm *VM) error {
-	testing.ContextLogf(ctx, "Deleting VM %q", vm.name)
+// DestroyDiskImage destroys the disk image of the given VM.
+func (c *Concierge) DestroyDiskImage(ctx context.Context, vmName string) error {
+	testing.ContextLogf(ctx, "Deleting VM %q", vmName)
 
 	resp := &vmpb.DestroyDiskImageResponse{}
-	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.conciergeObj, conciergeInterface+".DestroyDiskImage",
+	if err := dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".DestroyDiskImage",
 		&vmpb.DestroyDiskImageRequest{
-			CryptohomeId: vm.Concierge.ownerID,
-			VmName:       vm.name,
+			CryptohomeId: c.ownerID,
+			VmName:       vmName,
 		}, resp); err != nil {
-		return errors.Wrapf(err, "failed to delete VM %q, got dbus error", vm.name)
+		return errors.Wrapf(err, "failed to delete VM %q, got dbus error", vmName)
 	}
 
 	if resp.Status != vmpb.DiskImageStatus_DISK_STATUS_DOES_NOT_EXIST && resp.Status != vmpb.DiskImageStatus_DISK_STATUS_DESTROYED {
-		return errors.Errorf("failed to delete VM %q, got status %v, failure reason %q", vm.name, resp.Status, resp.FailureReason)
+		return errors.Errorf("failed to delete VM %q, got status %v, failure reason %q", vmName, resp.Status, resp.FailureReason)
 	}
 	return nil
 }

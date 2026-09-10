@@ -171,7 +171,7 @@ func (vm *VM) Stop(ctx context.Context) error {
 
 // Delete deletes the VM.
 func (vm *VM) Delete(ctx context.Context) error {
-	return vm.Concierge.destroyDiskImage(ctx, vm)
+	return vm.Concierge.DestroyDiskImage(ctx, vm.name)
 }
 
 // RetrieveLogs gets the VM logs.
