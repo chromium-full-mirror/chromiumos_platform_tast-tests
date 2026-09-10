@@ -94,7 +94,7 @@ const (
 	deferARCForceEnabled = "DeferArcActivationUntilUserSessionStartUpTaskCompletion:history_window/0/history_threshold/1"
 )
 
-const loginPerfOptinTimeout = 10 * time.Minute
+const loginPerfOptinTimeout = 15 * time.Minute
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
 
