@@ -7,10 +7,12 @@ package guestos
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image/color"
 	"image/png"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -131,6 +133,24 @@ func colorsMatchScaled(actual, expected color.Color, minScale, maxScale float64,
 	return near(ar, er) && near(ag, eg) && near(ab, eb)
 }
 
+// saveStderrToFile writes stderr output to a file in the test output directory
+// and returns the filename if successful, or an empty string otherwise.
+func saveStderrToFile(ctx context.Context, windowName, stderrStr string) string {
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		testing.ContextLog(ctx, "Failed to get output directory to save stderr")
+		return ""
+	}
+	fileName := fmt.Sprintf("%s_stderr.txt", strings.ReplaceAll(windowName, "/", "_"))
+	filePath := filepath.Join(outDir, fileName)
+	if err := os.WriteFile(filePath, []byte(stderrStr), 0644); err != nil {
+		testing.ContextLogf(ctx, "Failed to write stderr to %s: %v", filePath, err)
+		return ""
+	}
+	testing.ContextLogf(ctx, "Saved %s stderr to %s", windowName, fileName)
+	return fileName
+}
+
 // RunWindowedApp Runs the command cmdline in the guest, waits for the window
 // windowName to open, sends it a key press event, runs condition, and then
 // closes all open windows. Note that this will close windows other then the
@@ -145,8 +165,9 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 
 	testing.ContextLogf(ctx, "Starting %v application", windowName)
 	cmd := guest.Command(ctx, cmdline...)
-	var buf bytes.Buffer
-	cmd.Stdout = &buf
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
 
 	if err := cmd.Start(); err != nil {
 		return "", errors.Wrapf(err, "failed to start command %v", cmdline)
@@ -155,6 +176,13 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 
 	size, err := PollWindowSize(ctx, tconn, windowName, timeout)
 	if err != nil {
+		cancel()
+		cmd.Wait(testexec.DumpLogOnError)
+		if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
+			if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
+				return "", errors.Wrapf(err, "failed to find window %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)
+			}
+		}
 		return "", errors.Wrapf(err, "failed to find window %q while running %v", windowName, cmdline)
 	}
 	testing.ContextLogf(ctx, "Window %q is visible with size %v", windowName, size)
@@ -178,8 +206,13 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 	}
 
 	if err := cmd.Wait(testexec.DumpLogOnError); err != nil {
+		if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
+			if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
+				return "", errors.Wrapf(err, "command %v failed to terminate properly (stderr saved to %s)", cmdline, fileName)
+			}
+		}
 		return "", errors.Wrapf(err, "command %v failed to terminate properly", cmdline)
 	}
 
-	return buf.String(), nil
+	return stdoutBuf.String(), nil
 }
