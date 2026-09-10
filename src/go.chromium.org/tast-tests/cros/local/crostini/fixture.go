@@ -785,6 +785,17 @@ func launchExitTerminal(ctx context.Context, tconn *chrome.TestConn) error {
 	return nil
 }
 
+// waitForDisplayServiceIfEnabled waits for user display services (sommelier-x@0) in the container to become active.
+func waitForDisplayServiceIfEnabled(ctx context.Context, cont *vm.Container) error {
+	// If sommelier-x@0 is enabled in the container, wait until it becomes active.
+	if err := cont.Command(ctx, "systemctl", "--user", "--quiet", "is-enabled", "sommelier-x@0").Run(); err != nil {
+		return nil
+	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		return cont.Command(ctx, "systemctl", "--user", "--quiet", "is-active", "sommelier-x@0").Run()
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 500 * time.Millisecond})
+}
+
 // resetContainer checks that the container is reachable, runs basic commands, and clears the clipboard.
 // If restoreSnapshot is true, it restores the container snapshot and cycles Terminal before checking basic commands.
 func resetContainer(ctx context.Context, cont *vm.Container, cr *chrome.Chrome, tconn *chrome.TestConn, restoreSnapshot bool) error {
@@ -808,6 +819,7 @@ func resetContainer(ctx context.Context, cont *vm.Container, cr *chrome.Chrome, 
 		// 1. stop the container.
 		// 2. restore the snapshot.
 		// 3. start the container.
+		// 4. wait for user display services to become active.
 		if err := cont.RestoreCopy(ctx, snapshotName); err != nil {
 			return errors.Wrap(err, "failed to restore snapshot")
 		}
@@ -816,6 +828,9 @@ func resetContainer(ctx context.Context, cont *vm.Container, cr *chrome.Chrome, 
 		// See b/271947202.
 		if err := launchExitTerminal(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to re-launch terminal and exit")
+		}
+		if err := waitForDisplayServiceIfEnabled(ctx, cont); err != nil {
+			return errors.Wrap(err, "failed to wait for display services")
 		}
 	}
 
