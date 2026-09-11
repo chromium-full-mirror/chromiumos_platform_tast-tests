@@ -126,6 +126,10 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for G3/S5 powerstate: ", err)
 	}
 
+	// battery need 30 seconds to discharge and complete the cutoff sequence
+	testing.ContextLog(ctx, "Sleeping 60 seconds before power on")
+	testing.Sleep(ctx, 60*time.Second)
+
 	testing.ContextLog(ctx, "Pressing power key to turn on DUT")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
 		s.Fatal("Failed to press power key on DUT: ", err)
