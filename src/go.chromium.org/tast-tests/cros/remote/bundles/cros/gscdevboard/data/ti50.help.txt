@@ -16,6 +16,7 @@ gpioget
 -gpioset
 help
 idle
+-kbpress
 powerbtn
 rddkeepalive
 -reboot
