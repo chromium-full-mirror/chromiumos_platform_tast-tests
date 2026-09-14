@@ -42,7 +42,7 @@ func init() {
 		Contacts: []string{"arc-storage@google.com", "niwa@google.com", "youkichihosoi@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{
 			"android_vm",
 			"arcvm_data_migration",
