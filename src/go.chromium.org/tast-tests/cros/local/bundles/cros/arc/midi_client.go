@@ -31,10 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBooted",
-		// TODO(b/556069856): Temporarily disabled from mainline due to kernel
-		// seq_lock / midis D-state deadlock during teardown, which wedges Upstart
-		// and causes subsequent tests in the shard requiring UI restarts to fail.
-		// Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
