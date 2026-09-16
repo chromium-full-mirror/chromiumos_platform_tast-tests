@@ -1358,6 +1358,7 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 	if meet.Effects {
 		if err := SetVisualEffects(ui, TurnOffEffectsFinder)(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to turn off visual effects: ", err)
+			faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return true }, cr, "ui_dump_set_visual_effects")
 		}
 	}
 
