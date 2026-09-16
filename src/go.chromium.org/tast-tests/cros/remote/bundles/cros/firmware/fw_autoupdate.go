@@ -892,16 +892,16 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to parse futility manifest: %q %+v", out, err)
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO != initialVersions[reporters.CrossystemParamRoFwid] {
-		s.Errorf("Failed to pack chromeos-firmwareupdate-old AP RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO, initialVersions[reporters.CrossystemParamRoFwid])
+		s.Fatalf("Failed to pack chromeos-firmwareupdate-old AP RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RO, initialVersions[reporters.CrossystemParamRoFwid])
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW != initialVersions[reporters.CrossystemParamFwid] {
-		s.Errorf("Failed to pack chromeos-firmwareupdate-old AP RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW, initialVersions[reporters.CrossystemParamFwid])
+		s.Fatalf("Failed to pack chromeos-firmwareupdate-old AP RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].AP.Versions.RW, initialVersions[reporters.CrossystemParamFwid])
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO != initialECRO {
-		s.Errorf("Failed to pack chromeos-firmwareupdate-old EC RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO, initialECRO)
+		s.Fatalf("Failed to pack chromeos-firmwareupdate-old EC RO got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RO, initialECRO)
 	}
 	if expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW != initialECRW {
-		s.Errorf("Failed to pack chromeos-firmwareupdate-old EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, initialECRW)
+		s.Fatalf("Failed to pack chromeos-firmwareupdate-old EC RW got %s, want %s", expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW, initialECRW)
 	}
 
 	s.Log("Rolling back firmware to old version")
