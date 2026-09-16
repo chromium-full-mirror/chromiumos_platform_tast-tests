@@ -634,14 +634,20 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to futility read to %q: %+v", oldAPFile, err)
 	}
-	// Copy the active section to the backup section, released images will have the same firmware in A & B.
-	activeFw, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
-	inactiveFw := "B"
-	if activeFw == "B" {
-		inactiveFw = "A"
+	if err := h.WaitForFWResult(ctx); err != nil {
+		s.Fatal("Failed waiting for fw_result before reading active firmware slot: ", err)
 	}
-	activeSection := "RW_SECTION_" + activeFw
-	inactiveSection := "RW_SECTION_" + inactiveFw
+	// Copy the active section to the backup section, released images will have the same firmware in A & B.
+	activeSlot, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+	if err != nil {
+		s.Fatal("Failed to get active firmware slot: ", err)
+	}
+	inactiveSlot := "B"
+	if activeSlot == "B" {
+		inactiveSlot = "A"
+	}
+	activeSection := "RW_SECTION_" + activeSlot
+	inactiveSection := "RW_SECTION_" + inactiveSlot
 	s.Logf("Copying section %s to %s for chromeos-firmwareupdate-old", activeSection, inactiveSection)
 	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
 	defer cancel()
@@ -726,6 +732,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.AllowGBBForce); err != nil {
 			s.Fatal("Failed to perform mode aware reboot: ", err)
 		}
+		if err := h.WaitForFWResult(ctx); err != nil {
+			s.Fatal("Failed waiting for fw_result after reboot: ", err)
+		}
 		shortCtx, cancel := context.WithTimeout(ctx, firmwareUpdateTimeout)
 		defer cancel()
 		if err := h.DUT.Conn().CommandContext(shortCtx, "futility", "flash", "--wp-disable").Run(ssh.DumpLogOnError); err != nil {
@@ -734,26 +743,19 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 	h.CheckAndLogECCrashes(ctx, s)
 
-	getCrossystemParams := func(ctx context.Context) (result map[reporters.CrossystemParam]string, retErr error) {
-		retErr = testing.Poll(ctx, func(ctx context.Context) error {
-			result, err = h.Reporter.Crossystem(ctx, reporters.CrossystemParamRoFwid, reporters.CrossystemParamFwid, reporters.CrossystemParamMainfwAct,
-				reporters.CrossystemParamMainfwType, reporters.CrossystemParamTpmFwVer, reporters.CrossystemParamFWResult)
-			if err != nil {
-				return err
-			}
-			if result[reporters.CrossystemParamFWResult] == "trying" {
-				return errors.New("firmware not ready, fw_result = trying")
-			}
-			if result[reporters.CrossystemParamFWResult] == "unknown" {
-				return errors.New("firmware not ready, fw_result = unknown")
-			}
-			return nil
-		}, &testing.PollOptions{Timeout: 90 * time.Second, Interval: 5 * time.Second})
-		return
+	getCrossystemParams := func(ctx context.Context) (map[reporters.CrossystemParam]string, error) {
+		if err := h.WaitForFWResult(ctx); err != nil {
+			return nil, err
+		}
+		return h.Reporter.Crossystem(ctx, reporters.CrossystemParamRoFwid, reporters.CrossystemParamFwid, reporters.CrossystemParamMainfwAct,
+			reporters.CrossystemParamMainfwType, reporters.CrossystemParamTpmFwVer, reporters.CrossystemParamFWResult)
 	}
 	initialVersions, err := getCrossystemParams(ctx)
 	if err != nil {
 		s.Fatalf("Failed to call crossystem: %+v", err)
+	}
+	if initialVersions[reporters.CrossystemParamMainfwAct] != activeSlot {
+		s.Fatalf("Active firmware slot changed during write-protect changes: got %s, want %s", initialVersions[reporters.CrossystemParamMainfwAct], activeSlot)
 	}
 	ectool := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
 	initialECRO, initialECRW, err := ectool.RORWVersion(ctx)

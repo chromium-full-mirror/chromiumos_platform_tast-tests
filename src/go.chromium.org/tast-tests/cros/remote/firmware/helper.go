@@ -2721,6 +2721,23 @@ func (h *Helper) SupportAPFwState(ctx context.Context, dutFeatures *protocol.DUT
 	return nil
 }
 
+// WaitForFWResult polls crossystem until fw_result is neither "trying" nor "unknown".
+func (h *Helper) WaitForFWResult(ctx context.Context) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		res, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFWResult)
+		if err != nil {
+			return err
+		}
+		if res == "trying" {
+			return errors.New("firmware not ready, fw_result = trying")
+		}
+		if res == "unknown" {
+			return errors.New("firmware not ready, fw_result = unknown")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 90 * time.Second, Interval: 5 * time.Second})
+}
+
 // GSCResetAfterWPEnable triggers a GSC reboot by shutting down the AP after WP has been enabled.
 func (h *Helper) GSCResetAfterWPEnable(ctx context.Context, dutFeatures *protocol.DUTFeatures) error {
 	// Don't do anything if the board isn't running a Ti50 image that resets after WP is enabled.
@@ -2754,6 +2771,10 @@ func (h *Helper) GSCResetAfterWPEnable(ctx context.Context, dutFeatures *protoco
 			return errors.Wrap(stateErr, "failed to reconnect to DUT, failed to check powerstate")
 		}
 		return errors.Wrapf(err, "failed to reconnect to DUT, got power state: %v", currPowerState)
+	}
+
+	if err := h.WaitForFWResult(ctx); err != nil {
+		return errors.Wrap(err, "waiting for fw_result after GSC reset")
 	}
 	return nil
 }
