@@ -1449,6 +1449,18 @@ func simpleConnectPower() []*simpleConnectParams {
 	}}
 }
 
+func simpleConnectSmoke() *simpleConnectParams {
+	return &simpleConnectParams{
+		Name:      "smoke",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz for smoke testing."),
+		ExtraAttr: []string{"group:connectivity_smoke"},
+		Val: []simpleConnectParamsVal{
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)"}}},
+		},
+	}
+}
+
 func TestSimpleConnect(t *testing.T) {
 	var ps []*simpleConnectParams
 	ps = append(ps, simpleConnect80211abg()...)
@@ -1478,6 +1490,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect8021xWPA3()...)
 	ps = append(ps, simpleConnectTunneled1x()...)
 	ps = append(ps, simpleConnectPower()...)
+	ps = append(ps, simpleConnectSmoke())
 
 	for _, p := range ps {
 		p.ExtraTestBedDeps = append(p.ExtraTestBedDeps, tbdep.WifiRouterFeatures(p.DepsWifiRouterFeatures...)...)

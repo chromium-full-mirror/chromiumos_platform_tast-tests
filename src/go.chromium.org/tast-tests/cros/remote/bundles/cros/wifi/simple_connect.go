@@ -2422,6 +2422,16 @@ func init() {
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
 				ExtraTestBedDeps: []string{"wifi_router_models:gale"},
+			}, {
+				// Verifies that DUT can connect to an open 802.11n network on 5GHz channel 48 with a channel width of 20MHz for smoke testing.
+				Name:      "smoke",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"group:connectivity_smoke"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					}},
+				}},
 			},
 		},
 	})
