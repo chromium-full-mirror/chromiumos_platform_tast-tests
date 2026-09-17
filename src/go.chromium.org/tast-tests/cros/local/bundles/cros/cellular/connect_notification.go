@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_agnostic"},
-		Fixture:      "cellularEnforceConnectionLocal.ehide",
+		Fixture:      "cellularEnforceConnectionLocal",
 		Timeout:      2 * time.Minute,
 	})
 }
