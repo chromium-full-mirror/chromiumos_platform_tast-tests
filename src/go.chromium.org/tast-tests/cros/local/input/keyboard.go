@@ -32,7 +32,7 @@ const (
 type KeyboardEventWriter struct {
 	rw                *RawEventWriter
 	virt              *os.File            // if non-nil, used to hold a virtual device open
-	delay             time.Duration       // duration to sleep after key-typing action
+	Delay             time.Duration       // duration to sleep after key-typing action
 	dev               string              // path to underlying device in /dev/input
 	topRowLayoutType  TopRowLayoutType    // layout type of the top row of the keyboard
 	topRowScanCodeMap map[EventCode]int32 // map to map between EventCodes and the scan code for top row keys. only initializd when topRowLayoutType is LayoutCustom.
@@ -83,12 +83,17 @@ func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool, delay time.
 			if err != nil {
 				return nil, err
 			}
-			return &KeyboardEventWriter{rw: rw, delay: delay, dev: infoPath}, nil
+			return &KeyboardEventWriter{rw: rw, Delay: delay, dev: infoPath}, nil
 		}
 	}
 
 	// If we didn't find a real keyboard, create a virtual one.
-	return VirtualKeyboard(ctx)
+	kw, err := VirtualKeyboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	kw.Delay = delay
+	return kw, nil
 }
 
 // findPhysicalKeyboardDevInfo iterates over devices and returns devinfo for
@@ -163,7 +168,7 @@ func FindPowerKeyDevice(ctx context.Context) (bool, string, error) {
 
 // virtualKeyboard creates a virtual keyboard device and returns an EventWriter that injects events into it.
 func virtualKeyboard(ctx context.Context, deviceID devID) (*KeyboardEventWriter, error) {
-	kw := &KeyboardEventWriter{delay: defaultDelay}
+	kw := &KeyboardEventWriter{Delay: defaultDelay}
 
 	// Include our PID in the device name to be extra careful in case an old bundle process hasn't exited.
 	name := fmt.Sprintf("Tast virtual keyboard %d.%d", os.Getpid(), nextVirtKbdNum)
@@ -381,7 +386,7 @@ func (kw *KeyboardEventWriter) AccelRelease(ctx context.Context, s string) error
 // Without sleeping between keystrokes, the omnibox seems to produce scrambled text.
 // Presumably there's a bug in Chrome's input stack or the omnibox code.
 func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *error) {
-	if kw.delay <= 0 {
+	if kw.Delay <= 0 {
 		return
 	}
 	if *firstErr != nil {
@@ -389,7 +394,7 @@ func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *err
 	}
 
 	// GoBigSleepLint: Sleeps to simulate key strokes by a keyboard.
-	if err := testing.Sleep(ctx, kw.delay); err != nil {
+	if err := testing.Sleep(ctx, kw.Delay); err != nil {
 		*firstErr = errors.Wrap(err, "timeout while typing")
 	}
 }

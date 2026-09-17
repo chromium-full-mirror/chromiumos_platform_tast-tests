@@ -88,7 +88,7 @@ func readAllEvents(r io.Reader) ([]string, error) {
 func TestEventWriterSuccess(t *testing.T) {
 	b := testBuffer{}
 	now := time.Unix(1, 0)
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, Delay: 0}
 
 	if err := kw.rw.Event(EV_KEY, KEY_A, 1); err != nil {
 		t.Error("Writing key down failed: ", err)
@@ -128,7 +128,7 @@ func TestEventWriterWriteError(t *testing.T) {
 	// Create a buffer that always returns an error on write.
 	b := testBuffer{}
 	b.err = errors.New("intentional error")
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, time.Now}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, time.Now}, Delay: 0}
 	testContext := context.Background()
 	defer kw.Close(testContext)
 
@@ -151,7 +151,7 @@ func TestEventWriterOpenError(t *testing.T) {
 func TestEventWriterType(t *testing.T) {
 	b := testBuffer{}
 	now := time.Unix(5, 0)
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, Delay: 0}
 
 	const str = "AHa!"
 	if err := kw.Type(context.Background(), str); err != nil {
@@ -187,7 +187,7 @@ func TestEventWriterType(t *testing.T) {
 func TestEventWriterAccel(t *testing.T) {
 	b := testBuffer{}
 	now := time.Unix(5, 0)
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, Delay: 0}
 
 	const accel = "Ctrl+Alt+T"
 	if err := kw.Accel(context.Background(), accel); err != nil {
@@ -217,7 +217,7 @@ func TestEventWriterAccel(t *testing.T) {
 func TestEventWriterTypeSequence(t *testing.T) {
 	b := testBuffer{}
 	now := time.Unix(5, 0)
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, Delay: 0}
 
 	var sequence = []string{"S", "e", "q", "space"}
 	if err := kw.TypeSequence(context.Background(), sequence); err != nil {
@@ -251,7 +251,7 @@ func TestEventWriterTypeSequence(t *testing.T) {
 func TestEventWriterAccelPressesAndReleases(t *testing.T) {
 	b := testBuffer{}
 	now := time.Unix(5, 0)
-	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, delay: 0}
+	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, func() time.Time { return now }}, Delay: 0}
 
 	if err := kw.AccelPress(context.Background(), "Ctrl"); err != nil {
 		t.Fatalf("AccelPress(Ctrl) returned error: %v", err)
