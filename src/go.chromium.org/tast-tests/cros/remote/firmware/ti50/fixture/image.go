@@ -81,11 +81,14 @@ const (
 	releaseBucket      = "chromeos-releases"
 
 	// GSC filenames
-	cr50Release          = "cr50.r0.0.*.w%s.tbz2"
-	cr50BIDLockedRelease = "cr50.r0.0.*.w%s_%s_%08x_%08x.tbz2"
+	cr50Release          = "cr50%s.r0.0.*.w%s.tbz2"
+	cr50BIDLockedRelease = "cr50%s.r0.0.*.w%s_%s_%08x_%08x.tbz2"
 	// Ti50 changed formats. This works with old and new versions.
-	ti50Release          = "ti50*.r*w*%s.tar.xz"
-	ti50BIDLockedRelease = "ti50*.r*w*%s_%s_%08x_%08x.tar.xz"
+	ti50Release          = "ti50%s.r*w*%s.tar.xz"
+	ti50BIDLockedRelease = "ti50%s.r*w*%s_%s_%08x_%08x.tar.xz"
+
+	// 50a image flags. *50a images are signed with the 0x100000 flag.
+	bIDFlag50a = 0x100000
 )
 
 // ImageType declarations, please update AllTi50ImageTypes() after editing.
@@ -119,6 +122,9 @@ var (
 
 	// reTestbedTypeParts extracts relevant parts of the testbed type string.
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
+
+	// reGSCVersionNT matches GSC versions
+	reGSCVersionNT = regexp.MustCompile(`^0\.3[0-9]\.`)
 )
 
 // AllTi50TestbedTypes returns all the testbed types that use ti50 images.
@@ -421,6 +427,21 @@ func getBIDInt(b string) (int64, error) {
 	return strconv.ParseInt(b, 16, 64)
 }
 
+// qualFwNameExt uses the GSC version and flags to generate the fwName extension.
+// It'll add "a" to images with the 0x100000 flag and "-nt" to images with the
+// "0.3X." NT version prefix.
+func qualFwNameExt(version string, bIDFlags int64) string {
+	fwNameExt := ""
+	if bIDFlags&bIDFlag50a != 0 {
+		fwNameExt = "a"
+	}
+	// NT images have a "-nt" ext. All NT versions start with 0.3
+	if reGSCVersionNT.MatchString(version) {
+		fwNameExt += "-nt"
+	}
+	return fwNameExt
+}
+
 // qualVersionToGsGlob converts contents of qual file to a glob expression of its .tbz2 file.
 func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
 	var releaseFormat, releaseBIDLockedFormat string
@@ -442,7 +463,8 @@ func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
 		if m == nil {
 			return "", errors.New("qual version not recognized: " + qualVersion)
 		}
-		return fmt.Sprintf(releaseFormat, strings.TrimSuffix(m[1], "/")), nil
+		fwNameExt := qualFwNameExt(m[1], 0)
+		return fmt.Sprintf(releaseFormat, fwNameExt, strings.TrimSuffix(m[1], "/")), nil
 	}
 	bIDMask, err := getBIDInt(m[3])
 	if err != nil {
@@ -452,7 +474,9 @@ func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "invalid bid flags: %s", m[4])
 	}
-	return fmt.Sprintf(releaseBIDLockedFormat, m[1], m[2], bIDMask, bIDFlags), nil
+	fwNameExt := qualFwNameExt(m[1], bIDFlags)
+
+	return fmt.Sprintf(releaseBIDLockedFormat, fwNameExt, m[1], m[2], bIDMask, bIDFlags), nil
 }
 
 // imageDir returns a cloud directory storing EFI and debug images signed for particular testbeds.

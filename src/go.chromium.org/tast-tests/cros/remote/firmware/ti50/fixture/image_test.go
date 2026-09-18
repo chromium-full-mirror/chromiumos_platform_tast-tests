@@ -73,26 +73,46 @@ func TestQualVersionToGsGlob3(t *testing.T) {
 }
 
 func TestQualVersionToGsGlob4(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.23.81", "ti50*.r*w*0.23.81.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.23.81", "ti50.r*w*0.23.81.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob5(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.23.81/", "ti50*.r*w*0.23.81.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.23.81/", "ti50.r*w*0.23.81.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob6(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.24.81/FFFF:0x00000010:0x10", "ti50*.r*w*0.24.81_FFFF_00000010_00000010.tar.xz", false)
+	testQualVersionToGsGlob(t, "ti50", "0.24.81/FFFF:0x00000010:0x10", "ti50.r*w*0.24.81_FFFF_00000010_00000010.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob7(t *testing.T) {
-	testQualVersionToGsGlob(t, "invalidName", "0.3.22", "", true)
+	testQualVersionToGsGlob(t, "ti50", "0.33.81/", "ti50-nt.r*w*0.33.81.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob8(t *testing.T) {
-	testQualVersionToGsGlob(t, "ti50", "0.24.81/::", "", true)
+	testQualVersionToGsGlob(t, "ti50", "0.34.81/FFFF:0x00000010:0x10", "ti50-nt.r*w*0.34.81_FFFF_00000010_00000010.tar.xz", false)
 }
 
 func TestQualVersionToGsGlob9(t *testing.T) {
+	testQualVersionToGsGlob(t, "ti50", "0.33.81/FFFF:0:0x10000", "ti50-nt.r*w*0.33.81_FFFF_00000000_00010000.tar.xz", false)
+}
+
+func TestQualVersionToGsGlob10(t *testing.T) {
+	testQualVersionToGsGlob(t, "ti50", "0.33.81/FFFF:0:0x100000", "ti50a-nt.r*w*0.33.81_FFFF_00000000_00100000.tar.xz", false)
+}
+
+func TestQualVersionToGsGlob11(t *testing.T) {
+	testQualVersionToGsGlob(t, "ti50", "0.34.81/FFFF:0:0x100010", "ti50a-nt.r*w*0.34.81_FFFF_00000000_00100010.tar.xz", false)
+}
+
+func TestQualVersionToGsGlobError1(t *testing.T) {
+	testQualVersionToGsGlob(t, "invalidName", "0.3.22", "", true)
+}
+
+func TestQualVersionToGsGlobError2(t *testing.T) {
+	testQualVersionToGsGlob(t, "ti50", "0.24.81/::", "", true)
+}
+
+func TestQualVersionToGsGlobError3(t *testing.T) {
 	testQualVersionToGsGlob(t, "ti50", "0.24.81/FFFF:0:0xZZZZ", "", true)
 }
 
@@ -109,5 +129,36 @@ func testQualVersionToGsGlob(t *testing.T, fwName, input, expected string, expec
 	}
 	if out != expected {
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
+	}
+}
+
+func TestQualFwNameExt1(t *testing.T) {
+	testQualFwNameExt(t, "0.3.81", 0x10000, "")
+}
+
+func TestQualFwNameExt2(t *testing.T) {
+	testQualFwNameExt(t, "0.3.81", 0x110000, "a")
+}
+
+func TestQualFwNameExt3(t *testing.T) {
+	testQualFwNameExt(t, "0.24.81", 0x10000, "")
+}
+
+func TestQualFwNameExt4(t *testing.T) {
+	testQualFwNameExt(t, "0.24.81", 0x110000, "a")
+}
+
+func TestQualFwNameExt5(t *testing.T) {
+	testQualFwNameExt(t, "0.34.81", 0x10000, "-nt")
+}
+
+func TestQualFwNameExt6(t *testing.T) {
+	testQualFwNameExt(t, "0.34.81", 0x110000, "a-nt")
+}
+
+func testQualFwNameExt(t *testing.T, rwVersion string, bidFlags int64, expected string) {
+	out := qualFwNameExt(rwVersion, bidFlags)
+	if out != expected {
+		t.Fatalf("chipExt mismatch:\ngot      %v\nexpected %v", out, expected)
 	}
 }
