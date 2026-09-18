@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -499,6 +500,20 @@ func clearUserData(ctx context.Context, cfg *config.Config) error {
 	}
 
 	if !cfg.KeepOwnership() {
+		// Also remove PinWeaver low_entropy_creds directory and restart cryptohomed so
+		// that PinWeaverManager resets the TPM/GSC hash tree to a clean initial state
+		// and clears any in-memory lock (e.g. after an unclean VM reboot or direct
+		// removal of user shadow directories above). See b/553426317.
+		lowEntropyCredsDir := filepath.Join(shadowDir, "low_entropy_creds")
+		if err := os.RemoveAll(lowEntropyCredsDir); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove %q: %v", lowEntropyCredsDir, err)
+		}
+		if err := upstart.RestartJob(ctx, "cryptohomed"); err != nil {
+			testing.ContextLog(ctx, "Failed to restart cryptohomed: ", err)
+		} else if err := cryptohome.CheckService(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to wait for cryptohomed D-Bus service: ", err)
+		}
+
 		// Delete policy files to clear the device's ownership state since the account
 		// whose cryptohome we'll delete may be the owner: http://crbug.com/897278
 		if err := session.ClearDeviceOwnership(ctx); err != nil {
