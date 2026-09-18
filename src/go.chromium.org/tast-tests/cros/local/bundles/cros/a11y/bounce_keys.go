@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -54,7 +52,7 @@ func BounceKeys(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	// Enable Bounce Keys.
 	cleanupBounceKeys, err := a11y.EnsureBounceKeysEnabled(ctx, tconn, true)
@@ -67,23 +65,14 @@ func BounceKeys(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Open a browser tab with a text area for typing.
-	textURL := a11y.URLFromHTML("<textarea autofocus rows=\"10\" cols=\"60\"></textarea>")
-	conn, err := a11y.NewTabWithURL(ctx, cr, textURL)
+	ta, err := a11y.OpenTextAreaTab(ctx, cr, ui)
 	if err != nil {
-		s.Fatal("Failed to open textarea URL: ", err)
+		s.Fatal("Failed to open textarea tab: ", err)
 	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer ta.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	textFieldNode := nodewith.Role(role.TextField).Ancestor(nodewith.HasClass("ContentsWebView"))
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(textFieldNode)(ctx); err != nil {
-		s.Fatal("Text field node did not appear: ", err)
-	}
-
-	// Helper functions for typing.
 	typeWithInterval := func(ctx context.Context, text string, interval time.Duration) error {
 		for _, r := range text {
 			c := string(r)
@@ -96,18 +85,6 @@ func BounceKeys(ctx context.Context, s *testing.State) {
 			}
 		}
 		return nil
-	}
-	deleteText := func(ctx context.Context, s *testing.State) {
-		if err := kb.Accel(ctx, "Ctrl+a"); err != nil {
-			s.Error("Failed to press [Ctrl+a]: ", err)
-		}
-		if err := kb.Accel(ctx, "Backspace"); err != nil {
-			s.Error("Failed to press [Backspace]: ", err)
-		}
-		textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
-		if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(textNode)(ctx); err != nil {
-			s.Error("Failed to delete text: ", err)
-		}
 	}
 
 	subtests := []struct {
@@ -140,15 +117,22 @@ func BounceKeys(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
-			defer deleteText(ctx, s)
+			defer func() {
+				if err := ta.Clear(cleanupCtx); err != nil {
+					s.Error("Failed to clear text area: ", err)
+				}
+			}()
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, subtest.name)
+
+			if err := ta.Focus(ctx); err != nil {
+				s.Fatal("Text field lost focus before typing: ", err)
+			}
 
 			if err := typeWithInterval(ctx, subtest.input, subtest.interval); err != nil {
 				s.Fatal("Failed to type with interval: ", err)
 			}
-			textNode := nodewith.Name(subtest.expected).Role(role.StaticText).Ancestor(textFieldNode)
-			if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(textNode)(ctx); err != nil {
-				s.Fatalf("Text node with %q did not appear: %v", subtest.expected, err)
+			if err := ta.WaitForText(ctx, subtest.expected); err != nil {
+				s.Fatalf("Failed waiting for expected text %q: %v", subtest.expected, err)
 			}
 		})
 	}

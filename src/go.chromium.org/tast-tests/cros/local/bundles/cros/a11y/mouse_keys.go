@@ -12,11 +12,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,17 +39,18 @@ func init() {
 }
 
 func MouseKeys(ctx context.Context, s *testing.State) {
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Shorten deadline to leave time for cleanup
+	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	ui := uiauto.New(tconn)
 
@@ -70,7 +73,6 @@ func MouseKeys(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create a keyboard with delay %s: %v", delay, err)
 	}
-
 	defer kb.Close(cleanupCtx)
 
 	showContextMenu := func(ctx context.Context) error {
@@ -83,7 +85,7 @@ func MouseKeys(ctx context.Context, s *testing.State) {
 	getMenuLocation := func(ctx context.Context) (*coords.Rect, error) {
 		menuNode := nodewith.Role(role.Menu).First()
 		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(menuNode)(ctx); err != nil {
-			s.Fatal("Context menu did not appear: ", err)
+			return nil, errors.Wrap(err, "context menu did not appear")
 		}
 		return ui.Location(ctx, menuNode)
 	}
@@ -121,7 +123,7 @@ func MouseKeys(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get final context menu location: ", err)
 	}
 
-	if initialMenuLocation.Top < finalMenuLocation.Top {
-		s.Error("Failed to move cursor and context menu")
+	if initialMenuLocation.Top <= finalMenuLocation.Top {
+		s.Errorf("Failed to move cursor upwards: initial menu Top=%d, final menu Top=%d", initialMenuLocation.Top, finalMenuLocation.Top)
 	}
 }

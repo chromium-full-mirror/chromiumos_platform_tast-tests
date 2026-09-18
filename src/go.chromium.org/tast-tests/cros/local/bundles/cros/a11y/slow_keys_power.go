@@ -14,8 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -103,27 +101,13 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Open a browser tab with a text area for typing.
-	textURL := a11y.URLFromHTML("<textarea rows=\"10\" cols=\"80\"></textarea>")
-	conn, err := a11y.NewTabWithURL(ctx, cr, textURL)
+	ta, err := a11y.OpenTextAreaTab(ctx, cr, ui)
 	if err != nil {
-		s.Fatal("Failed to open textarea URL: ", err)
+		s.Fatal("Failed to open textarea tab: ", err)
 	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer ta.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
-	textFieldNode := nodewith.Role(role.TextField).Ancestor(nodewith.HasClass("ContentsWebView"))
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(textFieldNode)(ctx); err != nil {
-		s.Fatal("Text field node did not appear: ", err)
-	}
-	if err := ui.WithTimeout(5 * time.Second).LeftClickUntilFocused(textFieldNode)(ctx); err != nil {
-		s.Fatal("Failed to click and focus on text field: ", err)
-	}
-
-	// Finder for the actual text node in the text field.
-	textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
 
 	kb, err := input.KeyboardWithCustomDelay(ctx, a11y.SlowKeysDefaultDelay+50*time.Millisecond)
 	if err != nil {
@@ -149,7 +133,7 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to type test string: ", err)
 		}
 
-		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(textNode.First())(ctx); err != nil {
+		if err := ta.WaitForNonEmptyText(ctx); err != nil {
 			s.Fatal("Text node did not appear: ", err)
 		}
 	}

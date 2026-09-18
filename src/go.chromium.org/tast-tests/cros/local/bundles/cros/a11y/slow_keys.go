@@ -12,8 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -60,42 +58,19 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Open a browser tab with a text area for typing.
-	textURL := a11y.URLFromHTML("<textarea rows=\"10\" cols=\"60\"></textarea>")
-	conn, err := a11y.NewTabWithURL(ctx, cr, textURL)
+	ta, err := a11y.OpenTextAreaTab(ctx, cr, ui)
 	if err != nil {
-		s.Fatal("Failed to open textarea URL: ", err)
+		s.Fatal("Failed to open textarea tab: ", err)
 	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer ta.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	textFieldNode := nodewith.Role(role.TextField).Ancestor(nodewith.HasClass("ContentsWebView"))
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(textFieldNode)(ctx); err != nil {
-		s.Fatal("Text field node did not appear: ", err)
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to create keyboard: ", err)
 	}
-	if err := ui.WithTimeout(5 * time.Second).LeftClickUntilFocused(textFieldNode)(ctx); err != nil {
-		s.Fatal("Failed to click and focus on text field: ", err)
-	}
-
-	// Helper functions for typing.
-	deleteText := func(ctx context.Context, s *testing.State) {
-		// Use a new keyboard with enough delay to actually type with slow keys.
-		kb, err := input.KeyboardWithCustomDelay(ctx, a11y.SlowKeysDefaultDelay+50*time.Millisecond)
-		if err != nil {
-			s.Fatal("Failed to create a keyboard to delete text: ", err)
-		}
-		defer kb.Close(ctx)
-
-		if err := kb.TypeSequence(ctx, []string{"Ctrl+a", "Backspace"}); err != nil {
-			s.Error("Failed to type text deletion sequence: ", err)
-		}
-		textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
-		if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(textNode)(ctx); err != nil {
-			s.Error("Failed to delete text: ", err)
-		}
-	}
+	defer kb.Close(cleanupCtx)
 
 	subtests := []struct {
 		name     string
@@ -121,28 +96,24 @@ func SlowKeys(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 			defer cancel()
-			defer deleteText(ctx, s)
+			defer func() {
+				if err := ta.Clear(cleanupCtx); err != nil {
+					s.Error("Failed to clear text area: ", err)
+				}
+			}()
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, subtest.name)
 
-			kb, err := input.KeyboardWithCustomDelay(ctx, subtest.delay)
-			if err != nil {
-				s.Fatalf("Failed to create a keyboard with delay %s: %v", subtest.delay, err)
+			if err := ta.Focus(ctx); err != nil {
+				s.Fatal("Text field lost focus before typing: ", err)
 			}
-			defer kb.Close(cleanupCtx)
+
+			kb.Delay = subtest.delay
 
 			if err := kb.Type(ctx, subtest.input); err != nil {
 				s.Fatal("Failed to type string: ", err)
 			}
-			textNode := nodewith.Role(role.StaticText).Ancestor(textFieldNode)
-			if subtest.expected != "" {
-				textNode = textNode.Name(subtest.expected)
-				if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(textNode)(ctx); err != nil {
-					s.Fatalf("Text node with %q did not appear: %v", subtest.expected, err)
-				}
-			} else {
-				if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(textNode)(ctx); err != nil {
-					s.Fatal("Expected text to be empty: ", err)
-				}
+			if err := ta.WaitForText(ctx, subtest.expected); err != nil {
+				s.Fatalf("Failed waiting for expected text %q: %v", subtest.expected, err)
 			}
 		})
 	}
