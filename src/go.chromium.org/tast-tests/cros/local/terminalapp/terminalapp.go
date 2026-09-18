@@ -268,11 +268,22 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 	)
 }
 
+// UI returns the underlying uiauto.Context for the Terminal App.
+func (ta *TerminalApp) UI() *uiauto.Context {
+	return ta.ui
+}
+
 // WaitForPrompt waits until the terminal window shows a shell
 // prompt. Useful for either waiting for the startup process to finish
 // or for a terminal application to exit.
 func (ta *TerminalApp) WaitForPrompt() uiauto.Action {
-	return ta.ui.WithTimeout(3 * time.Minute).WaitUntilExists(Prompt.Onscreen().First())
+	return ta.WaitForPromptWithTimeout(3 * time.Minute)
+}
+
+// WaitForPromptWithTimeout waits up to the specified timeout until the
+// terminal window shows a shell prompt.
+func (ta *TerminalApp) WaitForPromptWithTimeout(timeout time.Duration) uiauto.Action {
+	return ta.ui.WithTimeout(timeout).WaitUntilExists(Prompt.Onscreen().First())
 }
 
 // ClickShelfMenuItem right clicks the terminal app icon on the shelf and left click the specified menu item.
