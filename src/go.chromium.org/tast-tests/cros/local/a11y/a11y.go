@@ -17,13 +17,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/crastests"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // List of extension IDs and URLs.
@@ -358,45 +355,39 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	return TTSFeatureData{ctx, tconn, sm, tdown, crConn}, nil
 }
 
-// toggleKeyboardAndTextInputSetting is a helper function that toggles
-// a setting in Keyboard and Text Input settings page via Settings UI.
-func toggleKeyboardAndTextInputSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, settingId int, enable bool) error {
-	heading := nodewith.NameStartingWith("Keyboard and text input").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-	kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, fmt.Sprintf("keyboardAndTextInput?settingId=%d", settingId), ui.Exists(heading))
-	if err != nil {
-		return errors.Wrap(err, "failed to open keyboard accessibility settings page")
+// setA11yPrefEnabled sets a boolean accessibility preference and waits for it to update.
+func setA11yPrefEnabled(ctx context.Context, tconn *chrome.TestConn, prefName string, enable bool) error {
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", prefName, enable); err != nil {
+		return errors.Wrapf(err, "failed to set pref %q to %v", prefName, enable)
 	}
-	defer kbSettings.Close(ctx)
-	if err := kbSettings.SetToggleOption(cr, name, enable)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to toggle %q setting", name)
-	}
-	return nil
-}
-
-// ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via Settings UI.
-func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
-	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Bounce keys", 1554, enable)
-}
-
-// ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via Settings UI.
-func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
-	return toggleKeyboardAndTextInputSetting(ctx, tconn, cr, ui, "Slow keys", 1555, enable)
-}
-
-func toggleCursorAndTouchpadSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, name string, settingId int, enable bool) error {
-	heading := nodewith.NameStartingWith("Cursor and touchpad").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-	cursorTouchpadSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, fmt.Sprintf("cursorAndTouchpad?settingId=%d", settingId), ui.Exists(heading))
-	if err != nil {
-		return errors.Wrap(err, "failed to open cursor and touchpad settings page")
-	}
-	defer cursorTouchpadSettings.Close(ctx)
-	if err := cursorTouchpadSettings.SetToggleOption(cr, name, enable)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to toggle %q setting", name)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var pref struct {
+			Value bool `json:"value"`
+		}
+		if err := tconn.Call(ctx, &pref, "tast.promisify(chrome.settingsPrivate.getPref)", prefName); err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get pref %q", prefName))
+		}
+		if pref.Value != enable {
+			return errors.Errorf("pref %q value is %v; want %v", prefName, pref.Value, enable)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return errors.Wrapf(err, "pref %q did not reach %v", prefName, enable)
 	}
 	return nil
 }
 
-// ToggleMouseKeysSetting is a helper function that toggles Mouse Keys setting via Settings UI.
-func ToggleMouseKeysSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ui *uiauto.Context, enable bool) error {
-	return toggleCursorAndTouchpadSetting(ctx, tconn, cr, ui, "Mouse Keys", 1538, enable)
+// ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via settingsPrivate API.
+func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.bounce_keys_enabled", enable)
+}
+
+// ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via settingsPrivate API.
+func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.slow_keys_enabled", enable)
+}
+
+// ToggleMouseKeysSetting is a helper function that toggles Mouse Keys setting via settingsPrivate API.
+func ToggleMouseKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
+	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.mouse_keys.enabled", enable)
 }

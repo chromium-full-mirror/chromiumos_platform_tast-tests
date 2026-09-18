@@ -186,7 +186,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create keyboard: ", err)
 		}
 
-		if err := mousekeys.SetUp(ctx, kb, cr); err != nil {
+		if err := mousekeys.SetUp(ctx, tconn); err != nil {
 			s.Error("Failed to setup MouseKeys: ", err)
 		}
 
@@ -196,7 +196,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		}
 
 		defer func() {
-			if err := mousekeys.TearDown(closeCtx, kb, cr, tconn); err != nil {
+			if err := mousekeys.TearDown(closeCtx, kb, tconn); err != nil {
 				s.Error("Failed to tear down MouseKeys: ", err)
 			}
 		}()

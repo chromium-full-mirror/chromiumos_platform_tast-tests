@@ -52,11 +52,11 @@ func MouseKeys(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	// Enable Mouse Keys.
-	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, cr, ui, true); err != nil {
+	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to enable Mouse Keys setting: ", err)
 	}
 	defer func() {
-		if err := a11y.ToggleMouseKeysSetting(ctx, tconn, cr, ui, false); err != nil {
+		if err := a11y.ToggleMouseKeysSetting(ctx, tconn, false); err != nil {
 			s.Error("Failed to disable Mouse Keys setting during clean up: ", err)
 		}
 	}()

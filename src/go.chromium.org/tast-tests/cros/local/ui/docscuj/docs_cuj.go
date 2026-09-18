@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -24,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
@@ -70,22 +70,14 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	ac := uiauto.New(tconn)
 
 	if testParam.BounceKeysEnabled {
-		if err := func() error {
-			defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "failure")
-
-			heading := nodewith.NameStartingWith("Keyboard and text input").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-			kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "keyboardAndTextInput?settingId=1554", ac.Exists(heading))
-			if err != nil {
-				return errors.Wrap(err, "failed to open keyboard accessibility settings page")
-			}
-			defer kbSettings.Close(ctx)
-			if err := kbSettings.SetToggleOption(cr, "Bounce keys", true)(ctx); err != nil {
-				return errors.Wrap(err, "failed to toggle Bounce keys setting to on")
-			}
-			return nil
-		}(); err != nil {
-			return nil, err
+		if err := a11y.ToggleBounceKeysSetting(ctx, tconn, true); err != nil {
+			return nil, errors.Wrap(err, "failed to enable Bounce keys setting")
 		}
+		defer func() {
+			if err := a11y.ToggleBounceKeysSetting(closeCtx, tconn, false); err != nil {
+				testing.ContextLog(closeCtx, "Failed to disable Bounce keys setting during cleanup: ", err)
+			}
+		}()
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, tconn, cr, nil, cujRecorderOptions)

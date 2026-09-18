@@ -11,16 +11,15 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -82,35 +81,24 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 
 	if s.Param().(testParams).EnableSlowKeys {
 		// Enable Slow Keys.
-		if err := a11y.ToggleSlowKeysSetting(ctx, tconn, cr, ui, true); err != nil {
+		if err := a11y.ToggleSlowKeysSetting(ctx, tconn, true); err != nil {
 			s.Fatal("Failed to enable Slow Keys setting: ", err)
 		}
 		defer func() {
-			if err := a11y.ToggleSlowKeysSetting(cleanupCtx, tconn, cr, ui, false); err != nil {
+			if err := a11y.ToggleSlowKeysSetting(cleanupCtx, tconn, false); err != nil {
 				s.Error("Failed to disable Slow Keys setting during clean up: ", err)
 			}
 		}()
 	}
 
-	// Disable auto repeat keys.
-	toggleRepeatKeys := func(ctx context.Context, enable bool) error {
-		heading := nodewith.NameStartingWith("Keyboard and inputs").Role(role.Heading).Ancestor(ossettings.WindowFinder)
-		kbSettings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "per-device-keyboard?settingId=412", ui.Exists(heading))
-		if err != nil {
-			return errors.Wrap(err, "failed to open keyboard settings page")
-		}
-		defer kbSettings.Close(ctx)
-		if err := kbSettings.SetToggleOption(cr, "Press and hold to automatically repeat the key", enable)(ctx); err != nil {
-			return errors.Wrapf(err, "failed to toggle repeat keys setting to %v", enable)
-		}
-		return nil
-	}
-	if err := toggleRepeatKeys(ctx, false); err != nil {
+	// Disable auto repeat keys so that repeat keys don't interfere with the slow keys power test.
+	cleanupKeyRepeat, err := settings.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	if err != nil {
 		s.Fatal("Failed to toggle repeat keys off: ", err)
 	}
 	defer func() {
-		if err := toggleRepeatKeys(cleanupCtx, true); err != nil {
-			s.Error("Failed to toggle repeat keys back on during clean up: ", err)
+		if err := cleanupKeyRepeat(cleanupCtx, tconn); err != nil {
+			s.Error("Failed to restore repeat keys setting during clean up: ", err)
 		}
 	}()
 
