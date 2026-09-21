@@ -185,21 +185,22 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create keyboard: ", err)
 		}
+		defer kb.Close(closeCtx)
 
-		if err := mousekeys.SetUp(ctx, tconn); err != nil {
-			s.Error("Failed to setup MouseKeys: ", err)
+		cleanupMouseKeys, err := a11y.EnsureMouseKeysEnabled(ctx, tconn, true)
+		if err != nil {
+			s.Fatal("Failed to enable MouseKeys: ", err)
 		}
+		defer func() {
+			if err := cleanupMouseKeys(closeCtx); err != nil {
+				s.Error("Failed to restore MouseKeys setting during cleanup: ", err)
+			}
+		}()
 
 		// Perform a series of mouse movements and clicks.
 		if err := mousekeys.PerformActionsForIdleTest(ctx, kb); err != nil {
 			s.Error("Failed to perform mouse actions: ", err)
 		}
-
-		defer func() {
-			if err := mousekeys.TearDown(closeCtx, kb, tconn); err != nil {
-				s.Error("Failed to tear down MouseKeys: ", err)
-			}
-		}()
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 

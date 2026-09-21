@@ -9,29 +9,8 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast/core/errors"
 )
-
-// SetUp executes the MouseKeys set up code.
-func SetUp(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, true); err != nil {
-		return errors.Wrap(err, "failed to enable Mouse Keys setting")
-	}
-
-	return nil
-}
-
-// TearDown disables Mouse Keys and closes the keyboard event writer for test cleanup.
-func TearDown(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
-	if err := a11y.ToggleMouseKeysSetting(ctx, tconn, false); err != nil {
-		return errors.Wrap(err, "failed to disable Mouse Keys setting during clean up")
-	}
-	kb.Close(ctx)
-
-	return nil
-}
 
 // PerformActionsForIdleTest performs a sequence of mouse movements forming a rough rectangle,
 // alternating mouse buttons and performing clicks. No apps are launched

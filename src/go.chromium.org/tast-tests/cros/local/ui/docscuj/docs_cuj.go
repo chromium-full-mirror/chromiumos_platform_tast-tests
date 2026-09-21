@@ -70,12 +70,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	ac := uiauto.New(tconn)
 
 	if testParam.BounceKeysEnabled {
-		if err := a11y.ToggleBounceKeysSetting(ctx, tconn, true); err != nil {
+		cleanupBounceKeys, err := a11y.EnsureBounceKeysEnabled(ctx, tconn, true)
+		if err != nil {
 			return nil, errors.Wrap(err, "failed to enable Bounce keys setting")
 		}
 		defer func() {
-			if err := a11y.ToggleBounceKeysSetting(closeCtx, tconn, false); err != nil {
-				testing.ContextLog(closeCtx, "Failed to disable Bounce keys setting during cleanup: ", err)
+			if err := cleanupBounceKeys(closeCtx); err != nil {
+				testing.ContextLog(closeCtx, "Failed to restore Bounce keys setting during cleanup: ", err)
 			}
 		}()
 	}

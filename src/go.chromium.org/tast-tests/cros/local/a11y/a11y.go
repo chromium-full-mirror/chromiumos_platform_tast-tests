@@ -377,17 +377,39 @@ func setA11yPrefEnabled(ctx context.Context, tconn *chrome.TestConn, prefName st
 	return nil
 }
 
-// ToggleBounceKeysSetting is a helper function that toggles Bounce Keys setting via settingsPrivate API.
-func ToggleBounceKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
-	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.bounce_keys_enabled", enable)
+// ensureA11yPrefEnabled sets a boolean accessibility preference if not already set to
+// enable, and returns a cleanup function to restore the original value.
+func ensureA11yPrefEnabled(ctx context.Context, tconn *chrome.TestConn, prefName string, enable bool) (func(ctx context.Context) error, error) {
+	var origPref struct {
+		Value bool `json:"value"`
+	}
+	if err := tconn.Call(ctx, &origPref, "tast.promisify(chrome.settingsPrivate.getPref)", prefName); err != nil {
+		return nil, errors.Wrapf(err, "failed to get original pref %q", prefName)
+	}
+	if origPref.Value != enable {
+		if err := setA11yPrefEnabled(ctx, tconn, prefName, enable); err != nil {
+			return nil, err
+		}
+	}
+	return func(ctx context.Context) error {
+		return setA11yPrefEnabled(ctx, tconn, prefName, origPref.Value)
+	}, nil
 }
 
-// ToggleSlowKeysSetting is a helper function that toggles Slow Keys setting via settingsPrivate API.
-func ToggleSlowKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
-	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.slow_keys_enabled", enable)
+// EnsureBounceKeysEnabled sets the Bounce Keys preference and returns a cleanup
+// function to restore the original preference value.
+func EnsureBounceKeysEnabled(ctx context.Context, tconn *chrome.TestConn, enable bool) (func(ctx context.Context) error, error) {
+	return ensureA11yPrefEnabled(ctx, tconn, "settings.a11y.bounce_keys_enabled", enable)
 }
 
-// ToggleMouseKeysSetting is a helper function that toggles Mouse Keys setting via settingsPrivate API.
-func ToggleMouseKeysSetting(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
-	return setA11yPrefEnabled(ctx, tconn, "settings.a11y.mouse_keys.enabled", enable)
+// EnsureSlowKeysEnabled sets the Slow Keys preference and returns a cleanup
+// function to restore the original preference value.
+func EnsureSlowKeysEnabled(ctx context.Context, tconn *chrome.TestConn, enable bool) (func(ctx context.Context) error, error) {
+	return ensureA11yPrefEnabled(ctx, tconn, "settings.a11y.slow_keys_enabled", enable)
+}
+
+// EnsureMouseKeysEnabled sets the Mouse Keys preference and returns a cleanup
+// function to restore the original preference value.
+func EnsureMouseKeysEnabled(ctx context.Context, tconn *chrome.TestConn, enable bool) (func(ctx context.Context) error, error) {
+	return ensureA11yPrefEnabled(ctx, tconn, "settings.a11y.mouse_keys.enabled", enable)
 }

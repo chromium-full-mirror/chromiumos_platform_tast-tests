@@ -81,12 +81,13 @@ func SlowKeysPower(ctx context.Context, s *testing.State) {
 
 	if s.Param().(testParams).EnableSlowKeys {
 		// Enable Slow Keys.
-		if err := a11y.ToggleSlowKeysSetting(ctx, tconn, true); err != nil {
+		cleanupSlowKeys, err := a11y.EnsureSlowKeysEnabled(ctx, tconn, true)
+		if err != nil {
 			s.Fatal("Failed to enable Slow Keys setting: ", err)
 		}
 		defer func() {
-			if err := a11y.ToggleSlowKeysSetting(cleanupCtx, tconn, false); err != nil {
-				s.Error("Failed to disable Slow Keys setting during clean up: ", err)
+			if err := cleanupSlowKeys(cleanupCtx); err != nil {
+				s.Error("Failed to restore Slow Keys setting during clean up: ", err)
 			}
 		}()
 	}

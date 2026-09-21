@@ -57,12 +57,13 @@ func BounceKeys(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	// Enable Bounce Keys.
-	if err := a11y.ToggleBounceKeysSetting(ctx, tconn, true); err != nil {
+	cleanupBounceKeys, err := a11y.EnsureBounceKeysEnabled(ctx, tconn, true)
+	if err != nil {
 		s.Fatal("Failed to enable Bounce Keys setting: ", err)
 	}
 	defer func() {
-		if err := a11y.ToggleBounceKeysSetting(ctx, tconn, false); err != nil {
-			s.Error("Failed to disable Bounce Keys setting during clean up: ", err)
+		if err := cleanupBounceKeys(cleanupCtx); err != nil {
+			s.Error("Failed to restore Bounce Keys setting during clean up: ", err)
 		}
 	}()
 
