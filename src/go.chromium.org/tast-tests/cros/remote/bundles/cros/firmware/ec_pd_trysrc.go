@@ -49,7 +49,7 @@ func init() {
 }
 
 const (
-	pdDisconnectTime    time.Duration = 1 * time.Second
+	pdDisconnectTime    time.Duration = 2 * time.Second
 	pdSetupPollTimeout  time.Duration = 20 * time.Second
 	pdSetupPollInterval time.Duration = 4 * time.Second
 	pdConnectIterations int           = 20
@@ -86,7 +86,7 @@ func executeConnectSequence(ctx context.Context, s *testing.State, trySrcSupport
 		if _, err := h.Servo.SetPDTrySrc(ctx, servo.PDPortUnderTest, trySrcInt); err != nil {
 			testing.ContextLogf(ctx, "Failed Enabling TrySrc: %q", err)
 		}
-		// Disconnect time from 1 to 1.5 seconds
+		// Disconnect time from 2 to 2.5 seconds
 		randDisconnectTime := pdDisconnectTime + time.Duration(rand.Float32()*float32(time.Second)/2)
 		testing.ContextLogf(ctx, "Disconnect time = %s", randDisconnectTime)
 		if state, err := h.Servo.ServoGetConnectedStateAfterCCReconnect(ctx, randDisconnectTime); err != nil {
