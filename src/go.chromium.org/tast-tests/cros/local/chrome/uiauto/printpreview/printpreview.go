@@ -62,32 +62,42 @@ func Print(ctx context.Context, tconn *chrome.TestConn) error {
 // SelectPrinter interacts with Chrome print preview to select the printer with
 // the given printerName.
 func SelectPrinter(ctx context.Context, tconn *chrome.TestConn, printerName string) error {
-	// Find and expand the destination list.  The exact name may change based on which
-	// printer was previously selected, but it will always start with "Destination ".
-	dataList := nodewith.NameStartingWith("Destination ").Role(role.PopUpButton)
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("find and click destination list",
-		ui.WithTimeout(10*time.Second).WaitUntilExists(dataList),
-		ui.LeftClick(dataList),
-	)(ctx); err != nil {
-		return err
-	}
 
-	// Find and click the menu item corresponding to `printerName` if it exists.
-	// Note that if it does not exist, the desired printer may be behind the
-	// "See more..." menu item, requiring additional clicks on behalf of the user.
-	menuItem := nodewith.Name(printerName).Role(role.MenuItem)
-	if err := ui.WithTimeout(1 * time.Second).LeftClick(menuItem)(ctx); err == nil {
-		return nil
-	}
+	// Check the new "See more" button first with a timeout.
+	seeMoreBtn := nodewith.Name("See more destinations").Role(role.Button)
+	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(seeMoreBtn)(ctx); err == nil {
+		if err := ui.LeftClick(seeMoreBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click See more button")
+		}
+	} else {
+		// If it does not exist, fallback to older UI: find and expand the destination list.
+		// The exact name may change based on which printer was previously selected,
+		// but it will always start with "Destination ".
+		dataList := nodewith.NameStartingWith("Destination ").Role(role.PopUpButton)
+		if err := uiauto.Combine("find and click destination list",
+			ui.WithTimeout(10*time.Second).WaitUntilExists(dataList),
+			ui.LeftClick(dataList),
+		)(ctx); err != nil {
+			return err
+		}
 
-	// Find and click the See more... menu item.
-	seeMore := nodewith.Name("See more destinations").Role(role.MenuItem)
-	if err := uiauto.Combine("find and click See more... menu item",
-		ui.WithTimeout(10*time.Second).WaitUntilExists(seeMore),
-		ui.LeftClick(seeMore),
-	)(ctx); err != nil {
-		return err
+		// Find and click the menu item corresponding to `printerName` if it exists.
+		// Note that if it does not exist, the desired printer may be behind the
+		// "See more..." menu item, requiring additional clicks on behalf of the user.
+		menuItem := nodewith.Name(printerName).Role(role.MenuItem)
+		if err := ui.WithTimeout(1 * time.Second).LeftClick(menuItem)(ctx); err == nil {
+			return nil
+		}
+
+		// Find and click the See more... menu item.
+		seeMoreMenuItem := nodewith.Name("See more destinations").Role(role.MenuItem)
+		if err := uiauto.Combine("find and click See more menu item",
+			ui.WithTimeout(10*time.Second).WaitUntilExists(seeMoreMenuItem),
+			ui.LeftClick(seeMoreMenuItem),
+		)(ctx); err != nil {
+			return err
+		}
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -433,28 +443,5 @@ func CloseAdvancedSettings(ctx context.Context, tconn *chrome.TestConn) error {
 		return err
 	}
 
-	return nil
-}
-
-// OpenDestinationDialogCros opens the destination-dialog-cros from the main
-// print-preview screen.
-func OpenDestinationDialogCros(ctx context.Context, tconn *chrome.TestConn) error {
-	// Find and click the See more... menu item.
-	dataList := nodewith.NameStartingWith("Destination ").Role(role.PopUpButton)
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	if err := uiauto.Combine("find and click destination list",
-		ui.WaitUntilExists(dataList),
-		ui.LeftClick(dataList),
-	)(ctx); err != nil {
-		return err
-	}
-
-	seeMore := nodewith.Name("See more destinations").Role(role.MenuItem)
-	if err := uiauto.Combine("find and click See more... menu item",
-		ui.WaitUntilExists(seeMore),
-		ui.LeftClick(seeMore),
-	)(ctx); err != nil {
-		return err
-	}
 	return nil
 }
