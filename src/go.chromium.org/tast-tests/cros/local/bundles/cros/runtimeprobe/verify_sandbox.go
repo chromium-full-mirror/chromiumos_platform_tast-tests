@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type verifySandboxTestParams struct {
@@ -116,6 +117,7 @@ func init() {
 				}},
 				helperTimeout: 15,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("phasma")),
 		}, {
 			Name: "tpm",
 			Val: verifySandboxTestParams{
