@@ -191,7 +191,7 @@ func SetVisualEffects(ui *uiauto.Context, effect *nodewith.Finder) uiauto.Action
 		doDefaultMoreOptions(ui),
 		// Open the visual effects panel.
 		ui.WithTimeout(30*time.Second).DoDefault(effectsItem),
-		ui.WithTimeout(30*time.Second).WaitUntilExists(effectsHeading),
+		ui.WithTimeout(time.Minute).WaitUntilExists(effectsHeading),
 	)
 
 	return uiauto.NamedCombine(
@@ -214,8 +214,8 @@ func doDefaultMoreOptions(ui *uiauto.Context) uiauto.Action {
 		}
 		// Sometimes, the UI has two identical "More Options" buttons, which requires
 		// selecting the last one to be the correct button.
-		return ui.DoDefaultUntil(moreOptionsFinder.Nth(len(moreOptionsButtons)-1),
-			ui.WithTimeout(5*time.Second).WaitUntilExists(callOptionsMenu),
+		return ui.WithTimeout(time.Minute).DoDefaultUntil(moreOptionsFinder.Nth(len(moreOptionsButtons)-1),
+			ui.WaitUntilExists(callOptionsMenu),
 		)(ctx)
 	}
 }

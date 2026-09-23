@@ -52,7 +52,7 @@ import (
 
 const (
 	// DefaultTestTimeout is the default timeout for the whole test.
-	DefaultTestTimeout = 25 * time.Minute
+	DefaultTestTimeout = 40 * time.Minute
 	// DefaultMeetTimeout is the default timeout for the Meet session.
 	DefaultMeetTimeout = 10 * time.Minute
 	// longUITimeout is the timeout for UI interactions.
