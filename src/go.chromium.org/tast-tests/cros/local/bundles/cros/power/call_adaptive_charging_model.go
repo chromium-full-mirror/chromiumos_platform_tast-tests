@@ -26,7 +26,7 @@ func init() {
 		Desc: "Check the AdaptiveCharging model",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"amoylan@chromium.org",
+			"amoylan@google.com",
 			"thanhdng@chromium.org",
 		},
 		// Software > Fundamentals > Machine Intelligence > Adaptive Charging

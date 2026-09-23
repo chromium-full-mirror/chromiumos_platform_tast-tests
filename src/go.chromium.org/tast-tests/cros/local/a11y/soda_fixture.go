@@ -33,7 +33,7 @@ func init() {
 		Desc: "Purges libsoda and libsoda-model-en-us DLCs after test",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"amoylan@chromium.org",
+			"amoylan@google.com",
 		},
 		BugComponent:    "b:1116342", // Software > Machine Intelligence > libsoda & ChromeOS Live Caption
 		Impl:            &sodaDLCFixture{},

@@ -27,7 +27,7 @@ func init() {
 		Desc: "Collect power metrics of using live caption",
 		Contacts: []string{
 			"ml-service-team@google.com",
-			"amoylan@chromium.org",
+			"amoylan@google.com",
 			"chenjih@google.com",
 		},
 		Fixture: a11y.PowerAshWithSoda,
