@@ -26,8 +26,8 @@ func init() {
 		BugComponent:    "b:908319",
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
-		PostTestTimeout: 30 * time.Second,
-		SetUpTimeout:    30 * time.Second,
+		PostTestTimeout: 2 * time.Minute,
+		SetUpTimeout:    2 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
@@ -46,8 +46,8 @@ func init() {
 		Parent:          fixture.Enrolled, // Provides enrollment.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
-		PostTestTimeout: 30 * time.Second,
-		SetUpTimeout:    30 * time.Second,
+		PostTestTimeout: 2 * time.Minute,
+		SetUpTimeout:    2 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
@@ -66,8 +66,8 @@ func init() {
 		Parent:          fixture.CleanOwnership, // Clean device ownership.
 		Impl:            &updateEngineFixture{},
 		PreTestTimeout:  2 * time.Minute, // See b/343529050, sometimes update engine is installing DLCs and we need to wait.
-		PostTestTimeout: 30 * time.Second,
-		SetUpTimeout:    30 * time.Second,
+		PostTestTimeout: 2 * time.Minute,
+		SetUpTimeout:    2 * time.Minute,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
 		},
@@ -89,6 +89,10 @@ func (*updateEngineFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 // PostTest ensures that the state of update engine is reset.
 func (*updateEngineFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	s.Log("UpdateEngine Fixture PostTest")
+
+	if err := ensureDUTConnected(ctx, s.DUT()); err != nil {
+		s.Fatal("Failed to ensure DUT connection: ", err)
+	}
 
 	logTarget := filepath.Join(s.OutDir(), "post_test_update_engine.log")
 	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), "/var/log/update_engine.log", logTarget, linuxssh.DereferenceSymlinks); err != nil {

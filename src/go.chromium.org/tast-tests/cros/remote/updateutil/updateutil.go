@@ -120,9 +120,28 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	return WaitForUpdateReboot(ctx, dut, currentRootPartition)
 }
 
+// ensureDUTConnected checks if the DUT connection is healthy and reconnects if needed.
+// See b/239013478: a preceding local test in the shard may have rebooted the DUT,
+// leaving the remote bundle's cached SSH connection closed (EOF).
+func ensureDUTConnected(ctx context.Context, dut *dut.DUT) error {
+	if err := dut.Health(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed DUT connection check, reconnecting: ", err)
+		waitConnectCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		if err := dut.WaitConnect(waitConnectCtx); err != nil {
+			return errors.Wrap(err, "failed to reconnect to the DUT")
+		}
+	}
+	return nil
+}
+
 // EnsureUpdateStatusIdle ensures update engine is running and its status is
 // idle.
 func EnsureUpdateStatusIdle(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
+	if err := ensureDUTConnected(ctx, dut); err != nil {
+		return err
+	}
+
 	cl, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
@@ -140,6 +159,10 @@ func EnsureUpdateStatusIdle(ctx context.Context, dut *dut.DUT, rpcHint *testing.
 // ResetUpdateStatus resets update engine to ensure it is left in a clean state.
 // Must be called after requesting an update.
 func ResetUpdateStatus(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
+	if err := ensureDUTConnected(ctx, dut); err != nil {
+		return err
+	}
+
 	cl, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
