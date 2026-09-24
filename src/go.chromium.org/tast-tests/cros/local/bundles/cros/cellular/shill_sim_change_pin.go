@@ -45,11 +45,6 @@ func ShillSimChangePin(ctx context.Context, s *testing.State) {
 
 	tempPin := mmconst.TempSimPin
 
-	// ResetModem needed for sim power reset to reflect locked type values.
-	if _, err := helper.ResetModem(ctx); err != nil {
-		s.Fatal("Failed to reset modem: ", err)
-	}
-
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
