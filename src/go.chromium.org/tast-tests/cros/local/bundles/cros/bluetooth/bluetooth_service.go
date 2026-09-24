@@ -517,6 +517,22 @@ func (b *BtService) DiscoverDevice(ctx context.Context, request *pb.DiscoverDevi
 	return &emptypb.Empty{}, nil
 }
 
+// DiscoverDeviceAndSampleRSSI will start discovery, wait until a device is
+// found and reports a valid RSSI, sample its RSSI while discovery is active,
+// and then stop discovery.
+func (b *BtService) DiscoverDeviceAndSampleRSSI(ctx context.Context, request *pb.DiscoverDeviceAndSampleRSSIRequest) (*pb.DiscoverDeviceAndSampleRSSIResponse, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	rssi, err := b.facade.DiscoverDeviceAndSampleRSSI(ctx, request.DeviceAddress, request.DiscoveryTimeout.AsDuration())
+	if err != nil {
+		return nil, err
+	}
+	return &pb.DiscoverDeviceAndSampleRSSIResponse{
+		Rssi: int32(rssi),
+	}, nil
+}
+
 // PairDevice pairs a peer device with the given address and authentication
 // pin.
 //

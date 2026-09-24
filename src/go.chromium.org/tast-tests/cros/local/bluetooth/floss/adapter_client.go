@@ -382,6 +382,23 @@ func (c *AdapterClient) GetRemoteWakeAllowed(ctx context.Context, device *Blueto
 	return c.dbus.CallForBool(ctx, "GetRemoteWakeAllowed", device.Marshall())
 }
 
+// GetRemoteRSSI calls the floss D-Bus method with the same name for this
+// object.
+func (c *AdapterClient) GetRemoteRSSI(ctx context.Context, device *BluetoothDevice) (int16, error) {
+	if device == nil {
+		return 0, errors.New("non-nil device required")
+	}
+	call := c.dbus.Call(ctx, "GetRemoteRSSI", device.Marshall())
+	if call.Err != nil {
+		return 0, errors.Wrap(call.Err, "failed to call GetRemoteRSSI")
+	}
+	var rssi int16
+	if err := call.Store(&rssi); err != nil {
+		return 0, errors.Wrap(err, "failed to store response of GetRemoteRSSI as int16")
+	}
+	return rssi, nil
+}
+
 // GetConnectedDevices calls the floss D-Bus method with the same name for this
 // object.
 func (c *AdapterClient) GetConnectedDevices(ctx context.Context) ([]*BluetoothDevice, error) {

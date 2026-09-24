@@ -139,6 +139,12 @@ service BluetoothService {
   // to successfully discover the device before the timeout was reached.
   rpc DiscoverDevice(DiscoverDeviceRequest) returns (google.protobuf.Empty) {}
 
+  // DiscoverDeviceAndSampleRSSI will start discovery, wait until a device is
+  // found and reports a valid RSSI, sample its RSSI while discovery is active,
+  // and then stop discovery.
+  rpc DiscoverDeviceAndSampleRSSI(DiscoverDeviceAndSampleRSSIRequest)
+      returns (DiscoverDeviceAndSampleRSSIResponse) {}
+
   // PairDevice pairs a peer device with the given address and authentication
   // pin. Device can be assumed to be both paired and connect to the DUT if this
   // returns without error.
@@ -307,6 +313,13 @@ message DiscoverDeviceRequest {
   string deviceAddress = 1;
   google.protobuf.Duration discoveryTimeout = 3;
 }
+
+message DiscoverDeviceAndSampleRSSIRequest {
+  string deviceAddress = 1;
+  google.protobuf.Duration discoveryTimeout = 2;
+}
+
+message DiscoverDeviceAndSampleRSSIResponse { int32 rssi = 1; }
 
 message PairDeviceRequest {
   string deviceAddress = 1;

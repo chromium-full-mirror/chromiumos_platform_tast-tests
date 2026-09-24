@@ -691,11 +691,34 @@ func (b *BluetoothFlossFacade) DeviceAlias(ctx context.Context, address string) 
 	return b.adapterClient.GetRemoteAlias(ctx, device)
 }
 
+// DeviceRSSI returns the RSSI of a known device with the given address.
+func (b *BluetoothFlossFacade) DeviceRSSI(ctx context.Context, address string) (int16, error) {
+	if err := b.assertEnabled(); err != nil {
+		return 0, err
+	}
+	device := &floss.BluetoothDevice{Address: address}
+	rssi, err := b.adapterClient.GetRemoteRSSI(ctx, device)
+	if err != nil {
+		return 0, err
+	}
+	if rssi == common.InvalidRSSI {
+		return 0, errors.Errorf("invalid RSSI (%d) for device %s", rssi, address)
+	}
+	return rssi, nil
+}
+
 // DiscoverDevice will start discovery, wait until a device is found, and then
 // stop discovery. A non-nil error return indicates that the adapter was able
 // to successfully discover the device before the timeout was reached.
 func (b *BluetoothFlossFacade) DiscoverDevice(ctx context.Context, address string, discoveryTimeout time.Duration) error {
 	return common.DiscoverDevice(ctx, b, address, discoveryTimeout)
+}
+
+// DiscoverDeviceAndSampleRSSI will start discovery, wait until a device is
+// found and reports a valid RSSI, sample its RSSI while discovery is active,
+// and then stop discovery.
+func (b *BluetoothFlossFacade) DiscoverDeviceAndSampleRSSI(ctx context.Context, address string, discoveryTimeout time.Duration) (int16, error) {
+	return common.DiscoverDeviceAndSampleRSSI(ctx, b, address, discoveryTimeout)
 }
 
 // PairDevice pairs a peer device with the given address and authentication

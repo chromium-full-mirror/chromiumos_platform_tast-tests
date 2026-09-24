@@ -189,10 +189,18 @@ type BluetoothFacade interface {
 	// DeviceAlias returns the alias of a known device with the given address.
 	DeviceAlias(ctx context.Context, address string) (string, error)
 
+	// DeviceRSSI returns the RSSI of a known device with the given address.
+	DeviceRSSI(ctx context.Context, address string) (int16, error)
+
 	// DiscoverDevice will start discovery, wait until a device is found, and then
 	// stop discovery. A non-nil error return indicates that the adapter was able
 	// to successfully discover the device before the timeout was reached.
 	DiscoverDevice(ctx context.Context, address string, discoveryTimeout time.Duration) error
+
+	// DiscoverDeviceAndSampleRSSI will start discovery, wait until a device is
+	// found and reports a valid RSSI, sample its RSSI while discovery is active,
+	// and then stop discovery.
+	DiscoverDeviceAndSampleRSSI(ctx context.Context, address string, discoveryTimeout time.Duration) (int16, error)
 
 	// PairDevice pairs a peer device with the given address and authentication
 	// pin.
@@ -229,53 +237,99 @@ type BluetoothFacade interface {
 	GetPasskey(ctx context.Context, address string) (uint32, error)
 }
 
-// DiscoverDevice will start discovery, wait until a device is found, and then
-// stop discovery. A non-nil error return indicates that the adapter was able
-// to successfully discover the device before the timeout was reached.
-func DiscoverDevice(ctx context.Context, facade BluetoothFacade, address string, discoveryTimeout time.Duration) error {
+// InvalidRSSI is the sentinel value (127) returned by Floss GetRemoteRSSI when
+// a device's RSSI is unknown or unavailable.
+const InvalidRSSI int16 = 127
+
+// discoverDevice is a shared helper for DiscoverDevice and DiscoverDeviceAndSampleRSSI.
+func discoverDevice(ctx context.Context, facade BluetoothFacade, address string, discoveryTimeout time.Duration, sampleRSSI bool) (int16, error) {
 	if discoveryTimeout == 0 {
 		discoveryTimeout = 60 * time.Second
 	}
 	testing.ContextLog(ctx, "Starting bluetooth discovery")
 	if err := facade.StartDiscovery(ctx); err != nil {
-		return errors.New("failed to start discovery")
+		return 0, errors.Wrap(err, "failed to start discovery")
 	}
 	stopDiscoveryCtx := ctx
-	ctx, _ = ctxutil.Shorten(ctx, 500*time.Millisecond)
+	ctx, cancel := ctxutil.Shorten(ctx, 500*time.Millisecond)
+	defer cancel()
 	defer func() {
 		testing.ContextLog(stopDiscoveryCtx, "Stopping bluetooth discovery")
 		if err := facade.StopDiscovery(stopDiscoveryCtx); err != nil {
 			testing.ContextLog(stopDiscoveryCtx, "Failed to stop discovery: ", err)
 		}
 	}()
-	testing.ContextLogf(ctx, "Waiting for bluetooth adapter to discover device with address %q (%s timeout)", address, discoveryTimeout.String())
+
+	if sampleRSSI {
+		testing.ContextLogf(ctx, "Waiting for bluetooth adapter to discover and sample RSSI for device with address %q (%s timeout)", address, discoveryTimeout.String())
+	} else {
+		testing.ContextLogf(ctx, "Waiting for bluetooth adapter to discover device with address %q (%s timeout)", address, discoveryTimeout.String())
+	}
+
+	var sampledRSSI int16
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		hasDevice, err := facade.HasDevice(ctx, address)
+		var pollErr error
 		if err != nil {
-			return errors.Wrapf(err, "failed to check if bluetooth adapter has device with address %q", address)
+			pollErr = errors.Wrapf(err, "failed to check if bluetooth adapter has device with address %q", address)
+		} else if !hasDevice {
+			pollErr = errors.Errorf("bluetooth adapter does not have device with address %q", address)
+		} else if sampleRSSI {
+			rssi, err := facade.DeviceRSSI(ctx, address)
+			if err != nil {
+				pollErr = errors.Wrapf(err, "failed to get RSSI for device with address %q", address)
+			} else if rssi == InvalidRSSI {
+				pollErr = errors.Errorf("device with address %q reported invalid RSSI (%d)", address, rssi)
+			} else {
+				sampledRSSI = rssi
+				return nil
+			}
+		} else {
+			return nil // Device found, and we don't need RSSI
 		}
-		if hasDevice {
-			return nil
-		}
+
 		isDiscovering, err := facade.IsDiscovering(ctx)
 		if err != nil {
-			return errors.New("failed to check if bluetooth adapter is still discovering")
+			return errors.Wrap(err, "failed to check if bluetooth adapter is still discovering")
 		}
 		if !isDiscovering {
-			testing.ContextLog(ctx, "Restarting bluetooth discovery, device not yet found")
+			if sampleRSSI {
+				testing.ContextLog(ctx, "Restarting bluetooth discovery, device or valid RSSI not yet found")
+			} else {
+				testing.ContextLog(ctx, "Restarting bluetooth discovery, device not yet found")
+			}
 			if err := facade.StartDiscovery(ctx); err != nil {
-				return errors.New("failed to restart discovery")
+				return errors.Wrap(err, "failed to restart discovery")
 			}
 		}
-		return errors.Errorf("bluetooth adapter does not have device with address %q", address)
+		return pollErr
 	}, &testing.PollOptions{
 		Interval: 100 * time.Millisecond,
 		Timeout:  discoveryTimeout,
 	}); err != nil {
-		return errors.Wrapf(err, "failed to wait until bluetooth adapter discovered device with address %q", address)
+		if sampleRSSI {
+			return 0, errors.Wrapf(err, "failed to wait until bluetooth adapter discovered and sampled RSSI for device with address %q", address)
+		}
+		return 0, errors.Wrapf(err, "failed to wait until bluetooth adapter discovered device with address %q", address)
 	}
-	testing.ContextLogf(ctx, "Successfully discovered bluetooth device with address %q", address)
-	return nil
+
+	if sampleRSSI {
+		testing.ContextLogf(ctx, "Successfully discovered bluetooth device with address %q with RSSI %d dBm", address, sampledRSSI)
+	} else {
+		testing.ContextLogf(ctx, "Successfully discovered bluetooth device with address %q", address)
+	}
+	return sampledRSSI, nil
+}
+
+// DiscoverDevice will start discovery, wait until a device is found, and then stop discovery.
+func DiscoverDevice(ctx context.Context, facade BluetoothFacade, address string, discoveryTimeout time.Duration) error {
+	_, err := discoverDevice(ctx, facade, address, discoveryTimeout, false)
+	return err
+}
+
+// DiscoverDeviceAndSampleRSSI will start discovery, wait until a device is found and reports a valid RSSI, sample its RSSI while discovery is active, and then stop discovery.
+func DiscoverDeviceAndSampleRSSI(ctx context.Context, facade BluetoothFacade, address string, discoveryTimeout time.Duration) (int16, error) {
+	return discoverDevice(ctx, facade, address, discoveryTimeout, true)
 }
 
 // EnabledOnBoot returns the value of the system setting that determines if
