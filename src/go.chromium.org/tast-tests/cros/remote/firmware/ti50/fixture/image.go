@@ -628,6 +628,9 @@ func cmd(ctx context.Context, desc, cmd string, args ...string) (string, error) 
 	c := exec.CommandContext(ctx, cmd, args...)
 	output, err := c.CombinedOutput()
 	if err != nil {
+		if output != nil {
+			testing.ContextLogf(ctx, "command errored: %v, output was: %v", err, string(output))
+		}
 		err = errors.Wrap(err, desc)
 	}
 	return string(output), err
