@@ -41,6 +41,7 @@ var defaultPairingAgentCapabilityByDeviceType = map[cbt.DeviceType]cbt.PairingAg
 	cbt.DeviceTypeBluetoothAudio: cbt.PairingAgentCapabilityNoInputNoOutput,
 	cbt.DeviceTypeMouse:          cbt.PairingAgentCapabilityNoInputNoOutput,
 	cbt.DeviceTypeKeyboard:       cbt.PairingAgentCapabilityNoInputNoOutput,
+	cbt.DeviceTypeGamepad:        cbt.PairingAgentCapabilityNoInputNoOutput,
 	cbt.DeviceTypeLEFastPair:     cbt.PairingAgentCapabilityDisplayYesNo,
 }
 
