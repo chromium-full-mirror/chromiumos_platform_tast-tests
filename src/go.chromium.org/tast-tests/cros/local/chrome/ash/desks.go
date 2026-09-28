@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -304,12 +303,6 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 		ac.WaitForLocation(focusedNameView),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to save a desk")
-	}
-
-	// Wait for CPU usage to drop before typing to prevent keystrokes from being
-	// dropped on low-end devices due to high CPU load.
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for CPU to become idle")
 	}
 
 	// Type savedDeskName and press "Enter".
