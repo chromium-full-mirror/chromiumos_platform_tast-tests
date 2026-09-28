@@ -8,6 +8,8 @@ package secagentdupstart
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"time"
 
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
@@ -15,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,8 +52,23 @@ func RestartSecagentd(ctx context.Context, waitForAddMatchSignal bool, args ...u
 	// to let minijail do its thing and start secagentd.
 	pid := uint64(0)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Retrieve the single child process ID of the minijail process.
 		pid, err = secagentdprocfsscraper.GetOnlyChildPid(uint64(mjPid))
-		return err
+		if err != nil {
+			return err
+		}
+		// Resolve the executable symlink for the child process.
+		exePath, err := filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/exe", pid))
+		if err != nil {
+			return err
+		}
+		// Extract the base executable name for the child process.
+		exeBase := filepath.Base(exePath)
+		// Ensure the child process has executed the expected daemon binary.
+		if exeBase != name {
+			return errors.Errorf("child process %d executable is %s, want %s", pid, exeBase, name)
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return 0, err
 	}
