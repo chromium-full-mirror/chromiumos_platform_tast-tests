@@ -191,27 +191,42 @@ func openWithTestApp(ctx context.Context, files *filesapp.FilesApp, config TestC
 // waitForFileType waits for file type (mime type) to be populated. This is an
 // indication that the backend metadata is ready.
 func waitForFileType(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
-	if err := uiauto.Combine("select the test file with Files app",
-		files.OpenPath(filesapp.FilesTitlePrefix+config.DirTitle, config.DirName, config.SubDirectories...),
-		files.SelectFile(config.FileName))(ctx); err != nil {
-		return errors.Wrap(err, "failed to select the test file with Files app")
-	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
 
-	// Get the keyboard.
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
-	// Press 'Space' to open/close the QuickView and check the file type. Repeat this
-	// until 'text/plain' is shown. Retries up to 6 times (~ 30 seconds).
+	quickViewDialog := nodewith.Role(role.Dialog).First()
+	backButton := nodewith.Name("Back").Role(role.Button).Ancestor(quickViewDialog)
+
+	closeQuickView := func(ctx context.Context) error {
+		if found, err := files.IsNodeFound(ctx, quickViewDialog); err != nil {
+			return err
+		} else if !found {
+			return nil
+		}
+		return uiauto.Combine("close QuickView",
+			files.DoDefault(backButton),
+			files.WithTimeout(3*time.Second).WaitUntilGone(quickViewDialog),
+		)(ctx)
+	}
+	defer closeQuickView(cleanupCtx)
+
+	// Press 'Space' to open the QuickView and check the file type. Repeat this
+	// until 'text/plain' is shown. Retries up to 6 times (~ 60 seconds).
 	times := 6
 	if err := uiauto.Retry(times,
 		uiauto.Combine("Checking file type",
+			closeQuickView,
+			files.OpenPath(filesapp.FilesTitlePrefix+config.DirTitle, config.DirName, config.SubDirectories...),
+			files.WithTimeout(15*time.Second).SelectFile(config.FileName),
 			keyboard.AccelAction("Space"),
-			files.WithTimeout(5*time.Second).WaitUntilExists(nodewith.Name("text/plain").Role(role.StaticText)),
-			keyboard.AccelAction("Space"),
+			files.WithTimeout(10*time.Second).WaitUntilExists(nodewith.Name("text/plain").Role(role.StaticText)),
 		),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to wait for file type after %d retries", times)
