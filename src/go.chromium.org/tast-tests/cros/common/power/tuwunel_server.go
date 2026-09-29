@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -23,7 +25,10 @@ import (
 const (
 	// TuwunelServerDefaultPort is the default port to forward the request from DUT to Tuwunel server.
 	TuwunelServerDefaultPort = 8008
-	tuwunelConfigTemplate    = `
+	// tuwunelMaxCPU is the maximum number of CPU cores supported by the Tuwunel server,
+	// as it tracks available cores using a 128-bit bitmask.
+	tuwunelMaxCPU         = 128
+	tuwunelConfigTemplate = `
 	[global]
 	server_name = "powertest.localdomain"
 	database_path = "%s"
@@ -31,6 +36,10 @@ const (
 	port = %d
 	allow_registration = true
 	yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse = true
+	db_pool_workers = 2
+	db_pool_max_workers = 4
+	rocksdb_parallelism_threads = 1
+	db_cache_capacity_mb = 16.0
 `
 	signalKilledMessage = "signal: killed"
 )
@@ -163,7 +172,14 @@ func (t *TuwunelServer) Start(ctx context.Context) error {
 		}
 		t.listener = nil
 	}
-	t.cmd = testexec.CommandContext(ctx, t.binaryFile, "-c", t.configFile)
+	// The Tuwunel server spawns threads based on the CPU cores it can access.
+	// Limit its CPU affinity to a single core to avoid exceeding container thread limits.
+	coreID := os.Getpid() % min(runtime.NumCPU(), tuwunelMaxCPU)
+	t.cmd = testexec.CommandContext(ctx, "taskset", "-c", strconv.Itoa(coreID), t.binaryFile, "-c", t.configFile)
+	// By default, jemalloc spawns background threads and creates an arena per CPU core.
+	// Disable background threads and per-CPU arenas to reduce thread and memory usage.
+	t.cmd.Env = append(os.Environ(),
+		"MALLOC_CONF=background_thread:false,narenas:1,percpu_arena:disabled")
 	t.cmd.Stdout = &t.buf
 	t.cmd.Stderr = &t.buf
 	if err := t.cmd.Start(); err != nil {
