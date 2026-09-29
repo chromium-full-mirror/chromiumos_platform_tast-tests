@@ -6,7 +6,6 @@ package metrics
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"time"
 
@@ -104,9 +103,14 @@ func RustBindings(ctx context.Context, s *testing.State) {
 	// waitHistogramUpdate() returns the diff to hOld. The histogram before calling SendCrosEventToUMA would be excluded.
 	checkHistogram(s, h, indexVMDiskEraseFailed, noRepeatCount)
 
-	// Ensure any leftover UMA events file is removed on test exit so that
-	// unconsumed events do not leak into subsequent tests.
-	defer os.Remove("/var/lib/metrics/uma-events")
+	// Ensure any leftover UMA events file is truncated on test exit so that
+	// unconsumed events do not leak into subsequent tests, without deleting the
+	// file (which would drop its 0666 permissions and SELinux label).
+	defer func() {
+		if err := metrics.ClearHistogramTransferFile(); err != nil {
+			s.Error("Failed to clear histogram transfer file: ", err)
+		}
+	}()
 
 	// These are not histograms. It's not necessary to verify the result on Chrome.
 	// These binding functions always return error when not on the DUT. Check if they return OK on the DUT.
