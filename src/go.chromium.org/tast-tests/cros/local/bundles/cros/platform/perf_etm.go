@@ -122,12 +122,12 @@ func verifyETMData(report string) error {
 }
 
 // verifyLastBranchSamples verifies that the report contains a last branch sample.
-// We can verify either "dso" or "tracedCommand" but not both at the same time.
+// We can verify either "dsoPattern" or "tracedCommand" but not both at the same time.
 // If "tracedCommand" is non empty verify that the command has branch records.
-// If "dso" is non empty verify that there are records belonging to this dso.
-func verifyLastBranchSamples(report, tracedCommand, dso string) error {
-	if tracedCommand != "" && dso != "" {
-		return errors.New("can't verify \"tracedCommand\" and \"dso\" at the same time. Split it into two calls")
+// If "dsoPattern" is non-nil verify that there are records belonging to a dso matching the pattern.
+func verifyLastBranchSamples(report, tracedCommand string, dsoPattern *regexp.Regexp) error {
+	if tracedCommand != "" && dsoPattern != nil {
+		return errors.New("can't verify \"tracedCommand\" and \"dsoPattern\" at the same time. Split it into two calls")
 	}
 	sampleRecordRegexp := regexp.MustCompile("PERF_RECORD_SAMPLE")
 	branchStackSizeRegexp := regexp.MustCompile(`branch stack: nr:(\d+)`)
@@ -160,16 +160,16 @@ func verifyLastBranchSamples(report, tracedCommand, dso string) error {
 			// Record is either invalid or belongs to a different command.
 			continue
 		}
-		if dso != "" {
+		if dsoPattern != nil {
 			dsoMatch := dsoRegexp.FindStringSubmatch(record)
-			if dsoMatch != nil && dso == dsoMatch[1] {
+			if dsoMatch != nil && dsoPattern.MatchString(dsoMatch[1]) {
 				// Found a branch sample from the dso.
 				return nil
 			}
 			// Record is either invalid or belongs to a different dso.
 			continue
 		}
-		// We are ok with any last branch record if neither tracedCommand or dso is passed.
+		// We are ok with any last branch record if neither tracedCommand or dsoPattern is passed.
 		return nil
 	}
 	return errors.Errorf("couldn't find a valid Last Branch sample. Total number of samples: %d", numberOfRecords)
@@ -216,7 +216,7 @@ func testPerfETMPerThread(ctx context.Context, s *testing.State) {
 		s.Fatalf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
 	}
 	s.Log("Verifying Last Branch samples in per-thread mode")
-	if err = verifyLastBranchSamples(string(out), tracedCommand, ""); err != nil {
+	if err = verifyLastBranchSamples(string(out), tracedCommand, nil); err != nil {
 		s.Errorf("Last branch sample verification failed for %q command: %v", tracedCommand, err)
 	}
 }
@@ -268,7 +268,9 @@ func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
 	}
 
 	// Test ETM data in the profile with synthesized branch samples.
-	kernelDSO := "/proc/kcore"
+	// kernelDSOPattern matches both /proc/kcore and [kernel.kallsyms] (e.g. [kernel.kallsyms]_stext)
+	// because perf report may fall back to kallsyms if /proc/kcore validation fails at decode time.
+	kernelDSOPattern := regexp.MustCompile(`^(/proc/kcore|\[kernel\.kallsyms)`)
 	cmd = testexec.CommandContext(ctx, "perf", "report", "-D", "-i", perfInjectData)
 	out, err = cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
@@ -276,12 +278,12 @@ func testPerfETMSystemWide(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Verifying Last Branch samples in system-wide mode")
 	// Verify samples from the traced command.
-	if err = verifyLastBranchSamples(string(out), "chrome", ""); err != nil {
+	if err = verifyLastBranchSamples(string(out), "chrome", nil); err != nil {
 		s.Errorf("Failed but forgiven. Last branch sample verification failed for %q command: %v", "chrome", err)
 	}
 	// Verify samples from the kernel dso.
-	if err = verifyLastBranchSamples(string(out), "", kernelDSO); err != nil {
-		s.Errorf("Last branch sample verification failed for %q dso: %v", kernelDSO, err)
+	if err = verifyLastBranchSamples(string(out), "", kernelDSOPattern); err != nil {
+		s.Errorf("Last branch sample verification failed for %v dso: %v", kernelDSOPattern, err)
 	}
 }
 
