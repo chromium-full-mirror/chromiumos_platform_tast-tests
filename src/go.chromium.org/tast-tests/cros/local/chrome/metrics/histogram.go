@@ -294,15 +294,17 @@ func ClearHistogramTransferFile() error {
 // clearHistogramTransferFileByName is the heart of ClearHistogramTransferFile.
 // It is broken up into a separate function for ease of testing.
 func clearHistogramTransferFileByName(fileName string) error {
-	file, err := os.OpenFile(fileName, os.O_RDWR, 0666)
-	if os.IsNotExist(err) {
-		// File doesn't exist, so it's already truncated.
-		return nil
-	}
+	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return errors.Wrapf(err, "unable to open %s", fileName)
 	}
 	defer file.Close()
+
+	// Ensure 0666 permissions so unprivileged daemons running under different
+	// UIDs (e.g. metrics, crash, shill) can append UMA events without EACCES.
+	if err := file.Chmod(0666); err != nil {
+		return errors.Wrapf(err, "unable to chmod %s", fileName)
+	}
 
 	if err := unix.Flock(int(file.Fd()), unix.LOCK_EX); err != nil {
 		return errors.Wrapf(err, "unable to lock %s", fileName)

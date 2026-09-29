@@ -18,7 +18,7 @@ func TestClearHistogramTransferFile(t *testing.T) {
 
 	fileName := dir + "/metrics"
 	const contents = "ABC123"
-	if err = os.WriteFile(fileName, []byte(contents), 0666); err != nil {
+	if err = os.WriteFile(fileName, []byte(contents), 0644); err != nil {
 		t.Fatalf("os.WriteFile: %v", err)
 	}
 
@@ -30,6 +30,8 @@ func TestClearHistogramTransferFile(t *testing.T) {
 		t.Fatalf("os.Stat: %v", err)
 	} else if info.Size() != 0 {
 		t.Error("file was not truncated")
+	} else if info.Mode().Perm() != 0666 {
+		t.Errorf("file mode was %v, want 0666", info.Mode().Perm())
 	}
 }
 
@@ -41,16 +43,17 @@ func TestClearHistogramTransferFileWhenFileDoesntExist(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	fileName := dir + "/metrics"
-	// Don't create the file.
+	// Don't create the file beforehand.
 	if err = clearHistogramTransferFileByName(fileName); err != nil {
 		t.Fatalf("clearHistogramTransferFileByName: %v", err)
 	}
 
-	_, err = os.Stat(fileName)
-
-	if err == nil {
-		t.Error("file was created")
-	} else if !os.IsNotExist(err) {
-		t.Errorf("os.Stat: %v", err)
+	info, err := os.Stat(fileName)
+	if err != nil {
+		t.Fatalf("os.Stat: %v", err)
+	} else if info.Size() != 0 {
+		t.Error("file was not empty")
+	} else if info.Mode().Perm() != 0666 {
+		t.Errorf("file mode was %v, want 0666", info.Mode().Perm())
 	}
 }
