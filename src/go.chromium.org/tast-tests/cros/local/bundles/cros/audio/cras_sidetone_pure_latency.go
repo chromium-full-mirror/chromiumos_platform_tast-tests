@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 		},
 		VariantCategory: `{"name": "Audio_Board"}`,
 		Data:            []string{data.AudioShortSine440Wav},
+		HardwareDeps:    hwdep.D(hwdep.SkipOnModel("betty")),
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,
 			Parent:   fixture.UIStopped{}.Instance(),

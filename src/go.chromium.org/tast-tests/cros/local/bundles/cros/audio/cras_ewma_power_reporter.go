@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 			"release-health_audio",
 		},
 		VariantCategory: `{"name": "Audio_Board"}`,
+		HardwareDeps:    hwdep.D(hwdep.SkipOnModel("betty")),
 		Fixture: fixture.AloopLoaded{
 			Channels: 2,
 			Parent:   fixture.UIStopped{}.Instance(),
