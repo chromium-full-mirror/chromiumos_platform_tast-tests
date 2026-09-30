@@ -77,6 +77,7 @@ func Drivefs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed waiting for DriveFS to start: ", err)
 	}
+	defer drivefs.SaveDriveLogsOnError(ctx, s.HasError, cr.NormalizedUser(), mountPath)
 	drivefsRoot := path.Join(mountPath, "root")
 
 	// Since the test account can be shared with other concurrently running

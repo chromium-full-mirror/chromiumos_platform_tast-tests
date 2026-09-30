@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/filesystem"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -99,6 +101,9 @@ func (dfs *DriveFs) ClearCommandLineFlags() error {
 // Restart terminates the running instance of `drivefs` and waits for it to
 // remount.
 func (dfs *DriveFs) Restart(ctx context.Context) error {
+	logPath := dfs.ConfigPath("Logs", "drivefs.txt")
+	prevInfo, prevErr := os.Stat(logPath)
+
 	// Kill DriveFS, cros-disks will ensure another starts up.
 	if err := testexec.CommandContext(ctx, "pkill", "-HUP", "drivefs").Run(); err != nil {
 		// pkill exits with code 1 if it could find no matching process (see: man 1 pkill).
@@ -107,6 +112,29 @@ func (dfs *DriveFs) Restart(ctx context.Context) error {
 			return errors.Wrap(err, "failed to kill drivefs processes")
 		}
 	}
+
+	// DriveFS starts with reuse_existing_log_file = false, rotating drivefs.txt
+	// to drivefs_<N>.txt and creating a new drivefs.txt file on every startup.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		currInfo, err := os.Stat(logPath)
+		if err != nil {
+			return err
+		}
+		if prevErr == nil && os.SameFile(prevInfo, currInfo) {
+			return errors.New("waiting for drivefs to rotate drivefs.txt")
+		}
+		logBytes, err := os.ReadFile(logPath)
+		if err != nil {
+			return err
+		}
+		if !strings.Contains(string(logBytes), driveFsLogStartupHeader) {
+			return errors.New("waiting for new drivefs process to start logging")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: mountPointTimeout, Interval: 200 * time.Millisecond}); err != nil {
+		return errors.Wrap(err, "failed waiting for restarted drivefs process to start")
+	}
+
 	_, err := WaitForDriveFs(ctx, dfs.user)
 	return err
 }

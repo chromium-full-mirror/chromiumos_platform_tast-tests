@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -19,8 +20,16 @@ import (
 
 const (
 	mountPointTimeout = 60 * time.Second // timeout waiting for CrosDisks to mount Drivefs.
-	fuseIoTimeout     = 40 * time.Second // timeout waiting for the FUSE to be operational.
-	restartDelay      = 4 * time.Second  // delay waiting for DriveFS to restart.
+	// Allow up to 70s to cover both the 1st (20s) and 2nd (+40s = 60s)
+	// GlobalPhenotypeExperimentFetcher backoff retries on a clean start.
+	fuseIoTimeout = 70 * time.Second // timeout waiting for the FUSE to be operational.
+
+	driveFsLogStartupHeader        = "drivefs log started"
+	driveFsLogNoFeatureConfigDiff  = "No change in CoreFeatureConfig for account os_account"
+	driveFsLogTokensChanged        = "Experiment tokens changed for account os_account"
+	driveFsLogCoreStarted          = "DriveFs core has started with: metrics"
+	driveFsLogSafeRestartRequested = "Safe restart requested:"
+	driveFsLogScheduledRestart     = "DriveFs scheduled restart."
 )
 
 // WaitForDriveFs checks that the Drivefs mount is ready for IO.
@@ -54,32 +63,76 @@ func WaitForDriveFs(ctx context.Context, username string) (string, error) {
 	mountPath := mounts[0].MountPath
 	testing.ContextLog(ctx, "drivefs is mounted into ", mountPath)
 
-	// On a clean start DriveFS would fetch some settings from the server and will
-	// want to restart to apply them. Let's wait for a bit to allow it to do this.
-	testing.ContextLogf(ctx, "Waiting %v for drivefs to stabilize", restartDelay)
-	if testing.Sleep(ctx, restartDelay) != nil {
+	// On a clean start, DriveFS fetches server feature configs via Phenotype
+	// (retrying 20s after an initial 500ms timeout, and backing off to +40s = 60s
+	// if the first retry also times out under heavy boot load) and self-restarts
+	// to apply them. Poll until the current DriveFS instance has persisted its
+	// experiment token, verified its feature config without pending restarts,
+	// finished starting core, and mounted the root directory.
+	testing.ContextLogf(ctx, "Waiting up to %v for drivefs to stabilize", fuseIoTimeout)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		currMounts, err := findMatchingMount(isDriveFs)
+		if err != nil {
+			return errors.Wrap(err, "io error trying to list mounts")
+		}
+		if len(currMounts) != 1 {
+			return errors.Errorf("expected one drivefs mount, found %d", len(currMounts))
+		}
+		mountPath = currMounts[0].MountPath
+		if err := checkDriveFsStabilized(homePath, mountPath); err != nil {
+			return err
+		}
+		drivefsRoot := path.Join(mountPath, "root")
+		dir, err := os.Stat(drivefsRoot)
+		if err != nil {
+			return err
+		}
+		if !dir.IsDir() {
+			return errors.Errorf("no root folder inside %s", mountPath)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: fuseIoTimeout, Interval: time.Second}); err != nil {
 		return "", errors.Wrap(err, "failed while waiting for drivefs to stabilize")
 	}
 
-	// We expect to find at least this folder in the mount point.
-	drivefsRoot := path.Join(mountPath, "root")
-
-	// As drivefs may not be fully initialized yet all access to the mount point
-	// may fail inside FUSE driver until the daemon is ready.
-	// Poll for stat to succeed in case the drivefs daemon is never ready due to
-	// some bug.
-	if err := waitForMountConnected(ctx, fuseIoTimeout, drivefsRoot); err != nil {
-		return "", errors.Wrap(err, "failed while waiting for stat")
-	}
-	dir, err := os.Stat(drivefsRoot)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed trying to stat %s", drivefsRoot)
-	}
-	if !dir.IsDir() {
-		return "", errors.Wrapf(err, "failed with no root folder inside %s", mountPath)
-	}
-
 	return mountPath, nil
+}
+
+// checkDriveFsStabilized verifies that DriveFS has finished its initial
+// server experiment/feature config fetch and is not about to self-restart.
+func checkDriveFsStabilized(homePath, mountPath string) error {
+	persistableToken := PersistableToken(mountPath)
+	if persistableToken == "" {
+		return errors.Errorf("failed to obtain persistable token from mount path %q", mountPath)
+	}
+
+	experimentTokenPath := ConfigPath(homePath, persistableToken, "experiment_token")
+	if _, err := os.Stat(experimentTokenPath); err != nil {
+		return errors.Wrap(err, "experiment_token not yet persisted")
+	}
+
+	logPath := ConfigPath(homePath, persistableToken, "Logs", "drivefs.txt")
+	logBytes, err := os.ReadFile(logPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read drivefs.txt")
+	}
+	latestLog := string(logBytes)
+	if idx := strings.LastIndex(latestLog, driveFsLogStartupHeader); idx != -1 {
+		latestLog = latestLog[idx:]
+	}
+
+	if strings.Contains(latestLog, driveFsLogSafeRestartRequested) ||
+		strings.Contains(latestLog, driveFsLogScheduledRestart) ||
+		strings.Contains(latestLog, driveFsLogTokensChanged) {
+		return errors.New("drivefs is restarting to apply updated feature config")
+	}
+	if !strings.Contains(latestLog, driveFsLogNoFeatureConfigDiff) {
+		return errors.New("drivefs has not yet verified CoreFeatureConfig for os_account")
+	}
+	if !strings.Contains(latestLog, driveFsLogCoreStarted) {
+		return errors.New("drivefs core has not yet finished starting")
+	}
+	return nil
 }
 
 func findMatchingMount(matcher func(sysutil.MountInfo) bool) (matches []sysutil.MountInfo, err error) {
@@ -114,12 +167,4 @@ func waitForMatchingMount(ctx context.Context, timeout time.Duration, matcher fu
 
 func isDriveFs(info sysutil.MountInfo) bool {
 	return info.Fstype == "fuse.drivefs"
-}
-
-func waitForMountConnected(ctx context.Context, timeout time.Duration, path string) error {
-	testing.ContextLogf(ctx, "Waiting %v for mount to become connected", timeout)
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := os.Stat(path)
-		return err
-	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
 }
