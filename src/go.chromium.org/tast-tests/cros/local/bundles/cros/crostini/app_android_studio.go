@@ -138,11 +138,13 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
 	if err := uiauto.NamedCombine("Create a new project with defaults",
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
-		// On cold startup, the splash screen window may be mapped on top of the
-		// "Import Android Studio Settings" dialog and visually occlude it,
-		// preventing UI detection from finding the "OK" button. Wait for the
-		// splash window to be gone.
-		uiauto.New(tconn).WithTimeout(15*time.Second).WaitUntilGone(splashWindow),
+		// On cold startup, the splash screen window may be mapped slightly after
+		// and on top of the "Import Android Studio Settings" dialog and visually
+		// occlude it, preventing UI detection from finding the "OK" button. Wait
+		// briefly in case the splash window appears with a delay, then wait for
+		// the splash window to be gone.
+		uiauto.Sleep(time.Second),
+		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilGone(splashWindow),
 		// Two-letter words normally need an exact match.
 		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The analytics consent dialog is flaky. Look for the body
