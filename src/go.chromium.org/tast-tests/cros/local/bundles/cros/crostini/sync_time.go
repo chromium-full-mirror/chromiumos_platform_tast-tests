@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -63,6 +64,27 @@ func getTime(ctx context.Context, s *testing.State, cont *vm.Container) (time.Ti
 
 func SyncTime(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// In Baguette (containerless Crostini), systemd-timesyncd runs in the guest
+	// with CAP_SYS_TIME and watches CLOCK_REALTIME with TFD_TIMER_CANCEL_ON_SET.
+	// When maitred_client jumps the clock back 15 minutes via settimeofday(),
+	// systemd-timesyncd immediately triggers an NTP resync and steps the clock
+	// back to the current time before the test can verify the past time or test
+	// Concierge.SyncTimes. Temporarily stop it during the test.
+	if strings.Contains(s.TestName(), "baguette") {
+		if err := cont.Command(ctx, "sudo", "systemctl", "stop", "systemd-timesyncd").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to stop systemd-timesyncd: ", err)
+		}
+		defer func() {
+			if err := cont.Command(cleanupCtx, "sudo", "systemctl", "start", "systemd-timesyncd").Run(testexec.DumpLogOnError); err != nil {
+				s.Fatal("Failed to start systemd-timesyncd: ", err)
+			}
+		}()
+	}
 
 	// Set the time back 15 minutes, don't make a huge clock change as that can
 	// cause other odd behaviors with timers.
