@@ -7,11 +7,9 @@ package fixture
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"golang.org/x/exp/slices"
-
-	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -35,8 +33,8 @@ func (pf UIStopped) Instance() string {
 		Impl:            uiStoppedFixture{},
 		BugComponent:    "b:776546",
 		Parent:          pf.Parent,
-		SetUpTimeout:    20 * time.Second,
-		TearDownTimeout: 20 * time.Second,
+		SetUpTimeout:    upstart.UIRestartTimeout,
+		TearDownTimeout: upstart.UIRestartTimeout,
 	})
 }
 
