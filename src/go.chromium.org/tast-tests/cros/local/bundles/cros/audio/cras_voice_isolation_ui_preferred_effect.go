@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -24,6 +25,8 @@ func init() {
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational"},
 		VariantCategory: `{"name": "Audio_Model"}`,
+		SoftwareDeps:    []string{"chrome", "no_qemu"},
+		HardwareDeps:    hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Params: []testing.Param{
 			{
 				Name: "noise_cancellation",
