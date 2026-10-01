@@ -51,7 +51,7 @@ type decodedFrameInfo struct {
 	Layouts []planeLayout `json:"layouts"`
 }
 
-// computeMD5 returns the md5sum of a visible rectangle of the YUV frame. The
+// computeMD5 returns the md5sum of a visible rectangle of the I420 frame. The
 // visible rectangle of the frame must be (0, 0, vw, vh).
 func computeMD5(frameInfo decodedFrameInfo, vw, vh int) (string, error) {
 	if frameInfo.Format != "I420" {
@@ -75,11 +75,11 @@ func computeMD5(frameInfo decodedFrameInfo, vw, vh int) (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-// isRGBFormat returns true if and only if the format is one of RGB formats defined in VideoPixelFormat.
-// https://www.w3.org/TR/webcodecs/#pixel-format
-func isRGBFormat(format string) bool {
+// isGpuReadbackFormat returns true if and only if the format is one of a buffer that is likely readbacked from the GPU.
+// Such a buffer cannot be validated by golden md5 because the GPU readback content has hardware dependency.
+func isGpuReadbackFormat(format string) bool {
 	switch format {
-	case "RGBA", "RGBX", "BGRA", "BGRX":
+	case "NV12", "RGBA", "RGBX", "BGRA", "BGRX":
 		return true
 	default:
 		return false
@@ -198,8 +198,8 @@ func RunDecodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 			return outputJSLogAndError(cleanupCtx, conn, errors.Wrap(err, "failed getting frame"))
 		}
 
-		if isRGBFormat(frameInfo.Format) {
-			testing.ContextLogf(ctx, "skip md5 validation skip because decoded frames are RGB format and thus decoded content is device dependent: %s", frameInfo.Format)
+		if isGpuReadbackFormat(frameInfo.Format) {
+			testing.ContextLogf(ctx, "skip md5 validation skip because decoded frames are %s format and thus decoded content is device dependent", frameInfo.Format)
 			return nil
 		}
 		md5, err := computeMD5(frameInfo, width, height)
