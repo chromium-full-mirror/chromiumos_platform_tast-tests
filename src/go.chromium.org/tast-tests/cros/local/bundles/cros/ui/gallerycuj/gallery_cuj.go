@@ -41,6 +41,10 @@ const (
 	audioFile1 = "gallery_five_minute_audio.mp3"
 	audioFile2 = "gallery_audio.mp3"
 	audioFile3 = "gallery_audio.wav"
+	// minDisplayWidthForFilesAppSnap is the minimum width for the display to snap Files app window.
+	// For more details, see:
+	// https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ash/system_web_apps/apps/file_manager_web_app_info.cc
+	minDisplayWidthForFilesAppSnap = 1200
 )
 
 // GalleryFiles are the data files required by GalleryCUJ.
@@ -124,6 +128,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	info, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the primary display info")
+	}
+	if info.Bounds.Width < minDisplayWidthForFilesAppSnap {
+		revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to minimize primary display zoom factor")
+		}
+		defer revertZoom(cleanupCtx, tconn)
 	}
 
 	kb, err := input.Keyboard(ctx)
