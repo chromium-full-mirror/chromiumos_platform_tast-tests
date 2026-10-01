@@ -29,8 +29,6 @@ import (
 const (
 	// DefaultArcVMName is the default VM name for ARCVM.
 	DefaultArcVMName = "arcvm"
-	// DefaultBorealisVMName is the default VM name for the Borealis VM.
-	DefaultBorealisVMName = "borealis"
 	// DefaultVMName is the default crostini VM name.
 	DefaultVMName = "termina"
 	// DefaultBruschettaVMName is the default bruschetta VM name.
@@ -54,9 +52,6 @@ const (
 
 	// ARC represents an ARC VM.
 	ARC
-
-	// Borealis represents a Borealis VM.
-	Borealis
 
 	// Bruschetta represents a Bruschetta reference VM.
 	Bruschetta
@@ -99,8 +94,6 @@ func NewSystemRecognizedVM(c *Concierge, enableGPU bool, diskSize uint64, vmType
 		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultVMName), nil
 	case ARC:
 		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultArcVMName), nil
-	case Borealis:
-		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultBorealisVMName), nil
 	case Bruschetta:
 		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultBruschettaVMName), nil
 	default:
