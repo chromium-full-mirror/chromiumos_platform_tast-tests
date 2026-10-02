@@ -279,8 +279,7 @@ func GetOrientation(ctx context.Context, tconn *chrome.TestConn) (*Orientation, 
 
 	info, err := GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get the primary display info: ", err)
-		return result, nil
+		return result, errors.Wrap(err, "failed to get primary display info")
 	}
 
 	result.Type = OrientationLandscapePrimary
@@ -309,16 +308,13 @@ func GetOrientation(ctx context.Context, tconn *chrome.TestConn) (*Orientation, 
 	if nativeWidth <= 0 || nativeHeight <= 0 || nativeWidth == nativeHeight {
 		return result, nil
 	}
-	if info.Bounds.Width == nativeHeight && info.Bounds.Height == nativeWidth {
-		// Screens with a natural portrait orientation
-		if result.Type == OrientationLandscapePrimary {
-			result.Angle = 90
-		}
-	} else if info.Bounds.Width == nativeWidth && info.Bounds.Height == nativeHeight {
-		// Screens with a natural landscape orientation
-		if result.Type == OrientationPortraitPrimary {
-			result.Angle = 90
-		}
+
+	// Determine the angle by comparing the current and native orientations.
+	nativeIsPortrait := nativeWidth < nativeHeight
+	currentIsPortrait := info.Bounds.Width < info.Bounds.Height
+
+	if nativeIsPortrait != currentIsPortrait {
+		result.Angle = 90
 	}
 
 	return result, nil
