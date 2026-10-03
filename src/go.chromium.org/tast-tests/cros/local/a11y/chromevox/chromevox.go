@@ -67,25 +67,38 @@ func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
 		}
 	}()
 
-	// Poll until ChromeVox connection finishes loading.
-	if err := extConn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
-		return nil, errors.Wrap(err, "timed out waiting for ChromeVox connection to be ready")
+	// Poll until TestImportManager and required ChromeVox exports are registered on globalThis.
+	if err := extConn.WaitForExpr(ctx, `Boolean(
+		globalThis.TestImportManager &&
+		globalThis.TestImportManager.getImports().TtsBackground &&
+		globalThis.TestImportManager.getImports().ChromeVoxRange &&
+		globalThis.TestImportManager.getImports().ChromeVoxState
+	)`); err != nil {
+		return nil, errors.Wrap(err, "timed out waiting for ChromeVox TestImportManager exports")
 	}
 
 	// Make sure required modules exist and are accessible.
-	if err := extConn.Eval(ctx, `(async () => {
-		if (!window.TtsBackground) {
-		  window.TtsBackground = TestImportManager.getImports().TtsBackground;
+	if err := extConn.Eval(ctx, `(() => {
+		const imports = TestImportManager.getImports();
+		if (!globalThis.TtsBackground) {
+		  globalThis.TtsBackground = imports.TtsBackground;
 		}
-		if (!window.ChromeVoxRange) {
-		  window.ChromeVoxRange = TestImportManager.getImports().ChromeVoxRange;
+		if (!globalThis.ChromeVoxRange) {
+		  globalThis.ChromeVoxRange = imports.ChromeVoxRange;
+		}
+		if (!globalThis.ChromeVoxState) {
+		  globalThis.ChromeVoxState = imports.ChromeVoxState;
 		}
 	  })()`, nil); err != nil {
 		return nil, errors.Wrap(err, "failed to export modules from ChromeVox")
 	}
 
-	if err := extConn.WaitForExpr(ctx, "ChromeVoxRange.instance"); err != nil {
-		return nil, errors.Wrap(err, "ChromeVoxRange is unavailable")
+	if err := extConn.WaitForExpr(ctx, "Boolean(ChromeVoxRange.instance) && Boolean(TtsBackground.instance)"); err != nil {
+		return nil, errors.Wrap(err, "ChromeVoxRange or TtsBackground is unavailable")
+	}
+
+	if err := extConn.Eval(ctx, "ChromeVoxState.ready()", nil); err != nil {
+		return nil, errors.Wrap(err, "failed waiting for ChromeVoxState.ready()")
 	}
 
 	if err := chrome.AddTastLibrary(ctx, extConn); err != nil {
@@ -130,7 +143,10 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.Engi
 	}()
 
 	inputs := a11y.TTSFeatureInputs{CTX: ctx, CR: cr, ED: ed, URL: a11y.URLFromHTML(html), Feature: a11y.SpokenFeedback}
-	sud, _ := setUpHelper(inputs, vd)
+	sud, err := setUpHelper(inputs, vd)
+	if err != nil {
+		return sud, err
+	}
 
 	// Wait for ChromeVox to focus the root web area.
 	rootWebArea := nodewith.Role(role.RootWebArea).First()
