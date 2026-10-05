@@ -53,6 +53,7 @@ func init() {
 			"firmware.EcStress.keyscan",
 			"firmware.EcStress.flash",
 			"firmware.EcStress.pd",
+			"firmware.EcStress.console",
 			"firmware.EcStress.period",
 		},
 		Timeout: time.Hour,
@@ -60,6 +61,18 @@ func init() {
 			{
 				Name: "bare",
 				Val: ecStressParams{
+					console: false,
+					flash:   false,
+					keyscan: false,
+					pd:      false,
+					sensors: false,
+					suspend: false,
+				},
+			},
+			{
+				Name: "console",
+				Val: ecStressParams{
+					console: true,
 					flash:   false,
 					keyscan: false,
 					pd:      false,
@@ -70,6 +83,7 @@ func init() {
 			{
 				Name: "flash",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      false,
@@ -80,6 +94,7 @@ func init() {
 			{
 				Name: "keyscan",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      false,
@@ -91,6 +106,7 @@ func init() {
 			{
 				Name: "pd",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      true,
@@ -101,6 +117,7 @@ func init() {
 			{
 				Name: "sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      false,
@@ -112,6 +129,7 @@ func init() {
 			{
 				Name: "suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      false,
@@ -123,6 +141,7 @@ func init() {
 			{
 				Name: "flash_keyscan",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      false,
@@ -134,6 +153,7 @@ func init() {
 			{
 				Name: "flash_pd",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      true,
@@ -144,6 +164,7 @@ func init() {
 			{
 				Name: "flash_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      false,
@@ -155,6 +176,7 @@ func init() {
 			{
 				Name: "flash_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      false,
@@ -166,6 +188,7 @@ func init() {
 			{
 				Name: "keyscan_pd",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      true,
@@ -177,6 +200,7 @@ func init() {
 			{
 				Name: "keyscan_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      false,
@@ -188,6 +212,7 @@ func init() {
 			{
 				Name: "keyscan_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      false,
@@ -199,6 +224,7 @@ func init() {
 			{
 				Name: "pd_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      true,
@@ -210,6 +236,7 @@ func init() {
 			{
 				Name: "pd_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      true,
@@ -221,6 +248,7 @@ func init() {
 			{
 				Name: "sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      false,
@@ -232,6 +260,7 @@ func init() {
 			{
 				Name: "flash_keyscan_pd",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      true,
@@ -243,6 +272,7 @@ func init() {
 			{
 				Name: "flash_keyscan_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      false,
@@ -254,6 +284,7 @@ func init() {
 			{
 				Name: "flash_keyscan_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      false,
@@ -265,6 +296,7 @@ func init() {
 			{
 				Name: "flash_pd_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      true,
@@ -276,6 +308,7 @@ func init() {
 			{
 				Name: "flash_pd_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      true,
@@ -287,6 +320,7 @@ func init() {
 			{
 				Name: "flash_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      false,
@@ -298,6 +332,7 @@ func init() {
 			{
 				Name: "keyscan_pd_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      true,
@@ -309,6 +344,7 @@ func init() {
 			{
 				Name: "keyscan_pd_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      true,
@@ -320,6 +356,7 @@ func init() {
 			{
 				Name: "keyscan_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      false,
@@ -331,6 +368,7 @@ func init() {
 			{
 				Name: "pd_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: false,
 					pd:      true,
@@ -342,6 +380,7 @@ func init() {
 			{
 				Name: "flash_keyscan_pd_sensors",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      true,
@@ -354,6 +393,7 @@ func init() {
 			{
 				Name: "flash_keyscan_pd_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      true,
@@ -366,6 +406,7 @@ func init() {
 			{
 				Name: "flash_keyscan_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      false,
@@ -378,6 +419,7 @@ func init() {
 			{
 				Name: "flash_pd_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: false,
 					pd:      true,
@@ -390,6 +432,7 @@ func init() {
 			{
 				Name: "keyscan_pd_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   false,
 					keyscan: true,
 					pd:      true,
@@ -402,6 +445,7 @@ func init() {
 			{
 				Name: "flash_keyscan_pd_sensors_suspend",
 				Val: ecStressParams{
+					console: false,
 					flash:   true,
 					keyscan: true,
 					pd:      true,
@@ -414,6 +458,7 @@ func init() {
 			{
 				Name: "all",
 				Val: ecStressParams{
+					console: true,
 					flash:   true,
 					keyscan: true,
 					pd:      true,
@@ -432,6 +477,7 @@ type ecStressParams struct {
 	keyscan bool
 	flash   bool
 	pd      bool
+	console bool
 }
 
 type cancelfunc func() error
@@ -1100,7 +1146,9 @@ func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Dur
 		func(pdCtx context.Context) error {
 			const repeatCount = 20
 			const sleepPeriod = 0.05
-			if err := h.ServoProxy.RunCommandQuiet(pdCtx, true, "dut-control", "servo_uart_cmd:fakedisconnect 0 0", fmt.Sprintf("sleep:%v", sleepPeriod), fmt.Sprintf("--repeat=%v", repeatCount), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort())); err != nil {
+			// Use parent ctx so an in-flight dut-control batch completes cleanly
+			// before startTask exits on pdCtx cancellation.
+			if err := h.ServoProxy.RunCommandQuiet(ctx, true, "dut-control", "servo_uart_cmd:fakedisconnect 0 0", fmt.Sprintf("sleep:%v", sleepPeriod), fmt.Sprintf("--repeat=%v", repeatCount), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort())); err != nil {
 				return err
 			}
 			disconnectCount += repeatCount
@@ -1115,6 +1163,31 @@ func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Dur
 					testing.ContextLog(ctx, "Failed to restore DRP on Servo")
 				}
 			}
+			return nil
+		},
+	), nil
+}
+
+func startConsoleStressTask(ctx context.Context, h *firmware.Helper, timeout time.Duration) (cancelfunc, error) {
+	testing.ContextLog(ctx, "Starting Console Stress Task")
+	if err := h.Servo.SetString(ctx, "ec_uart_regexp", "None"); err != nil {
+		return nil, errors.Wrap(err, "failed to clear EC UART Regexp")
+	}
+	var cmdCount = 0
+	return startTask(ctx, timeout,
+		func(consoleCtx context.Context) error {
+			const repeatCount = 10
+			// Use parent ctx so an in-flight dut-control batch completes cleanly
+			// before startTask exits on consoleCtx cancellation.
+			if err := h.ServoProxy.RunCommandQuiet(ctx, true, "dut-control", "ec_uart_cmd:version", "sleep:0.2", "ec_uart_cmd:powerinfo", "sleep:0.2", fmt.Sprintf("--repeat=%v", repeatCount), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort())); err != nil {
+				return err
+			}
+			cmdCount += 2 * repeatCount
+			testing.ContextLogf(ctx, "Console Stress Commands #%v", cmdCount)
+			return nil
+		},
+		func(consoleCtx context.Context) error {
+			testing.ContextLogf(ctx, "Console Stress Task Done; %v Commands", cmdCount)
 			return nil
 		},
 	), nil
@@ -1136,6 +1209,9 @@ func getParams(s *testing.State) ecStressParams {
 	}
 	if val := getBoolVar(s, "firmware.EcStress.pd"); val != nil {
 		params.pd = *val
+	}
+	if val := getBoolVar(s, "firmware.EcStress.console"); val != nil {
+		params.console = *val
 	}
 	return params
 }
@@ -1209,6 +1285,7 @@ func dumpParams(ctx context.Context, params ecStressParams, period time.Duration
 	testing.ContextLogf(ctx, "Stress PD:\t\t%v", params.pd)
 	testing.ContextLogf(ctx, "Stress Sensors:\t%v", params.sensors)
 	testing.ContextLogf(ctx, "Stress Suspend:\t%v", params.suspend)
+	testing.ContextLogf(ctx, "Stress Console:\t%v", params.console)
 	testing.ContextLogf(ctx, "Stress Period:\t%v", period)
 }
 
@@ -1324,6 +1401,15 @@ func EcStress(ctx context.Context, s *testing.State) {
 		defer pdStressTaskCancel()
 	}
 
+	var consoleStressTaskCancel cancelfunc
+	if params.console {
+		consoleStressTaskCancel, err = startConsoleStressTask(ctx, h, stressPeriod+timeoutPadding)
+		if err != nil {
+			s.Fatal("Failed to start console stress task: ", err)
+		}
+		defer consoleStressTaskCancel()
+	}
+
 	s.Logf("Waiting %v seconds while EC is being stressed", stressPeriod.Seconds())
 	// GoBigSleepLint: Wait while EC is being stressed
 	if err := testing.Sleep(ctx, stressPeriod); err != nil {
@@ -1331,6 +1417,12 @@ func EcStress(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Stress period over, cleaning up")
+
+	if params.console {
+		if err := consoleStressTaskCancel(); err != nil {
+			s.Error("console stress task failure: ", err)
+		}
+	}
 
 	if params.pd {
 		if err := pdStressTaskCancel(); err != nil {
