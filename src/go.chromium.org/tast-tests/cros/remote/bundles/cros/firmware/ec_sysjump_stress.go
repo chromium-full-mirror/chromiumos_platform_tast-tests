@@ -31,7 +31,8 @@ const (
 )
 
 type ecSysjumpStressParams struct {
-	iterations int
+	iterations  int
+	consecutive bool
 }
 
 func init() {
@@ -53,7 +54,15 @@ func init() {
 			{
 				Name: "stress",
 				Val: ecSysjumpStressParams{
-					iterations: 10,
+					iterations:  10,
+					consecutive: false,
+				},
+			},
+			{
+				Name: "consecutive",
+				Val: ecSysjumpStressParams{
+					iterations:  100,
+					consecutive: true,
 				},
 			},
 		},
@@ -63,17 +72,8 @@ func init() {
 // ecSysjumpStress performs a sysjump e.g. RW->RO and verifies the post-jump
 // state. Performs the second jump back e.g. RO->RW and verifies the post-jump
 // state as part of one iteration.
-func ecSysjumpStress(ctx context.Context, h *firmware.Helper, iteration int) error {
-	origCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy)
-	if err != nil {
-		return errors.Wrap(err, "failed to get initial EC active copy")
-	}
-	firstSysjumpDest := "RO"
-	secondSysjumpDest := "RW"
-	if strings.HasPrefix(origCopy, "RO") {
-		firstSysjumpDest = "RW"
-		secondSysjumpDest = "RO"
-	}
+func ecSysjumpStress(ctx context.Context, h *firmware.Helper, firstSysjumpDest string, iteration int) error {
+	secondSysjumpDest := getSysjumpDest(firstSysjumpDest)
 
 	// First jump.
 	if err := sysjumpAndVerify(ctx, h, firstSysjumpDest, iteration); err != nil {
@@ -85,6 +85,23 @@ func ecSysjumpStress(ctx context.Context, h *firmware.Helper, iteration int) err
 		return errors.Wrapf(err, "second jump to %s failed", secondSysjumpDest)
 	}
 
+	return nil
+}
+
+// ecSysjumpStressConsecutive performs a sysjump and only the minimal active
+// copy verification after each jump. This helper should be ran in a loop that
+// performs a large sequence of sysjumps to maximize cycle throughput. This
+// should be followed by the full post-jump state verification at the conclusion
+// of all the jumps.
+func ecSysjumpStressConsecutive(ctx context.Context, h *firmware.Helper, sysjumpDest string, iteration int) error {
+	if err := executeSysjump(ctx, h, sysjumpDest, iteration); err != nil {
+		return errors.Wrapf(err, "jump to %s failed", sysjumpDest)
+	}
+	// Ensure we actually performed a sysjump by verifying that the active copy
+	// jumped to sysjumpDest.
+	if err := h.Servo.CheckECActiveCopyMatch(ctx, sysjumpDest); err != nil {
+		return errors.Wrapf(err, "consecutive sysjump failed on jump %d while jumping to %s", iteration, sysjumpDest)
+	}
 	return nil
 }
 
@@ -124,13 +141,8 @@ func executeSysjump(ctx context.Context, h *firmware.Helper, sysjumpDest string,
 		return errors.Wrapf(err, "failed to run EC command sysjump %s", sysjumpDest)
 	}
 
-	// GoBigSleepLint: Short settle delay to ensure EC triggers reset before polling connectivity.
+	// GoBigSleepLint: Wait for the EC to complete the sysjump and re-initialize its console.
 	testing.Sleep(ctx, 3*time.Second)
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT after sysjump")
-	}
 	return nil
 }
 
@@ -175,6 +187,12 @@ func verifyECResponsive(ctx context.Context, h *firmware.Helper) error {
 // recent EC crashes. This can be called after a sysjump instead of waiting
 // until the end to check for crashes.
 func verifyNoECCrashes(ctx context.Context, h *firmware.Helper) error {
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after sysjump")
+	}
+
 	crashes, err := h.GetNewECCrashes(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to query EC crash cache")
@@ -219,9 +237,14 @@ func verifyBatteryChargerAttached(ctx context.Context, h *firmware.Helper, isCha
 // machine is still functioning. Gracefully handles boards that do not have
 // USB-C PD ports.
 func verifyPDStateFunctioning(ctx context.Context, h *firmware.Helper) error {
-	pdState, err := h.Servo.GetDUTPDState(ctx)
+	var pdState *servo.PDState
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		pdState, err = h.Servo.GetDUTPDState(ctx)
+		return err
+	}, &testing.PollOptions{Timeout: 45 * time.Second, Interval: 2 * time.Second})
 	if err != nil {
-		if strings.Contains(err.Error(), "Port 0 does not exist") {
+		if strings.Contains(err.Error(), "no active PD ports found") {
 			// Handle boards without USB-C PD ports.
 			testing.ContextLogf(ctx, "Skipping PD state check (no active PD port on this board): %v", err)
 			return nil
@@ -239,6 +262,16 @@ func verifyS0PowerState(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to maintain or return to S0 power state after sysjump")
 	}
 	return nil
+}
+
+// getSysjumpDest takes the current active copy, either "RO" or "RW", and
+// outputs the opposite one, "RW" or "RO", representing the location to sysjump
+// to next.
+func getSysjumpDest(activeCopy string) string {
+	if strings.HasPrefix(activeCopy, "RW") {
+		return "RO"
+	}
+	return "RW"
 }
 
 // recoverDUT resets the DUT power state via Servo and waits for the DUT to
@@ -297,6 +330,17 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 		s.Fatalf("Requires positive amount of iterations, got %d", numIters)
 	}
 
+	// Get device state during test setup.
+	isChargerAttachedBefore, err := h.Servo.GetChargerAttached(ctx)
+	if err != nil {
+		s.Errorf("Failed to get if battery charger is attached before running test: %v", err)
+	}
+	activeCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy)
+	if err != nil {
+		s.Fatalf("Failed to get initial EC active copy: %v", err)
+	}
+	sysjumpDest := getSysjumpDest(activeCopy)
+
 	failures := make([][]error, numIters)
 	numFails := 0
 	startTime := time.Now()
@@ -309,8 +353,19 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 		}
 		h.Servo.Echo(ctx, fmt.Sprintf("%s iteration %d out of %d", s.TestName(), i+1, numIters))
 
-		// Perform a sysjump, verify state, then perform a sysjump back and verify state again.
-		iterErr := ecSysjumpStress(ctx, h, i+1)
+		// Run selected test.
+		var iterErr error
+		if params.consecutive {
+			// Make rapid consecutive sysjumps.
+			iterErr = ecSysjumpStressConsecutive(ctx, h, sysjumpDest, i+1)
+			if i+1 < numIters {
+				// Don't increase sysjumpDest on the last iteration, keep it the same for final state verification.
+				sysjumpDest = getSysjumpDest(sysjumpDest)
+			}
+		} else {
+			// Perform a sysjump, verify state, then perform a sysjump back and verify state again.
+			iterErr = ecSysjumpStress(ctx, h, sysjumpDest, i+1)
+		}
 
 		// Handle iteration failure and DUT recovery.
 		if iterErr != nil {
@@ -322,6 +377,20 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 				// If the DUT cannot be recovered, abort the rest of the test.
 				s.Fatalf("DUT unrecoverable after iteration %d: %v", i+1, err)
 			}
+			// After recovery and reboot, ensure accurate sysjumpDest since active copy could have changed.
+			activeCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy)
+			if err != nil {
+				s.Fatalf("Failed to get EC active copy after DUT recovery: %v", err)
+			}
+			sysjumpDest = getSysjumpDest(activeCopy)
+		}
+	}
+
+	if params.consecutive {
+		// Perform final full state verification for the consecutive sysjump test.
+		s.Logf("Completed %d consecutive sysjumps. Verifying full post-jump state.", numIters)
+		if err := verifyPostJumpState(ctx, h, sysjumpDest, isChargerAttachedBefore, numIters); err != nil {
+			s.Errorf("Final state verification failed after jump to %s: %v", sysjumpDest, err)
 		}
 	}
 
@@ -337,7 +406,7 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 			}
 		}
 		s.Fatalf("%s test had %d errors, see logs for details", s.TestName(), numFails)
-	} else {
+	} else if !s.HasError() {
 		s.Log("No failures encountered")
 	}
 }
