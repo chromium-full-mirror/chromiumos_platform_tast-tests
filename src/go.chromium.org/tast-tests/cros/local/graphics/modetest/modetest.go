@@ -55,17 +55,18 @@ type Encoder struct {
 
 // Connector attributes parsed from modetest.
 type Connector struct {
-	ConnectorID uint32
-	EncoderID   uint32
-	Connected   bool
-	Name        string
-	Width       uint32
-	Height      uint32
-	CountModes  int
-	Encoders    []uint32
-	Modes       []*Mode
-	VrrCapable  bool
-	Edid        *Edid
+	ConnectorID      uint32
+	EncoderID        uint32
+	Connected        bool
+	Name             string
+	Width            uint32
+	Height           uint32
+	CountModes       int
+	Encoders         []uint32
+	Modes            []*Mode
+	VrrCapable       bool
+	Edid             *Edid
+	PanelOrientation int
 }
 
 // Crtc attributes parsed from modetest.
@@ -286,11 +287,13 @@ func Connectors(ctx context.Context) ([]*Connector, error) {
 		}
 		vrrCapable := false
 		var edid Edid
+		var panelOrientation int
 		if propMatches := propRegexp.FindAllStringSubmatch(propsMatch, -1); propMatches != nil {
 			for _, propMatch := range propMatches {
 				propName := propMatch[propRegexp.SubexpIndex("name")]
 				blobValue := propMatch[propRegexp.SubexpIndex("blobValue")]
 				valueValue := propMatch[propRegexp.SubexpIndex("valueValue")]
+				enumValue := propMatch[propRegexp.SubexpIndex("enumValue")]
 				if propName == "vrr_capable" {
 					vrrCapable = valueValue == "1"
 					continue
@@ -303,20 +306,44 @@ func Connectors(ctx context.Context) ([]*Connector, error) {
 					edid = ParseEdid(edidBytes)
 					continue
 				}
+				if propName == "panel orientation" {
+					const uint64Max string = "18446744073709551615"
+
+					// Value enums: Normal=0 Upside Down=1 Left Side Up=2 Right Side Up=3
+					// Refer to https://docs.kernel.org/gpu/drm-kms.html#c.drm_panel_orientation
+					switch enumValue {
+					case "0", uint64Max: // Normal, Unknown
+						// UINT64_MAX indicates an unknown orientation value due to unsigned conversion of -1.
+						// Assume that panels with unknown orientation have normal orientation.
+						// Refer to https://chromium.googlesource.com/chromium/src/+/main/ui/ozone/platform/drm/common/drm_util.cc#293
+						// e.g. jacuzzi/pico
+						panelOrientation = 0
+					case "1": // Upside Down
+						panelOrientation = 180
+					case "2": // Left Side Up, e.g. kukui, starmie
+						panelOrientation = 90
+					case "3": // Right Side Up, e.g. wugtrio, bugzzy, meliks
+						panelOrientation = 270
+					default:
+						return nil, errors.Errorf("unknown panel orientation: %s", enumValue)
+					}
+					continue
+				}
 			}
 		}
 		connectors = append(connectors, &Connector{
-			ConnectorID: uint32(connectorID),
-			EncoderID:   uint32(encoderID),
-			Connected:   connected,
-			Name:        name,
-			Width:       uint32(width),
-			Height:      uint32(height),
-			CountModes:  countModes,
-			Encoders:    encoders,
-			Modes:       modes,
-			VrrCapable:  vrrCapable,
-			Edid:        &edid,
+			ConnectorID:      uint32(connectorID),
+			EncoderID:        uint32(encoderID),
+			Connected:        connected,
+			Name:             name,
+			Width:            uint32(width),
+			Height:           uint32(height),
+			CountModes:       countModes,
+			Encoders:         encoders,
+			Modes:            modes,
+			VrrCapable:       vrrCapable,
+			Edid:             &edid,
+			PanelOrientation: panelOrientation,
 		})
 	}
 	return connectors, nil

@@ -12,10 +12,12 @@ import (
 	"context"
 	"math"
 	"os"
+	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/graphics/modetest"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -272,52 +274,88 @@ type Orientation struct {
 	Type OrientationType `json:"type"`
 }
 
-// GetOrientation returns the Orientation of the display.
+// GetOrientation returns the Orientation of the primary display.
 func GetOrientation(ctx context.Context, tconn *chrome.TestConn) (*Orientation, error) {
-	result := &Orientation{}
-	testing.ContextLog(ctx, "Warning: GetOrientation using window bounds for orientation detection in Extension Manifest V3")
-
 	info, err := GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		return result, errors.Wrap(err, "failed to get primary display info")
+		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	result.Type = OrientationLandscapePrimary
+	orientationType := OrientationLandscapePrimary
 	if info.Bounds.Width < info.Bounds.Height {
-		result.Type = OrientationPortraitPrimary
+		orientationType = OrientationPortraitPrimary
 	}
 
-	var nativeWidth, nativeHeight int
-	// Iterate through the available display modes to find the native mode.
-	for _, mode := range info.Modes {
-		if mode.IsNative {
-			nativeWidth = mode.Width
-			nativeHeight = mode.Height
-			break
+	// Some models do not provide a panel orientation value.
+	// Affected models include zork/dirinboz, cherry/tomato,
+	// guybrush/dewatt, jacuzzi/pico, and corsola/steelix, among others.
+	// ChromeOS treats a missing panel orientation as the default 0-degree
+	// orientation, consistent with GetPanelOrientation() in screen-capture-utils.
+	// Refer to https://chromium.googlesource.com/chromiumos/platform2/+/main/screen-capture-utils/crtc.cc#188
+	physicalRotation := 0
+
+	if connectors, err := modetest.Connectors(ctx); err != nil {
+		testing.ContextLog(ctx, `Failed to run "modetest"; defaulting to 0 degrees for the panel orientation: `, err)
+	} else {
+		// These three connection types represent internal display connections.
+		// Refer to https://source.chromium.org/chromium/chromium/src/+/main:ui/ozone/platform/drm/common/drm_util.cc;l=135-138
+		reg := regexp.MustCompile(`eDP|LVDS|DSI`)
+		for _, connector := range connectors {
+			// Check whether the display is internal and connected.
+			if reg.MatchString(connector.Name) && connector.Connected {
+				physicalRotation = connector.PanelOrientation
+				break
+			}
 		}
 	}
 
-	// If no native mode is found, use the first available mode.
-	if nativeWidth == 0 && len(info.Modes) > 0 {
-		nativeWidth = info.Modes[0].Width
-		nativeHeight = info.Modes[0].Height
+	// Check whether the ChromeOS display is rotated.
+	logicalRotation, err := activeDisplayRotation(ctx, tconn, info)
+	if err != nil {
+		return nil, err
 	}
 
-	// Angle based on the comparison of current bounds with native dimensions.
-	// See https://w3c.github.io/screen-orientation/#dfn-screen-orientation-values-lists
-	if nativeWidth <= 0 || nativeHeight <= 0 || nativeWidth == nativeHeight {
-		return result, nil
+	// Calculate the net rotation required by the compositor.
+	// physicalRotation is the panel's hardware orientation, while logicalRotation
+	// is the screen rotation requested by the OS.
+	// Add 360 before modulo to ensure a non-negative result.
+	angle := (physicalRotation - logicalRotation + 360) % 360
+
+	return &Orientation{
+		Angle: angle,
+		Type:  orientationType,
+	}, nil
+}
+
+// activeDisplayRotation returns the current active rotation angle (0, 90, 180, or 270)
+// for the specified display.
+//
+// If info.Rotation has a valid explicit angle (0, 90, 180, 270), it is returned immediately.
+// Otherwise, when auto-rotate mode is enabled, info.Rotation may be set to -1.
+// In this case, the function polls the display's current state by checking against each
+// possible rotation angle using WaitForDisplayRotation.
+func activeDisplayRotation(ctx context.Context, tconn *chrome.TestConn, info *Info) (int, error) {
+	// Since the value can only be `0`, `90`, `180`, `270`, or `-1`, we only need to
+	// check whether it is `-1` here.
+	// Refer to https://source.chromium.org/chromium/chromium/src/+/main:ash/display/cros_display_config.h;l=61
+	if info.Rotation != -1 {
+		return info.Rotation, nil
+	}
+	for _, candidate := range []struct {
+		rotation RotationAngle
+		degrees  int
+	}{
+		{Rotate0, 0},
+		{Rotate90, 90},
+		{Rotate180, 180},
+		{Rotate270, 270},
+	} {
+		if err := WaitForDisplayRotation(ctx, tconn, info.ID, candidate.rotation); err == nil {
+			return candidate.degrees, nil
+		}
 	}
 
-	// Determine the angle by comparing the current and native orientations.
-	nativeIsPortrait := nativeWidth < nativeHeight
-	currentIsPortrait := info.Bounds.Width < info.Bounds.Height
-
-	if nativeIsPortrait != currentIsPortrait {
-		result.Angle = 90
-	}
-
-	return result, nil
+	return 0, errors.Errorf("failed to determine active rotation for display %s", info.ID)
 }
 
 // IsFakeDisplayID checks if a display is fake or not by its id.
