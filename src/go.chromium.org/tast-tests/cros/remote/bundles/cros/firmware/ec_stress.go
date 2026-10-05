@@ -1098,14 +1098,15 @@ func startPdStressTask(ctx context.Context, h *firmware.Helper, timeout time.Dur
 	var disconnectCount = 0
 	return startTask(ctx, timeout,
 		func(pdCtx context.Context) error {
-			const repeatCount = 100
+			const repeatCount = 20
 			const sleepPeriod = 0.05
 			if err := h.ServoProxy.RunCommandQuiet(pdCtx, true, "dut-control", "servo_uart_cmd:fakedisconnect 0 0", fmt.Sprintf("sleep:%v", sleepPeriod), fmt.Sprintf("--repeat=%v", repeatCount), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort())); err != nil {
 				return err
 			}
 			disconnectCount += repeatCount
 			testing.ContextLogf(ctx, "PD Disconnect #%v", disconnectCount)
-			return nil
+			// GoBigSleepLint: Allow PD port to complete attach negotiation and trigger HOOK_AC_CHANGE / charger I2C bursts
+			return testing.Sleep(pdCtx, 2*time.Second)
 		},
 		func(pdCtx context.Context) error {
 			testing.ContextLogf(ctx, "PD Stress Task Done; %v Disconnects", disconnectCount)
@@ -1311,13 +1312,13 @@ func EcStress(ctx context.Context, s *testing.State) {
 		if err := testing.Sleep(ctx, time.Second*1); err != nil {
 			s.Fatal("Failed to sleep during stress period: ", err)
 		}
+		// PD stress causes SSH to disconnect, close cleanly before starting
+		disconnectDut(ctx, h)
 		pdStressTaskCancel, err = startPdStressTask(ctx, h, stressPeriod+timeoutPadding)
 		if err != nil {
 			s.Fatal("Failed to start PD stress task: ", err)
 		}
 		defer pdStressTaskCancel()
-		// PD stress causes SSH to disconnect
-		disconnectDut(ctx, h)
 	}
 
 	s.Logf("Waiting %v seconds while EC is being stressed", stressPeriod.Seconds())
