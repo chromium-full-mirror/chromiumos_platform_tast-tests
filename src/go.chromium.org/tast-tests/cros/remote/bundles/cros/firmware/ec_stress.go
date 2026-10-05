@@ -1291,7 +1291,10 @@ func EcStress(ctx context.Context, s *testing.State) {
 				defer enableKeyboardWakeup(ctx, h)
 			}
 		}
-		suspendStressTaskCancel, err = startSuspendStressTask(ctx, h, stressPeriod+timeoutPadding, time.Second*7, time.Second*7)
+		// 12s wake / 4s suspend (75% S0 duty cycle) allows AP-driven stress
+		// tasks (e.g. flash and sensors) enough run time while still
+		// exercising suspend and resume transitions.
+		suspendStressTaskCancel, err = startSuspendStressTask(ctx, h, stressPeriod+timeoutPadding, time.Second*12, time.Second*4)
 		if err != nil {
 			s.Fatal("Failed to start suspend stress task: ", err)
 		}
