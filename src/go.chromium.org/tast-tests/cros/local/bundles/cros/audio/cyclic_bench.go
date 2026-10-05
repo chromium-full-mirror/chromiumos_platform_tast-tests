@@ -104,6 +104,8 @@ var cyclicBenchUnstableModels = []string{
 	"chinchou", "chinchou360", "keldeo", "kyogre", "ponyta", "ponyta360", "rusty", "skitty", "squirtle", "steelix", "tentacruel", "veluza", "voltorb",
 	// staryu(b/423801869)
 	"starmie", "wugtrio", "wyrdeer",
+	// cherry(b/564386282)
+	"dojo", "tomato",
 }
 
 func init() {
