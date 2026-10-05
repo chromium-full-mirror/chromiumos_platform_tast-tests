@@ -278,6 +278,10 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			minBacklightPercentNonlinear = math.Min(minBacklightPercentNonlinear, r.otherInfo[t.Name+"_"+cp.BacklightPercentNonlinearKey].(float64))
 			minBacklightPercentLinear = math.Min(minBacklightPercentLinear, r.otherInfo[t.Name+"_"+cp.BacklightPercentLinearKey].(float64))
 		}
+		if len(persona.Skipped) == len(p.Tests) {
+			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because all tests were skipped", p.Name)
+			continue
+		}
 		if missingTestResultFlag {
 			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test results in that persona is missing", p.Name)
 			continue
