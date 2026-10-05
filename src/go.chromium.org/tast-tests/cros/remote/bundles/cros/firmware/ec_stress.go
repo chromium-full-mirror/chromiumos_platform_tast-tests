@@ -1047,6 +1047,13 @@ func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wa
 				retErr = err
 				return
 			}
+			if rebooted, err := dutRebooted(ctx, h); err != nil {
+				retErr = err
+				return
+			} else if rebooted {
+				// No cleanup or checks needed if dut rebooted
+				return
+			}
 
 			finalCount, err := getKernelSuspendCount(ctx, h)
 			if err != nil {
