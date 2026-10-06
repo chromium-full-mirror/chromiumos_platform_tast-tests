@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/session"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,8 +29,8 @@ func init() {
 }
 
 func RejectDuplicate(ctx context.Context, s *testing.State) {
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart session_manager: ", err)
+	if err := session.SetUpDevice(ctx); err != nil {
+		s.Fatal("Failed to reset device ownership: ", err)
 	}
 
 	const user = "first_user@nowhere.com"

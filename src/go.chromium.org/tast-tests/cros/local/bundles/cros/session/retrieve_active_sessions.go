@@ -28,8 +28,8 @@ func init() {
 }
 
 func RetrieveActiveSessions(ctx context.Context, s *testing.State) {
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to restart session_manager: ", err)
+	if err := session.SetUpDevice(ctx); err != nil {
+		s.Fatal("Failed to reset device ownership: ", err)
 	}
 
 	const (
