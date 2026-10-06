@@ -61,6 +61,19 @@ const (
 	defaultPort int         = 65535
 )
 
+const (
+	// shillAvailableTimeout bounds how long a restarted secagentd may take to
+	// connect to shill. Its main thread can be busy for tens of seconds right
+	// after a restart on slow VMs (e.g. while Chrome is still starting up).
+	shillAvailableTimeout = 60 * time.Second
+	// externalDeviceTimeout bounds how long secagentd may take to add the router
+	// interface to its BPF external device map once it is connected to shill.
+	externalDeviceTimeout = 30 * time.Second
+	// secagentdLogPollInterval is how often secagentd.log is re-read while
+	// waiting for secagentd.
+	secagentdLogPollInterval = 500 * time.Millisecond
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: NetworkEvents,
@@ -223,6 +236,14 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Log("Unable to clear the kernel trace file: ", err)
 	}
 
+	// Remember the end of secagentd.log before restarting secagentd so that
+	// nothing logged by the new instance is skipped.
+	preRestartOffset, err := secagentdcommon.GetSecagentdLogSize()
+	if err != nil {
+		s.Log("Failed to get size of secagentd log file, defaulting to 0: ", err)
+		preRestartOffset = 0
+	}
+
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
@@ -238,6 +259,18 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
+	}
+
+	// secagentd adds shill devices to its BPF external device map only after it
+	// sees shill as available, and right after a restart that can take tens of
+	// seconds (e.g. while Chrome is still starting up on VMs). Wait for it
+	// before building the test network. Match the PID so a line logged by the
+	// previous secagentd instance can't satisfy the wait.
+	shillAvailableText := fmt.Sprintf("secagentd[%d]: Shill is now available.", agentPid)
+	s.Logf("Waiting for %q in secagentd.log starting from offset %d", shillAvailableText, preRestartOffset)
+	if err := secagentdcommon.WaitForStringInLogWithOptions(ctx, shillAvailableText, preRestartOffset,
+		&testing.PollOptions{Timeout: shillAvailableTimeout, Interval: secagentdLogPollInterval}, s.Logf); err != nil {
+		s.Fatal("Failed to wait for secagentd to connect to shill: ", err)
 	}
 
 	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid, true)
@@ -279,9 +312,17 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		}
 
 		// Wait for secagentd to register the router interface in its BPF external device map.
-		syncText := fmt.Sprintf("ifname: %s ifindex:", testEnv.Router.VethOutName)
+		// Match the ifindex of the interface that was just created: a leftover
+		// interface with the same name from an earlier test is registered as
+		// soon as secagentd connects to shill, and must not satisfy this wait.
+		routerIface, err := net.InterfaceByName(testEnv.Router.VethOutName)
+		if err != nil {
+			s.Fatal("Failed to look up the router interface: ", err)
+		}
+		syncText := fmt.Sprintf("ifname: %s ifindex: %d added", routerIface.Name, routerIface.Index)
 		s.Logf("Waiting for %q in secagentd.log starting from offset %d to ensure external device is registered", syncText, initialOffset)
-		if err := secagentdcommon.WaitForStringInLog(ctx, syncText, initialOffset, s.Logf); err != nil {
+		if err := secagentdcommon.WaitForStringInLogWithOptions(ctx, syncText, initialOffset,
+			&testing.PollOptions{Timeout: externalDeviceTimeout, Interval: secagentdLogPollInterval}, s.Logf); err != nil {
 			s.Fatal("Failed to wait for external device to be registered in secagentd: ", err)
 		}
 	} else {

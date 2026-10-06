@@ -86,6 +86,14 @@ func GetSecagentdLogSize() (int64, error) {
 // past runs may abort the wait prematurely.
 func WaitForStringInLog(ctx context.Context, text string, startingOffset int64,
 	logf func(format string, args ...interface{})) error {
+	return WaitForStringInLogWithOptions(ctx, text, startingOffset,
+		&testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second}, logf)
+}
+
+// WaitForStringInLogWithOptions is the same as WaitForStringInLog, but polls
+// secagentd.log with the given poll options (e.g. timeout and interval).
+func WaitForStringInLogWithOptions(ctx context.Context, text string, startingOffset int64,
+	opts *testing.PollOptions, logf func(format string, args ...interface{})) error {
 	offset := startingOffset
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		logReader, err := os.Open(secagentdLogFile)
@@ -109,5 +117,5 @@ func WaitForStringInLog(ctx context.Context, text string, startingOffset int64,
 			return testing.PollBreak(errors.Wrap(err, "failed to calculate offset after scanning"))
 		}
 		return errors.New("could not find " + text + " in " + logReader.Name())
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 2 * time.Second})
+	}, opts)
 }
