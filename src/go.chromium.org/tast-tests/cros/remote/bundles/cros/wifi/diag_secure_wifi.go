@@ -61,12 +61,13 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		ServiceDeps:     []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
+		SoftwareDeps:    []string{"chrome"},
+		Attr:            []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{{
 			Name: "none",
 			Val: secureWiFiParams{

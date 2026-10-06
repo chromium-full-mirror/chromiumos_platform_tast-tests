@@ -52,8 +52,9 @@ func init() {
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		// TODO(b/542029943): Re-enable once the test is stable.
 		// Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
-		Fixture:     wificell.FixtureID(wificell.TFFeaturesEnroll),
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesEnroll),
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.policy.PolicyService",
