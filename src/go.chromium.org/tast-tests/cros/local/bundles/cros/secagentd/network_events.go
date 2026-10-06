@@ -214,10 +214,13 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
 
-	// On test failure save off the kernel trace.
+	// On test failure save off the kernel trace and secagentd log.
 	defer func() {
 		if err := secagentdcommon.OnErrorSaveKernelTrace(cleanupCtx, s.OutDir(), s.HasError); err != nil {
-			s.Logf("Unable to export kernel traces for failure analysis:%s", err)
+			s.Logf("Unable to export kernel traces for failure analysis: %s", err)
+		}
+		if err := secagentdcommon.OnErrorSaveSecagentdLog(cleanupCtx, s.OutDir(), s.HasError); err != nil {
+			s.Logf("Unable to export secagentd log for failure analysis: %s", err)
 		}
 	}()
 	// Restart with default parameter.

@@ -62,6 +62,22 @@ func OnErrorSaveKernelTrace(ctx context.Context, outDir string, hasError func() 
 	return nil
 }
 
+// OnErrorSaveSecagentdLog saves off a copy of the secagentd log on test failure.
+// USAGE: defer OnErrorSaveSecagentdLog(ctx, s.OutDir(), s.HasError)
+func OnErrorSaveSecagentdLog(ctx context.Context, outDir string, hasError func() bool) error {
+	if !hasError() {
+		return nil
+	}
+	if _, err := os.Stat(secagentdLogFile); os.IsNotExist(err) {
+		return nil
+	}
+	outFile := filepath.Join(outDir, "secagentd.log")
+	if err := fsutil.CopyFile(secagentdLogFile, outFile); err != nil {
+		return errors.Wrapf(err, "failed to copy %q to %q", secagentdLogFile, outFile)
+	}
+	return nil
+}
+
 // ClearSecagentdLog clears out the secagentd.log file.
 func ClearSecagentdLog() error {
 	err := os.Truncate(secagentdLogFile, 0)
