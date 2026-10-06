@@ -7,6 +7,7 @@ package apps
 import (
 	"context"
 	"os"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	policyFixt "go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -95,6 +97,10 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 	params := s.Param().(testParams)
 	isOOBE := params.isOOBE
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	var cr *chrome.Chrome
 	if isOOBE {
 		// Using fakedms and login
@@ -110,7 +116,7 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start FakeDMS: ", err)
 		}
-		defer fdms.Stop(ctx)
+		defer fdms.Stop(cleanupCtx)
 
 		if err := fdms.WritePolicyBlob(policy.NewBlob()); err != nil {
 			s.Fatal("Failed to write policies to FakeDMS: ", err)
@@ -120,12 +126,14 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 			ctx,
 			chrome.FakeLogin(chrome.Creds{User: policyFixt.Username, Pass: policyFixt.Password}),
 			chrome.DMSPolicy(fdms.URL), chrome.DontSkipOOBEAfterLogin(),
+			chrome.ExtraArgs("--allow-empty-passwords-in-tests"),
 			chrome.EnableFeatures("HelpAppFirstRun"),
 			chrome.FieldTrialConfig(params.fieldTrialConfig),
 		)
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
+		defer cr.Close(cleanupCtx)
 	} else {
 		cr = s.FixtValue().(chrome.HasChrome).Chrome()
 	}
@@ -134,7 +142,7 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn)
 	helpCtx := helpapp.NewContext(cr, tconn)

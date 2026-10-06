@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/helpapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -153,6 +154,10 @@ func LaunchHelpApp(ctx context.Context, s *testing.State) {
 
 // helpAppLaunchDuringOOBE verifies help app launch during OOBE stage. Help app only launches with real user login in clamshell mode.
 func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode bool, fieldTrialConfig chrome.FieldTrialConfigMode) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	var uiMode string
 	if isTabletMode {
 		uiMode = "--force-tablet-mode=touch_view"
@@ -164,20 +169,20 @@ func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.EnableFeatures("HelpAppFirstRun"),
-		chrome.ExtraArgs(uiMode),
+		chrome.ExtraArgs(uiMode, "--allow-empty-passwords-in-tests"),
 		chrome.FieldTrialConfig(fieldTrialConfig),
 	)
-
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// Verify HelpApp (aka Explore) launched in Clamshell mode only.
 	if err := assertHelpAppLaunched(ctx, s, tconn, cr, !isTabletMode); err != nil {
