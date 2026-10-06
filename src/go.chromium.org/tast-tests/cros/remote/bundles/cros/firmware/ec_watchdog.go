@@ -304,17 +304,30 @@ func checkProgramCounter(ctx context.Context, panicInfo string) error {
 		"cortex-m0 or risc-v": regexp.MustCompile(`pc\s*[\:]\s*([0-9a-fA-F]*)\s`), // Looks like: `... pc :{hex val or empty}\n`
 		"nds32":               regexp.MustCompile(`(?i)IPC\s*([0-9a-fA-F]*)\s`),   // Looks like: `IPC {hex val or empty} ...`
 	}
+	r5Regex := regexp.MustCompile(`r5\s*:\s*([0-9a-fA-F]+)\s`)
 	for arch, regex := range pcMap {
 		match := regex.FindStringSubmatch(panicInfo)
 		if match == nil {
 			continue
 		}
-		if len(match) < 2 || match[1] == "" {
+		var pcStr string
+		if len(match) >= 2 {
+			pcStr = match[1]
+		}
+		if len(pcStr) == 0 && arch == "cortex-m0 or risc-v" && strings.Contains(panicInfo, "xPSR: ffffffff") {
+			// For Zephyr EC software panics (e.g. watchdog warning/timeout), the exception frame is artificial
+			// with xPSR = ffffffff, and the real PC is stored in r5 instead of the pc field.
+			r5Match := r5Regex.FindStringSubmatch(panicInfo)
+			if r5Match != nil && len(r5Match) >= 2 && r5Match[1] != "" {
+				pcStr = r5Match[1]
+			}
+		}
+		if len(pcStr) == 0 {
 			return errors.Errorf("program counter was unexpectedly blank, expected non-zero value: %v", panicInfo)
 		}
-		pc, err := strconv.ParseInt(match[1], 16, 64)
+		pc, err := strconv.ParseInt(pcStr, 16, 64)
 		if err != nil {
-			return errors.Wrapf(err, "failed to parse program counter value from match %v to int", match[1])
+			return errors.Wrapf(err, "failed to parse program counter value from match %v to int", pcStr)
 		}
 		testing.ContextLogf(ctx, "Found program counter value (arch: %v): %v (%v)", arch, pc, strings.TrimSpace(match[0]))
 		if pc == 0 {
