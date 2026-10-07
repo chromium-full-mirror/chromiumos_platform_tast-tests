@@ -103,14 +103,6 @@ var benchmarkFlags = []string{
 	"--disable-field-trial-config",
 }
 
-// webUIOmniboxFeatures are the features that render the Omnibox popup using
-// WebUI.
-var webUIOmniboxFeatures = []string{
-	"WebUIOmniboxPopup",
-	"WebUIOmniboxAimPopup",
-	"WebUIOmniboxFullPopup",
-}
-
 // webUIOmniboxOptimizationFeatures are the optimizations for the WebUI
 // Omnibox popup.
 var webUIOmniboxOptimizationFeatures = []string{
@@ -1120,8 +1112,17 @@ func init() {
 	})
 	// The following fixtures are variants of loggedInToCUJUser and
 	// loggedInToCUJUserWithWebRTCEventLogging, used to compare CUJ performance
-	// with the WebUI Omnibox popup disabled, enabled without its optimizations,
-	// and enabled with its optimizations.
+	// across these WebUI Omnibox configs:
+	//  1. WebUIOmniboxDisabled: all WebUI Omnibox features disabled.
+	//  2. WebUIOmniboxPopupEnabledOnly: WebUIOmniboxPopup and
+	//     WebUIOmniboxAimPopup enabled.
+	//  3. WebUIOmniboxFullPopupEnabledOnly: WebUIOmniboxFullPopup and
+	//     WebUIOmniboxAimPopup enabled.
+	//  4. WebUIOmniboxPopupEnabledAndOptimized: config 2 with
+	//     webUIOmniboxOptimizationFeatures enabled.
+	//  5. WebUIOmniboxFullPopupEnabledAndOptimized: config 3 with
+	//     webUIOmniboxOptimizationFeatures enabled.
+	// Every feature that a config doesn't enable is explicitly disabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxDisabled",
 		Desc: "Variant of loggedInToCUJUser with the WebUI Omnibox popup and its optimizations disabled",
@@ -1132,7 +1133,7 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.DisableFeatures(webUIOmniboxFeatures...),
+				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
 		},
@@ -1144,8 +1145,8 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWebUIOmniboxEnabledOnly",
-		Desc: "Variant of loggedInToCUJUser with the WebUI Omnibox popup enabled and its optimizations disabled",
+		Name: "loggedInToCUJUserWebUIOmniboxPopupEnabledOnly",
+		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1153,7 +1154,8 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures(webUIOmniboxFeatures...),
+				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
 		},
@@ -1165,8 +1167,8 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWebUIOmniboxEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUser with the WebUI Omnibox popup and its optimizations enabled",
+		Name: "loggedInToCUJUserWebUIOmniboxFullPopupEnabledOnly",
+		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1174,7 +1176,52 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures(webUIOmniboxFeatures...),
+				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxPopup"),
+				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWebUIOmniboxPopupEnabledAndOptimized",
+		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Contacts: []string{
+			"vincentchiang@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
+				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWebUIOmniboxFullPopupEnabledAndOptimized",
+		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Contacts: []string{
+			"vincentchiang@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
 		},
@@ -1198,7 +1245,7 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.DisableFeatures(webUIOmniboxFeatures...),
+				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
 			docsBlocker: true,
@@ -1211,8 +1258,8 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxEnabledOnly",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with the WebUI Omnibox popup enabled and its optimizations disabled",
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxPopupEnabledOnly",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1223,7 +1270,8 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures(webUIOmniboxFeatures...),
+				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
 			docsBlocker: true,
@@ -1236,8 +1284,8 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with the WebUI Omnibox popup and its optimizations enabled",
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxFullPopupEnabledOnly",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1248,7 +1296,60 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures(webUIOmniboxFeatures...),
+				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxPopup"),
+				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+			),
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxPopupEnabledAndOptimized",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Contacts: []string{
+			"vincentchiang@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
+				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+			),
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxFullPopupEnabledAndOptimized",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Contacts: []string{
+			"vincentchiang@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
+				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
 			docsBlocker: true,
