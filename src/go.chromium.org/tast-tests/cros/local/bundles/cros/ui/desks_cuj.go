@@ -71,6 +71,38 @@ func init() {
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
+			// TODO(b/570204454): Remove once the WebUI Omnibox experiment is
+			// complete.
+			{
+				Name:      "webui_omnibox_disabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxDisabled",
+			},
+			{
+				Name:      "webui_omnibox_popup_enabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxPopupEnabledOnly",
+			},
+			{
+				Name:      "webui_omnibox_full_popup_enabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxFullPopupEnabledOnly",
+			},
+			{
+				Name:      "webui_omnibox_popup_optimized",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxPopupEnabledAndOptimized",
+			},
+			{
+				Name:      "webui_omnibox_full_popup_optimized",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxFullPopupEnabledAndOptimized",
+			},
 		},
 	})
 }
