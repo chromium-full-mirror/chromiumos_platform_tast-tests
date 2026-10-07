@@ -390,12 +390,30 @@ func getQrtrNodes(ctx context.Context) (map[int]*qrtrNode, error) {
 }
 
 // CheckAndWaitForFlashToComplete returns an error if PowerOverrideLock file
-// is held for more than 5 minutes.
+// is held or a flash task is in progress for more than 5 minutes.
 func CheckAndWaitForFlashToComplete(ctx context.Context) error {
-	if err := testing.Poll(ctx, func(context.Context) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat(PowerOverrideLockFilePath); err == nil {
 			testing.ContextLog(ctx, "ModemFwd still flashing firmware")
 			return errors.New("ModemFwd still flashing firmware")
+		}
+		// Also check D-Bus InProgressTasks for active flash tasks that do not hold PowerOverrideLockFilePath.
+		if _, _, pid, err := upstart.JobStatus(ctx, JobName); err != nil || pid == 0 {
+			return nil
+		}
+		m, err := New(ctx)
+		if err != nil {
+			return nil
+		}
+		var tasks []map[string]dbus.Variant
+		if err := m.Property(ctx, "InProgressTasks", &tasks); err != nil {
+			return nil
+		}
+		for _, task := range tasks {
+			if t, ok := task["type"]; ok && t.Value() == "flash" {
+				testing.ContextLog(ctx, "ModemFwd still has flash task in progress")
+				return errors.New("ModemFwd still flashing firmware")
+			}
 		}
 		return nil
 	}, &testing.PollOptions{

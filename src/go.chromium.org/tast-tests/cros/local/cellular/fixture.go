@@ -638,6 +638,11 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := f.waitForModemFwdToIdle(ctx); err != nil {
 		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
 	}
+	// Stop modemfwd before EnsureValidSIM so SIM slot switches do not trigger
+	// a background firmware flash that inhibits the modem and stops hermes.
+	if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
+		s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
+	}
 	// Check if the modem is exported by ModemManager before initializing Starfish/NewHelper().
 	if _, err := waitForModemToBeExported(ctx); err != nil {
 		if isL850(ctx, s) {
@@ -717,9 +722,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.sf != nil {
-		if _, err := stopJob(ctx, modemfwd.JobName); err != nil {
-			s.Fatalf("Failed to stop %q: %s", modemfwd.JobName, err)
-		}
 		// On starfish setups, PSIM being the active sim slot is required
 		if _, err = modem.EnsureValidSIM(ctx, true); err != nil {
 			s.Fatal("Failed to switch to PSIM on a starfish setup: ", err)
@@ -743,6 +745,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		// polling the dbus modem object, just in case.
 		if _, err = waitForModemToBeExported(ctx); err != nil {
 			s.Fatal("Could not find modem after starting modemfwd: ", err)
+		}
+		if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
+			s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
 		}
 	}
 
@@ -820,10 +825,6 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 	f.cr = cr
-
-	if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
-		s.Fatalf("Failed to stop job: %q, %s", modemfwd.JobName, err)
-	}
 
 	if upstart.JobExists(ctx, hermes.JobName) {
 		err := hermes.WaitForChromeESIMCache(ctx, 2*time.Second)

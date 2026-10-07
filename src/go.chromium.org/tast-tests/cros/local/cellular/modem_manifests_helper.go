@@ -217,7 +217,8 @@ func ResetModemWithHelper(ctx context.Context) (*modemmanager.Modem, error) {
 	}
 
 	// Wait for MM to export a new modem object, to ensure OldModem was reset.
-	modem, err := modemmanager.PollModem(ctx, OldModem.String())
+	// Pass OldModemPath instead of OldModem.String() as OldModem can be nil if inhibited.
+	modem, err := modemmanager.PollModem(ctx, string(OldModemPath))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get modem after reboot")
 	}
