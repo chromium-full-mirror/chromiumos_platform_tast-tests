@@ -105,8 +105,7 @@ func PrivilegedFiles(ctx context.Context, s *testing.State) {
 			Effective: fscaps.SETGID | fscaps.SETUID | fscaps.SETPCAP,
 			Permitted: fscaps.SETGID | fscaps.SETUID | fscaps.SETPCAP,
 		},
-		"/sbin/unix_chkpwd":   {Effective: fscaps.DAC_OVERRIDE, Permitted: fscaps.DAC_OVERRIDE},
-		"/usr/bin/fusermount": {Effective: fscaps.SYS_ADMIN, Permitted: fscaps.SYS_ADMIN},
+		"/sbin/unix_chkpwd": {Effective: fscaps.DAC_OVERRIDE, Permitted: fscaps.DAC_OVERRIDE},
 		"/usr/sbin/dnsmasq": {
 			Effective:   fscaps.NET_ADMIN | fscaps.NET_BIND_SERVICE | fscaps.NET_RAW,
 			Inheritable: fscaps.NET_ADMIN | fscaps.NET_BIND_SERVICE | fscaps.NET_RAW,
