@@ -105,7 +105,10 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	cmd := cont.Command(ctx, "android-studio/bin/studio.sh")
+	// Pass "nosplash" to suppress the splash screen window, which can map after
+	// and on top of the modal "Import Android Studio Settings" dialog on cold
+	// startup and occlude the "OK" button.
+	cmd := cont.Command(ctx, "android-studio/bin/studio.sh", "nosplash")
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -127,7 +130,6 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	androidWindow := nodewith.NameStartingWith("Import Android Studio Settings").Role(role.Window).First()
-	splashWindow := nodewith.Name("splash").Role(role.Window).First()
 	newProjectWindow := nodewith.NameStartingWith("My Application").Role(role.Window).First()
 	setupWizardWindow := nodewith.NameStartingWith("Android Studio Setup Wizard").Role(role.Window).First()
 	newProjectDialog := nodewith.NameStartingWith("New Project").Role(role.Window).First()
@@ -138,13 +140,6 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
 	if err := uiauto.NamedCombine("Create a new project with defaults",
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
-		// On cold startup, the splash screen window may be mapped slightly after
-		// and on top of the "Import Android Studio Settings" dialog and visually
-		// occlude it, preventing UI detection from finding the "OK" button. Wait
-		// briefly in case the splash window appears with a delay, then wait for
-		// the splash window to be gone.
-		uiauto.Sleep(time.Second),
-		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilGone(splashWindow),
 		// Two-letter words normally need an exact match.
 		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The analytics consent dialog is flaky. Look for the body
