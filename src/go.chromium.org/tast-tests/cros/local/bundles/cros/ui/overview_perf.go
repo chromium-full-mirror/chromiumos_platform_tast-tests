@@ -259,11 +259,12 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 			if windows == 2 {
 				// The overview exit animation does not include the window being activated.
 				// Thus, the SplitView-2windows case has no overview exit animation at all.
+				fullDescription := "SplitView-2windows"
 				if err := doTestCase(
-					ctx, s, tconn, runner, "SplitView-2windows", "2windows", true /*tablet*/, ash.WindowStateMaximized,
+					ctx, s, tconn, runner, fullDescription, "2windows", true /*tablet*/, ash.WindowStateMaximized,
 					true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
 				); err != nil {
-					s.Fatal("Test case \"SplitView-2windows\" failed: ", err)
+					return errors.Wrapf(err, "test case %q failed", fullDescription)
 				}
 				continue
 			}
@@ -283,7 +284,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 					true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
 					"Ash.Overview.AnimationSmoothness.Exit.SplitView",
 				); err != nil {
-					s.Fatalf("Test case %q failed: %s", fullDescription, err)
+					return errors.Wrapf(err, "test case %q failed", fullDescription)
 				}
 			}
 		}
@@ -368,7 +369,7 @@ func doTestCase(
 		s.Log("Failed to wait for overview stabilization: ", err)
 	}
 
-	runner.RunMultiple(ctx, fullDescription, uiperf.Run(s,
+	_, err := runner.RunMultiple(ctx, fullDescription, uiperf.Run(s,
 		perfutil.RunAndWaitAll(tconn,
 			func(ctx context.Context) error {
 				if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
@@ -382,6 +383,9 @@ func doTestCase(
 			histograms...,
 		)),
 		perfutil.StoreAll(perf.BiggerIsBetter, "percent", windowsDescription))
+	if err != nil {
+		return errors.Wrap(err, "failed to run overview scenarios")
+	}
 
 	return nil
 }
