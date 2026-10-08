@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium"},
 		// "no_qemu" disables the test on betty (this test is not compatible with the qemu virtual network setup).
-		SoftwareDeps: []string{"chrome", "arc", "no_qemu"},
+		SoftwareDeps: []string{"chrome", "android_vm", "no_qemu"},
 		HardwareDeps: arc.ArcAppHwDeps,
 		Fixture:      "arcBooted",
 	})
@@ -58,7 +58,7 @@ func ARCMultiNetworkingConnectivity(ctx context.Context, s *testing.State) {
 
 	// Ensure that inbound and outbound networking works for each network interface inside ARC for each host's physical interfaces.
 	for _, device := range response.Devices {
-		if device.GuestType != pp.NetworkDevice_ARC && device.GuestType != pp.NetworkDevice_ARCVM {
+		if device.GuestType != pp.NetworkDevice_ARCVM {
 			continue
 		}
 

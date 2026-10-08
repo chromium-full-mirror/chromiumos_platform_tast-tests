@@ -177,7 +177,7 @@ func getPPNetworkDevice(ctx context.Context, hostIfname string) (*pp.NetworkDevi
 		return nil, errors.Wrap(err, "failed to get patchpanel devices")
 	}
 	for _, device := range response.Devices {
-		if (device.GuestType == pp.NetworkDevice_ARCVM || device.GuestType == pp.NetworkDevice_ARC) && device.PhysIfname == hostIfname {
+		if device.GuestType == pp.NetworkDevice_ARCVM && device.PhysIfname == hostIfname {
 			return device, nil
 		}
 	}

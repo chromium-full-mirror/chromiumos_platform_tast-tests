@@ -87,13 +87,9 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping from host %s: %v", conn.Server.OverlayIPv4, err)
 	}
-	// arc0/eth0 are hardcoded in ARC as the iface of our fake ethernet network that VPN traffic
+	// eth0 is hardcoded in ARC as the iface of our fake ethernet network that VPN traffic
 	// will fall back to if there's an issue with the ARC VPN.
-	arcVersion := s.Param().(string)
-	network := "eth0"
-	if arcVersion == "container" {
-		network = "arc0"
-	}
+	const network = "eth0"
 	if err := arcnet.ExpectPingSuccess(ctx, a, network, conn.Server.OverlayIPv4); err != nil {
 		s.Fatalf("Failed to ping %s from ARC over %q: %v", conn.Server.OverlayIPv4, network, err)
 	}
