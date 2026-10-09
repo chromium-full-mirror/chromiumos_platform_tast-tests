@@ -89,7 +89,11 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ur
 // Desk 4:
 //   - Windows: 1
 //   - User Input: Keyboard typing
-func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter) ([]action.Action, int, func(ctx context.Context) error, error) {
+//
+// If om is not nil (omnibox variants), a memory snapshot is taken after
+// each desk and, unless om.param.KeepHeavySites, every window shows an
+// on-DUT page.
+func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, om *omniboxEnv) ([]action.Action, int, func(ctx context.Context) error, error) {
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
 	// the time that desk setup can take, to ensure we have time
@@ -100,13 +104,24 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 	cleanup := func(ctx context.Context) error { return nil }
 	const notes = "The quick brown fox jumps over the lazy dog in the afternoon on Saturday!"
 
-	docsURL, err := cuj.GetTestDocURL(setupCtx)
-	if err != nil {
-		return nil, 0, cleanup, errors.Wrap(err, "failed to get Google Doc URL")
+	// The omnibox variant with on-DUT pages doesn't use the Google Doc.
+	omniboxLocalPages := om != nil && !om.param.KeepHeavySites
+	var docsURL string
+	var err error
+	if !omniboxLocalPages {
+		docsURL, err = cuj.GetTestDocURL(setupCtx)
+		if err != nil {
+			return nil, 0, cleanup, errors.Wrap(err, "failed to get Google Doc URL")
+		}
 	}
 
 	// Open additional tabs for RAM pressure.
-	tabs, err := cuj.NewTabs(setupCtx, cr, false, 3)
+	var tabs []cuj.TabConn
+	if omniboxLocalPages {
+		tabs, err = cuj.NewTabsByURLs(setupCtx, cr, false, om.pageURLs(omniboxPagesRAMTabs))
+	} else {
+		tabs, err = cuj.NewTabs(setupCtx, cr, false, 3)
+	}
 	if err != nil {
 		return nil, 0, cleanup, errors.Wrap(err, "failed to open multiple tabs in a window")
 	}
@@ -118,7 +133,7 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 
 	var totalOpenWindows int
 	var onVisitActions []action.Action
-	for i, desk := range []struct {
+	desks := []struct {
 		urls               []string      // A list of urls to open for this desk.
 		expectedNumWindows int           // Expected number of windows that should be open after desk setup.
 		onVisitAction      action.Action // Unique user input action to perform on this desk.
@@ -175,11 +190,21 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 			onVisitAction:      kw.TypeAction(notes),
 			expectedNumWindows: 1,
 		},
-	} {
+	}
+	if omniboxLocalPages {
+		omniboxPages := [][]int{omniboxPagesDesk1, omniboxPagesDesk2, omniboxPagesDesk3, omniboxPagesDesk4}
+		for i := range desks {
+			desks[i].urls = om.pageURLs(omniboxPages[i])
+		}
+	}
+	for i, desk := range desks {
 		totalOpenWindows += desk.expectedNumWindows
 		deskTabs, err := openDesk(ctx, tconn, cr, desk.urls, totalOpenWindows, i)
 		if err != nil {
 			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to complete setup for desk %d", i)
+		}
+		if om != nil {
+			om.mem.snapshot(ctx, totalOpenWindows)
 		}
 
 		if desk.urls[0] == cuj.NewGoogleDocsURL {

@@ -30,6 +30,11 @@ import (
 
 // TestParam is the test parameters for DesksCUJ.
 type TestParam struct {
+	// Omnibox swaps per-desk input for omnibox operations and, unless
+	// KeepHeavySites, the sites for on-DUT pages.
+	Omnibox bool
+	// KeepHeavySites keeps the default sites (omnibox_heavy).
+	KeepHeavySites bool
 }
 
 // Run runs the desks CUJ by opening up 4 different desks and switching
@@ -118,6 +123,18 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
+	var om *omniboxEnv
+	if testParam.Omnibox {
+		if err := recorder.AddCollectedMetrics(omniboxMetricConfigs()...); err != nil {
+			return nil, errors.Wrap(err, "failed to add omnibox metrics to recorder")
+		}
+		om, err = newOmniboxEnv(ctx, cr, tconn, testParam)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to set up the omnibox environment")
+		}
+		defer om.Close(cleanupCtx)
+	}
+
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to capture the state of the device during each of the
 	// desk switching workflows.
@@ -137,7 +154,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, cr, kw, mw, tpw, tw)
+	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, cr, kw, mw, tpw, tw, om)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up desks")
 	}
@@ -225,6 +242,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		return nil, errors.Wrap(err, "failed to record the performance data")
+	}
+	if om != nil {
+		// Final memory snapshot after the workload, outside of the
+		// recorded section. It isn't used for the per-window slope.
+		om.mem.snapshotFinal(ctx, expectedNumWindows)
+		om.recordResults(ctx, pv)
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
