@@ -63,6 +63,55 @@ func init() {
 				Val:       deskscuj.TestParam{},
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
+			// Omnibox variants (go/desks-omnibox-cuj, b/572006779).
+			{
+				Name:      "omnibox",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserDisableARC",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			// ARC on, like the release gate, so that the milestone check
+			// runs under realistic memory pressure.
+			{
+				Name:      "omnibox_heavy",
+				Val:       deskscuj.TestParam{Omnibox: true, KeepHeavySites: true},
+				Fixture:   "loggedInToCUJUser",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			// The omnibox variant with each WebUI Omnibox config, so an
+			// A/B is two test names and the fixture sets the features.
+			// Like omnibox, these fixtures have ARC disabled, for low noise
+			// per-CL A/Bs.
+			{
+				Name:      "omnibox_webui_disabled",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxDisabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			{
+				Name:      "omnibox_popup",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxPopupEnabledOnly",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			{
+				Name:      "omnibox_popup_optimized",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxPopupEnabledAndOptimized",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			{
+				Name:      "omnibox_full_popup",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxFullPopupEnabledOnly",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
+			{
+				Name:      "omnibox_full_popup_optimized",
+				Val:       deskscuj.TestParam{Omnibox: true},
+				Fixture:   "loggedInToCUJUserWebUIOmniboxFullPopupEnabledAndOptimized",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
 				Name:              "vulkan",
