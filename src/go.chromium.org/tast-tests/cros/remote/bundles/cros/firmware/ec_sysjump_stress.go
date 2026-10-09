@@ -174,11 +174,31 @@ func verifyPostJumpState(ctx context.Context, h *firmware.Helper, expectedSysjum
 	return nil
 }
 
-// verifyECResponsive runs a simple EC command to verify that the EC is responsive.
+// verifyECResponsive runs a simple EC command via Servo UART and via ectool on
+// the DUT to verify that both the EC console and AP to EC host communication
+// are responsive.
 func verifyECResponsive(ctx context.Context, h *firmware.Helper) error {
-	version, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`Build:\s+`})
-	if err != nil || len(version) == 0 {
+	// Verify that the EC UART debug console is responsive with a simple command.
+	if _, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`Build:\s+`}); err != nil {
 		return errors.Wrap(err, "EC console unresponsive after sysjump")
+	}
+
+	// Wait for the DUT SSH connection before running host commands (like ectool
+	// below or crash checks in the caller), as sysjump can briefly reset USB-C PD
+	// and drop Ethernet on Type-C Servo setups.
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 45*time.Second)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after sysjump")
+	}
+
+	// Verify AP to EC communication over the host bus via ectool version. The
+	// above check tests the EC UART debug console, which can remain responsive
+	// even if a sysjump disrupts the AP to EC host interface, so this check tries
+	// to catch this issue (e.g. b/549100556).
+	ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
+	if _, err := ec.Version(ctx); err != nil {
+		return errors.Wrap(err, "AP to EC communication via ectool version unresponsive after sysjump")
 	}
 	return nil
 }
@@ -187,12 +207,6 @@ func verifyECResponsive(ctx context.Context, h *firmware.Helper) error {
 // recent EC crashes. This can be called after a sysjump instead of waiting
 // until the end to check for crashes.
 func verifyNoECCrashes(ctx context.Context, h *firmware.Helper) error {
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT after sysjump")
-	}
-
 	crashes, err := h.GetNewECCrashes(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to query EC crash cache")
