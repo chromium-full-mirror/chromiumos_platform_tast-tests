@@ -290,6 +290,10 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test running time is under its min_running_time", p.Name)
 			continue
 		}
+		if len(minutesBatteryLifeValues) == 0 {
+			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because all tests were skipped or have zero weight", p.Name)
+			continue
+		}
 		minutesBatteryLife := stat.HarmonicMean(minutesBatteryLifeValues, weights)
 		dischargeRate := stat.Mean(dischargeRateValues, weights)
 		// Collect battery metrics for each persona in perf.Values.
