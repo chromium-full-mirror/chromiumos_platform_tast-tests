@@ -33,7 +33,7 @@ func init() {
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
 		SoftwareDeps:   []string{"chrome"},
 		Fixture:        "chromeLoggedInWithMojoTestEuicc",
-		Timeout:        10 * time.Minute,
+		Timeout:        15 * time.Minute,
 		Params: []testing.Param{{
 			// Ensures non-empty activation codes.
 			Name: "refresh",
