@@ -5,13 +5,18 @@
 package utils
 
 import (
+	"context"
+	"encoding/binary"
 	"encoding/hex"
+	"slices"
 	"strconv"
+	"time"
 
 	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -86,6 +91,78 @@ func (t *TpmHelper) WriteFifo(data []byte) error {
 // ReadFifo reads bytes from the TPM DATA_FIFO register.
 func (t *TpmHelper) ReadFifo(length int) ([]byte, error) {
 	return t.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDataFifo), "--length", strconv.Itoa(length))
+}
+
+// ToReadyState aborts any command in progress and moves the TPM to the Ready
+// state. The first commandReady write moves it from Reception, Execution or
+// Completion to Idle, the second one from Idle to Ready.
+func (t *TpmHelper) ToReadyState() error {
+	for range 2 {
+		if err := t.SendCancel(); err != nil {
+			return errors.Wrap(err, "failed to write commandReady")
+		}
+		if _, err := t.ReadSts(); err != nil {
+			return errors.Wrap(err, "failed to read TPM_STS")
+		}
+	}
+	return nil
+}
+
+// ExecuteRawCommand sends cmd to the TPM through the FIFO registers and returns
+// the response header followed by at most maxRead bytes of the response in
+// total. Unlike Send, the response doesn't have to be well formed nor read in
+// full, which allows checking malformed or oversized responses.
+func (t *TpmHelper) ExecuteRawCommand(ctx context.Context, cmd []byte, maxRead int) ([]byte, error) {
+	const (
+		// Small enough for a single SPI and I2C transaction on all GSCs.
+		fifoChunkSize    = 32
+		tpmHeaderSize    = 6 // tag + size
+		dataAvailBitMask = 0x10
+	)
+
+	if err := t.ToReadyState(); err != nil {
+		return nil, err
+	}
+	for chunk := range slices.Chunk(cmd, fifoChunkSize) {
+		if err := t.WriteFifo(chunk); err != nil {
+			return nil, errors.Wrap(err, "failed to write DATA_FIFO")
+		}
+	}
+	if err := t.SendGo(); err != nil {
+		return nil, errors.Wrap(err, "failed to write tpmGo")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		sts, err := t.ReadSts()
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if sts&dataAvailBitMask == 0 {
+			return errors.Errorf("dataAvail not set, TPM_STS 0x%02x", sts)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Second, Interval: 10 * time.Millisecond}); err != nil {
+		return nil, errors.Wrap(err, "failed waiting for response")
+	}
+
+	resp, err := t.ReadFifo(tpmHeaderSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response header")
+	}
+	if len(resp) < tpmHeaderSize {
+		return nil, errors.Errorf("short response header: %x", resp)
+	}
+	size := int(binary.BigEndian.Uint32(resp[2:tpmHeaderSize]))
+	for want := min(size, maxRead); len(resp) < want; {
+		rest, err := t.ReadFifo(min(want-len(resp), fifoChunkSize))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read response")
+		}
+		if len(rest) == 0 {
+			return nil, errors.New("empty DATA_FIFO read")
+		}
+		resp = append(resp, rest...)
+	}
+	return resp, nil
 }
 
 // RawCaptureTransport captures serialized TPM 2.0 command bytes from tpm2.Command.Execute.
