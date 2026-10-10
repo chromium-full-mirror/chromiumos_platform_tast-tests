@@ -62,9 +62,9 @@ func init() {
 				ExtraAttr: []string{"dsp_medium"},
 			},
 			{
-				Name:      "fw_qual",
-				Timeout:   4000 * time.Minute,
-				Val:       2500,
+				Name:      "fw_qual_1250",
+				Timeout:   900 * time.Minute, // 15 hours to stay below 16 hr limit for more graceful cleanup.
+				Val:       1250,
 				ExtraAttr: []string{"dsp_large"},
 			},
 		},
