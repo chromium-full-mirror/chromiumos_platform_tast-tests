@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/a11y/chromevox"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
@@ -22,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -35,7 +37,11 @@ func init() {
 		BugComponent: "b:1272895",
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		SoftwareDeps: []string{"chrome", "ondevice_speech"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		TestBedDeps:  []string{tbdep.Power("battery")},
+		HardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+		// TODO(crbug.com/572107019): Re-enable weekly once ChromeVox MV3 and CBX
+		// SODA DLC issues are resolved.
+		// Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		Params: []testing.Param{{
 			Name:    "captions_only",
 			Fixture: a11y.PowerAshWithSoda,
