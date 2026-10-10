@@ -76,7 +76,8 @@ func init() {
 			Val: idlePerfTest{
 				testType: testTypeFaceGaze,
 			},
-			Fixture: fixture.ChromeLoggedInDisableSyncWithFaceGaze,
+			ExtraAttr: []string{"cuj_weekly"},
+			Fixture:   fixture.ChromeLoggedInDisableSyncWithFaceGaze,
 		}, {
 			// TODO(b/356944093): Remove focusmode fixture from `idle_perf` once feature launches.
 			Name: "focusmode",
