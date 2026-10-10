@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/settings"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -49,6 +51,8 @@ func init() {
 			Val:  testParams{EnableSlowKeys: false},
 		}},
 		SoftwareDeps: []string{"chrome"},
+		TestBedDeps:  []string{tbdep.Power("battery")},
+		HardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 		Fixture:      "chromeLoggedIn",
 	})
 }
