@@ -1062,6 +1062,11 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			testing.ContextLogf(ctx, "Failed to restart job: shill, %s", errs)
 		}
 	}
+	if !f.disableCellularInShill {
+		if err := f.enableCellularIfNeeded(ctx); err != nil {
+			testing.ContextLog(ctx, "Unable to enable Cellular on PostTest: ", err)
+		}
+	}
 	modem, waitForModemErr := modemmanager.NewModem(ctx)
 	if waitForModemErr != nil {
 		testing.ContextLog(ctx, "Failed to create modem object: ", waitForModemErr)
@@ -1112,6 +1117,21 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 
 }
 
+func (f *cellularFixture) enableCellularIfNeeded(ctx context.Context) error {
+	if f.helper == nil {
+		return nil
+	}
+	enabled, err := f.helper.Manager.IsEnabled(ctx, shill.TechnologyCellular)
+	if err == nil && enabled {
+		return nil
+	}
+	// Wait for any ongoing stopping transition (where Device.Scanning is true) to complete.
+	if err := f.helper.Device.WaitForProperty(ctx, shillconst.DevicePropertyScanning, false, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed waiting for Cellular Scanning property to become false")
+	}
+	return f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular)
+}
+
 func (f *cellularFixture) fixtureCleanUp(ctx context.Context, s *testing.FixtState) {
 	if f.fixtureFailure {
 		testing.ContextLog(ctx, "Fixture failure. Calling TearDown from fixtureCleanUp")
@@ -1138,27 +1158,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			f.modemLoggingStarted = false
 		}
 	}
-	if f.disableCellularInShill && f.helper != nil {
-		// In Shill::Cellular::Start(), we don't allow Start(enable Cellular technology) when
-		// Cellular is in Stopping state. This scenario is not hard to reproduce when modemmanager
-		// is restarted by itself on the fixture teardown(for example, on fixture
-		// cellularModemManager). Since EnableTechnology will return an error if Cellular is being
-		// stopped, retry a few times until Cellular has completed the Stopping operation.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			waitCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-			defer cancel()
-			if err := f.helper.Manager.EnableTechnology(waitCtx, shill.TechnologyCellular); err != nil {
-				testing.ContextLog(ctx, "Failed to enable Cellular technology: ", err)
-				return err
-			}
-			return nil
-		}, &testing.PollOptions{
-			Timeout:  5 * time.Second,
-			Interval: 500 * time.Millisecond,
-		}); err != nil {
-			testing.ContextLog(ctx, "Unable to enable Cellular: ", err)
-			teardownFailure = true
-		}
+	if err := f.enableCellularIfNeeded(ctx); err != nil {
+		testing.ContextLog(ctx, "Unable to enable Cellular: ", err)
+		teardownFailure = true
 	}
 	if f.modemfwdStopped {
 		waitCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)

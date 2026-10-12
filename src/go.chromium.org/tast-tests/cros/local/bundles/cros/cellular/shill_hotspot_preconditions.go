@@ -99,7 +99,7 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		if err := cellular.CheckIfL850VerizonAndFixDefaultAPN(ctx); err != nil {
@@ -200,6 +200,16 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		if err := helper.Manager.DisableTechnology(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Cellular technology disabling failed: ", err)
 		}
+		defer func(ctx context.Context) {
+			testing.ContextLog(ctx, "Wait for cellular technology to finish disabling")
+			if err := helper.WaitForEnabledState(ctx, false); err != nil {
+				s.Log("Failed to wait for cellular technology disabled state: ", err)
+			}
+			testing.ContextLog(ctx, "Re-enable cellular technology")
+			if _, err := helper.Enable(ctx); err != nil {
+				s.Log("Failed to re-enable cellular technology during cleanup: ", err)
+			}
+		}(cleanupCtx)
 
 		testing.ContextLog(ctx, "Wait for tethering disabled")
 		if _, err := helper.Manager.WaitForTetheringState(ctx, shillconst.TetheringStateIdle); err != nil {
