@@ -314,7 +314,7 @@ func UpdateVersion(ctx context.Context, s *testing.State) {
 		if tc.keyVersion == fwDataKeyVer || tc.keyVersion == fwVer {
 			// Reset the TPM to avoid encountering the 'RW firmware key version rollback detect' issue after reboot.
 			s.Log("Resetting TPM and rebooting DUT")
-			if err := resetTpmAndReboot(ctx, pv, &state); err != nil {
+			if err := resetTpmAndReboot(ctx, h, &state); err != nil {
 				s.Error("Failed to reset TPM and reboot DUT: ", err)
 			}
 			if state.RemoveServoChargerRequired && !state.IsServoChargerConnected {
@@ -483,8 +483,7 @@ func checkKeyVer(ctx context.Context, h *firmware.Helper, expectedVer uint16, ke
 }
 
 // resetTpmAndReboot resets the TPM's data key version and reboots.
-func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.CheckAndSetServoCharger) error {
-	h := pv.Helper
+func resetTpmAndReboot(ctx context.Context, h *firmware.Helper, state *firmware.CheckAndSetServoCharger) error {
 	testing.ContextLog(ctx, "Rebooting the DUT to recovery screen")
 	if err := h.BootToRecoveryMode(ctx, state, false); err != nil {
 		return errors.Wrap(err, "failed to boot to recovery mode")
@@ -498,8 +497,12 @@ func resetTpmAndReboot(ctx context.Context, pv *fixture.Value, state *firmware.C
 	}
 	testing.ContextLog(ctx, "TPM recovery command output : ", string(out))
 
-	if err := h.RebootWithSSHCommand(ctx, pv.BootMode); err != nil {
-		return errors.Wrap(err, "failed to reboot with VT2 command")
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		return errors.Wrap(err, "creating mode switcher")
+	}
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset, firmware.WaitSoftwareSync, firmware.WaitMemoryRetrain); err != nil {
+		return errors.Wrap(err, "failed to reboot with ColdReset")
 	}
 	return nil
 }
