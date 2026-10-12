@@ -45,6 +45,7 @@ func init() {
 			"zeleena@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		Attr:         []string{"group:firmware", "firmware_stress"},
 		Vars:         []string{"firmware.ecSysjumpStressIterations"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		TestBedDeps:  tbdep.ServoPresentAndWorking,
