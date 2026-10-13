@@ -81,6 +81,11 @@ func VPNDestroySockets(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create VPN connection: ", err)
 	}
+	defer func() {
+		if err := vpnConn.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up VPN connection: ", err)
+		}
+	}()
 
 	// Set up socket connections.
 	env := vpnConn.Server.Env()

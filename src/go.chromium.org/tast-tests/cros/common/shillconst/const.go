@@ -220,6 +220,10 @@ const (
 	ServicePropertyEAPUseSystemCAs                = "EAP.UseSystemCAs"
 	ServicePropertyEAPSubjectAlternativeNameMatch = "EAP.SubjectAlternativeNameMatch"
 	ServicePropertyEAPDomainSuffixMatch           = "EAP.DomainSuffixMatch"
+
+	// Provider property names and values.
+	ProviderPropertyType = "Type"
+	ProviderTypeArcVpn   = "arcvpn"
 )
 
 // Service Error values

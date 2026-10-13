@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -131,23 +132,31 @@ func ARCVPNProxySettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to shill Manager: ", err)
 	}
 
-	services, _, err := m.ServicesByTechnology(ctx, shill.TechnologyVPN)
+	_, props, err := m.ServicesByTechnology(ctx, shill.TechnologyVPN)
 	if err != nil {
 		s.Fatal("Failed to get VPN services: ", err)
 	}
 
-	if len(services) != 1 {
-		s.Fatal("Expect to find only one VPN service, but found:", len(services))
+	var arcvpnProps []*dbusutil.Properties
+	for _, p := range props {
+		provider, err := p.GetMap(shillconst.ServicePropertyProvider)
+		if err != nil {
+			continue
+		}
+		providerType, err := provider.GetString(shillconst.ProviderPropertyType)
+		if err != nil {
+			continue
+		}
+		if providerType == shillconst.ProviderTypeArcVpn {
+			arcvpnProps = append(arcvpnProps, p)
+		}
+	}
+	if len(arcvpnProps) != 1 {
+		s.Fatal("Expect to find only one ARC VPN service, but found: ", len(arcvpnProps))
 	}
 
 	// Check that proxy config property in shill matches the expectation.
-	service := services[0]
-	p, err := service.GetProperties(ctx)
-	if err != nil {
-		s.Fatal("Failed to get VPN service properties: ", err)
-	}
-
-	proxyConfig, err := p.Get(shillconst.ServicePropertyProxyConfig)
+	proxyConfig, err := arcvpnProps[0].GetString(shillconst.ServicePropertyProxyConfig)
 	if err != nil {
 		s.Fatal("Failed to get proxy config property from service: ", err)
 	}
