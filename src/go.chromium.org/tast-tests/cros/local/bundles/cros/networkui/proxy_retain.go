@@ -50,7 +50,8 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "after_login",
+				Name:              "after_login",
+				ExtraSoftwareDeps: []string{"non_meet_device"},
 				Val: &proxyRetainTestParam{
 					description: "Proxy information retained after login",
 					test:        &retainAfterLoginTest{},

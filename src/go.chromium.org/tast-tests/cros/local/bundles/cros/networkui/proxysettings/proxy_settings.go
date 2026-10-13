@@ -230,7 +230,7 @@ func (m *Manager) LaunchAndPrepare(ctx context.Context, cr *chrome.Chrome, tconn
 	defer cancel()
 
 	if err := m.Launch(ctx, cr, tconn, network); err != nil {
-		return nil
+		return errors.Wrap(err, "failed to launch proxy settings")
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
@@ -270,9 +270,9 @@ func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 		}
 	case SignInScreen:
 		// Launch the proxy-settings page from QuickSettings is unstable as the QuickSettings
-		// can be collapsed by various events, wait for the lock-screen to be stable is essential.
-		if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {
-			return errors.Wrap(err, "failed to wait for lockscreen to be ready for testing")
+		// can be collapsed by various events, wait for the lock-screen or OOBE welcome screen to be stable is essential.
+		if err := waitForSignInScreenOrOOBE(ctx, cr, tconn, 30*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for sign-in screen or OOBE welcome screen to be ready for testing")
 		}
 
 		if err := m.launchProxySettingsFromQuickSettings(ctx, cr, tconn, network); err != nil {
@@ -294,6 +294,55 @@ func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 	}
 
 	return nil
+}
+
+// waitForSignInScreenOrOOBE waits until either the lockscreen/sign-in screen is ready for password
+// entry, or the OOBE welcome screen is visible (e.g. on CFM remora boards where NoLogin with
+// KeepState lands on the OOBE welcome screen).
+func waitForSignInScreenOrOOBE(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, timeout time.Duration) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		st, err := lockscreen.GetState(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get lockscreen state")
+		}
+		if st.ReadyForPassword && st.AreAllUserImagesLoaded {
+			return nil
+		}
+
+		oobeVisible, err := isOOBEWelcomeScreenVisible(ctx, cr)
+		if err != nil {
+			return errors.Wrap(err, "failed to check OOBE welcome screen visibility")
+		}
+		if oobeVisible {
+			return nil
+		}
+
+		return errors.Errorf("neither lockscreen password entry (last status %+v) nor OOBE welcome screen is ready", st)
+	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
+}
+
+// isOOBEWelcomeScreenVisible performs an immediate check for whether an OOBE target exists and its
+// welcome screen is currently visible.
+func isOOBEWelcomeScreenVisible(ctx context.Context, cr *chrome.Chrome) (bool, error) {
+	targets, err := cr.FindTargets(ctx, chrome.MatchTargetURLPrefix("chrome://oobe"))
+	if err != nil {
+		return false, errors.Wrap(err, "failed to find OOBE targets")
+	}
+	if len(targets) == 0 {
+		return false, nil
+	}
+
+	oobeConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetID(targets[0].TargetID))
+	if err != nil {
+		return false, errors.Wrap(err, "failed to connect to OOBE target")
+	}
+	defer oobeConn.Close()
+
+	var visible bool
+	if err := oobeConn.Eval(ctx, "typeof Oobe === 'function' && Boolean(Oobe.readyForTesting) && typeof OobeAPI === 'object' && OobeAPI !== null && Boolean(OobeAPI.screens?.WelcomeScreen?.isVisible?.())", &visible); err != nil {
+		return false, errors.Wrap(err, "failed to evaluate OOBE welcome screen visibility")
+	}
+	return visible, nil
 }
 
 // Close closes the proxy-settings page.
