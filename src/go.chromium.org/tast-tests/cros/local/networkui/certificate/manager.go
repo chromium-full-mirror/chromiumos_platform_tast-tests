@@ -70,7 +70,7 @@ var (
 	certFinder = nodewith.Ancestor(nodewith.Name("Certificate Manager").Role(role.RootWebArea))
 
 	clientCertLink = certFinder.NameStartingWith("View imported certificates from ChromeOS").Role(role.Link)
-	caCertLink     = certFinder.NameStartingWith("Installed by you").Role(role.Link)
+	caCertLink     = certFinder.NameRegex(regexp.MustCompile(`^Installed by you (No|\d+) certificate`)).Role(role.Link)
 
 	importDistrusted = certFinder.Name("Import to Distrusted Certificates").Role(role.Button)
 
