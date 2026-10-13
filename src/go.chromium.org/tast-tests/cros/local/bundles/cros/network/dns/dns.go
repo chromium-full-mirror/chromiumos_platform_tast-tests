@@ -430,15 +430,26 @@ func queryDNS(ctx context.Context, c Client, cr *chrome.Chrome, a *arc.ARC, cont
 			return errors.Wrapf(err, "failed to do open %s", url)
 		}
 		defer conn.Close()
-		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-			return errors.Wrap(err, "failed to wait for page to load")
-		}
-		content, err := conn.PageContent(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get page content")
-		}
-		if !strings.Contains(content, httpResponse) && !strings.Contains(content, chromeNXDomainError) {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+				return errors.Wrap(err, "failed to wait for page to load")
+			}
+			content, err := conn.PageContent(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get page content")
+			}
+			if strings.Contains(content, httpResponse) || strings.Contains(content, chromeNXDomainError) {
+				return nil
+			}
+			// Wait for a terminal DNS_PROBE_FINISHED_* state (where NXDOMAIN was already
+			// handled above) rather than breaking on intermediate ERR_NAME_NOT_RESOLVED or
+			// DNS_PROBE_STARTED states while Chrome's background DNS probe is still running.
+			if strings.Contains(content, "DNS_PROBE_FINISHED_") {
+				return testing.PollBreak(errors.New("failed to resolve domain"))
+			}
 			return errors.New("failed to resolve domain")
+		}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 100 * time.Millisecond}); err != nil {
+			return err
 		}
 		return nil
 	default:
