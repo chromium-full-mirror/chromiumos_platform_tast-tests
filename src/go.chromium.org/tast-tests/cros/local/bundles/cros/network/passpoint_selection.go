@@ -494,6 +494,8 @@ type selectionTestContext struct {
 	manager *shill.Manager
 	// aps is the list of access points/server created for the test.
 	aps []*hostapd.Server
+	// ssids is the list of SSIDs for the access points created for the test.
+	ssids []string
 	// credentials is the set of Passpoint credentials under test.
 	credentials []*passpoint.Credentials
 	// hasTLS is true when the test will use TLS authentication.
@@ -507,14 +509,38 @@ type selectionTestContext struct {
 }
 
 func PasspointSelection(ctx context.Context, s *testing.State) {
-	// Reserve a little time for cleanup.
+	// Reserve time for cleanup (including waiting for any post-disconnect scan
+	// to finish before flushing BSS).
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 25*time.Second)
 	defer cancel()
 
 	tc, err := prepareSelectionTest(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
+	}
+
+	wifi, err := shill.NewWifiManager(ctx, tc.manager)
+	if err != nil {
+		s.Fatal("Failed to obtain Wi-Fi manager: ", err)
+	}
+
+	wpas, err := wpasupplicant.NewSupplicant(ctx)
+	if err != nil {
+		s.Fatal("Failed to create wpa_supplicant proxy: ", err)
+	}
+	iface, err := wpas.GetInterface(ctx, tc.clientIface)
+	if err != nil {
+		s.Fatalf("Failed to obtain %s interface from wpa_supplicant: %v", tc.clientIface, err)
+	}
+
+	// Ensure any ongoing scan or connection from a previous test has settled
+	// and flush any stale BSS entries before starting the test APs.
+	if err := wifi.WaitUntilDisconnectedAndNotScanning(ctx, 15*time.Second); err != nil {
+		s.Log("Wi-Fi device did not become disconnected and not scanning before test setup: ", err)
+	}
+	if err := iface.FlushBSS(ctx, 0); err != nil {
+		s.Fatal("Failed to flush BSS cache before test setup: ", err)
 	}
 
 	// Prepare the certificate storage.
@@ -542,26 +568,21 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context) {
 		// Remove the test profile
 		if err := tc.manager.RemoveFakeUserProfile(ctx, profileName); err != nil {
-			s.Fatal("Failed to clean test profile: ", err)
+			s.Error("Failed to clean test profile: ", err)
+		}
+		// Ensure the cache of scanned networks is flushed after the profile removal
+		// disconnects the active service and any post-disconnect scan settles.
+		// As the test run is quicker than real life network changes, the cache might
+		// keep a list of available networks between two tests and lead to spurious
+		// connection attempts from Shill (b/282090326) on networks that do not
+		// exist anymore.
+		if err := wifi.WaitUntilDisconnectedAndNotScanning(ctx, 15*time.Second); err != nil {
+			s.Log("Wi-Fi device did not become disconnected and not scanning during cleanup: ", err)
+		}
+		if err := iface.FlushBSS(ctx, 0); err != nil {
+			s.Error("Failed to flush BSS cache during cleanup: ", err)
 		}
 	}(cleanupCtx)
-
-	// Ensure the cache of scanned network will be flushed right after the
-	// removal of the access points.
-	// As the test run is quicker than real life network changes, the cache might
-	// keep a list of available networks between two tests and lead to spurious
-	// connection attempts from Shill (b/282090326) on networks that does no
-	// exist anymore.
-	wpas, err := wpasupplicant.NewSupplicant(ctx)
-	if err != nil {
-		s.Fatal("Failed to create wpa_supplicant proxy: ", err)
-	}
-	iface, err := wpas.GetInterface(ctx, tc.clientIface)
-	if err != nil {
-		s.Fatalf("Failed to obtain %s interface from wpa_supplicant: %v", tc.clientIface, err)
-	}
-	// Set the expiration time of the cache entries to 0 (i.e. immediate flush).
-	defer iface.FlushBSS(cleanupCtx, 0)
 
 	// Start all the access points.
 	for _, ap := range tc.aps {
@@ -572,7 +593,23 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 		defer ap.Stop()
 	}
 
-	// Add the sets of credentials to Shill.
+	// Create a monitor to collect access point events before triggering
+	// Passpoint interworking selection.
+	testing.ContextLogf(ctx, "Starting monitor for %s", tc.expectedAP)
+	m := hostapd.NewMonitor()
+	if err := m.Start(ctx, tc.expectedAP); err != nil {
+		s.Fatal("Failed to start hostapd monitor: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := m.Stop(ctx); err != nil {
+			s.Error("Failed to stop hostapd monitor: ", err)
+		}
+	}(cleanupCtx)
+
+	// Add the sets of credentials to Shill while the Wi-Fi device is idle and
+	// after all APs are started, so that the subsequent scan discovers all APs
+	// simultaneously and triggers InterworkingSelect against the full candidate
+	// set.
 	for _, c := range tc.credentials {
 		if c.Auth == passpoint.AuthTLS {
 			c.CertID = certOrKeyID
@@ -587,28 +624,13 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Create a monitor to collect access point events.
-	testing.ContextLogf(ctx, "Starting monitor for %s", tc.expectedAP)
-	m := hostapd.NewMonitor()
-	if err := m.Start(ctx, tc.expectedAP); err != nil {
-		s.Fatal("Failed to start hostapd monitor: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := m.Stop(ctx); err != nil {
-			s.Fatal("Failed to stop hostapd monitor: ", err)
-		}
-	}(cleanupCtx)
-
-	wifi, err := shill.NewWifiManager(ctx, tc.manager)
-	if err != nil {
-		s.Fatal("Failed to obtain Wi-Fi manager: ", err)
-	}
-
 	// Delay to wait for a network to be discovered.
 	const scanAndWaitTimeout = time.Minute
-	// Trigger a scan
-	if _, err := wifi.ScanAndWaitForService(ctx, tc.expectedSSID, scanAndWaitTimeout); err != nil {
-		s.Fatal("Failed to request an active scan: ", err)
+	// Trigger a scan and wait for all test access points to be discovered by Shill.
+	for _, ssid := range tc.ssids {
+		if _, err := wifi.ScanAndWaitForService(ctx, ssid, scanAndWaitTimeout); err != nil {
+			s.Fatalf("Failed to discover AP %s: %v", ssid, err)
+		}
 	}
 
 	// Check the device connects to the access point.
@@ -650,10 +672,12 @@ func prepareSelectionTest(ctx context.Context, s *testing.State) (tc *selectionT
 
 	// Create one access point per test network
 	var servers []*hostapd.Server
+	var ssids []string
 	var expectedServer *hostapd.Server
 	for i, ap := range params.aps {
 		server := ap.ToServer(ifaces.AP[i], s.OutDir())
 		servers = append(servers, server)
+		ssids = append(ssids, ap.SSID)
 		if ap.SSID == params.expectedSSID {
 			expectedServer = server
 		}
@@ -666,6 +690,7 @@ func prepareSelectionTest(ctx context.Context, s *testing.State) (tc *selectionT
 	return &selectionTestContext{
 		manager:      m,
 		aps:          servers,
+		ssids:        ssids,
 		credentials:  params.credentials,
 		hasTLS:       hasTLS,
 		clientIface:  ifaces.Client[0],

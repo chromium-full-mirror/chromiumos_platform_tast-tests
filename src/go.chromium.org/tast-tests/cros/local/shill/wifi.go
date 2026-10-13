@@ -312,9 +312,19 @@ func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string,
 		return nil, errors.Wrapf(err, "failed to get %s device from Shill", iface)
 	}
 
-	// Always ensure the device is scanning and check if the service appeared.
+	// Check if the service appeared and ensure the device is scanning while waiting.
+	props := map[string]interface{}{
+		shillconst.ServicePropertyType:        shillconst.TypeWifi,
+		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+	}
 	var service *Service
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var findErr error
+		service, findErr = wifi.m.FindMatchingService(ctx, props)
+		if findErr == nil {
+			return nil
+		}
+
 		properties, err := d.GetProperties(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get device scanning state"))
@@ -331,12 +341,7 @@ func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string,
 			}
 		}
 
-		props := map[string]interface{}{
-			shillconst.ServicePropertyType:        shillconst.TypeWifi,
-			shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
-		}
-		service, err = wifi.m.FindMatchingService(ctx, props)
-		return err
+		return findErr
 	}, &testing.PollOptions{
 		Timeout:  timeout,
 		Interval: discoveryInterval,
@@ -344,4 +349,50 @@ func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string,
 		return nil, errors.Wrap(err, "service not found")
 	}
 	return service, nil
+}
+
+// WaitUntilDisconnectedAndNotScanning waits for the Wi-Fi device to be
+// disconnected (SelectedService == "/") and not actively scanning
+// (Scanning == false). Checking both ensures that after disconnecting or
+// removing a profile, both the service teardown and any post-disconnect
+// background scan triggered by Shill have settled before callers flush
+// wpa_supplicant's BSS cache.
+func (wifi *WifiManager) WaitUntilDisconnectedAndNotScanning(ctx context.Context, timeout time.Duration) error {
+	iface, err := wifi.Interface(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain Wi-Fi interface")
+	}
+
+	d, err := wifi.m.DeviceByName(ctx, iface)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get %s device from Shill", iface)
+	}
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		properties, err := d.GetProperties(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get device properties"))
+		}
+
+		scanning, err := properties.GetBool(shillconst.DevicePropertyScanning)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get %q property", shillconst.DevicePropertyScanning))
+		}
+		if scanning {
+			return errors.New("Wi-Fi device is still scanning")
+		}
+
+		selectedService, err := properties.GetObjectPath(shillconst.DevicePropertySelectedService)
+		if err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get %q property", shillconst.DevicePropertySelectedService))
+		}
+		if selectedService != "/" {
+			return errors.Errorf("Wi-Fi device still has selected service %q", selectedService)
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  timeout,
+		Interval: 200 * time.Millisecond,
+	})
 }
