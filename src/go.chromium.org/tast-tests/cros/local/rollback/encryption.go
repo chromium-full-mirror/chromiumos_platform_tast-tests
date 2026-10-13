@@ -70,6 +70,11 @@ func TriggerTpmEncryption(ctx context.Context) error {
 	}
 	defer upstart.StartJob(ctx, "oobe_config_restore")
 
+	for _, path := range []string{SslEncryptedRollbackData, TpmEncryptedRollbackData} {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			return errors.Wrapf(err, "failed to remove %s", path)
+		}
+	}
 	if err := testexec.CommandContext(ctx, "systemd-tmpfiles", "--create", "--remove", "--clean", "/usr/lib/tmpfiles.d/on-demand/oobe_config_save.conf").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run tmpfiles for oobe_config_save")
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 const dataSaveFlag = "/mnt/stateful_partition/.save_rollback_data"
-const oobeCompletedFile = "/home/chronos/.oobe_completed"
+const ownerKeyFile = "/var/lib/devicesettings/owner.key"
 const oobeConfigRestoreDir = "/var/lib/oobe_config_restore"
 const oobeConfigSaveDir = "/var/lib/oobe_config_save"
 
@@ -67,10 +67,10 @@ func PlaceFakedDecryptedRollbackData(ctx context.Context) error {
 	return nil
 }
 
-// PlaceOobeCompletedFlag fakes oobe completion.
+// PlaceOobeCompletedFlag fakes oobe completion by creating the owner key file.
 func PlaceOobeCompletedFlag(ctx context.Context) error {
-	if err := os.WriteFile(oobeCompletedFile, []byte(""), 0644); err != nil {
-		return errors.Wrap(err, "failed to place oobe completed flag")
+	if err := os.WriteFile(ownerKeyFile, []byte(""), 0644); err != nil {
+		return errors.Wrap(err, "failed to place owner key file")
 	}
 	return nil
 }
@@ -129,7 +129,7 @@ func CleanupRollbackLeftovers(ctx context.Context) (retErr error) {
 		oobeConfigSaveDir,
 		oobeConfigRestoreDir,
 		MetricsData,
-		oobeCompletedFile,
+		ownerKeyFile,
 	}
 	for _, path := range paths {
 		if err := os.RemoveAll(path); err != nil {
