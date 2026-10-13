@@ -275,3 +275,15 @@ func reloadIfFileMenuDisabled(ui *uiauto.Context) action.Action {
 		uiauto.IfFailThen(ui.WithTimeout(time.Minute).WaitUntilGone(fileMenuItemDisabled), reloadPage),
 	)
 }
+
+// DismissGettingStartedDialog returns an action to dismiss the "Getting started"
+// template dialog if it appears.
+func DismissGettingStartedDialog(tconn *chrome.TestConn) action.Action {
+	gettingStartedDialog := nodewith.Name("Getting started").Role(role.Dialog)
+	gettingStartedPrompt := prompts.Prompt{
+		Name:              "Getting started",
+		PromptFinder:      gettingStartedDialog,
+		ClearButtonFinder: prompts.CloseButtonFinder.Ancestor(gettingStartedDialog),
+	}
+	return prompts.ClearPotentialPrompts(tconn, shortUITimeout, gettingStartedPrompt)
+}

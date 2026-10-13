@@ -264,6 +264,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 			return err
 		}
 
+		// On some devices, the "Templates" button may be located at the center of
+		// the screen. When this happens, RunDragMouseCycle triggers the "Getting started"
+		// template dialog that blocks the toolbar buttons. Dismiss it if it appears.
+		if err := googledocs.DismissGettingStartedDialog(tconn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to clear 'Getting started' dialog")
+		}
+
 		for pIndex, p := range paragraphs {
 			// Before typing the next paragraph, ensure that the Docs
 			// tab hasn't crashed.
