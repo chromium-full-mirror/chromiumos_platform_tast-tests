@@ -6,11 +6,8 @@ package networkui
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
-	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -18,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	vpnManager "go.chromium.org/tast-tests/cros/local/networkui/vpn"
@@ -52,33 +48,10 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	runner := hwsec.NewCmdRunner()
-	certStore, err := netcertstore.CreateStore(ctx, runner)
-	if err != nil {
-		s.Fatal("Failed to create cert store: ", err)
-	}
-	defer certStore.Cleanup(cleanupCtx)
-
-	testCert := certificate.TestCert1()
-	// Prepare the certificates for the test.
-	if _, err := certStore.InstallCertKeyPair(ctx, testCert.ClientCred.PrivateKey, testCert.ClientCred.Cert); err != nil {
-		s.Fatal("Failed to install client cert: ", err)
-	}
-	id, err := certStore.InstallCertKeyPair(ctx, "", testCert.CACred.Cert)
-	if err != nil {
-		s.Fatal("Failed to install CA cert: ", err)
-	}
-
-	res := newVPNAreUserSpecifiedTestResource(vpn.NewCertVals(testCert, certStore.UserToken, id), s.OutDir())
+	res := newVPNAreUserSpecifiedTestResource(s.OutDir())
 	defer res.cleanup(cleanupCtx)
 
-	// Use the user who has installed certificates through netcertstore package as
-	// primary user responsible for configuring the VPN service.
-	primaryUser := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
-	if err := loginAndDoAction(ctx, []chrome.Option{
-		chrome.KeepState(), // Avoid resetting TPM.
-		chrome.FakeLogin(primaryUser),
-	}, joinVPN(res)); err != nil {
+	if err := loginAndDoAction(ctx, nil, joinVPN(res)); err != nil {
 		s.Fatal("Failed to login primary user to prepare: ", err)
 	}
 
@@ -95,17 +68,12 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 type vpnAreUserSpecifiedTestResource struct {
 	outDir string
 
-	certVals          *vpn.CertVals
-	userCertsNameOnUI string
-
 	cleanupVPNEnv uiauto.Action
 }
 
-func newVPNAreUserSpecifiedTestResource(certVals *vpn.CertVals, outDir string) *vpnAreUserSpecifiedTestResource {
+func newVPNAreUserSpecifiedTestResource(outDir string) *vpnAreUserSpecifiedTestResource {
 	return &vpnAreUserSpecifiedTestResource{
-		outDir:            outDir,
-		certVals:          certVals,
-		userCertsNameOnUI: fmt.Sprintf("%s [%s]", certVals.Credentials.CACred.Info.CommonName, certVals.Credentials.ClientCred.Info.CommonName),
+		outDir: outDir,
 	}
 }
 
@@ -146,11 +114,13 @@ func joinVPN(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction
 		defer cancel()
 
 		cfg := vpn.NewConfig(
-			// Using OpenVPN to perform the test (this is only a random choice).
-			vpn.TypeOpenVPN,
-			// Password is required when configuring an OpenVPN network via UI.
-			vpn.WithOpenVPNUseUserPassword(),
-			vpn.WithCertVals(res.certVals),
+			// Using L2TP/IPsec PSK to perform the test (this is only a random choice).
+			// TODO(b/414664834): Restore certificate-based VPN coverage once
+			// netcertstore.InstallCertKeyPair (p11_replay --import --type=cert) sets
+			// NSS CKT_NSS_TRUSTED_DELEGATOR trust attributes required by Chrome's
+			// NetworkCertLoader for Server CA certificates.
+			vpn.TypeL2TPIPsec,
+			vpn.WithIPsecAuthType(vpn.AuthTypePSK),
 		)
 
 		_, vpnHelper, cleanup, err := vpnManager.NewDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)

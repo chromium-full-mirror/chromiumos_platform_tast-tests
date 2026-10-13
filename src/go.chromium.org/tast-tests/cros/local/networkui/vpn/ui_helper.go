@@ -39,39 +39,43 @@ type DialogHelper interface {
 // The clientCertName is optional, only required for some VPN types, an error will be thrown if it is not specified when it should be.
 func NewDialogHelper(vpnType vpn.Type, config *vpn.Config, props *vpn.ShillProperties, vpnName string, clientCertName *string) (DialogHelper, error) {
 	baseHelper := &dialogHelperBase{props: props, vpnName: vpnName}
+	var certName string
+	if clientCertName != nil {
+		certName = *clientCertName
+	}
 
 	switch vpnType {
 	case vpn.TypeIKEv2:
 		if config == nil {
 			return nil, errors.New("invalid VPN config")
 		}
-		if config.IPsecAuthType == vpn.AuthTypeCert && clientCertName == nil {
+		if config.IPsecAuthType == vpn.AuthTypeCert && certName == "" {
 			return nil, errors.Errorf("expecting clientCertName to be provided for %q", vpnType.String())
 		}
 		return &ikev2Helper{
 			dialogHelperBase: baseHelper,
 			ipsecAuthType:    config.IPsecAuthType,
-			clientCertName:   *clientCertName,
+			clientCertName:   certName,
 		}, nil
 	case vpn.TypeL2TPIPsec:
 		if config == nil {
 			return nil, errors.New("invalid VPN config")
 		}
-		if config.IPsecAuthType == vpn.AuthTypeCert && clientCertName == nil {
+		if config.IPsecAuthType == vpn.AuthTypeCert && certName == "" {
 			return nil, errors.Errorf("expecting clientCertName to be provided for %q", vpnType.String())
 		}
 		return &l2tpipsecHelper{
 			dialogHelperBase: baseHelper,
 			ipsecAuthType:    config.IPsecAuthType,
-			clientCertName:   *clientCertName,
+			clientCertName:   certName,
 		}, nil
 	case vpn.TypeOpenVPN:
-		if clientCertName == nil {
+		if certName == "" {
 			return nil, errors.Errorf("expecting clientCertName to be provided for %q", vpnType.String())
 		}
 		return &openvpnHelper{
 			dialogHelperBase: baseHelper,
-			clientCertName:   *clientCertName,
+			clientCertName:   certName,
 		}, nil
 	case vpn.TypeWireGuard:
 		return &wireguardHelper{
@@ -93,8 +97,8 @@ func NewDialogHelper(vpnType vpn.Type, config *vpn.Config, props *vpn.ShillPrope
 // Note that vpnNameOnUI is only a name of this VPN network that end user
 // attempt to add through ChromeOS UI.
 func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameOnUI string) (server *vpn.Server, dialogHelper DialogHelper, cleanup uiauto.Action, retErr error) {
-	if cfg == nil || cfg.CertVals == nil {
-		return nil, nil, nil, errors.New("invalid configs: missing configs or certificates values")
+	if cfg == nil {
+		return nil, nil, nil, errors.New("invalid configs: missing configs")
 	}
 
 	var cleanups []uiauto.Action
@@ -144,8 +148,12 @@ func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameO
 		return nil, nil, nil, errors.Wrap(err, "failed to generate D-Bus properties")
 	}
 
-	certName := fmt.Sprintf("%s [%s]", cfg.CertVals.Credentials.CACred.Info.CommonName, cfg.CertVals.Credentials.ClientCred.Info.CommonName)
-	if dialogHelper, err = NewDialogHelper(server.Config.Type, cfg, props, vpnNameOnUI, &certName); err != nil {
+	var certName *string
+	if cfg.CertVals != nil {
+		name := fmt.Sprintf("%s [%s]", cfg.CertVals.Credentials.CACred.Info.CommonName, cfg.CertVals.Credentials.ClientCred.Info.CommonName)
+		certName = &name
+	}
+	if dialogHelper, err = NewDialogHelper(server.Config.Type, cfg, props, vpnNameOnUI, certName); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to create a UI helper")
 	}
 
