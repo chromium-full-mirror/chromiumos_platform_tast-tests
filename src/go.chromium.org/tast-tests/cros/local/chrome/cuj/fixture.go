@@ -1110,9 +1110,11 @@ func init() {
 		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
-	// The following fixtures are variants of loggedInToCUJUser and
-	// loggedInToCUJUserWithWebRTCEventLogging, used to compare CUJ performance
-	// across these WebUI Omnibox configs:
+	// The following fixtures are variants of loggedInToCUJUserDisableARC and
+	// loggedInToCUJUserWithWebRTCEventLoggingDisableARC, used to compare CUJ
+	// performance across these WebUI Omnibox configs. ARC is disabled so that
+	// it doesn't push 4 GB devices into swap, which hides the cost of the
+	// WebUI popups:
 	//  1. WebUIOmniboxDisabled: all WebUI Omnibox features disabled.
 	//  2. WebUIOmniboxPopupEnabledOnly: WebUIOmniboxPopup and
 	//     WebUIOmniboxAimPopup enabled.
@@ -1125,7 +1127,7 @@ func init() {
 	// Every feature that a config doesn't enable is explicitly disabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxDisabled",
-		Desc: "Variant of loggedInToCUJUser with the WebUI Omnibox popup and its optimizations disabled",
+		Desc: "Variant of loggedInToCUJUserDisableARC with the WebUI Omnibox popup and its optimizations disabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1136,6 +1138,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
+			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1146,7 +1149,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxPopupEnabledOnly",
-		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
+		Desc: "Variant of loggedInToCUJUserDisableARC with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1158,6 +1161,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
+			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1168,7 +1172,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxFullPopupEnabledOnly",
-		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
+		Desc: "Variant of loggedInToCUJUserDisableARC with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1180,6 +1184,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
+			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1190,7 +1195,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxPopupEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Desc: "Variant of loggedInToCUJUserDisableARC with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1202,6 +1207,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
+			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1212,7 +1218,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxFullPopupEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUser with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Desc: "Variant of loggedInToCUJUserDisableARC with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1224,6 +1230,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			},
+			disableARC: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1234,7 +1241,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxDisabled",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with the WebUI Omnibox popup and its optimizations disabled",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with the WebUI Omnibox popup and its optimizations disabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1248,6 +1255,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1259,7 +1267,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxPopupEnabledOnly",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with WebUIOmniboxPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1274,6 +1282,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1285,7 +1294,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxFullPopupEnabledOnly",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with WebUIOmniboxFullPopup and WebUIOmniboxAimPopup enabled, without the popup optimizations",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1300,6 +1309,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1311,7 +1321,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxPopupEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with WebUIOmniboxPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1326,6 +1336,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
@@ -1337,7 +1348,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxFullPopupEnabledAndOptimized",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLogging with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with WebUIOmniboxFullPopup, WebUIOmniboxAimPopup and the popup optimizations enabled",
 		Contacts: []string{
 			"vincentchiang@chromium.org",
 			"cros-sw-perf@google.com",
@@ -1352,6 +1363,7 @@ func init() {
 				chrome.DisableFeatures("WebUIOmniboxPopup"),
 				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
 			),
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
