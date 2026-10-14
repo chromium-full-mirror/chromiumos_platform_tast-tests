@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -74,8 +75,26 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set charger status to connected: ", err)
 	}
 
+	const chargeLimitPref = "/var/lib/power_manager/charge_limit_enabled"
+	origChargeLimit, origChargeLimitErr := linuxssh.ReadFile(ctx, dut.Conn(), chargeLimitPref)
+
 	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Performing cleanup")
+		restoreChargeLimit := func(ctx context.Context) error {
+			if origChargeLimitErr == nil {
+				return linuxssh.WriteFile(ctx, dut.Conn(), chargeLimitPref, origChargeLimit, 0644)
+			}
+			return dut.Conn().CommandContext(ctx, "rm", "-f", chargeLimitPref).Run()
+		}
+
+		// Best-effort restore before EC reboot in case the DUT cannot reconnect
+		// after reboot. Ignore errors since the DUT may currently be in G3.
+		if dut.Connected(ctx) {
+			testing.ContextLog(ctx, "Restoring powerd charge_limit_enabled preference before EC reboot")
+			_ = restoreChargeLimit(ctx)
+			_ = dut.Conn().CommandContext(ctx, "sync").Run()
+		}
+
 		testing.ContextLog(ctx, "Rebooting EC to restore battery connection")
 		// Running ec command reboot from a powered off state (eg powerstate G3) still brings up DUT without additional powerkey press.
 		if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
@@ -89,7 +108,25 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect to DUT after ec rebooot: ", err)
 		}
 
+		testing.ContextLog(ctx, "Restoring powerd charge_limit_enabled preference")
+		if err := restoreChargeLimit(ctx); err != nil {
+			s.Fatal("Failed to restore charge_limit_enabled in powerd: ", err)
+		}
+		if err := dut.Conn().CommandContext(ctx, "restart", "powerd").Run(); err != nil {
+			s.Fatal("Failed to restart powerd: ", err)
+		}
 	}(cleanupCtx)
+
+	// Persistently disable powerd's charge_limit_enabled preference across the
+	// shutdown/power-on cycle so powerd does not re-enable the battery sustainer
+	// while the battery is cut off.
+	testing.ContextLog(ctx, "Disabling charge_limit_enabled in powerd")
+	if err := linuxssh.WriteFile(ctx, dut.Conn(), chargeLimitPref, []byte("0\n"), 0644); err != nil {
+		s.Fatal("Failed to disable charge_limit_enabled in powerd: ", err)
+	}
+	if err := dut.Conn().CommandContext(ctx, "restart", "powerd").Run(); err != nil {
+		s.Fatal("Failed to restart powerd: ", err)
+	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -100,12 +137,6 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 	client := security.NewBootLockboxServiceClient(cl.Conn)
 	if _, err := client.NewChromeLogin(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
-	}
-
-	// Disable battery sustainer - i.e. force charging
-	testing.ContextLog(ctx, "Disable battery sustainer")
-	if err := dut.Conn().CommandContext(ctx, "ectool", "chargecontrol", "normal").Run(); err != nil {
-		s.Fatal("Failed to issue `ectool chargecontrol normal`: ", err)
 	}
 
 	// Cut off the battery to simulate booting without a battery.
@@ -126,8 +157,8 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for G3/S5 powerstate: ", err)
 	}
 
-	// battery need 30 seconds to discharge and complete the cutoff sequence
 	testing.ContextLog(ctx, "Sleeping 60 seconds before power on")
+	// GoBigSleepLint: battery needs 30 seconds to discharge and complete the cutoff sequence.
 	testing.Sleep(ctx, 60*time.Second)
 
 	testing.ContextLog(ctx, "Pressing power key to turn on DUT")
