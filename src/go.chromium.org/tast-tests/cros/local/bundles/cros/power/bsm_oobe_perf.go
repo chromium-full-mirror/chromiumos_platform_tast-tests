@@ -32,7 +32,6 @@ type testParamBsmOobePerf struct {
 }
 
 func init() {
-	// TODO(b/418724317): Remove from lab after BSM slows down login is fixed.
 	testing.AddTest(&testing.Test{
 		Func: BsmOobePerf,
 		Desc: "Navigate through Play Store Out-Of-Box Experience (OOBE) and record provisioning time and resource usage under battery saver mode",
@@ -55,7 +54,6 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged_vm",
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamBsmOobePerf{
 				metric: "Unmanaged",
@@ -71,7 +69,6 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged_vm_bsm",
-			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamBsmOobePerf{
 				metric:    "Unmanaged",
