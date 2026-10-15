@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/qos"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -237,10 +238,14 @@ func QosAppMonitor(ctx context.Context, s *testing.State) {
 		pingAddrs = append(pingAddrs, ip.String())
 	}
 
-	// Ping and make sure connection has been established.
+	// Ping and make sure connection has been established on both host and ARC.
 	for _, target := range pingAddrs {
 		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
-			s.Errorf("network verification failed: %v is not reachable as user chronos on host: %v", target, err)
+			s.Fatalf("Network verification failed: %v is not reachable as user chronos on host: %v", target, err)
+		}
+		// ExpectPingSuccess polls internally for up to 20s until the target is reachable from ARC.
+		if err := arcnet.ExpectPingSuccess(ctx, a, "", target); err != nil {
+			s.Fatalf("Network verification failed: %v is not reachable from ARC: %v", target, err)
 		}
 	}
 
