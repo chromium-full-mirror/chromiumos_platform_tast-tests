@@ -45,15 +45,28 @@ func init() {
 	})
 }
 
+// loginStateMode specifies whether Chrome should preserve or clear existing user
+// profile state on disk when logging in.
+type loginStateMode int
+
+const (
+	// cleanLogin starts Chrome with a fresh user profile (wiping existing cryptohome state).
+	cleanLogin loginStateMode = iota
+	// keepStateLogin starts Chrome with chrome.KeepState(), preserving the existing user
+	// profile and its saved Shill Wi-Fi configurations across logins.
+	keepStateLogin
+)
+
 // WifiReconnectOnUserChange sets up a WiFi AP with EAP, and configures
 // different credentials for the user profile and the device (default) profile
 // (which is common setup in enterprise), so that a WiFi reconnect will be
 // triggered during login or logout. The test verifies that routing, DNS, and
 // web browsing in Chrome works after login and logout.
 func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
-	// Use a shortened context for test operations to reserve time for cleanup.
+	// Use a shortened context for test operations to reserve time for cleanup
+	// (including logging back in to remove the test service from the user profile).
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
@@ -202,8 +215,12 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 	// Group of util functions.
 
 	// Do login by starting Chrome.
-	login := func(tag string) *chrome.Chrome {
-		cr, err := chrome.New(ctx, chrome.KeepState())
+	login := func(tag string, mode loginStateMode) *chrome.Chrome {
+		var opts []chrome.Option
+		if mode == keepStateLogin {
+			opts = append(opts, chrome.KeepState())
+		}
+		cr, err := chrome.New(ctx, opts...)
 		if err != nil {
 			s.Fatalf("%s: Failed to login by starting Chrome: %v", tag, err)
 		}
@@ -333,11 +350,32 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 
 	// Group of util functions -- end.
 
+	// Remove the configured WiFi service from the user profile on teardown so
+	// it does not remain in /profile/chronos/shill for subsequent tests.
+	// Register the defer before Login #0 so cleanup still runs if verifySvcOnline
+	// fatals after configureSvc has already saved the service to the user profile.
+	userSvcConfigured := false
+	defer func() {
+		if !userSvcConfigured {
+			return
+		}
+		cr, err := chrome.New(cleanupCtx, chrome.KeepState())
+		if err != nil {
+			s.Log("Cleanup Login: Failed to login by starting Chrome: ", err)
+			return
+		}
+		defer cr.Close(cleanupCtx)
+		if err := wifiMgr.ForgetAP(cleanupCtx, ssid); err != nil {
+			s.Logf("Failed to remove WiFi service %s from user profile during cleanup: %v", ssid, err)
+		}
+	}()
+
 	s.Log("Logging in to configure WiFi service for user profile")
 	func() {
 		const tag = "Login #0"
-		login(tag)
+		login(tag, cleanLogin)
 		svc := scanAndFindSvc(tag, ssid)
+		userSvcConfigured = true
 		configureSvc(tag, svc, userProfileIdentity, userProfilePassword)
 		verifySvcOnline(tag, svc)
 	}()
@@ -361,7 +399,7 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 		s.Logf("Test WiFi connection for login (%d/%d)", i, iterCnt)
 		func() {
 			tag := fmt.Sprintf("Login #%d", i)
-			cr := login(tag)
+			cr := login(tag, keepStateLogin)
 			svc := scanAndFindSvc(tag, ssid)
 			verifySvcOnline(tag, svc)
 			verifyIPProvision(tag, svc)

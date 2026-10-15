@@ -295,8 +295,8 @@ func (wifi *WifiManager) ForgetAP(ctx context.Context, ssid string) error {
 	return nil
 }
 
-// ScanAndWaitForService starts a Wi-Fi scan and waits for a service with
-// ssid to appear.
+// ScanAndWaitForService starts a Wi-Fi scan and waits for a visible (in-range)
+// Wi-Fi service with ssid to be discovered.
 func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string, timeout time.Duration) (*Service, error) {
 	// discoveryInterval is the delay between two polls, it allows to avoid
 	// spamming Shill with D-Bus requests.
@@ -316,6 +316,7 @@ func (wifi *WifiManager) ScanAndWaitForService(ctx context.Context, ssid string,
 	props := map[string]interface{}{
 		shillconst.ServicePropertyType:        shillconst.TypeWifi,
 		shillconst.ServicePropertyWiFiHexSSID: strings.ToUpper(hex.EncodeToString([]byte(ssid))),
+		shillconst.ServicePropertyVisible:     true, // only find visible APs.
 	}
 	var service *Service
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
