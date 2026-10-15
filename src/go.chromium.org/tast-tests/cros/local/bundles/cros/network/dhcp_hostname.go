@@ -6,6 +6,7 @@ package network
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -15,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -90,8 +92,20 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 	}
 
 	reconnectService := func() {
-		if err := svc.Reconnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect the service: ", err)
+		if err := svc.Disconnect(ctx); err != nil {
+			s.Fatal("Failed to disconnect the service: ", err)
+		}
+		if err := waitForIPv4Teardown(ctx, rt.VethOutName); err != nil {
+			s.Fatal("Failed to wait for IPv4 address teardown: ", err)
+		}
+		state, err := svc.GetState(ctx)
+		if err != nil {
+			s.Fatal("Failed to get service state: ", err)
+		}
+		if state == shillconst.ServiceStateIdle || state == shillconst.ServiceStateFailure {
+			if err := svc.Connect(ctx); err != nil {
+				s.Fatal("Failed to connect the service: ", err)
+			}
 		}
 		if err := svc.WaitForConnectedOrError(ctx); err != nil {
 			s.Fatal("Failed to wait for service in test online: ", err)
@@ -106,14 +120,31 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 		reconnectService()
 	}
 
+	var pushedProfiles []string
+	defer func() {
+		for i := len(pushedProfiles) - 1; i >= 0; i-- {
+			name := pushedProfiles[i]
+			if err := manager.PopProfile(cleanupCtx, name); err != nil {
+				testing.ContextLogf(cleanupCtx, "Failed to pop %s profile during cleanup: %v", name, err)
+			}
+			if err := manager.RemoveProfile(cleanupCtx, name); err != nil {
+				testing.ContextLogf(cleanupCtx, "Failed to remove %s profile during cleanup: %v", name, err)
+			}
+		}
+	}()
+
 	pushProfile := func(name string) {
 		testing.ContextLogf(ctx, "Push profile %s and reconnect the service", name)
 		if _, err := manager.CreateProfile(ctx, name); err != nil {
 			s.Fatalf("Failed to create %s profile: %v", name, err)
 		}
 		if _, err := manager.PushProfile(ctx, name); err != nil {
+			if rmErr := manager.RemoveProfile(cleanupCtx, name); rmErr != nil {
+				testing.ContextLogf(cleanupCtx, "Failed to remove %s profile after PushProfile failure: %v", name, rmErr)
+			}
 			s.Fatalf("Failed to push %s profile: %v", name, err)
 		}
+		pushedProfiles = append(pushedProfiles, name)
 		reconnectService()
 	}
 
@@ -124,6 +155,9 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 		}
 		if err := manager.RemoveProfile(ctx, name); err != nil {
 			s.Fatalf("Failed to remove %s profile: %v", name, err)
+		}
+		if len(pushedProfiles) > 0 && pushedProfiles[len(pushedProfiles)-1] == name {
+			pushedProfiles = pushedProfiles[:len(pushedProfiles)-1]
 		}
 		reconnectService()
 	}
@@ -181,4 +215,23 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 	if hasHostname(hostname1) || hasHostname(hostname2) {
 		s.Fatal("Leases in dnsmasq still contains the hostname which should be removed")
 	}
+}
+
+func waitForIPv4Teardown(ctx context.Context, ifaceName string) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		iface, err := net.InterfaceByName(ifaceName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get interface %s", ifaceName)
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get addresses on %s", ifaceName)
+		}
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok && ipnet.IP.To4() != nil {
+				return errors.Errorf("interface %s still has IPv4 address %s", ifaceName, ipnet.IP)
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 50 * time.Millisecond})
 }
