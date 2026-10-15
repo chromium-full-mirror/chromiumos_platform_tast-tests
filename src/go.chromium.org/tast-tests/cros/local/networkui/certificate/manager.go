@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -28,6 +29,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Manager holds the resources required to operate the Certificates Manager.
@@ -167,7 +169,11 @@ func (m *Manager) ImportCACert(fileName, certName string, trustSettings CATrustS
 
 	return uiauto.Combine(fmt.Sprintf("import CA certificate %q", certName),
 		m.switchToCertTab(TypeCA),
-		m.ui.LeftClick(importDistrusted),
+		// In Guest mode, downloading certificates via downloadFromLocalHTTPServer triggers
+		// "Download complete" notification popups in the bottom-right corner that can
+		// occlude the "Import to Distrusted Certificates" button and intercept coordinate-based
+		// mouse clicks. Use DoDefault to activate the button via accessibility actions.
+		m.ui.DoDefault(importDistrusted),
 		uploadFile(m.tconn, fileName),
 		m.ui.WaitUntilExists(certificateText),
 	)
@@ -332,7 +338,9 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, ce
 		}
 		defer func(ctx context.Context) {
 			if retErr != nil {
-				m.DeleteCert(certName, organization, certType)
+				if err := m.DeleteCert(certName, organization, certType)(ctx); err != nil {
+					testing.ContextLogf(ctx, "Failed to delete %q cert after import failure: %v", certType, err)
+				}
 			}
 		}(cleanupCtx)
 	}
@@ -383,7 +391,7 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, fileNam
 
 	downloadLink := nodewith.Name(linkName).Role(role.Link)
 
-	regex := regexp.MustCompile(fmt.Sprintf(`^Download\scomplete\n%s$`, fileName))
+	regex := regexp.MustCompile(fmt.Sprintf(`^Download\scomplete\n%s$`, regexp.QuoteMeta(fileName)))
 	downloadMessage := nodewith.NameRegex(regex).Role(role.GenericContainer)
 
 	ui := uiauto.New(tconn)
@@ -392,6 +400,13 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, fileNam
 		ui.WaitUntilExists(downloadMessage),
 	)(ctx); err != nil {
 		return nil, err
+	}
+	// Dismiss the "Download complete" notification popup on a best-effort basis so it does
+	// not remain in the bottom-right corner covering buttons in the Certificate Manager UI
+	// (such as "Import to Distrusted Certificates"), without failing if the notification
+	// has already disappeared on its own.
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		testing.ContextLog(ctx, "Failed to close download notifications: ", err)
 	}
 
 	return func(ctx context.Context) error {
