@@ -48,6 +48,7 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"),
+				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
@@ -70,6 +71,7 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync"),
+				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -92,6 +94,7 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
+				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
@@ -114,6 +117,7 @@ func init() {
 				chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 				chrome.EnableFeatures("DesksTemplates", "EnableSavedDesks"),
 				chrome.DisableFeatures("DeskTemplateSync", "FirmwareUpdaterApp"),
+				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
