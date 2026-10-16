@@ -257,10 +257,16 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 		deskActionButton := nodewith.ClassName("DeskActionButton").Name("Open context menu")
 
 		// Navigate to the save desk buttons.
+		// Move the mouse to the root window before moving to deskPreviewView so
+		// that autotestPrivate.mouseMove always dispatches a mouse-move event
+		// (even if the cursor was already at deskPreviewView's center point after
+		// keyboard events disabled mouse hover) and the desk bar expansion
+		// animation has time to finish before hovering.
 		if err := uiauto.Combine(
 			"navigate to the save desk buttons",
 			ac.DoDefault(defaultDeskButton),
 			ac.WaitUntilExists(deskMiniView),
+			ac.MouseMoveTo(nodewith.Root(), 0),
 			ac.MouseMoveTo(deskPreviewView, 0),
 			ac.WaitUntilExists(deskActionButton),
 			ac.DoDefault(deskActionButton),
