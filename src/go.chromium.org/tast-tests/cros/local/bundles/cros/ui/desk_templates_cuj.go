@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -42,6 +43,7 @@ func init() {
 		BugComponent: "b:1020793",
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnMeetOnlyDevice()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps:      []string{ui.GaiaPoolDefaultVarName},

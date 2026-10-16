@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // defaultTimeout includes 10m base time, cooldown, and TotalBenchmarkTimeout
@@ -29,6 +30,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnMeetOnlyDevice()),
 		Vars: []string{
 			// Iterations are limited by the specific benchmark:
 			// Speedometer: Default to 10.

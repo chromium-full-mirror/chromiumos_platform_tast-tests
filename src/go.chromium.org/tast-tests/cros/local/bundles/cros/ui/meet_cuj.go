@@ -31,6 +31,7 @@ func init() {
 		HardwareDeps: hwdep.D(
 			hwdep.SkipOnModel("kaisa"),
 			hwdep.SkipOnModel("kench"),
+			hwdep.SkipOnMeetOnlyDevice(),
 		),
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{

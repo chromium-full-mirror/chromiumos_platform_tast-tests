@@ -14,19 +14,21 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GpuCUJ,
-		Desc:         "GPU performance CUJ tests",
-		Contacts:     []string{
+		Func: GpuCUJ,
+		Desc: "GPU performance CUJ tests",
+		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnMeetOnlyDevice()),
 		Timeout:      25*time.Minute + cuj.CPUStabilizationTimeout,
 		Data: []string{
 			"video.html",
