@@ -1100,12 +1100,18 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 			return errors.Wrap(err, "GSCVersionInfo failed")
 		}
 		if gscVer.IsTi50 {
+			ccdConnected, err := s.CCDConnected(ctx)
+			if err != nil {
+				return errors.Wrap(err, "check ccd connected failed")
+			}
 			testing.ContextLog(ctx, "Resetting EC via GSC console")
 			if err := s.RunGSCCommand(ctx, "ecrst pulse"); err != nil {
 				return errors.Wrap(err, "ecrst pulse failed")
 			}
-			if err := s.WaitForCCDState(ctx, true, 30*time.Second); err != nil {
-				return errors.Wrap(err, "wait for ccd failed")
+			if ccdConnected {
+				if err := s.WaitForCCDState(ctx, true, 30*time.Second); err != nil {
+					return errors.Wrap(err, "wait for ccd failed")
+				}
 			}
 			return nil
 		}
