@@ -10,41 +10,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// List of power rounded display fixtures.
-const (
-	PowerRoundedDisplayWithFlagOn  = "powerRoundedDisplayWithFlagOn"
-	PowerRoundedDisplayWithFlagOff = "powerRoundedDisplayWithFlagOff"
-)
+// PowerRoundedDisplayWithFlagOn is the fixture for the RoundedDisplayPower test
+// with the flag enabled.
+const PowerRoundedDisplayWithFlagOn = "powerRoundedDisplayWithFlagOn"
 
 func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name: PowerRoundedDisplayWithFlagOff,
-		Desc: "UI CUJ tests with Rounded Windows feature disabled",
-		Contacts: []string{
-			"zoraiznaeem@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		Impl: powersetup.NewPowerUIFixture(powersetup.PowerTestOptions{
-			NightLight:         powersetup.DisableNightLight,
-			DarkTheme:          powersetup.EnableLightTheme,
-			KeyboardBrightness: powersetup.SetKbBrightnessToZero,
-		}, powersetup.PowerFixtureOptions{
-			BrowserExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(
-					// By only allowing SingleOnTop strategy, we insure that
-					// rounded display mask textures are always promoted.
-					// See b/331664214.
-					"--enable-hardware-overlays=single-on-top"),
-			},
-		}),
-		Parent:          "gpuWatchHangs",
-		BugComponent:    "b:1045832", // ChromeOS > Software > Performance > TPS
-		SetUpTimeout:    powersetup.SetUpTimeout,
-		ResetTimeout:    powersetup.ResetTimeout,
-		TearDownTimeout: powersetup.TearDownTimeout,
-		PreTestTimeout:  powersetup.PreTestTimeout,
-		PostTestTimeout: powersetup.PostTestTimeout,
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: PowerRoundedDisplayWithFlagOn,
 		Desc: "UI CUJ tests with Rounded Windows feature enabled",

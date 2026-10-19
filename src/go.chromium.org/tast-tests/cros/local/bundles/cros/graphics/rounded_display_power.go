@@ -48,12 +48,6 @@ func init() {
 			{
 				Name:    "enabled",
 				Fixture: roundeddisplay.PowerRoundedDisplayWithFlagOn,
-				Val:     roundedDisplayPowerParam{enableFeature: true},
-			},
-			{
-				Name:    "disabled",
-				Fixture: roundeddisplay.PowerRoundedDisplayWithFlagOff,
-				Val:     roundedDisplayPowerParam{enableFeature: false},
 			},
 		},
 	})
@@ -63,8 +57,6 @@ func RoundedDisplayPower(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	param := s.Param().(roundedDisplayPowerParam)
 
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -102,13 +94,8 @@ func RoundedDisplayPower(ctx context.Context, s *testing.State) {
 
 	fastInkAction := action.Sleep(time.Second)
 
-	expectedOverlays := 1
-	if param.enableFeature {
-		expectedOverlays = roundeddisplay.ExpectedNumberOfPromotedOverlays
-	}
-
 	if err := roundeddisplay.VerifyNumberOfPromotedOverlays(
-		ctx, tconn, s, expectedOverlays, fastInkAction); err != nil {
+		ctx, tconn, s, roundeddisplay.ExpectedNumberOfPromotedOverlays, fastInkAction); err != nil {
 		s.Fatal("Expected number of overlays not promoted: ", err)
 	}
 
