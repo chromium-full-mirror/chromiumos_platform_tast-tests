@@ -221,6 +221,46 @@ func (ec *ECTool) ChipInfo(ctx context.Context) (*chipinfo, error) {
 	return &info, nil
 }
 
+// EC reset flags defined in include/ec_commands.h.
+const (
+	ECResetFlagOther      uint32 = 0x00000001
+	ECResetFlagResetPin   uint32 = 0x00000002
+	ECResetFlagBrownout   uint32 = 0x00000004
+	ECResetFlagPowerOn    uint32 = 0x00000008
+	ECResetFlagWatchdog   uint32 = 0x00000010
+	ECResetFlagSoft       uint32 = 0x00000020
+	ECResetFlagHibernate  uint32 = 0x00000040
+	ECResetFlagRTCAlarm   uint32 = 0x00000080
+	ECResetFlagWakePin    uint32 = 0x00000100
+	ECResetFlagLowBattery uint32 = 0x00000200
+	ECResetFlagSysjump    uint32 = 0x00000400
+	ECResetFlagHard       uint32 = 0x00000800
+	ECResetFlagAPOff      uint32 = 0x00001000
+	ECResetFlagPreserved  uint32 = 0x00002000
+	ECResetFlagUSBResume  uint32 = 0x00004000
+	ECResetFlagRDD        uint32 = 0x00008000
+	ECResetFlagRbox       uint32 = 0x00010000
+	ECResetFlagSecurity   uint32 = 0x00020000
+	ECResetFlagAPWatchdog uint32 = 0x00040000
+	ECResetFlagStayInRO   uint32 = 0x00080000
+	ECResetFlagEFS        uint32 = 0x00100000
+	ECResetFlagAPIdle     uint32 = 0x00200000
+	ECResetFlagInitialPwr uint32 = 0x00400000
+)
+
+// ResetFlags returns the EC reset flags using 'ectool sysinfo reset_flags'.
+func (ec *ECTool) ResetFlags(ctx context.Context) (uint32, error) {
+	out, err := ec.Command(ctx, "sysinfo", "reset_flags").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return 0, errors.Wrapf(err, "running 'ectool sysinfo reset_flags' on DUT, got: %v", string(out))
+	}
+	flags, err := strconv.ParseUint(strings.TrimSpace(string(out)), 0, 32)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse reset flags: %q", string(out))
+	}
+	return uint32(flags), nil
+}
+
 // GpioName type holds commands for 'ectool gpioget'.
 type GpioName string
 

@@ -286,6 +286,12 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 			}
 		}
 
+		if h.Config.Hibernate && tc.lidOpen == servo.LidOpenYes {
+			if err := h.VerifyECHibernateWakeResetFlags(ctx); err != nil {
+				s.Fatal("Failed to verify EC reset flags after wake on charge: ", err)
+			}
+		}
+
 		// Testhaus results showed that on Nami DUTs, when tested with lid closed,
 		// lid's state changed after waking up from hibernation. More research
 		// might be needed, but for now skip on checking lid state for Nami devices.

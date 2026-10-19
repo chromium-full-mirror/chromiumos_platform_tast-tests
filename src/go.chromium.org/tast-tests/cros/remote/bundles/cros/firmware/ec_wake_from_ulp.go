@@ -261,6 +261,10 @@ func ECWakeFromULP(ctx context.Context, s *testing.State) {
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
+
+	if err := h.VerifyECHibernateWakeResetFlags(ctx); err != nil {
+		s.Fatal("Failed to verify EC reset flags after wake from ULP: ", err)
+	}
 }
 
 func wakeDUTFromULP(ctx context.Context, h *firmware.Helper, wakeSrc int) error {
@@ -268,27 +272,27 @@ func wakeDUTFromULP(ctx context.Context, h *firmware.Helper, wakeSrc int) error 
 	case wakeDUTWithPwrBtn:
 		testing.ContextLog(ctx, "Wake DUT by a short press on the power button")
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurShortPress); err != nil {
-			errors.Wrap(err, "failed to press power button")
+			return errors.Wrap(err, "failed to press power button")
 		}
 	case wakeDUTWithLidSwitch:
 		testing.ContextLog(ctx, "Wake DUT by lid switch")
 		if err := lidSwitch(ctx, h); err != nil {
-			errors.Wrap(err, "failed to do lid switch")
+			return errors.Wrap(err, "failed to do lid switch")
 		}
 	default:
-		errors.Errorf("unexpected wake source: %d", wakeSrc)
+		return errors.Errorf("unexpected wake source: %d", wakeSrc)
 	}
 	return nil
 }
 
 func lidSwitch(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.CloseLid(ctx); err != nil {
-		errors.Wrap(err, "failed to close lid")
+		return errors.Wrap(err, "failed to close lid")
 	}
 	// GoBigSleepLint: Sleeping 1 sec to wait for lid close complete
 	testing.Sleep(ctx, 1*time.Second)
 	if err := h.Servo.OpenLid(ctx); err != nil {
-		errors.Wrap(err, "failed to open lid")
+		return errors.Wrap(err, "failed to open lid")
 	}
 	return nil
 }

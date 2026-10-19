@@ -2778,3 +2778,63 @@ func (h *Helper) GSCResetAfterWPEnable(ctx context.Context, dutFeatures *protoco
 	}
 	return nil
 }
+
+// VerifyECHibernateWakeResetFlags queries EC reset flags and chip info via
+// ectool and verifies that the reset flags indicate a clean wake from hibernate
+// without hardware or software watchdog resets, soft/hard reset fallbacks, or
+// stale initial-pwr assertions on non-ITE ECs (b/573710883).
+func (h *Helper) VerifyECHibernateWakeResetFlags(ctx context.Context) error {
+	ecTool := NewECTool(h.DUT, ECToolNameMain)
+	flags, err := ecTool.ResetFlags(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read EC reset flags")
+	}
+	chipInfo, err := ecTool.ChipInfo(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read EC chip info")
+	}
+	chipVendor := strings.ToLower(chipInfo.Vendor)
+	testing.ContextLogf(ctx, "EC reset flags after wake: 0x%08x, chip: %s (%s)", flags, chipInfo.Name, chipInfo.Vendor)
+
+	// Reject any abnormal or software-triggered reset flags.
+	badFlagChecks := []struct {
+		flag uint32
+		name string
+	}{
+		{ECResetFlagOther, "OTHER (0x1)"},
+		{ECResetFlagBrownout, "BROWNOUT (0x4)"},
+		{ECResetFlagWatchdog, "WATCHDOG (0x10)"},
+		{ECResetFlagSoft, "SOFT (0x20)"},
+		{ECResetFlagHard, "HARD (0x800)"},
+		{ECResetFlagSecurity, "SECURITY (0x20000)"},
+		{ECResetFlagAPWatchdog, "AP_WATCHDOG (0x40000)"},
+		{ECResetFlagStayInRO, "STAY_IN_RO (0x80000)"},
+	}
+	var badFlags []string
+	for _, check := range badFlagChecks {
+		if flags&check.flag != 0 {
+			badFlags = append(badFlags, check.name)
+		}
+	}
+
+	// On ITE it83xx boards (e.g. dedede it83xx), INITIAL_PWR is left set in
+	// flags by chip/it83xx/system.c across EFS sysjump. On all other ECs
+	// (such as NPCX), INITIAL_PWR after hibernate wake indicates the hardware
+	// watchdog reset bug (b/573710883).
+	if flags&ECResetFlagInitialPwr != 0 && chipVendor != "ite" {
+		badFlags = append(badFlags, "INITIAL_PWR (0x400000)")
+	}
+	if len(badFlags) > 0 {
+		return errors.Errorf("EC reset flags 0x%08x contain invalid flag(s) after hibernate wake: %s",
+			flags, strings.Join(badFlags, ", "))
+	}
+
+	// Must indicate either HIBERNATE (when backup RAM stays powered) or
+	// POWER_ON (on Z-state boards that cut EC and backup RAM power).
+	if flags&(ECResetFlagHibernate|ECResetFlagPowerOn) == 0 {
+		return errors.Errorf("EC reset flags 0x%08x missing expected hibernate wake flag (HIBERNATE 0x40 or POWER_ON 0x8)",
+			flags)
+	}
+
+	return nil
+}
