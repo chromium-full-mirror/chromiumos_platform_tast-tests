@@ -62,9 +62,10 @@ func init() {
 }
 
 const (
-	fullBatteryPercent     = 95.0
-	targetDischargePercent = 90.0
-	fullChargePollTimeout  = 110 * time.Minute
+	fullBatteryPercent        = 95.0
+	maxTargetDischargePercent = 90.0
+	minTargetDischargePercent = 85.0
+	fullChargePollTimeout     = 110 * time.Minute
 )
 
 func ECChargingState(ctx context.Context, s *testing.State) {
@@ -118,7 +119,20 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		// ----------- Test #3: Check discharges the DUT then checks its voltages -----------
 		// Disable Charge Limit for this test, since it messes with detecting if the
 		// battery is correctly charging while plugged in.
-		if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, targetDischargePercent); err != nil {
+		// Some batteries have a recharge threshold at or below 90% RSOC; step down
+		// 1% at a time until charging resumes or minTargetDischargePercent is reached.
+		var err error
+		for target := maxTargetDischargePercent; target >= minTargetDischargePercent; target -= 1.0 {
+			s.Logf("Testing charging voltages after discharging to %v%%", target)
+			if err = firmware.TestChargingVoltagesAfterDischarge(ctx, h, target); err == nil {
+				break
+			}
+			if ctx.Err() != nil {
+				break
+			}
+			s.Logf("Checking voltages at %v%% failed: %v", target, err)
+		}
+		if err != nil {
 			s.Fatal("Failed checking voltages after discharge test: ", err)
 		}
 	case statusOnFullCharge:
