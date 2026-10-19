@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     PlayFiles,
 		Desc:     "Checks whether the Play files directory is properly shared from ARC to ChromeOS",
-		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},

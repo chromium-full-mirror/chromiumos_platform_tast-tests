@@ -23,7 +23,7 @@ func init() {
 		Func: DownloadManager,
 		Desc: "Checks whether ARC can download files through DownloadManager",
 		Contacts: []string{"arc-storage@google.com",
-			"youkichihosoi@chromium.org",
+			"niwa@google.com",
 			"momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",

@@ -69,7 +69,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     FilesAppCts,
 		Desc:     "Run CTS test cases relevant to CrOS Files app",
-		Contacts: []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Fixture:      "arcBootedWithoutUIAutomator",

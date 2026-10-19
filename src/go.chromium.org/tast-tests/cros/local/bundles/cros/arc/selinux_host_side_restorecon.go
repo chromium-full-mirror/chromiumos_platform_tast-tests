@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     SELinuxHostSideRestorecon,
 		Desc:     "Checks that host-side SELinux restorecon does not take effect on ARC's /data directory",
-		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},

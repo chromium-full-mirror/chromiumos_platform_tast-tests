@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     QuotaProjectID,
 		Desc:     "Verifies that Android's quota project ID setting logic works",
-		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

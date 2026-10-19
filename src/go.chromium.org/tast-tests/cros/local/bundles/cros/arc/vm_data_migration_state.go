@@ -39,7 +39,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     VMDataMigrationState,
 		Desc:     "Verifies ARCVM /data volume types (virtio-fs vs virtio-blk) for pre-migration and newly created profiles on migration-eligible boards",
-		Contacts: []string{"arc-storage@google.com", "niwa@google.com", "youkichihosoi@google.com"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},

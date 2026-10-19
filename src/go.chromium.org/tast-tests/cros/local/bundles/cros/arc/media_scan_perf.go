@@ -46,7 +46,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     MediaScanPerf,
 		Desc:     "Checks elapsed time during a full-volume media scan",
-		Contacts: []string{"arc-storage@google.com", "youkichihosoi@chromium.org"},
+		Contacts: []string{"arc-storage@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:crosbolt"},
