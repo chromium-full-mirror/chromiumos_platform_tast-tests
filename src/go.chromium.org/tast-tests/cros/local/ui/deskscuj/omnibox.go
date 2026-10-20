@@ -92,6 +92,10 @@ type omniboxEnv struct {
 	visits        int
 	skippedVisits int
 
+	// aimEligible is the AI Mode eligibility of the account, or nil if
+	// it couldn't be determined.
+	aimEligible *bool
+
 	newWindowLatencies []time.Duration
 
 	// mem collects the memory snapshots taken as windows are opened, and
@@ -102,9 +106,9 @@ type omniboxEnv struct {
 	restoreSuggest action.Action
 }
 
-// newOmniboxEnv starts the on-DUT page server, seeds history and turns off
-// remote search suggestions, so that the popup contents only come from
-// history. Call Close to clean up.
+// newOmniboxEnv starts the on-DUT page server, seeds history, turns off
+// remote search suggestions (so that the popup contents only come from
+// history) and records AI Mode eligibility. Call Close to clean up.
 func newOmniboxEnv(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kw *input.KeyboardEventWriter, param TestParam) (env *omniboxEnv, retErr error) {
 	e := &omniboxEnv{
 		cr:    cr,
@@ -141,6 +145,8 @@ func newOmniboxEnv(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return nil, errors.Wrap(err, "failed to turn off remote suggest")
 	}
 	e.restoreSuggest = restore
+
+	e.recordAimEligibility(ctx)
 	return e, nil
 }
 
@@ -291,5 +297,6 @@ func (e *omniboxEnv) recordResults(ctx context.Context, pv *perf.Values) {
 	if e.skippedVisits > 0 {
 		testing.ContextLogf(ctx, "Skipped the omnibox input on %d visits", e.skippedVisits)
 	}
+	e.recordAimEligibilityResult(pv)
 	e.mem.record(ctx, pv)
 }
