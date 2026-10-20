@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
+	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/utils"
@@ -86,6 +87,13 @@ func getCPUSetCgroup(pid, tid int32) (string, error) {
 	return readCgroup(filepath.Join("/proc", strconv.Itoa(int(pid)), "task", strconv.Itoa(int(tid)), "cgroup"), "cpuset")
 }
 
+// isProcessGone returns true if err indicates that the process has already
+// exited. Reading /proc/<pid>/* fails with ENOENT once the process is reaped,
+// or with ESRCH if it is reaped between open(2) and read(2).
+func isProcessGone(err error) bool {
+	return os.IsNotExist(err) || errors.Is(err, unix.ESRCH)
+}
+
 func checkCPUCgroup(ctx context.Context, pid int32) error {
 	version, _, err := sysutil.KernelVersionAndArch()
 	if err != nil {
@@ -98,7 +106,7 @@ func checkCPUCgroup(ctx context.Context, pid int32) error {
 	}
 
 	cgroup, err := getCPUCgroup(pid)
-	if os.IsNotExist(err) {
+	if isProcessGone(err) {
 		return nil
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get cpu cgroup for process %d", pid)
@@ -111,7 +119,7 @@ func checkCPUCgroup(ctx context.Context, pid int32) error {
 
 func checkCPUSetCgroup(pid, tid int32) error {
 	cgroup, err := getCPUSetCgroup(pid, tid)
-	if os.IsNotExist(err) {
+	if isProcessGone(err) {
 		return nil
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to get cpuset cgroup for process %d", pid)
@@ -124,7 +132,7 @@ func checkCPUSetCgroup(pid, tid int32) error {
 
 func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Process) bool {
 	cmdline, err := p.CmdlineWithContext(ctx)
-	if os.IsNotExist(err) {
+	if isProcessGone(err) {
 		return false
 	} else if err != nil {
 		s.Fatal("Failed to get process name: ", err)
@@ -133,16 +141,25 @@ func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Proc
 	return !strings.Contains(cmdline, "--type=zygote") && !strings.Contains(cmdline, "--type=broker")
 }
 
-func getBackgroundProcessIds(ctx context.Context, s *testing.State, processes []*process.Process) map[int32]struct{} {
+// getBackgroundProcessIds returns the IDs of the given processes that are in
+// the background cpu cgroup.
+func getBackgroundProcessIds(processes []*process.Process) (map[int32]struct{}, error) {
 	pids := make(map[int32]struct{})
 	for _, p := range processes {
-		if cgroup, err := getCPUCgroup(p.Pid); err != nil {
-			s.Fatalf("Failed to get cpu cgroup for process %d: %v", p.Pid, err)
-		} else if cgroup == "/background" {
+		cgroup, err := getCPUCgroup(p.Pid)
+		if isProcessGone(err) {
+			// Chrome can terminate a renderer process at any time, e.g. right
+			// after a navigation. An exited process can't be a background
+			// renderer, so skip it.
+			continue
+		} else if err != nil {
+			return nil, errors.Wrapf(err, "failed to get cpu cgroup for process %d", p.Pid)
+		}
+		if cgroup == "/background" {
 			pids[p.Pid] = struct{}{}
 		}
 	}
-	return pids
+	return pids, nil
 }
 
 func ChromeQoS(ctx context.Context, s *testing.State) {
@@ -188,7 +205,10 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get renderer processes: ", err)
 	}
-	pidsBefore := getBackgroundProcessIds(ctx, s, rendererProcesses)
+	pidsBefore, err := getBackgroundProcessIds(rendererProcesses)
+	if err != nil {
+		s.Fatal("Failed to get background renderer processes: ", err)
+	}
 
 	// By opening a new tab, the existing page goes to background.
 	conn2, err := cr.NewConn(ctx, testURL)
@@ -198,11 +218,14 @@ func ChromeQoS(ctx context.Context, s *testing.State) {
 	defer conn2.Close()
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		rendererProcesses, err = chromeproc.GetRendererProcesses()
+		rendererProcesses, err := chromeproc.GetRendererProcesses()
 		if err != nil {
-			s.Fatal("Failed to get renderer processes: ", err)
+			return errors.Wrap(err, "failed to get renderer processes")
 		}
-		pidsAfter := getBackgroundProcessIds(ctx, s, rendererProcesses)
+		pidsAfter, err := getBackgroundProcessIds(rendererProcesses)
+		if err != nil {
+			return errors.Wrap(err, "failed to get background renderer processes")
+		}
 
 		for pid := range pidsAfter {
 			if _, ok := pidsBefore[pid]; !ok {
