@@ -138,6 +138,26 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	analyticsText := uidetection.TextBlock(strings.Split("Allow Google", " "))
 	firstRunText := uidetection.TextBlock(strings.Split("First Run", " "))
 	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
+
+	// The setup wizard shows the "Emulator Settings" page only when /dev/kvm
+	// exists in the container, i.e. when nested virtualization is available
+	// (see HardwareAccelerationCheck in Android Studio). Nested virtualization
+	// is disabled on some kernels (e.g. 5.10 and 5.15, see crostini.NestedVM),
+	// in which case "Verify Settings" is the last page of the wizard.
+	emulatorSettingsPage := uiauto.Combine("go through the Emulator Settings page",
+		// LeftClick via uidetection (screenshot OCR) is required here instead of
+		// uiauto.Context.DoDefault because Android Studio runs inside Crostini
+		// (ExoShellSurface) and does not expose internal Swing buttons to Chrome's
+		// accessibility tree (WithinA11yNode only crops the screenshot to the
+		// window bounds).
+		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
+		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Emulator Settings", " ")).WithinA11yNode(setupWizardWindow)),
+	)
+	if err := cont.Command(ctx, "test", "-e", "/dev/kvm").Run(); err != nil {
+		s.Log("/dev/kvm does not exist in the container; skipping the Emulator Settings page")
+		emulatorSettingsPage = func(context.Context) error { return nil }
+	}
+
 	if err := uiauto.NamedCombine("Create a new project with defaults",
 		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
 		// Two-letter words normally need an exact match.
@@ -161,8 +181,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Select UI Theme", " ")).WithinA11yNode(setupWizardWindow)),
 		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Verify Setting", " ")).WithinA11yNode(setupWizardWindow)),
-		ud.LeftClick(nextButton.WithinA11yNode(setupWizardWindow)),
-		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("Emulator Settings", " ")).WithinA11yNode(setupWizardWindow)),
+		emulatorSettingsPage,
 		ud.LeftClick(finishButton.WithinA11yNode(setupWizardWindow)),
 		ud.WaitUntilExists(uidetection.TextBlock(strings.Split("SDK is up to date", " ")).WithinA11yNode(setupWizardWindow)),
 		ud.LeftClick(finishButton.WithinA11yNode(setupWizardWindow)),
