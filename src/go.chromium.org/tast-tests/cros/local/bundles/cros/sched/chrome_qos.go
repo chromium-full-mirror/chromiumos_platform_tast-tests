@@ -50,34 +50,40 @@ func init() {
 	})
 }
 
-func getCPUCgroup(pid int32) (string, error) {
-	cgroupPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "cgroup")
-	cgroups, err := os.ReadFile(cgroupPath)
+// parseCgroup returns the path of the cgroup of the given cgroup v1
+// controller in content, which is in the format of /proc/<pid>/cgroup.
+func parseCgroup(content, controller string) (string, error) {
+	for _, line := range strings.Split(content, "\n") {
+		// Each line is "hierarchy-ID:controller-list:cgroup-path". The cgroup
+		// path itself can contain ':'.
+		fields := strings.SplitN(line, ":", 3)
+		if len(fields) != 3 {
+			continue
+		}
+		if fields[1] == controller {
+			return fields[2], nil
+		}
+	}
+	return "", errors.Errorf("%s cgroup not found", controller)
+}
+
+// readCgroup returns the path of the cgroup of the given cgroup v1 controller
+// from the cgroup file at path. Errors from reading the file are returned as
+// is so that callers can check them with os.IsNotExist.
+func readCgroup(path, controller string) (string, error) {
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
-	for _, line := range strings.Split(string(cgroups), "\n") {
-		line := strings.Split(line, ":")
-		if line[1] == "cpu" {
-			return line[2], nil
-		}
-	}
-	return "", errors.New("cpu cgroup not found")
+	return parseCgroup(string(content), controller)
+}
+
+func getCPUCgroup(pid int32) (string, error) {
+	return readCgroup(filepath.Join("/proc", strconv.Itoa(int(pid)), "cgroup"), "cpu")
 }
 
 func getCPUSetCgroup(pid, tid int32) (string, error) {
-	cgroupPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "task", strconv.Itoa(int(tid)), "cgroup")
-	cgroups, err := os.ReadFile(cgroupPath)
-	if err != nil {
-		return "", err
-	}
-	for _, line := range strings.Split(string(cgroups), "\n") {
-		line := strings.Split(line, ":")
-		if line[1] == "cpuset" {
-			return line[2], nil
-		}
-	}
-	return "", errors.New("cpuset cgroup not found")
+	return readCgroup(filepath.Join("/proc", strconv.Itoa(int(pid)), "task", strconv.Itoa(int(tid)), "cgroup"), "cpuset")
 }
 
 func checkCPUCgroup(ctx context.Context, pid int32) error {
