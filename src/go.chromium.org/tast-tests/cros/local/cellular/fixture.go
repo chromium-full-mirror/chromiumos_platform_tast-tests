@@ -71,7 +71,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularRemoteRebootSupport.ehide",
 			},
 		},
 	})
@@ -94,7 +94,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularRemoteRebootSupport.ehide",
 			},
 		},
 	})
@@ -131,7 +131,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularSuspendRemote.ehide",
 			},
 		},
 	})
@@ -154,7 +154,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularStressRemote.ehide",
 			},
 		},
 	})
@@ -205,7 +205,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularDUTCheckRemote.ehide",
 			},
 		},
 	})
@@ -321,7 +321,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularRemoteRebootSupport.ehide",
 			},
 		},
 	})
@@ -347,7 +347,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularRemoteRebootSupport.ehide",
 			},
 		},
 	})
@@ -466,7 +466,7 @@ func init() {
 			// The fixture using Ethernet-hide.
 			{
 				Name:   "ehide",
-				Parent: "ehide",
+				Parent: "cellularEnforceConnectionRemote.ehide",
 			},
 		},
 	})
@@ -1093,8 +1093,13 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			testing.ContextLog(ctx, "Unable to enable Cellular on PostTest: ", err)
 		}
 	}
-	modem, waitForModemErr := modemmanager.NewModem(ctx)
-	if waitForModemErr != nil {
+	if isApnTestRequiringEcReset(s.TestName()) {
+		f.dutBrokenUntilReboot = errors.Errorf("ec reset requested to clear APNs after %s", s.TestName())
+		testing.ContextLogf(ctx, "PostTest: %s completed. Requesting a dut ec reset from remote fixture to clear APNs", s.TestName())
+		if err := os.WriteFile(EcResetOnResetRequestedFlagPath, []byte("1"), 0666); err != nil {
+			testing.ContextLogf(ctx, "Could not write to %s: %s", EcResetOnResetRequestedFlagPath, err)
+		}
+	} else if modem, waitForModemErr := modemmanager.NewModem(ctx); waitForModemErr != nil {
 		testing.ContextLog(ctx, "Failed to create modem object: ", waitForModemErr)
 		// b/407604639 :  When the L850 modem doesn't come back after reset, we need to ec reset the
 		// device using the remote fixture. Since a reboot doesn't necessarily put the DUT into its
@@ -1169,6 +1174,7 @@ func (f *cellularFixture) fixtureCleanUp(ctx context.Context, s *testing.FixtSta
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	testing.ContextLog(ctx, "Executing Fixture::Teardown")
+	f.dutBrokenUntilReboot = nil
 	teardownFailure := false
 	if f.cleanupPolicies != nil {
 		f.cleanupPolicies(ctx)
@@ -1297,6 +1303,20 @@ func waitForModemToBeExported(ctx context.Context) (*modemmanager.Modem, error) 
 		return nil, err
 	}
 	return modem, nil
+}
+
+func isApnTestRequiringEcReset(testName string) bool {
+	for _, t := range []string{
+		"ShillCustomApn",
+		"CustomDefaultApnBehavior",
+		"ShillValidateProfile",
+		"ShillInvalidApn",
+	} {
+		if strings.Contains(testName, t) {
+			return true
+		}
+	}
+	return false
 }
 
 func isL850(ctx context.Context, s interface{}) bool {

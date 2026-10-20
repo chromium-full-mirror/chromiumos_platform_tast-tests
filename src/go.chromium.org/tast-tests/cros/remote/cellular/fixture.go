@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/network/ehideconst"
 	"go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -44,6 +45,15 @@ func init() {
 		TearDownTimeout: 3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularStressRemote",
@@ -56,6 +66,15 @@ func init() {
 		TearDownTimeout: 3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularE2ERemote",
@@ -93,6 +112,15 @@ func init() {
 		TearDownTimeout: 3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularAutoconnectRemote",
@@ -117,6 +145,15 @@ func init() {
 		ResetTimeout:    5 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularRemoteRebootSupport",
@@ -129,6 +166,15 @@ func init() {
 		TearDownTimeout: 3 * time.Minute,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"skipReboot"},
+		Params: []testing.FixtureParam{
+			// The default fixture using no param.
+			{},
+			// The fixture using Ethernet-hide.
+			{
+				Name:   "ehide",
+				Parent: "ehide",
+			},
+		},
 	})
 }
 
@@ -182,7 +228,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	if tf.rebootOnSetup && hasStartupRebootUptime(ctx, s) {
 		s.Log("Rebooting DUT")
-		if err := d.Reboot(ctx); err != nil {
+		if err := tf.rebootDUT(ctx, d); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	}
@@ -235,6 +281,19 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	ecResetNeeded, err := tf.hasEcResetOnResetRequested(ctx)
+	if err != nil {
+		// Don't throw Fatal, since we might still need to reset/reboot the DUT
+		s.Log("Failed to query for EcResetOnResetRequested result: ", err)
+	}
+	if ecResetNeeded {
+		s.Log("Local fixture requested ec reset. Resetting DUT")
+		if err := tf.ecResetDUT(ctx, s.DUT()); err != nil {
+			s.Fatal("Failed to ec reset: ", err)
+		}
+		return
+	}
+
 	localFixtureRequestsReboot, err := tf.hasRebootOnTearDownRequested(ctx)
 	if err != nil {
 		// Don't throw Fatal, since we might still need to reboot the DUT
@@ -251,23 +310,74 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 func (tf *fixture) ecResetDUT(ctx context.Context, dut *dut.DUT) error {
 	// DUT may be disconnected. Reconnect so we can reset.
-	if err := reconnectToDut(ctx, tf.dut); err != nil {
+	if err := reconnectToDut(ctx, dut); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
+	ehideEnabled := isEhideEnabled(ctx, dut)
+
 	if err := dut.Conn().CommandContext(ctx, "ectool", "reboot_ec", "cold", "at-shutdown").Run(); err != nil {
 		return errors.Wrap(err, "failed to run ectool reboot_ec")
+	}
+	if err := dut.RebootWithCommand(ctx, "shutdown", "-h", "now"); err != nil {
+		return errors.Wrap(err, "failed to shutdown and wake up DUT for ec reset")
+	}
+
+	if ehideEnabled {
+		if err := startEhide(ctx, dut); err != nil {
+			return errors.Wrap(err, "failed to restart ehide after ec reset")
+		}
 	}
 	return nil
 }
 
 func (tf *fixture) rebootDUT(ctx context.Context, dut *dut.DUT) error {
 	// DUT may be disconnected. Reconnect so we can reboot.
-	if err := reconnectToDut(ctx, tf.dut); err != nil {
+	if err := reconnectToDut(ctx, dut); err != nil {
 		return errors.Wrap(err, "failed to connect to DUT")
 	}
+
+	ehideEnabled := isEhideEnabled(ctx, dut)
+
 	if err := dut.Reboot(ctx); err != nil {
 		return errors.Wrap(err, "failed to reboot")
+	}
+
+	if ehideEnabled {
+		if err := startEhide(ctx, dut); err != nil {
+			return errors.Wrap(err, "failed to restart ehide after reboot")
+		}
+	}
+	return nil
+}
+
+func isEhideEnabled(ctx context.Context, d *dut.DUT) bool {
+	output, err := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "state").Output()
+	if err != nil {
+		return false
+	}
+	return strings.TrimSpace(string(output)) == ehideconst.EhideStateOn
+}
+
+func startEhide(ctx context.Context, d *dut.DUT) error {
+	startErr := d.Conn().CommandContext(ctx, ehideconst.EhidePath, "start").Run()
+	if startErr != nil && strings.Contains(startErr.Error(), "Process exited with status") {
+		return errors.Wrap(startErr, "failed to start ehide")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		connCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+		if err := d.Connect(connCtx); err != nil {
+			return err
+		}
+		stateCtx, stateCancel := context.WithTimeout(ctx, 15*time.Second)
+		defer stateCancel()
+		if !isEhideEnabled(stateCtx, d) {
+			return errors.New("ehide is not on")
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for ehide turning on")
 	}
 	return nil
 }
