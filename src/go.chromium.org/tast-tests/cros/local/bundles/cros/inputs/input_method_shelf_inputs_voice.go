@@ -115,7 +115,10 @@ func InputMethodShelfInputsVoice(ctx context.Context, s *testing.State) {
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
 			ui.LeftClick(voiceInputItem),
-			ui.DoDefaultUntil(voicePrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(voicePrivacyConfirmButton)),
+			uiauto.Combine("dismiss voice privacy dialog",
+				ui.DoDefault(voicePrivacyConfirmButton),
+				ui.WaitUntilGone(voicePrivacyConfirmButton),
+			),
 			uiauto.Sleep(time.Second),
 			func(ctx context.Context) error {
 				return audio.PlayWavToPCM(ctx, s.DataPath(voiceInputData.VoiceFile), "hw:Loopback,0")

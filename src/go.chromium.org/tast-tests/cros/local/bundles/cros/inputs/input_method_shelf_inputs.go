@@ -113,7 +113,10 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 			// The privacy dialog does not appear on all devices.
 			uiauto.IfSuccessThen(
 				ui.WithTimeout(20*time.Second).WaitUntilExists(handwritingPrivacyConfirmButton),
-				ui.DoDefaultUntil(handwritingPrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(handwritingPrivacyConfirmButton)),
+				uiauto.Combine("dismiss handwriting privacy dialog",
+					ui.DoDefault(handwritingPrivacyConfirmButton),
+					ui.WaitUntilGone(handwritingPrivacyConfirmButton),
+				),
 			),
 			func(ctx context.Context) error {
 				expectLongform := vkb.IsLongformHandWritingEngineID(testIME.ID)
