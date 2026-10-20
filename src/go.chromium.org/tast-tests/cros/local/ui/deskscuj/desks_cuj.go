@@ -128,7 +128,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		if err := recorder.AddCollectedMetrics(omniboxMetricConfigs()...); err != nil {
 			return nil, errors.Wrap(err, "failed to add omnibox metrics to recorder")
 		}
-		om, err = newOmniboxEnv(ctx, cr, tconn, testParam)
+		om, err = newOmniboxEnv(ctx, cr, tconn, kw, testParam)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to set up the omnibox environment")
 		}

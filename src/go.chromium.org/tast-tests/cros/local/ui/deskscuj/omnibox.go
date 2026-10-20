@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -69,11 +71,23 @@ var omniboxPageWords = []string{
 type omniboxEnv struct {
 	cr     *chrome.Chrome
 	tconn  *chrome.TestConn
+	kw     *input.KeyboardEventWriter
+	ui     *uiauto.Context
 	server *httptest.Server
 	param  TestParam
 
 	// hostPort is the host:port of the page server, e.g. 127.0.0.1:12345.
 	hostPort string
+
+	// Rotating indices so that every run visits windows and types strings
+	// in the same order.
+	corpusIdx int
+
+	// visits counts the desk visits with omnibox input, and skippedVisits
+	// the ones where the omnibox couldn't be focused, so no omnibox input
+	// was done.
+	visits        int
+	skippedVisits int
 
 	// mem collects the memory snapshots taken as windows are opened, and
 	// reports them as the Omnibox.Mem* metrics (see memTracker).
@@ -86,10 +100,12 @@ type omniboxEnv struct {
 // newOmniboxEnv starts the on-DUT page server, seeds history and turns off
 // remote search suggestions, so that the popup contents only come from
 // history. Call Close to clean up.
-func newOmniboxEnv(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, param TestParam) (env *omniboxEnv, retErr error) {
+func newOmniboxEnv(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kw *input.KeyboardEventWriter, param TestParam) (env *omniboxEnv, retErr error) {
 	e := &omniboxEnv{
 		cr:    cr,
 		tconn: tconn,
+		kw:    kw,
+		ui:    uiauto.New(tconn),
 		param: param,
 		mem:   newMemTracker("Omnibox"),
 	}
@@ -254,5 +270,13 @@ func omniboxMetricConfigs() []cujrecorder.MetricConfig {
 
 // recordResults saves the omnibox-specific perf values.
 func (e *omniboxEnv) recordResults(ctx context.Context, pv *perf.Values) {
+	pv.Set(perf.Metric{
+		Name:      "Omnibox.SkippedVisits",
+		Unit:      "count",
+		Direction: perf.SmallerIsBetter,
+	}, float64(e.skippedVisits))
+	if e.skippedVisits > 0 {
+		testing.ContextLogf(ctx, "Skipped the omnibox input on %d visits", e.skippedVisits)
+	}
 	e.mem.record(ctx, pv)
 }
