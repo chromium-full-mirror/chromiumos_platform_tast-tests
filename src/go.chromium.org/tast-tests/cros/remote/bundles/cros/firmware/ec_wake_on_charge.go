@@ -9,15 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -25,9 +22,7 @@ import (
 )
 
 type testArgsForECWakeOnCharge struct {
-	formFactor    string
-	tabletModeOff string
-	hasLid        bool
+	hasLid bool
 }
 
 type retriableErr struct {
@@ -62,39 +57,30 @@ func init() {
 			Name:              "chromeslate",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromeslate)),
 			Val: &testArgsForECWakeOnCharge{
-				formFactor: "chromeslate",
-				hasLid:     false,
+				hasLid: false,
 			},
 		}, {
 			Name:              "convertible",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
 			Val: &testArgsForECWakeOnCharge{
-				formFactor:    "convertible",
-				tabletModeOff: "tabletmode off",
-				hasLid:        true,
+				hasLid: true,
 			},
 		}, {
 			Name:              "detachable",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
 			Val: &testArgsForECWakeOnCharge{
-				formFactor:    "detachable",
-				tabletModeOff: "basestate attach",
-				hasLid:        true,
+				hasLid: true,
 			},
 		}, {
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
 			Val: &testArgsForECWakeOnCharge{
-				formFactor: "clamshell",
-				hasLid:     true,
+				hasLid: true,
 			},
 		}},
 	})
 }
 
-var (
-	tabletModeAngleHasChanged bool
-	checkedInfo               debugInformation
-)
+var checkedInfo debugInformation
 
 func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 
@@ -143,20 +129,6 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to ensure DUT booted: ", err)
-		}
-		if args.formFactor == "convertible" && tabletModeAngleHasChanged {
-			// Check for tablet mode angles, and if they are different
-			// than the default values, restore them to default.
-			cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
-			tabletModeAngleInit, hysInit, err := cmd.SaveTabletModeAngles(ctx)
-			if err != nil {
-				s.Fatal("Failed to read tablet mode angles: ", err)
-			} else if tabletModeAngleInit != "180" || hysInit != "20" {
-				s.Log("Restoring ectool tablet mode angles to the default settings")
-				if err := cmd.ForceTabletModeAngle(ctx, "180", "20"); err != nil {
-					s.Fatal("Failed to restore tablet mode angles to the default settings: ", err)
-				}
-			}
 		}
 	}(cleanupCtx, args)
 
@@ -250,7 +222,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 
 		if h.Config.Hibernate {
-			if err := hibernateDUT(ctx, h, s.DUT(), checkedInfo.hasMicroOrC2D2, tc.lidOpen, args.formFactor, args.tabletModeOff); err != nil {
+			if err := hibernateDUT(ctx, h, checkedInfo.hasMicroOrC2D2, tc.lidOpen); err != nil {
 				s.Fatal("Failed to hibernate DUT: ", err)
 			}
 		} else {
@@ -319,22 +291,6 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 	}
 }
 
-// checkTabletModeStatus checks whether ChromeOS is in tablet mode through the utils service.
-func checkTabletModeStatus(ctx context.Context, h *firmware.Helper) (bool, error) {
-	if err := h.RequireRPCUtils(ctx); err != nil {
-		return false, errors.Wrap(err, "requiring RPC utils")
-	}
-	if _, err := h.RPCUtils.NewChrome(ctx, &empty.Empty{}); err != nil {
-		return false, errors.Wrap(err, "failed to create instance of chrome")
-	}
-	defer h.RPCUtils.CloseChrome(ctx, &empty.Empty{})
-	res, err := h.RPCUtils.EvalTabletMode(ctx, &empty.Empty{})
-	if err != nil {
-		return false, err
-	}
-	return res.TabletModeEnabled, nil
-}
-
 func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInformation) error {
 	var wantInfo = []string{"hasMicroOrC2D2", "hasCCD", "servoType", "servoConnectionType"}
 	for _, val := range wantInfo {
@@ -358,37 +314,7 @@ func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInform
 	return nil
 }
 
-func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT, formFactor, tabletModeOff string) error {
-	// Skip this check if no ssh.
-	if dut == nil {
-		return nil
-	}
-	inTabletMode, err := checkTabletModeStatus(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "unable to check for DUT's tablet mode status")
-	}
-	if inTabletMode {
-		testing.ContextLog(ctx, "DUT is in tablet mode. Attempting to turn tablet mode off")
-		out, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeOff)
-		if err != nil {
-			if formFactor == "convertible" {
-				testing.ContextLogf(ctx, "Failed to run %s: %v. Attempting to set rotation angles with ectool instead", tabletModeOff, err)
-				cmd := firmware.NewECTool(dut, firmware.ECToolNameMain)
-				// Setting tabletModeAngle to 360 will force DUT into clamshell mode.
-				if err := cmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {
-					return errors.Wrap(err, "failed to set DUT in clamshell mode")
-				}
-				tabletModeAngleHasChanged = true
-				return nil
-			}
-			return errors.Wrapf(err, "failed to run %s", tabletModeOff)
-		}
-		testing.ContextLogf(ctx, "Tablet mode status: %s", out)
-	}
-	return nil
-}
-
-func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicroOrC2D2 bool, lidOpen servo.LidOpenValue, formFactor, tabletModeOff string) error {
+func hibernateDUT(ctx context.Context, h *firmware.Helper, hasMicroOrC2D2 bool, lidOpen servo.LidOpenValue) error {
 	if lidOpen == servo.LidOpenNo && !hasMicroOrC2D2 {
 		// On CCD-only setups, lid_open:no is emulated in EC RAM via 'lidclose' and
 		// would be cleared if the EC hibernates and resets. Wait for G3 or S5 only.
@@ -431,14 +357,6 @@ func hibernateDUT(ctx context.Context, h *firmware.Helper, dut *dut.DUT, hasMicr
 			}
 		}
 	case servo.LidOpenYes:
-		if formFactor == "convertible" || formFactor == "detachable" {
-			// For convertibles and detachables, if DUT was left in tablet mode by previous tests,
-			// key presses may be inactive. Always turn tablet mode off before using keyboard to hibernate.
-			testing.ContextLogf(ctx, "DUT is a %s. Checking tablet mode status before using keyboard to hibernate", formFactor)
-			if err := ensureClamshellMode(ctx, h, dut, formFactor, tabletModeOff); err != nil {
-				return err
-			}
-		}
 		testing.ContextLog(ctx, "Powering off AP to G3 for EC hibernation")
 		if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
 			return errors.Wrap(err, "failed to run poweroff cmd")
