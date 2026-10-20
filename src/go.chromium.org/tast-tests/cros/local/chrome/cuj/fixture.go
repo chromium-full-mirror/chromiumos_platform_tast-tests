@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
+	"go.chromium.org/tast-tests/cros/local/chrome/settings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -1385,6 +1386,106 @@ func init() {
 		PreTestTimeout:  CPUStabilizationTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+	// TODO(b/575873460): Remove once the shake to locate experiment is done.
+	// Variants of loggedInToCUJUserDisableARC and
+	// loggedInToCUJUserWithWebRTCEventLoggingDisableARC with shake to locate
+	// off and on. The enabled variants also turn on the settings toggle, which
+	// is off by default; the disabled variants turn the feature off explicitly
+	// so they remain a baseline after launch.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserShakeToLocateDisabled",
+		Desc: "Variant of loggedInToCUJUserDisableARC with the shake to locate feature disabled",
+		Contacts: []string{
+			"jackgeng@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.DisableFeatures("AccessibilityShakeToLocate"),
+			},
+			disableARC: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserShakeToLocateEnabled",
+		Desc: "Variant of loggedInToCUJUserDisableARC with the shake to locate feature and its settings toggle enabled",
+		Contacts: []string{
+			"jackgeng@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("AccessibilityShakeToLocate"),
+			},
+			disableARC:          true,
+			enableShakeToLocate: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateDisabled",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with the shake to locate feature disabled",
+		Contacts: []string{
+			"jackgeng@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.DisableFeatures("AccessibilityShakeToLocate"),
+			),
+			disableARC:  true,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateEnabled",
+		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with the shake to locate feature and its settings toggle enabled",
+		Contacts: []string{
+			"jackgeng@google.com",
+			"cros-sw-perf@google.com",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Data:         docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: append(
+				webRTCOpts,
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.EnableFeatures("AccessibilityShakeToLocate"),
+			),
+			disableARC:          true,
+			docsBlocker:         true,
+			enableShakeToLocate: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStabilizationTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
@@ -1699,6 +1800,8 @@ type loggedInToCUJUserFixture struct {
 	scxType scx.Type
 	// Enable "CrosBatterySaver" and "CrosBatterySaverAlwaysOn" features.
 	enableBatterySaver bool
+	// Turn on the "Shake mouse pointer to locate" settings toggle after login.
+	enableShakeToLocate bool
 }
 
 // NewWPRLoggedInToCUJUserWithoutCooldownFixture returns a newly created fixture object with WPR parameters
@@ -1931,6 +2034,19 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	f.cleanupTheme, err = setup.TurnOnLightTheme(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to turn on light theme: ", err)
+	}
+
+	if f.enableShakeToLocate {
+		if err := settings.SetShakeToLocateEnabled(ctx, tconn, true); err != nil {
+			s.Fatal("Failed to turn on shake to locate: ", err)
+		}
+		// Read the toggle back so that the experiment fails loudly instead of
+		// silently measuring a session where the feature is off.
+		if enabled, err := settings.ShakeToLocateEnabled(ctx, tconn); err != nil {
+			s.Fatal("Failed to read the shake to locate setting: ", err)
+		} else if !enabled {
+			s.Fatal("Shake to locate is still off after turning it on")
+		}
 	}
 
 	enablePlayStore := true

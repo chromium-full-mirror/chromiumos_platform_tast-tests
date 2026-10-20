@@ -33,6 +33,7 @@ const (
 	nightLightSchedulePref           = "ash.night_light.schedule_type"
 	nightLightEnabledPref            = "ash.night_light.enabled"
 	trackpadReverseScrollEnabledPref = "settings.touchpad.natural_scroll"
+	shakeToLocateEnabledPref         = "settings.a11y.shake_to_locate_enabled"
 )
 
 // DefaultZoom returns the default page zoom factor. Possible values are currently between
@@ -112,4 +113,23 @@ func TrackpadReverseScrollEnabled(ctx context.Context, c *chrome.TestConn) (bool
 // SetTrackpadReverseScrollEnabled enables/disables trackpad reverse scrolling..
 func SetTrackpadReverseScrollEnabled(ctx context.Context, c *chrome.TestConn, enabled bool) error {
 	return c.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", trackpadReverseScrollEnabledPref, enabled)
+}
+
+// ShakeToLocateEnabled returns true if the "Shake mouse pointer to locate"
+// accessibility setting is turned on.
+func ShakeToLocateEnabled(ctx context.Context, c *chrome.TestConn) (bool, error) {
+	var enabled struct {
+		Value bool `json:"value"`
+	}
+	if err := c.Call(ctx, &enabled, "tast.promisify(chrome.settingsPrivate.getPref)", shakeToLocateEnabledPref); err != nil {
+		return false, err
+	}
+	return enabled.Value, nil
+}
+
+// SetShakeToLocateEnabled turns the "Shake mouse pointer to locate"
+// accessibility setting on or off. The setting has no effect unless the
+// AccessibilityShakeToLocate feature is enabled.
+func SetShakeToLocateEnabled(ctx context.Context, c *chrome.TestConn, enabled bool) error {
+	return c.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", shakeToLocateEnabledPref, enabled)
 }

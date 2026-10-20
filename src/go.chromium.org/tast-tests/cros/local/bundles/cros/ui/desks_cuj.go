@@ -152,6 +152,20 @@ func init() {
 				Val:       deskscuj.TestParam{},
 				Fixture:   "loggedInToCUJUserWebUIOmniboxFullPopupEnabledAndOptimized",
 			},
+			// TODO(b/575873460): Remove once the shake to locate experiment is
+			// complete.
+			{
+				Name:      "shake_to_locate_disabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserShakeToLocateDisabled",
+			},
+			{
+				Name:      "shake_to_locate_enabled",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val:       deskscuj.TestParam{},
+				Fixture:   "loggedInToCUJUserShakeToLocateEnabled",
+			},
 		},
 	})
 }
