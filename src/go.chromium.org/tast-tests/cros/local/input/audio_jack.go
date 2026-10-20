@@ -9,10 +9,16 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// udevSettleTimeout is the maximum time to wait for udev to process the
+// addition of a virtual audio jack device.
+const udevSettleTimeout = 10 * time.Second
 
 // AudioJackEventWriter supports injecting events into an audio jack device.
 type AudioJackEventWriter struct {
@@ -147,6 +153,15 @@ func virtualAudioJackDevice(ctx context.Context) (aw *AudioJackEventWriter, retE
 	}(ctx)
 	testing.ContextLog(ctx, "Using virtual audio jack device ", dev)
 
+	// The device node is usable by root right away, but unprivileged consumers
+	// such as cros_healthd can only open it once udev has applied the input
+	// device rules (e.g. GROUP="input"). Wait for udev to finish processing the
+	// new device so that callers can rely on it immediately.
+	if err := waitForUdevSettled(ctx); err != nil {
+		retErr = errors.Wrap(err, "failed to wait for udev to set up the virtual audio jack device")
+		return nil, retErr
+	}
+
 	device, err := Device(ctx, dev)
 	if err != nil {
 		retErr = err
@@ -158,4 +173,12 @@ func virtualAudioJackDevice(ctx context.Context) (aw *AudioJackEventWriter, retE
 		path:        dev,
 		virtualFile: virt,
 	}, nil
+}
+
+// waitForUdevSettled waits until udev has processed all queued events, such as
+// the addition of a freshly created virtual device.
+func waitForUdevSettled(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, udevSettleTimeout)
+	defer cancel()
+	return testexec.CommandContext(ctx, "udevadm", "settle", fmt.Sprintf("--timeout=%d", int(udevSettleTimeout.Seconds()))).Run(testexec.DumpLogOnError)
 }

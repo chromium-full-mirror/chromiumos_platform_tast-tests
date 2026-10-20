@@ -45,10 +45,23 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
-	errorCh := make(chan error)
+	// Open the audio jack device before capturing events. cros_healthd looks
+	// for an audio jack evdev device only once, when capturing starts, so a
+	// virtual device that shows up later would never be monitored.
+	aw, err := input.AudioJack(ctx)
+	if err != nil {
+		s.Fatal("Failed to open audio jack device: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := aw.Close(ctx); err != nil {
+			s.Error("Failed to close audio jack: ", err)
+		}
+	}(ctx)
+
+	errorCh := make(chan error, 1)
 	defer func() {
 		if err := <-errorCh; err != nil {
-			s.Fatal("Failed to plug or unplug audio jack: ", err)
+			s.Error("Failed to plug or unplug audio jack: ", err)
 		}
 	}()
 
@@ -61,21 +74,6 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 		defer func() {
 			errorCh <- firstError
 		}()
-
-		aw, err := input.AudioJack(ctx)
-		if err != nil {
-			firstError = err
-			return
-		}
-		defer func(ctx context.Context) {
-			if err := aw.Close(ctx); err != nil {
-				if firstError != nil {
-					testing.ContextLog(ctx, "Failed to close audio jack: ", err)
-				} else {
-					firstError = errors.Wrap(err, "failed to close audio jack")
-				}
-			}
-		}(ctx)
 
 		for {
 			select {
