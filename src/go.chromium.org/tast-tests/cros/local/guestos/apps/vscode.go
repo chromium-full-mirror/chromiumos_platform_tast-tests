@@ -228,6 +228,13 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 func OpenVscodeFromFileManager(ctx context.Context, cfg VSCodeConfig, filesApp *filesapp.FilesApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, guest vm.Guest, dirName string) error {
 	const tmpFilename = "testfile.txt"
 
+	// Initialise VS Code to disable cursor blinking, notifications, updates,
+	// and the first-run Welcome page that otherwise interfere with UI
+	// detection when launching from the Files app.
+	if err := InitialiseVSCode(ctx, cfg, guest, keyboard, tconn); err != nil {
+		return errors.Wrap(err, "failed to initialise VSCode")
+	}
+
 	// Create a file in guest.
 	if err := guest.Command(ctx, "touch", tmpFilename).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to create a file in the guest")
@@ -241,8 +248,11 @@ func OpenVscodeFromFileManager(ctx context.Context, cfg VSCodeConfig, filesApp *
 	if err := uiauto.Combine("open tmp file with vscode via files app",
 		filesApp.OpenDir(dirName, filesapp.FilesTitlePrefix+dirName),
 		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, cfg.AppName),
-		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(cfg.WindowFinder).First()),
+		// Wait until the menu bar is rendered. Use ImmediateScreenshot because
+		// VS Code launched from the Files app activates built-in extensions in
+		// the background, and its status-bar spinner prevents StableScreenshot
+		// of the window from settling before the timeout.
+		uda.WithTimeout(vsCodeStartupTimeout).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.Word("File").WithinA11yNode(cfg.WindowFinder).First()),
 		// Left click the app window to focus.
 		ui.LeftClick(cfg.WindowFinder),
 		// Press ctrl+Q to exit window.
