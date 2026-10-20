@@ -119,7 +119,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 				),
 			),
 			func(ctx context.Context) error {
-				expectLongform := vkb.IsLongformHandWritingEngineID(testIME.ID)
+				expectLongform := vkb.IsLongformHandWritingSupported(testIME.ID)
 				hwCtx, err := vkb.NewContext(cr, tconn).NewHandwritingContext(ctx, expectLongform)
 				if err != nil {
 					return errors.Wrap(err, "failed to initiate handwriting context")

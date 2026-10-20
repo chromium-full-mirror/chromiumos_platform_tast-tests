@@ -155,7 +155,7 @@ func VirtualKeyboardHandwriting(ctx context.Context, s *testing.State) {
 				}
 			}(cleanupCtx)
 
-			expectLongform := vkb.IsLongformHandWritingEngineID(currentIME.ID)
+			expectLongform := vkb.IsLongformHandWritingSupported(currentIME.ID)
 
 			inputModality := util.InputWithHandWriting
 			if expectLongform {

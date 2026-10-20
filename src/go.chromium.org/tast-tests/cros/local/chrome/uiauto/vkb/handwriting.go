@@ -29,9 +29,21 @@ type HandwritingContext struct {
 	isLongForm bool
 }
 
-// IsLongformHandWritingEngineID checks if the given IME engine ID supports Longform handwriting.
+const longformAddonPath = "/usr/share/chromeos-assets/input_methods/input_tools/addons/longform_release_files/longform_wasm_bootstrap_compiled.js"
+
+// IsLongformHandWritingSupported checks if Longform handwriting is supported for the given IME
+// engine ID on the current device.
 // The Engine IDs which support the long form can be found in go/cros-vk-longform-enabled-engine-ids
-func IsLongformHandWritingEngineID(engineID string) bool {
+func IsLongformHandWritingSupported(engineID string) bool {
+	// Virtual Keyboard probes this bootstrap JS file via fetch() before enabling Longform
+	// handwriting (see isLongformAvailable() in http://google3/chrome/inputs/vk/ui/controller.ts).
+	// On space-constrained devices built with USE="-ime_addons" (boards inheriting
+	// features/2gb-rootfs or features/minimal such as snappy, pyro, sand, reef, hana, and coral),
+	// app-i18n/input-tools strips ./input-tools/addons from the image, so Virtual Keyboard always
+	// opens Legacy handwriting ("us.hwt") even for supported engine IDs.
+	if info, err := os.Stat(longformAddonPath); err != nil || !info.Mode().IsRegular() {
+		return false
+	}
 	switch engineID {
 	case "xkb:us::eng",
 		"xkb:us:altgr-intl:eng",
@@ -70,6 +82,17 @@ func (vkbCtx *VirtualKeyboardContext) NewHandwritingContext(ctx context.Context,
 	if expectLongform {
 		testing.ContextLog(ctx, "Expecting Longform handwriting. Waiting for 'lfhwt' to become visible")
 		if err := hwCtx.ui.WaitUntilExists(NodeFinder.Attribute("htmlId", "lfhwt").First())(ctx); err != nil {
+			// TODO(b/575745260): Remove this fallback once the Virtual Keyboard cold-start race
+			// is fixed. When handwriting is opened directly from the IME shelf menu on a cold
+			// start, Virtual Keyboard can intermittently open and stay on Legacy handwriting
+			// ("hwt") even on Longform-capable devices. Only check for "hwt" after waiting the
+			// full timeout for "lfhwt" so a brief startup flash of "hwt" during normal
+			// transitions does not misidentify a Longform session.
+			if hwCtx.ui.Exists(NodeFinder.Attribute("htmlId", "hwt").First())(ctx) == nil {
+				testing.ContextLog(ctx, "Virtual keyboard settled on Legacy handwriting ('hwt'); falling back to non-longform mode")
+				hwCtx.isLongForm = false
+				return hwCtx, nil
+			}
 			return nil, errors.Wrap(err, "failed to wait for longform handwriting canvas to become visible")
 		}
 	} else {
