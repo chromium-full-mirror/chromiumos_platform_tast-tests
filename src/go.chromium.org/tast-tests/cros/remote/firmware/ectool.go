@@ -261,6 +261,16 @@ func (ec *ECTool) ResetFlags(ctx context.Context) (uint32, error) {
 	return uint32(flags), nil
 }
 
+// SetHibernationDelay sets the delay in seconds before the EC enters
+// hibernation after the AP reaches G3 using 'ectool hibdelay <seconds>'.
+func (ec *ECTool) SetHibernationDelay(ctx context.Context, seconds uint32) error {
+	out, err := ec.Command(ctx, "hibdelay", strconv.FormatUint(uint64(seconds), 10)).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrapf(err, "running 'ectool hibdelay %d' on DUT, got: %v", seconds, string(out))
+	}
+	return nil
+}
+
 // GpioName type holds commands for 'ectool gpioget'.
 type GpioName string
 
