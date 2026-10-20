@@ -192,28 +192,54 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 		}
 		activeDesk := 0
 
-		recorder.Annotate(ctx, "Open_Google_Slides")
-		slidesURL, err := cuj.GetTestSlidesURL(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get Google Slides URL")
-		}
+		var err error
+		var slidesURL, lastOmniboxURL string
+		var slidesConn *chrome.Conn
+		if om != nil {
+			// The omnibox variants open windows via the omnibox instead
+			// of the Google Slides window.
+			recorder.Annotate(ctx, "Open_Windows_Via_Omnibox")
+			lastOmniboxURL, err = om.openWindowsViaOmnibox(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to open windows via the omnibox")
+			}
+			expectedNumWindows += len(omniboxPagesRecorded)
+			// Memory after opening the windows whose popups were shown,
+			// before the desk switcher shows popups in every window.
+			om.mem.snapshotShown(ctx, expectedNumWindows)
+		} else {
+			recorder.Annotate(ctx, "Open_Google_Slides")
+			slidesURL, err = cuj.GetTestSlidesURL(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get Google Slides URL")
+			}
 
-		slidesConn, err := recorder.NewConn(ctx, cr, "Slides", slidesURL, browser.WithNewWindow())
-		if err != nil {
-			return errors.Wrap(err, "failed to open a Google Slides presentation")
+			slidesConn, err = recorder.NewConn(ctx, cr, "Slides", slidesURL, browser.WithNewWindow())
+			if err != nil {
+				return errors.Wrap(err, "failed to open a Google Slides presentation")
+			}
+			expectedNumWindows++
 		}
-		expectedNumWindows++
 
 		deskSwitcher := NewDeskSwitcher(tconn, recorder, outDir, systemTraceConfigPath, deskSwitchingDuration, deskSwitchWorkflows, onVisitActions, expectedNumWindows, activeDesk)
 		if err := deskSwitcher.DeskSwitch(ctx); err != nil {
 			return errors.Wrap(err, "failed to perform desk switching action")
 		}
 
-		// Activate the desk where Google Slides is at.
+		// Activate the desk where Google Slides (or the windows opened via
+		// the omnibox) is at.
 		if deskSwitcher.ActiveDesk != 0 {
 			if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
 				return errors.Wrap(err, "failed to activate leftmost desk with the autotest API")
 			}
+		}
+
+		if om != nil {
+			if err := om.checkSkippedVisits(); err != nil {
+				return err
+			}
+			om.navigateToVersionURL(ctx, lastOmniboxURL)
+			return nil
 		}
 		const chromeVersionURL = chrome.VersionURL
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.

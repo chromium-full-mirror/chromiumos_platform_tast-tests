@@ -90,9 +90,9 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ur
 //   - Windows: 1
 //   - User Input: Keyboard typing
 //
-// If om is not nil (omnibox variants), a memory snapshot is taken after
-// each desk and, unless om.param.KeepHeavySites, every window shows an
-// on-DUT page.
+// If om is not nil (omnibox variants), the per-desk user input is replaced
+// by omnibox operations, a memory snapshot is taken after each desk, and,
+// unless om.param.KeepHeavySites, every window shows an on-DUT page.
 func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, om *omniboxEnv) ([]action.Action, int, func(ctx context.Context) error, error) {
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
@@ -191,10 +191,14 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 			expectedNumWindows: 1,
 		},
 	}
-	if omniboxLocalPages {
+	if om != nil {
+		omniboxActions := om.onVisitActions()
 		omniboxPages := [][]int{omniboxPagesDesk1, omniboxPagesDesk2, omniboxPagesDesk3, omniboxPagesDesk4}
 		for i := range desks {
-			desks[i].urls = om.pageURLs(omniboxPages[i])
+			desks[i].onVisitAction = omniboxActions[i]
+			if omniboxLocalPages {
+				desks[i].urls = om.pageURLs(omniboxPages[i])
+			}
 		}
 	}
 	for i, desk := range desks {

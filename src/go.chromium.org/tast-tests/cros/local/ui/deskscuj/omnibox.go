@@ -82,12 +82,17 @@ type omniboxEnv struct {
 	// Rotating indices so that every run visits windows and types strings
 	// in the same order.
 	corpusIdx int
+	desk2Idx  int
+	desk3Idx  int
+	navIdx    int
 
 	// visits counts the desk visits with omnibox input, and skippedVisits
 	// the ones where the omnibox couldn't be focused, so no omnibox input
 	// was done.
 	visits        int
 	skippedVisits int
+
+	newWindowLatencies []time.Duration
 
 	// mem collects the memory snapshots taken as windows are opened, and
 	// reports them as the Omnibox.Mem* metrics (see memTracker).
@@ -270,6 +275,14 @@ func omniboxMetricConfigs() []cujrecorder.MetricConfig {
 
 // recordResults saves the omnibox-specific perf values.
 func (e *omniboxEnv) recordResults(ctx context.Context, pv *perf.Values) {
+	for _, d := range e.newWindowLatencies {
+		pv.Append(perf.Metric{
+			Name:      "Omnibox.NewWindowLatency",
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, float64(d.Milliseconds()))
+	}
 	pv.Set(perf.Metric{
 		Name:      "Omnibox.SkippedVisits",
 		Unit:      "count",
