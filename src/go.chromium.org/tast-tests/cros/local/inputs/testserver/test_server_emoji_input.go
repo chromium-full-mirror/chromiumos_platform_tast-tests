@@ -30,18 +30,19 @@ func (its *InputsTestServer) TriggerEmojiPickerFromContextMenu(inputField InputF
 
 // DismissGifNudgeOverlay returns a user action to dismiss gif nudge overlay in PK emoji picker.
 func (its *InputsTestServer) DismissGifNudgeOverlay() uiauto.Action {
+	ui := emojipicker.NewUICtx(its.tconn)
 	return uiauto.Combine("Dismiss gif nudge overlay",
 		// Give the emoji picker a chance to fully render the search field.
-		its.ui.WaitUntilExists(emojipicker.SearchFieldFinder),
+		ui.WaitUntilExists(emojipicker.SearchFieldFinder),
 		// Note: A real mouse click is necessary here rather than DoDefault:
 		// 1. It dispatches a pointer event to dismiss the GIF nudge overlay in WebUI.
 		// 2. It activates and focuses the search box as the active TextInputClient in Ash IME.
 		//    EmojiPageHandler's InsertObserver in Chromium requires the emoji picker to have
 		//    text input focus so that closing the picker registers two focus changes (picker blur,
 		//    then target field focus) before inserting the emoji (see emoji_page_handler.cc).
-		its.ui.LeftClick(emojipicker.SearchFieldFinder),
+		ui.LeftClick(emojipicker.SearchFieldFinder),
 		// Wait for the nudge overlay to be dismissed.
-		its.ui.WaitUntilGone(emojipicker.NudgeOverlay),
+		ui.WaitUntilGone(emojipicker.NudgeOverlay),
 	)
 }
 
