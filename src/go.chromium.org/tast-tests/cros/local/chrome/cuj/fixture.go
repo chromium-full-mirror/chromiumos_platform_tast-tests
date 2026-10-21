@@ -103,9 +103,21 @@ var benchmarkFlags = []string{
 	"--disable-field-trial-config",
 }
 
-// webUIOmniboxOptimizationFeatures are the optimizations for the WebUI
+// WebUI Omnibox features compared by the WebUI Omnibox experiment fixtures.
+const (
+	// WebUIOmniboxPopupFeature shows the omnibox suggestions in a WebUI
+	// popup.
+	WebUIOmniboxPopupFeature = "WebUIOmniboxPopup"
+	// WebUIOmniboxAimPopupFeature shows the AI Mode popup in WebUI.
+	WebUIOmniboxAimPopupFeature = "WebUIOmniboxAimPopup"
+	// WebUIOmniboxFullPopupFeature renders both the omnibox input and the
+	// suggestions in WebUI.
+	WebUIOmniboxFullPopupFeature = "WebUIOmniboxFullPopup"
+)
+
+// WebUIOmniboxOptimizationFeatures are the optimizations for the WebUI
 // Omnibox popup.
-var webUIOmniboxOptimizationFeatures = []string{
+var WebUIOmniboxOptimizationFeatures = []string{
 	"OmniboxWebUIPopupHideOnCreation",
 	"OmniboxWebUIPopupMarkAsHidden",
 }
@@ -1121,9 +1133,9 @@ func init() {
 	//  3. WebUIOmniboxFullPopupEnabledOnly: WebUIOmniboxFullPopup and
 	//     WebUIOmniboxAimPopup enabled.
 	//  4. WebUIOmniboxPopupEnabledAndOptimized: config 2 with
-	//     webUIOmniboxOptimizationFeatures enabled.
+	//     WebUIOmniboxOptimizationFeatures enabled.
 	//  5. WebUIOmniboxFullPopupEnabledAndOptimized: config 3 with
-	//     webUIOmniboxOptimizationFeatures enabled.
+	//     WebUIOmniboxOptimizationFeatures enabled.
 	// Every feature that a config doesn't enable is explicitly disabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWebUIOmniboxDisabled",
@@ -1135,8 +1147,8 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature, WebUIOmniboxFullPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			},
 			disableARC: true,
 		},
@@ -1157,9 +1169,9 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxFullPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			},
 			disableARC: true,
 		},
@@ -1180,9 +1192,9 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxFullPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			},
 			disableARC: true,
 		},
@@ -1203,9 +1215,9 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
-				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxFullPopupFeature),
+				chrome.EnableFeatures(WebUIOmniboxOptimizationFeatures...),
 			},
 			disableARC: true,
 		},
@@ -1226,9 +1238,9 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxPopup"),
-				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxFullPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature),
+				chrome.EnableFeatures(WebUIOmniboxOptimizationFeatures...),
 			},
 			disableARC: true,
 		},
@@ -1252,8 +1264,8 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.DisableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup", "WebUIOmniboxFullPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature, WebUIOmniboxFullPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			),
 			disableARC:  true,
 			docsBlocker: true,
@@ -1278,9 +1290,9 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxFullPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			),
 			disableARC:  true,
 			docsBlocker: true,
@@ -1305,9 +1317,9 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxPopup"),
-				chrome.DisableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxFullPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxOptimizationFeatures...),
 			),
 			disableARC:  true,
 			docsBlocker: true,
@@ -1332,9 +1344,9 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures("WebUIOmniboxPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxFullPopup"),
-				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxFullPopupFeature),
+				chrome.EnableFeatures(WebUIOmniboxOptimizationFeatures...),
 			),
 			disableARC:  true,
 			docsBlocker: true,
@@ -1359,9 +1371,9 @@ func init() {
 			chromeExtraOpts: append(
 				webRTCOpts,
 				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures("WebUIOmniboxFullPopup", "WebUIOmniboxAimPopup"),
-				chrome.DisableFeatures("WebUIOmniboxPopup"),
-				chrome.EnableFeatures(webUIOmniboxOptimizationFeatures...),
+				chrome.EnableFeatures(WebUIOmniboxFullPopupFeature, WebUIOmniboxAimPopupFeature),
+				chrome.DisableFeatures(WebUIOmniboxPopupFeature),
+				chrome.EnableFeatures(WebUIOmniboxOptimizationFeatures...),
 			),
 			disableARC:  true,
 			docsBlocker: true,

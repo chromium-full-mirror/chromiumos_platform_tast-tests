@@ -239,6 +239,68 @@ func init() {
 				[]string{}, // disabledFeatures
 				[]string{"CrosBatterySaver", "CrosBatterySaverAlwaysOn"}, // enabledFeatures
 			},
+		}, {
+			// TODO(b/570204454): Remove the webui_omnibox_* variants once the
+			// WebUI Omnibox experiment is complete.
+			// These compare login performance across the same WebUI Omnibox
+			// configs as the loggedInToCUJUserWebUIOmnibox* fixtures, with ARC
+			// disabled as in those fixtures, and 2 windows as in
+			// noarc_2windows. Every feature that a config doesn't enable is
+			// explicitly disabled.
+			Name:      "webui_omnibox_disabled",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,     // windows
+				noarc, // arcMode
+				false, // tabletMode
+				true,  // autoSessionRestore
+				append([]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature, cuj.WebUIOmniboxFullPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				[]string{}, // enabledFeatures
+			},
+		}, {
+			Name:      "webui_omnibox_popup_enabled",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,     // windows
+				noarc, // arcMode
+				false, // tabletMode
+				true,  // autoSessionRestore
+				append([]string{cuj.WebUIOmniboxFullPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				[]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature},                     // enabledFeatures
+			},
+		}, {
+			Name:      "webui_omnibox_full_popup_enabled",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,     // windows
+				noarc, // arcMode
+				false, // tabletMode
+				true,  // autoSessionRestore
+				append([]string{cuj.WebUIOmniboxPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				[]string{cuj.WebUIOmniboxFullPopupFeature, cuj.WebUIOmniboxAimPopupFeature},             // enabledFeatures
+			},
+		}, {
+			Name:      "webui_omnibox_popup_optimized",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,     // windows
+				noarc, // arcMode
+				false, // tabletMode
+				true,  // autoSessionRestore
+				[]string{cuj.WebUIOmniboxFullPopupFeature}, // disabledFeatures
+				append([]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // enabledFeatures
+			},
+		}, {
+			Name:      "webui_omnibox_full_popup_optimized",
+			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
+			Val: loginPerfTestParam{
+				2,                                      // windows
+				noarc,                                  // arcMode
+				false,                                  // tabletMode
+				true,                                   // autoSessionRestore
+				[]string{cuj.WebUIOmniboxPopupFeature}, // disabledFeatures
+				append([]string{cuj.WebUIOmniboxFullPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // enabledFeatures
+			},
 		}},
 	})
 }
