@@ -7,6 +7,7 @@ package guestos
 import (
 	"bytes"
 	"context"
+	_ "embed" // Embed x11_focus_wait.py.
 	"fmt"
 	"image/color"
 	"image/png"
@@ -43,27 +44,49 @@ func PollWindowSize(ctx context.Context, tconn *chrome.TestConn, name string, ti
 }
 
 // windowSize returns the the width and the height of the window in pixels.
-func windowSize(ctx context.Context, tconn *chrome.TestConn, name string) (sz coords.Size, err error) {
+func windowSize(ctx context.Context, tconn *chrome.TestConn, name string) (coords.Size, error) {
 	ui := uiauto.New(tconn)
 	appWindow := nodewith.Name(name).First()
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(appWindow)(ctx); err != nil {
 		return coords.Size{}, errors.Wrap(err, "failed to locate the app window")
 	}
 
-	// Apps can open extra "degenerate" windows. We look for the first window with
-	// a client view that has a non-empty location node.
-	for i := 0; i < 4; i++ {
-		view := nodewith.ClassName("ClientView").Nth(i)
-		loc, err := ui.WithTimeout(15*time.Second).Location(ctx, view)
-		if err == nil {
-			if loc.Empty() {
-				continue
+	// Apps can open extra "degenerate" windows (such as 1x1 helper/leader windows
+	// or splash windows). Check up to 4 candidate Widget nodes with the target
+	// name (one Widget per window in Ash's automation tree) so an unrelated
+	// window's ClientView is not matched, and wait for Ash focus on the client
+	// surface before callers send keyboard input.
+	const maxCandidateWidgets = 4
+	var lastErr error
+	for i := 0; i < maxCandidateWidgets; i++ {
+		widget := nodewith.Name(name).ClassName("Widget").Nth(i)
+		// Most guest apps only open a single window (Nth(0)). Check immediately
+		// whether an (i+1)-th Widget exists so we do not burn 15s per iteration
+		// polling non-existent windows and clobbering Nth(0)'s failure reason.
+		if i > 0 {
+			if found, err := ui.IsNodeFound(ctx, widget); err != nil || !found {
+				break
 			}
-			return loc.Size(), nil
 		}
+		view := nodewith.ClassName("ClientView").Ancestor(widget).First()
+		loc, err := ui.WithTimeout(15*time.Second).Location(ctx, view)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if loc.Empty() {
+			lastErr = errors.New("client view location is empty")
+			continue
+		}
+		focusedView := nodewith.Focused().Ancestor(view).First()
+		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(focusedView)(ctx); err != nil {
+			lastErr = errors.Wrap(err, "failed waiting for client view focus")
+			continue
+		}
+		return loc.Size(), nil
 	}
 
-	return coords.Size{}, errors.Wrap(err, "failed to find client view location node")
+	return coords.Size{}, errors.Wrap(lastErr, "failed to find client view location node")
 }
 
 // MatchScreenshotDominantColor takes a screenshot and attempts to verify if it
@@ -177,7 +200,9 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 	size, err := PollWindowSize(ctx, tconn, windowName, timeout)
 	if err != nil {
 		cancel()
-		cmd.Wait(testexec.DumpLogOnError)
+		if waitErr := cmd.Wait(testexec.DumpLogOnError); waitErr != nil {
+			testing.ContextLogf(ctx, "Command %v exited after window poll failure: %v", cmdline, waitErr)
+		}
 		if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
 			if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
 				return "", errors.Wrapf(err, "failed to find window %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)
@@ -186,6 +211,24 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 		return "", errors.Wrapf(err, "failed to find window %q while running %v", windowName, cmdline)
 	}
 	testing.ContextLogf(ctx, "Window %q is visible with size %v", windowName, size)
+	// Under X11/Sommelier, Ash marks the ExoShellSurface focused before Sommelier
+	// processes xdg_toplevel.configure(ACTIVATED) / wl_keyboard.enter and sends
+	// xcb_set_input_focus to Xwayland; wait until Xwayland's X11 input focus is on
+	// windowName so the single keypress is not dropped.
+	if isX11Command(cmdline) {
+		if err := waitForX11WindowFocus(ctx, guest, windowName); err != nil {
+			cancel()
+			if waitErr := cmd.Wait(testexec.DumpLogOnError); waitErr != nil {
+				testing.ContextLogf(ctx, "Command %v exited after X11 focus failure: %v", cmdline, waitErr)
+			}
+			if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
+				if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
+					return "", errors.Wrapf(err, "failed waiting for X11 focus on %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)
+				}
+			}
+			return "", errors.Wrapf(err, "failed waiting for X11 focus on %q while running %v", windowName, cmdline)
+		}
+	}
 	testing.ContextLog(ctx, "Sending keypress to ", windowName)
 	if err := keyboard.Type(ctx, " "); err != nil {
 		return "", errors.Wrapf(err, "failed to send keypress to window while running %v", cmdline)
@@ -215,4 +258,60 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 	}
 
 	return stdoutBuf.String(), nil
+}
+
+const x11FocusTimeout = 10 * time.Second
+
+// x11FocusWaitScript polls libX11 inside the guest until a viewable X11 window
+// with WM_NAME matching sys.argv[1] holds X11 input focus.
+//
+//go:embed x11_focus_wait.py
+var x11FocusWaitScript string
+
+// isX11Command reports whether cmdline launches an X11 guest application.
+func isX11Command(cmdline []string) bool {
+	for _, arg := range cmdline {
+		if arg == "GDK_BACKEND=x11" || filepath.Base(arg) == "x11_demo" {
+			return true
+		}
+	}
+	return false
+}
+
+// waitForX11WindowFocus waits until windowName is viewable and holds X11 input
+// focus inside guest.
+func waitForX11WindowFocus(ctx context.Context, guest vm.Guest, windowName string) error {
+	// Reserve a small grace buffer before the parent context deadline so the
+	// guest Python script can exit cleanly and flush stderr diagnostics before
+	// vsh is terminated.
+	const graceBuffer = 2 * time.Second
+	waitTimeout := x11FocusTimeout
+	if deadline, ok := ctx.Deadline(); ok {
+		if remaining := time.Until(deadline); remaining > 0 {
+			if remaining > graceBuffer && remaining-graceBuffer < waitTimeout {
+				waitTimeout = remaining - graceBuffer
+			} else if remaining <= graceBuffer {
+				waitTimeout = remaining / 2
+			}
+		}
+	}
+	focusCtx, cancel := context.WithTimeout(ctx, waitTimeout+graceBuffer)
+	defer cancel()
+
+	// Pass x11FocusWaitScript via stdin rather than `python3 -c` because vsh
+	// serializes argv into a single SetupConnectionRequest protobuf capped at
+	// kMaxMessageSize (4096 bytes), whereas stdin is streamed in DataMessage
+	// chunks.
+	timeoutArg := fmt.Sprintf("%.2f", waitTimeout.Seconds())
+	cmd := guest.Command(focusCtx, "python3", "-", windowName, timeoutArg)
+	cmd.Stdin = strings.NewReader(x11FocusWaitScript)
+	var stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		if msg := strings.TrimSpace(stderrBuf.String()); msg != "" {
+			return errors.Wrapf(err, "X11 focus check failed (%s)", msg)
+		}
+		return err
+	}
+	return nil
 }
