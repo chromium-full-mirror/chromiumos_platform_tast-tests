@@ -100,24 +100,40 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to add Passpoint config from ARC: ", err)
 		}
 
-		// Ensure that a certificate and a private key is added. It can
-		// be racy to wait for the certificates and keys without a poll.
+		// Ensure that a certificate and keys are added. Starting in NSS 3.131,
+		// importing a permanent private key also creates a permanent public key
+		// object on the token in addition to the certificate and private key.
+		// It can be racy to wait for the certificates and keys without a poll.
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			aObjs, err := getAddedPKCS11Objects(ctx, objs)
 			if err != nil {
 				return errors.Wrap(err, "failed to get added PKCS#11 objects")
 			}
-			if len(aObjs) != 2 {
-				return errors.Errorf("len(aObjs) = %d, want 2", len(aObjs))
+			if len(aObjs) != 2 && len(aObjs) != 3 {
+				return errors.Errorf("len(aObjs) = %d, want 2 or 3", len(aObjs))
 			}
-			if aObjs[0].id != aObjs[1].id {
-				return errors.Errorf("certificate and private key ID does not match %v", aObjs)
+			var hasCert, hasPrivKey, hasPubKey bool
+			for _, obj := range aObjs {
+				if obj.id != aObjs[0].id {
+					return errors.Errorf("PKCS#11 object IDs do not match %v", aObjs)
+				}
+				switch obj.class {
+				case "Certificate":
+					hasCert = true
+				case "Private Key":
+					hasPrivKey = true
+				case "Public Key":
+					hasPubKey = true
+				}
 			}
-			if aObjs[0].class != "Private Key" && aObjs[1].class != "Private Key" {
-				return errors.New("expected at least one private key")
+			if !hasCert {
+				return errors.New("expected a certificate")
 			}
-			if aObjs[0].class != "Certificate" && aObjs[1].class != "Certificate" {
-				return errors.New("expected at least one certificate")
+			if !hasPrivKey {
+				return errors.New("expected a private key")
+			}
+			if len(aObjs) == 3 && !hasPubKey {
+				return errors.New("expected a public key")
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
