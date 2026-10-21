@@ -97,7 +97,7 @@ func CustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		IPType:             ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType]),
 		ApnType:            ossettings.ApnIsDefault,
 	}
-	userFriendlyApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
+	userFriendlyApnName := cellular.GetAPNUserFriendlyName(serviceLastGoodAPN)
 
 	ui := uiauto.New(tconn)
 	waitForConnectionState := func(finder *nodewith.Finder) uiauto.Action {

@@ -118,12 +118,14 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
-	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
 	}
+	serviceLastGoodAPNInfoApnName := cellular.GetAPNUserFriendlyName(serviceLastGoodAPN)
 
-	if err := mdp.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnName); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return mdp.VerifyApnIsVisibleInSubtext(ctx, tconn, cr, serviceLastGoodAPNInfoApnName)
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
 		s.Fatal("Failed to go to verify active apn subtext: ", err)
 	}
 
@@ -213,6 +215,14 @@ func connectAndVerify(ctx context.Context, ui *uiauto.Context, s *testing.State,
 		return errors.Wrap(err, "failed to connect and verify connected")
 	}
 
+	// Connecting to a network on an inactive SIM slot switches slots, which transiently removes
+	// the network and navigates OS Settings from Network Details back to Mobile data.
+	if err := ui.Exists(ossettings.MobileDataPageHeading)(ctx); err == nil {
+		if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to return to active network details page")
+		}
+	}
+
 	return nil
 }
 
@@ -224,11 +234,11 @@ func verifyAPNDetails(ctx context.Context, tconn *chrome.TestConn, helper *cellu
 	}
 
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
-	serviceLastGoodAPNInfoApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
-	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 	if err != nil {
 		return errors.Wrap(err, "error getting Service properties")
 	}
+	serviceLastGoodAPNInfoApnName := cellular.GetAPNUserFriendlyName(serviceLastGoodAPN)
+	serviceLastGoodAPNInfoApnSource := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 
 	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, serviceLastGoodAPNInfoApnName, serviceLastGoodAPNInfoApnSource); err != nil {
 		return errors.Wrap(err, "failed to verify connected APN UI")

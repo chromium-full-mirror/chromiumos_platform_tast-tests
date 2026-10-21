@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -125,8 +124,8 @@ func NonConnectedCellularHasNoApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disconnect to the default cellular service: ", err)
 	}
 
-	lastGoodApnInfoApnName, ok := lastGoodApn[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
-	if ok && lastGoodApnInfoApnName != "" {
+	lastGoodApnInfoApnName := cellular.GetAPNUserFriendlyName(lastGoodApn)
+	if lastGoodApnInfoApnName != "" {
 		lastGoodApnNode := nodewith.NameContaining(lastGoodApnInfoApnName)
 
 		// TODO(b/298522793): Check that no APN name is shown in OOBE.

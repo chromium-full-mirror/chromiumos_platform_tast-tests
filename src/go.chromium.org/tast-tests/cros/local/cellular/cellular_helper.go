@@ -1501,6 +1501,15 @@ func (h *Helper) GetCellularLastGoodAPN(ctx context.Context) (map[string]string,
 	return h.getCellularServiceDictProperty(ctx, shillconst.ServicePropertyCellularLastGoodAPN)
 }
 
+// GetAPNUserFriendlyName returns the user-friendly APN name from an APN info map,
+// falling back to the APN name if the user-friendly name is empty.
+func GetAPNUserFriendlyName(apnInfo map[string]string) string {
+	if name := apnInfo[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]; name != "" {
+		return name
+	}
+	return apnInfo[shillconst.DevicePropertyCellularAPNInfoApnName]
+}
+
 // GetCurrentIPType returns current ip_type of LastGoodAPN.
 func (h *Helper) GetCurrentIPType(ctx context.Context) (string, error) {
 	apnInfo, err := h.getCellularServiceDictProperty(ctx, shillconst.ServicePropertyCellularLastGoodAPN)

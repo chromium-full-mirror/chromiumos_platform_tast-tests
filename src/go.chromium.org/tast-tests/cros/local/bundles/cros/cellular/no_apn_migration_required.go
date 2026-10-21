@@ -45,10 +45,7 @@ func NoApnMigrationRequired(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get last good APN: ", err)
 	}
 
-	var serviceLastGoodAPNInfoApnName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
-	if serviceLastGoodAPNInfoApnName == "" {
-		serviceLastGoodAPNInfoApnName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
-	}
+	serviceLastGoodAPNInfoApnName := cellular.GetAPNUserFriendlyName(serviceLastGoodAPN)
 
 	var serviceLastGoodAPNInfoApnSource = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnSource]
 	if serviceLastGoodAPNInfoApnSource == "ui" {
