@@ -95,6 +95,13 @@ type omniboxEnv struct {
 	// aimEligible is the AI Mode eligibility of the account, or nil if
 	// it couldn't be determined.
 	aimEligible *bool
+	// aimAttempts and aimShown count the desk-3 visits where the AI Mode
+	// popup was attempted and shown.
+	aimAttempts int
+	aimShown    int
+	// aimDisabled turns off the AI Mode step, e.g. when the AI Mode
+	// button navigates instead of opening the popup.
+	aimDisabled bool
 
 	newWindowLatencies []time.Duration
 
@@ -147,6 +154,7 @@ func newOmniboxEnv(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 	e.restoreSuggest = restore
 
 	e.recordAimEligibility(ctx)
+	e.disableAimIfPopupDisabled(ctx)
 	return e, nil
 }
 
@@ -298,5 +306,6 @@ func (e *omniboxEnv) recordResults(ctx context.Context, pv *perf.Values) {
 		testing.ContextLogf(ctx, "Skipped the omnibox input on %d visits", e.skippedVisits)
 	}
 	e.recordAimEligibilityResult(pv)
+	e.recordAimResults(ctx, pv)
 	e.mem.record(ctx, pv)
 }

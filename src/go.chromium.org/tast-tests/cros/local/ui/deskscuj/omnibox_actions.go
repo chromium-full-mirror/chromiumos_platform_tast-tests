@@ -75,12 +75,20 @@ func (e *omniboxEnv) desk2Action() action.Action {
 }
 
 // desk3Action returns the desk-3 action: alternate between the desk's
-// windows, then the desk-1 sequence.
+// windows, then the AI Mode sequence (aimSequence).
 func (e *omniboxEnv) desk3Action() action.Action {
-	return e.visitAction(uiauto.Combine("use the omnibox in the next window",
-		e.activateNextWindowOnDesk(&e.desk3Idx),
-		e.classicSequence,
-	))
+	return e.visitAction(func(ctx context.Context) error {
+		// With AI Mode turned off (e.g. the Views popup baseline), desk 3
+		// runs the desk-1 sequence.
+		input := e.aimSequence
+		if e.aimDisabled {
+			input = e.classicSequence
+		}
+		return uiauto.Combine("use the omnibox in the next window",
+			e.activateNextWindowOnDesk(&e.desk3Idx),
+			input,
+		)(ctx)
+	})
 }
 
 // desk4Action returns the desk-4 action: open a new tab, navigate to a
