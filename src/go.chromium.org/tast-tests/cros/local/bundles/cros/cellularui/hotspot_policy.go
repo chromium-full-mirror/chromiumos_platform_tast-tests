@@ -163,7 +163,7 @@ func init() {
 
 func HotspotPolicy(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -178,11 +178,21 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer func(ctx context.Context) {
-		policyutil.ResetChrome(ctx, fdms, cr)
-		cr.Close(ctx)
+		if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+			s.Log("Failed to reset Chrome in cleanup: ", err)
+		}
+		if err := cr.Close(ctx); err != nil {
+			s.Log("Failed to close Chrome in cleanup: ", err)
+		}
 	}(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
+	defer func(ctx context.Context) {
+		if err := helper.Manager.DisableTethering(ctx); err != nil {
+			s.Log("Failed to disable tethering in cleanup: ", err)
+		}
+	}(cleanupCtx)
+
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
@@ -196,6 +206,7 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch network page: ", err)
 	}
+	defer hs.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	if err := hs.ToggleHotspot(ctx, tconn, cr, true); err != nil {

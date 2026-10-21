@@ -153,15 +153,22 @@ func init() {
 
 func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("TetheringExperimentalFunctionality"))
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
+	defer func(ctx context.Context) {
+		if err := helper.Manager.DisableTethering(ctx); err != nil {
+			s.Log("Failed to disable tethering in cleanup: ", err)
+		}
+	}(cleanupCtx)
+
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect cellular service: ", err)
 	}
@@ -175,6 +182,7 @@ func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch Network page: ", err)
 	}
+	defer networkPage.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	const toggleName = "Hotspot"
