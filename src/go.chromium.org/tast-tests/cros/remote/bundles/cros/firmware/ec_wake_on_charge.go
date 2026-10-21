@@ -98,17 +98,6 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	// Increase timeout in getting response from ec uart.
-	if err := h.Servo.SetString(ctx, "ec_uart_timeout", "10"); err != nil {
-		s.Fatal("Failed to extend ec uart timeout: ", err)
-	}
-	defer func() {
-		testing.ContextLog(ctx, "Restoring ec uart timeout to the default value of 3 seconds")
-		if err := h.Servo.SetString(ctx, "ec_uart_timeout", "3"); err != nil {
-			s.Fatal("Failed to restore default ec uart timeout: ", err)
-		}
-	}()
-
 	// At start of test, save some information that may
 	// be useful for debugging.
 	if err := checkInformation(ctx, h, &checkedInfo); err != nil {
@@ -132,32 +121,6 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx, args)
 
-	// Monitor servo connection in the background, and attempt to reconnect if the connection drops.
-	done := make(chan struct{})
-	defer func() {
-		done <- struct{}{}
-	}()
-	go func() {
-	monitorServo:
-		for {
-			select {
-			case <-done:
-				break monitorServo
-			default:
-				// GoBigSleepLint: Ping servo periodically to monitor whether it's alive.
-				if err := testing.Sleep(ctx, time.Second); err != nil {
-					s.Error("Failed to sleep while monitoring servo: ", err)
-				}
-				if _, err := h.Servo.Echo(ctx, "ping"); err != nil {
-					s.Log("Failed to ping servo, reconnecting: ", err)
-					err := h.ServoProxy.Reconnect(ctx)
-					if err != nil {
-						s.Error("Failed to connect to servo: ", err)
-					}
-				}
-			}
-		}
-	}()
 	for _, tc := range []struct {
 		lidOpen servo.LidOpenValue
 	}{
