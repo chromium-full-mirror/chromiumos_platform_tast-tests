@@ -829,11 +829,14 @@ func measureLoginPerformance(
 		// boot metrics have likely been already reported and wiped
 		// away while we were waiting for the cpu to cool down before
 		// running login. Force them to be reported again.
+		// Touch the flag in both locations: newer send-uptime-metrics
+		// reads it from /run/bootstat (where Chrome writes it), older
+		// versions read it from /tmp.
 		if err := testexec.CommandContext(
 			ctx,
 			"sh",
 			"-c",
-			"touch /tmp/stats-logout-started.written && /usr/share/cros/init/send-uptime-metrics",
+			"touch /tmp/stats-logout-started.written /run/bootstat/stats-logout-started.written && /usr/share/cros/init/send-uptime-metrics",
 		).Run(testexec.DumpLogOnError); err != nil {
 			return errors.Wrap(err, "failed to force send-uptime-metrics to be reported again")
 		}
