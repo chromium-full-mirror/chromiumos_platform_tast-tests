@@ -6,11 +6,16 @@ package cellular
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -49,6 +54,9 @@ func ShillSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
+	restoreWakeup := disableModemHostWakeup(ctx, s, helper.Device)
+	defer restoreWakeup()
+
 	// Apply required enabled state
 	if params.enabledState {
 		if _, err := helper.Enable(ctx); err != nil {
@@ -78,5 +86,56 @@ func ShillSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 
 	if _, err := helper.FindServiceForDevice(ctx); err != nil {
 		s.Fatal("Unable to find Cellular Service after resume: ", err)
+	}
+}
+
+// disableModemHostWakeup temporarily disables system wakeup on sysfs ancestors
+// (e.g. PCI xHCI controller) of the modem's network interface during RTC-timed
+// suspend so spurious USB 3.0 link wakeups from modems such as Fibocom L850-GL
+// do not cause hcd_pci_suspend to abort s2idle with -EBUSY (-16).
+func disableModemHostWakeup(ctx context.Context, s *testing.State, dev *shill.Device) func() {
+	props, err := dev.GetProperties(ctx)
+	if err != nil {
+		s.Log("Unable to read shill device properties for wakeup override: ", err)
+		return func() {}
+	}
+	ifName, err := props.GetString(shillconst.DevicePropertyInterface)
+	if err != nil || ifName == "" {
+		return func() {}
+	}
+	devPath, err := filepath.EvalSymlinks(filepath.Join("/sys/class/net", ifName, "device"))
+	if err != nil {
+		return func() {}
+	}
+
+	var toRestore []string
+	for dir := devPath; strings.HasPrefix(dir, "/sys/devices/"); dir = filepath.Dir(dir) {
+		wakeupPath := filepath.Join(dir, "power", "wakeup")
+		data, err := os.ReadFile(wakeupPath)
+		if err != nil || strings.TrimSpace(string(data)) != "enabled" {
+			continue
+		}
+		if err := os.WriteFile(wakeupPath, []byte("disabled"), 0644); err != nil {
+			s.Logf("Failed to disable wakeup at %s: %v", wakeupPath, err)
+			continue
+		}
+		s.Logf("Temporarily disabled wakeup at %s", wakeupPath)
+		toRestore = append(toRestore, wakeupPath)
+	}
+	return func() {
+		restoreFailed := false
+		for _, p := range toRestore {
+			if err := os.WriteFile(p, []byte("enabled"), 0644); err != nil {
+				s.Errorf("Failed to restore wakeup at %s: %v", p, err)
+				restoreFailed = true
+				continue
+			}
+			s.Logf("Restored wakeup at %s", p)
+		}
+		if restoreFailed {
+			if err := testexec.CommandContext(ctx, "reboot").Run(); err != nil {
+				s.Error("Failed to reboot DUT after wakeup restore failure: ", err)
+			}
+		}
 	}
 }
