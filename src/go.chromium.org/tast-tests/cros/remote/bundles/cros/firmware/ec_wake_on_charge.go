@@ -33,6 +33,7 @@ type debugInformation struct {
 	servoConnectionType string
 	servoType           string
 	hasMicroOrC2D2      bool
+	hasServoMicro       bool
 	hasCCD              bool
 }
 
@@ -148,10 +149,11 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 
 		// Set EC hibernation delay before closing the lid (which triggers powerd shutdown).
-		// On CCD-only setups (!hasMicroOrC2D2), lid_open:no is software-emulated in EC RAM via
-		// the 'lidclose' console command and would be wiped if the EC hibernates and resets, so
-		// only arm hibdelay when lid is open or when servo_micro/C2D2 drives hardware lid_open.
-		if h.Config.Hibernate && (tc.lidOpen == servo.LidOpenYes || checkedInfo.hasMicroOrC2D2) {
+		// On CCD-only and C2D2 setups (!hasServoMicro), lid_open:no is either emulated in EC RAM via
+		// 'lidclose' or driven via GSC console 'CCD_REC_LID_SWITCH', which does not hold LID_OPEN low
+		// across EC hibernation and Z-state. Only arm hibdelay when lid is open or when servo_micro
+		// drives the physical lid_open GPIO expander.
+		if h.Config.Hibernate && (tc.lidOpen == servo.LidOpenYes || checkedInfo.hasServoMicro) {
 			ecTool := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
 			s.Log("Setting EC hibernation delay to 5s via ectool")
 			if err := ecTool.SetHibernationDelay(ctx, 5); err != nil {
@@ -185,7 +187,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		}
 
 		if h.Config.Hibernate {
-			if err := hibernateDUT(ctx, h, checkedInfo.hasMicroOrC2D2, tc.lidOpen); err != nil {
+			if err := hibernateDUT(ctx, h, checkedInfo.hasServoMicro, tc.lidOpen); err != nil {
 				s.Fatal("Failed to hibernate DUT: ", err)
 			}
 		} else {
@@ -255,12 +257,14 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 }
 
 func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInformation) error {
-	var wantInfo = []string{"hasMicroOrC2D2", "hasCCD", "servoType", "servoConnectionType"}
+	var wantInfo = []string{"hasMicroOrC2D2", "hasServoMicro", "hasCCD", "servoType", "servoConnectionType"}
 	for _, val := range wantInfo {
 		var err error
 		switch val {
 		case "hasMicroOrC2D2":
 			info.hasMicroOrC2D2, err = h.Servo.PreferDebugHeader(ctx)
+		case "hasServoMicro":
+			info.hasServoMicro, err = h.Servo.HasServoMicro(ctx)
 		case "hasCCD":
 			info.hasCCD, err = h.Servo.HasCCD(ctx)
 		case "servoType":
@@ -272,15 +276,15 @@ func checkInformation(ctx context.Context, h *firmware.Helper, info *debugInform
 			return errors.Wrapf(err, "failed to check for %s", val)
 		}
 	}
-	testing.ContextLogf(ctx, "DUT has micro or c2d2: %t, has CCD: %t, servo type: %s, servo connection type: %s",
-		info.hasMicroOrC2D2, info.hasCCD, info.servoType, info.servoConnectionType)
+	testing.ContextLogf(ctx, "DUT has micro or c2d2: %t, has servo_micro: %t, has CCD: %t, servo type: %s, servo connection type: %s",
+		info.hasMicroOrC2D2, info.hasServoMicro, info.hasCCD, info.servoType, info.servoConnectionType)
 	return nil
 }
 
-func hibernateDUT(ctx context.Context, h *firmware.Helper, hasMicroOrC2D2 bool, lidOpen servo.LidOpenValue) error {
-	if lidOpen == servo.LidOpenNo && !hasMicroOrC2D2 {
-		// On CCD-only setups, lid_open:no is emulated in EC RAM via 'lidclose' and
-		// would be cleared if the EC hibernates and resets. Wait for G3 or S5 only.
+func hibernateDUT(ctx context.Context, h *firmware.Helper, hasServoMicro bool, lidOpen servo.LidOpenValue) error {
+	if lidOpen == servo.LidOpenNo && !hasServoMicro {
+		// Without servo_micro's physical GPIO expander, lid_open:no is not held low across
+		// EC hibernation and Z-state. Wait for G3 or S5 only.
 		testing.ContextLog(ctx, "Waiting for power state to become G3 or S5")
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5*time.Minute, "G3", "S5"); err != nil {
 			if strings.Contains(err.Error(), "No data was sent from the pty") ||
