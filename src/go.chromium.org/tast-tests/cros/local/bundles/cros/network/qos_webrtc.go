@@ -28,8 +28,27 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
-		// This test is expected to be flaky since the WebRTC detection can fail
-		// in some cases. See b/510988583#comment3 for details.
+		// This test is expected to fail ~25% of the time in production (see
+		// b/510988583):
+		//  1. patchpanel detects WebRTC flows using a stateless socket-filter
+		//     eBPF program (`match_dtls_srtp` in
+		//     `platform2/patchpanel/bpf/webrtc_detection.c`) attached via
+		//     iptables that inspects a single UDP packet for a DTLS 1.2
+		//     ClientHello containing the `use_srtp` extension (type 14) within
+		//     the first 10 TLS extensions.
+		//  2. With Chrome's `WebRtcPqcForDtls` feature enabled by default, the
+		//     post-quantum `X25519_MLKEM768` `key_share` extension (~1,184 bytes)
+		//     causes the DTLS ClientHello to be fragmented across two UDP packets
+		//     at the DTLS layer.
+		//  3. Because BoringSSL randomizes TLS extension order
+		//     (`permute_extensions`), whenever `key_share` is placed before
+		//     `use_srtp`, the `use_srtp` extension is pushed into the second UDP
+		//     fragment. The stateless eBPF filter only parses a ClientHello
+		//     starting at the beginning of a packet, so it misses `use_srtp` in
+		//     the second fragment and patchpanel does not apply the DSCP mark.
+		//  4. `WebRtcPqcForDtls` is intentionally kept at its default setting
+		//     here so this test continues to reflect real-world WebRTC QoS
+		//     detection behavior.
 		Attr: []string{"group:network", "network_platform"},
 		// `no_chrome_dcheck`: To avoid chrome crashes affecting the test execution.
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
