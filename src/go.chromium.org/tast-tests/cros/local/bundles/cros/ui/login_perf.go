@@ -5,19 +5,24 @@
 package ui
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
-	"golang.org/x/exp/slices"
+	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/dma"
@@ -25,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/ui"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
@@ -44,6 +50,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -56,6 +63,7 @@ const (
 	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
 	bootTimeLogin2                                        = "BootTime.Login2"
 	bootTimeLogin3                                        = "BootTime.Login3"
+	loginBrowserShutdownTime                              = "Login.BrowserShutdownTime"
 	uptimeLogoutToUIStopAfterLogout                       = "Uptime.LogoutToUIStopAfterLogout"
 	uptimeUIStopToProcessesTerminatedAfterLogout          = "Uptime.UIStopToProcessesTerminatedAfterLogout"
 	uptimeOtherProcessesTerminatedToChromeExecAfterLogout = "Uptime.OtherProcessesTerminatedToChromeExecAfterLogout"
@@ -64,6 +72,28 @@ const (
 	uptimeLoginPromptSetupTimeAfterLogout                 = "Uptime.LoginPromptSetupTimeAfterLogout"
 	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
+
+	// loginBrowserShutdownHang is 1 when session_manager had to SIGABRT the
+	// browser because it did not exit in time after the logout, 0 otherwise.
+	loginBrowserShutdownHang = "Login.BrowserShutdownHang"
+
+	// Files involved in reporting the logout metrics. Chrome writes
+	// logoutStartedFlagFile when it starts after a logout; send-uptime-metrics
+	// (an upstart task started on login-prompt-visible) renames it to
+	// logoutStartedDoneFile and writes the Uptime.* histograms to
+	// histogramTransferFile, where session_manager has already written
+	// Login.BrowserShutdownTime. Chrome scrapes histogramTransferFile
+	// periodically.
+	logoutStartedFlagFile = "/run/bootstat/stats-logout-started.written"
+	logoutStartedDoneFile = "/run/bootstat/stats-logout-started.written.done"
+	histogramTransferFile = "/var/lib/metrics/uma-events"
+	sendUptimeMetricsJob  = "send-uptime-metrics"
+	// session_manager writes shutdownBrowserPIDFile right before sending
+	// SIGABRT to a browser that did not exit in time; under Tast's default
+	// BreakpadTestMode crash_reporter does not run to delete it.
+	shutdownBrowserPIDFile  = "/run/chrome/shutdown_browser_pid"
+	logoutMetricsWaitTime   = 20 * time.Second
+	logoutMetricsPollPeriod = 200 * time.Millisecond
 
 	categoryAutoRestore   = "Ash.LoginPerf.AutoRestore."
 	categoryManualRestore = "Ash.LoginPerf.ManualRestore."
@@ -545,6 +575,224 @@ func logout(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
+// logoutAndStore signs out of cr and stores the metrics of that logout in pv.
+// Failures in preparing or collecting logout metrics are logged as warnings so
+// they do not discard a completed login measurement or leave cr non-nil after
+// sign-out.
+func logoutAndStore(ctx context.Context, cr *chrome.Chrome, pv *perfutil.Values) error {
+	if cr == nil {
+		return logout(ctx, cr)
+	}
+	c, prepErr := newLogoutCollector(ctx)
+	if prepErr != nil {
+		testing.ContextLog(ctx, "WARNING: Failed to prepare logout metrics: ", prepErr)
+	}
+	if err := logout(ctx, cr); err != nil {
+		return err
+	}
+	if c == nil {
+		return nil
+	}
+	m, err := c.collect(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "WARNING: Failed to collect logout metrics: ", err)
+		return nil
+	}
+	m.store(ctx, pv)
+	return nil
+}
+
+// logoutHistograms are the histograms (in milliseconds) that session_manager
+// and send-uptime-metrics write to the transfer file after a logout.
+var logoutHistograms = []string{
+	loginBrowserShutdownTime,
+	uptimeLogoutToUIStopAfterLogout,
+	uptimeUIStopToProcessesTerminatedAfterLogout,
+	uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
+	uptimeChromeExecToLoginPromptVisibleAfterLogout,
+	uptimeLogout,
+	uptimeLoginPromptSetupTimeAfterLogout,
+	uptimeLogoutToLoginPromptVisible,
+}
+
+// logoutStartedHistograms are the subset of logoutHistograms computed relative
+// to the logout-started bootstat event. When the logout-started flag was not
+// consumed, send-uptime-metrics substitutes a -1000000 ms sentinel for the
+// start timestamp and these three histograms report ~1,000,000+ ms.
+var logoutStartedHistograms = []string{
+	uptimeLogoutToUIStopAfterLogout,
+	uptimeLogout,
+	uptimeLogoutToLoginPromptVisible,
+}
+
+// logoutMetrics holds the shutdown metrics collected around one logout.
+type logoutMetrics struct {
+	// samples maps a name in logoutHistograms to the samples found in the
+	// transfer file. A missing name means the daemon did not report it.
+	samples map[string][]int
+	// flagConsumed is true when send-uptime-metrics consumed
+	// logoutStartedFlagFile (so logoutStartedHistograms hold real durations
+	// rather than the fallback sentinel).
+	flagConsumed bool
+	// hang is true if session_manager had to SIGABRT the browser.
+	hang bool
+}
+
+// logoutCollector reads the logout metrics straight from the transfer file
+// and session_manager's shutdown PID file. Reading histograms through Chrome
+// instead races with the ui restart of the next chrome.New, which starts
+// another send-uptime-metrics that reports the overflow sentinel 10 s later,
+// and bootstat_get_last would then measure against that restart's events.
+type logoutCollector struct{}
+
+// newLogoutCollector must be called before signing out.
+func newLogoutCollector(ctx context.Context) (*logoutCollector, error) {
+	// The login prompt of this session started a send-uptime-metrics that
+	// found no flag; make sure it is gone before clearing the transfer file.
+	if err := upstart.StopJob(ctx, sendUptimeMetricsJob); err != nil {
+		return nil, errors.Wrapf(err, "failed to stop %s", sendUptimeMetricsJob)
+	}
+	for _, p := range []string{logoutStartedFlagFile, logoutStartedDoneFile, shutdownBrowserPIDFile} {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+			return nil, errors.Wrapf(err, "failed to remove %s", p)
+		}
+	}
+	if err := metrics.ClearHistogramTransferFile(); err != nil {
+		return nil, errors.Wrap(err, "failed to clear histogram transfer file")
+	}
+	return &logoutCollector{}, nil
+}
+
+// collect waits for the send-uptime-metrics run triggered by the respawned
+// login screen to finish and return to stop/waiting, then reads the logout
+// histograms and checks whether session_manager wrote shutdownBrowserPIDFile.
+func (c *logoutCollector) collect(ctx context.Context) (*logoutMetrics, error) {
+	var samples map[string][]int
+	var flagConsumed bool
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		goal, state, _, err := upstart.JobStatus(ctx, sendUptimeMetricsJob)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if goal != upstartcommon.StopGoal || state != upstartcommon.WaitingState {
+			return errors.Errorf("%s is %s/%s", sendUptimeMetricsJob, goal, state)
+		}
+		_, statErr := os.Stat(logoutStartedDoneFile)
+		flagConsumed = statErr == nil
+		s, err := readTransferFileHistograms(histogramTransferFile, logoutHistograms)
+		if err != nil {
+			return err
+		}
+		if !flagConsumed && len(s[uptimeLogoutToLoginPromptVisible]) == 0 {
+			return errors.Errorf("waiting for %s or %s in %s", logoutStartedDoneFile, uptimeLogoutToLoginPromptVisible, histogramTransferFile)
+		}
+		samples = s
+		return nil
+	}, &testing.PollOptions{Timeout: logoutMetricsWaitTime, Interval: logoutMetricsPollPeriod}); err != nil {
+		return nil, errors.Wrapf(err, "%s did not finish", sendUptimeMetricsJob)
+	}
+	if !flagConsumed {
+		testing.ContextLogf(ctx, "WARNING: %s was not created; skipping logout-started Uptime metrics", logoutStartedDoneFile)
+	}
+
+	m := &logoutMetrics{
+		samples:      samples,
+		flagConsumed: flagConsumed,
+	}
+	if _, err := os.Stat(shutdownBrowserPIDFile); err == nil {
+		testing.ContextLogf(ctx, "Found %s after logout; browser hung on shutdown", shutdownBrowserPIDFile)
+		m.hang = true
+	} else if !os.IsNotExist(err) {
+		return nil, errors.Wrapf(err, "failed to stat %s", shutdownBrowserPIDFile)
+	}
+	return m, nil
+}
+
+// store appends the collected metrics to pv under the histogram names, so the
+// series stay continuous with the values reported through Chrome before.
+func (m *logoutMetrics) store(ctx context.Context, pv *perfutil.Values) {
+	for _, name := range logoutHistograms {
+		if !m.flagConsumed && slices.Contains(logoutStartedHistograms, name) {
+			continue
+		}
+		samples, ok := m.samples[name]
+		if !ok {
+			testing.ContextLogf(ctx, "WARNING: %s was not reported after logout", name)
+			continue
+		}
+		// Report the largest sample, as the old max-bucket reporting did, so a
+		// slow logout is not averaged away.
+		pv.Append(perf.Metric{
+			Name:      name,
+			Unit:      "millisecond",
+			Direction: perf.SmallerIsBetter,
+		}, float64(slices.Max(samples)))
+	}
+	hang := 0.0
+	if m.hang {
+		hang = 1.0
+	}
+	pv.Append(perf.Metric{
+		Name:      loginBrowserShutdownHang,
+		Unit:      "count",
+		Direction: perf.SmallerIsBetter,
+	}, hang)
+}
+
+// readTransferFileHistograms returns the samples of the named histograms in
+// the uma-events transfer file. Each record is a uint32 length that includes
+// itself, followed by "<type>\x00<payload>\x00"; a histogram payload is
+// "<name> <sample> <min> <max> <buckets>[ <count>]".
+func readTransferFileHistograms(path string, names []string) (map[string][]int, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open %s", path)
+	}
+	defer f.Close()
+
+	if err := unix.Flock(int(f.Fd()), unix.LOCK_SH); err != nil {
+		return nil, errors.Wrapf(err, "failed to lock %s", path)
+	}
+	defer unix.Flock(int(f.Fd()), unix.LOCK_UN)
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %s", path)
+	}
+	want := make(map[string]bool, len(names))
+	for _, n := range names {
+		want[n] = true
+	}
+	samples := make(map[string][]int)
+	for len(data) > 0 {
+		if len(data) < 4 {
+			return nil, errors.Errorf("truncated record header in %s", path)
+		}
+		// The file never leaves the device, so it is in native byte order,
+		// which is little-endian on every ChromeOS board.
+		size := int(binary.LittleEndian.Uint32(data))
+		if size < 4 || size > len(data) {
+			return nil, errors.Errorf("bad record size %d in %s", size, path)
+		}
+		record := data[4:size]
+		data = data[size:]
+		parts := bytes.SplitN(record, []byte{0}, 3)
+		if len(parts) < 2 || string(parts[0]) != "histogram" {
+			continue
+		}
+		fields := strings.Fields(string(parts[1]))
+		if len(fields) < 5 || !want[fields[0]] {
+			continue
+		}
+		sample, err := strconv.Atoi(fields[1])
+		if err != nil {
+			return nil, errors.Wrapf(err, "bad sample for %s in %s", fields[0], path)
+		}
+		samples[fields[0]] = append(samples[fields[0]], sample)
+	}
+	return samples, nil
+}
+
 // setSessionRestoreSetting opens OS settings and sets the 'Always restore' setting or
 // 'Ask every time' depending on `autoRestore`. In order to avoid possible noise when collecting the
 // browser login time performance at restoring time, this function also makes sure to close the OS
@@ -888,20 +1136,6 @@ func measureLoginPerformance(
 		if err := testing.Sleep(ctx, sleepTime); err != nil {
 			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepTime.Seconds())
 		}
-		// boot metrics have likely been already reported and wiped
-		// away while we were waiting for the cpu to cool down before
-		// running login. Force them to be reported again.
-		// Touch the flag in both locations: newer send-uptime-metrics
-		// reads it from /run/bootstat (where Chrome writes it), older
-		// versions read it from /tmp.
-		if err := testexec.CommandContext(
-			ctx,
-			"sh",
-			"-c",
-			"touch /tmp/stats-logout-started.written /run/bootstat/stats-logout-started.written && /usr/share/cros/init/send-uptime-metrics",
-		).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to force send-uptime-metrics to be reported again")
-		}
 
 		// If session restore is manual, restore the previous session.
 		if !param.autoSessionRestore {
@@ -1033,13 +1267,6 @@ func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []st
 		ashTastBootTimeLogin2,
 		bootTimeLogin2,
 		bootTimeLogin3,
-		uptimeLogoutToUIStopAfterLogout,
-		uptimeUIStopToProcessesTerminatedAfterLogout,
-		uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
-		uptimeChromeExecToLoginPromptVisibleAfterLogout,
-		uptimeLogout,
-		uptimeLoginPromptSetupTimeAfterLogout,
-		uptimeLogoutToLoginPromptVisible,
 
 		category + metricAllShelfIconsLoaded,
 		category + metricDeferredTasksStarted,
@@ -1085,14 +1312,7 @@ func storeHistograms(
 			bootTimeLogin2,
 			bootTimeLogin3,
 			ashTastArcUIAvailableAfterLoginDuration,
-			arcTastUIAvailableTimeDelta,
-			uptimeLogoutToUIStopAfterLogout,
-			uptimeUIStopToProcessesTerminatedAfterLogout,
-			uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
-			uptimeChromeExecToLoginPromptVisibleAfterLogout,
-			uptimeLogout,
-			uptimeLoginPromptSetupTimeAfterLogout,
-			uptimeLogoutToLoginPromptVisible:
+			arcTastUIAvailableTimeDelta:
 			reportMaxHistogramValue(ctx, hist, "millisecond", pv)
 
 		case
@@ -1236,7 +1456,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			if err := storeHistograms(ctx, hists, pv); err != nil {
 				return errors.Wrap(err, "storeHistograms failed")
 			}
-			if err := logout(ctx, cr); err != nil {
+			if err := logoutAndStore(ctx, cr, pv); err != nil {
 				return errors.Wrap(err, "failed to log out")
 			}
 			cr = nil
@@ -1284,22 +1504,21 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
 	} else if err := storeHistograms(ctx, tracingHistograms, tracingValues); err != nil {
 		s.Logf("WARNING: Failed to dump tracing histograms for the test scenario %s-tracing: %v", testName, err)
-	} else {
-		tracingValues.ForEach(func(name string, value []float64) {
-			if len(value) != 1 {
-				s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
-			} else {
-				s.Logf("%s-tracing %s: %f", testName, name, value[0])
-			}
-		})
-		for metric, values := range tpsValues {
-			s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
-		}
 	}
-	if err := logout(ctx, cr); err != nil {
+	if err := logoutAndStore(ctx, cr, tracingValues); err != nil {
 		s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
 	}
 	cr = nil
+	tracingValues.ForEach(func(name string, value []float64) {
+		if len(value) != 1 {
+			s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
+		} else {
+			s.Logf("%s-tracing %s: %f", testName, name, value[0])
+		}
+	})
+	for metric, values := range tpsValues {
+		s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
+	}
 
 	if err := r.Values().Save(closeCtx, s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
