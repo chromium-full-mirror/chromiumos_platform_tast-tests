@@ -219,7 +219,31 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		initialMetricsClientID = getMetricsClientID(ctx, s, oobeConn)
 	}
 
-	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
+	// screen returns a finder for the active OOBE screen container by its
+	// screen ID (kScreenId in chrome/browser/ui/webui/ash/login/*_screen_handler.h).
+	// It matches the screen custom element host by its HTML id (exposed in the
+	// a11y tree via oobe-dialog-host-styles) inside #oobe (whose class is set
+	// to screenID by DisplayManager.toggleStep).
+	screen := func(screenID string) *nodewith.Finder {
+		return nodewith.Attribute("htmlId", screenID).Ancestor(nodewith.HasClass(screenID))
+	}
+
+	// Scope each focused button query to the target screen element and onscreen
+	// state. Right after OobeAPI.screens.<Screen>.isVisible() becomes true in
+	// JS, a11y tree updates lag JS state while Blink marks the outgoing screen
+	// hidden/offscreen and OobeAdaptiveDialog.focusOnShow focuses the new
+	// screen's button via afterNextRender, so an unscoped focused-button query
+	// in uiauto.Location can match the outgoing screen's button on the first
+	// poll and abort with testing.PollBreak 300ms later when it disappears.
+	clickFocusedButton := func(screenID, desc string) uiauto.Action {
+		btn := nodewith.State(state.Focused, true).Role(role.Button).Onscreen().Ancestor(
+			screen(screenID),
+		)
+		return uiauto.Combine(desc,
+			ui.WaitUntilEnabled(btn),
+			ui.DoDefault(btn),
+		)
+	}
 
 	// Click on the 'Add Person' button if we are on the login screen, otherwise step through
 	// the OOBE screens that are shown during the first boot.
@@ -234,9 +258,18 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 		}
 
+		// WelcomeScreen's "Get started" button (<oobe-text-button id="getStarted"
+		// inverse>) starts with disabled=true until oobe-screens-loaded calls
+		// enableButtonsWhenLoaded(), and initial boot focus is deferred until
+		// DisplayManager.triggerDown() finishes, so match the inner cr-button
+		// (class="action-button") under #getStarted on #connect and wait until
+		// enabled.
+		getStartedButton := nodewith.Role(role.Button).HasClass("action-button").Onscreen().Ancestor(
+			nodewith.Attribute("htmlId", "getStarted").Ancestor(screen("connect")),
+		)
 		if err := uiauto.Combine("click next on the welcome screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
+			ui.WaitUntilEnabled(getStartedButton),
+			ui.DoDefault(getStartedButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to click welcome screen next button: ", err)
 		}
@@ -286,10 +319,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.SyncScreen.isReadyForTesting()"); err != nil {
 		s.Fatal("Failed to wait for the sync creation screen to be visible: ", err)
 	}
-	if err := uiauto.Combine("click next on the sync screen",
-		ui.WaitUntilExists(focusedButton),
-		ui.LeftClick(focusedButton),
-	)(ctx); err != nil {
+	if err := clickFocusedButton("sync-consent", "click next on the sync screen")(ctx); err != nil {
 		s.Fatal("Failed to continue on the sync screen: ", err)
 	}
 
@@ -304,10 +334,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.HWDataCollectionScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the HW Data Collection screen to be visible: ", err)
 		}
-		if err := uiauto.Combine("click next on the HW Data Collection screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("hw-data-collection", "click next on the HW Data Collection screen")(ctx); err != nil {
 			s.Fatal("Failed to skip on the HW Data Collection screen: ", err)
 		}
 	}
@@ -411,10 +438,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the fingerprint screen to be visible: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the fingerprint screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("fingerprint-setup", "click next on the fingerprint screen")(ctx); err != nil {
 			s.Fatal("Failed to skip on the fingerprint screen: ", err)
 		}
 	}
@@ -453,10 +477,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the AiIntro screen to be visible: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the AiIntro screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("ai-intro", "click next on the AiIntro screen")(ctx); err != nil {
 			s.Fatal("Failed to click next on the AiIntro screen: ", err)
 		}
 	}
@@ -474,10 +495,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the GeminiIntro screen to be visible: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the GeminiIntro screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("gemini-intro", "click next on the GeminiIntro screen")(ctx); err != nil {
 			s.Fatal("Failed to click next on the GeminiIntro screen: ", err)
 		}
 	}
@@ -503,10 +521,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for the SplitModifierKeyboardInfoScreen screen to be visible: ", err)
 		}
 
-		if err := uiauto.Combine("click next on the SplitModifierKeyboardInfoScreen screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("split-modifier-keyboard-info", "click next on the SplitModifierKeyboardInfoScreen screen")(ctx); err != nil {
 			s.Fatal("Failed to click next on the SplitModifierKeyboardInfoScreen screen: ", err)
 		}
 	}
@@ -636,10 +651,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the touchpad scroll screen to be visible: ", err)
 		}
-		if err := uiauto.Combine("click next on the touchpad scroll screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("touchpad-scroll", "click next on the touchpad scroll screen")(ctx); err != nil {
 			s.Fatal("Failed to continue on the touchpad scroll screen: ", err)
 		}
 	}
@@ -659,10 +671,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeDisplaySizeScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the  display size screen to be visible: ", err)
 		}
-		if err := uiauto.Combine("click next on the display size screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("display-size", "click next on the display size screen")(ctx); err != nil {
 			s.Fatal("Failed to continue on the display size screen: ", err)
 		}
 	}
@@ -678,10 +687,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ThemeSelectionScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the theme selection screen to be visible: ", err)
 		}
-		if err := uiauto.Combine("click next on the theme selection screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("theme-selection", "click next on the theme selection screen")(ctx); err != nil {
 			s.Fatal("Failed to continue on the theme selection screen: ", err)
 		}
 	}
@@ -706,10 +712,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.MarketingOptInScreen.isVisible()"); err != nil {
 			s.Fatal("Failed to wait for the marketing opt-in screen to be visible: ", err)
 		}
-		if err := uiauto.Combine("click next on the marketing-optin screen",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
-		)(ctx); err != nil {
+		if err := clickFocusedButton("marketing-opt-in", "click next on the marketing-optin screen")(ctx); err != nil {
 			s.Fatal("Failed to continue on the marketing opt-in screen: ", err)
 		}
 	}
