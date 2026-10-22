@@ -12,12 +12,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"google.golang.org/protobuf/proto"
@@ -303,22 +302,17 @@ func (u *CryptohomeClient) checkVaultWithAuthFactor(ctx context.Context, label s
 	defer u.InvalidateAuthSession(ctx, authSessionID)
 
 	var result *uda.AuthenticateAuthFactorReply
-	var expectedResult []uda.AuthIntent
 	if pinAuth {
-		// Lightweight Authentication does not exist for PIN AuthFactors - should go through full decryption in AuthenticateAuthFactor.
 		result, err = u.AuthenticatePinAuthFactor(ctx, authSessionID, label, authConfig.Password)
-		expectedResult = []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, uda.AuthIntent_AUTH_INTENT_DECRYPT}
 	} else {
 		result, err = u.AuthenticateAuthFactor(ctx, authSessionID, label, authConfig.Password)
-		expectedResult = []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY}
 	}
 	if err != nil {
 		return false, errors.Wrap(err, "failed to authenticate AuthFactor")
 	}
-	// Check that reply authenticatied with correct AuthIntent.
-	less := func(a, b uda.AuthIntent) bool { return a < b }
-	diff := cmp.Diff(result.AuthProperties.AuthorizedFor, expectedResult, cmpopts.SortSlices(less))
-	if diff != "" {
+	// Check that reply authenticatied with a verify-only intent. We don't check that the reply didn't include other intents because older
+	// versions of cryptohome would sometimes return additional intents depending on the verification.
+	if !slices.Contains(result.AuthProperties.AuthorizedFor, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY) {
 		return false, errors.Errorf("authenticated with incorrect AuthIntent: %q", result.AuthProperties.AuthorizedFor)
 	}
 	return true, nil
