@@ -191,7 +191,14 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		options = append(options, chrome.UseGaiaConfig(s.DataPath("gaia_sandbox_config.json")))
 	}
 
-	options = append(options, chrome.ExtraArgs("--skip-multidevice-screen"))
+	// Disable unified state determination so lab DUTs with a bundled Chrome
+	// Enterprise Upgrade license in PSM/DMServer ("packaged_license": true)
+	// skip AutoEnrollmentCheckScreen instead of redirecting from the update
+	// screen to enterprise-enrollment when DeferLogin steps through OOBE.
+	options = append(options, chrome.ExtraArgs(
+		"--skip-multidevice-screen",
+		"--enterprise-enable-unified-state-determination=never",
+	))
 
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
