@@ -145,7 +145,14 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 		return nil
 	}
 
-	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadyForTesting()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the consolidated consent screen to be ready")
+	}
+
+	screen := nodewith.Attribute("htmlId", "consolidated-consent").Ancestor(
+		nodewith.HasClass("consolidated-consent"),
+	)
+	focusedButton := nodewith.State(state.Focused, true).Role(role.Button).Onscreen().Ancestor(screen)
 	ui := uiauto.New(tconn).WithTimeout(100 * time.Second)
 
 	if err := ui.WaitUntilExists(focusedButton)(ctx); err != nil {
@@ -157,15 +164,21 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 		return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
 	}
 
-	for isReadMoreButtonShown {
+	// OobeAdaptiveDialog.onReadMoreClick transitions readMoreState to HIDDEN on a
+	// single activation and immediately transfers focus to the accept button via
+	// focusOnShow(). Activate #readMoreButton at most once and wait for
+	// isReadMoreButtonShown() to become false rather than looping, because an
+	// immediate Eval after an asynchronous click can observe stale true state and
+	// cause a second iteration to click the newly focused #acceptButton on
+	// ConsolidatedConsentScreen (leaving the subsequent accept click to consume
+	// SyncConsentScreen's accept button).
+	if isReadMoreButtonShown {
+		readMoreButton := nodewith.Role(role.Button).Attribute("htmlId", "readMoreButton").Onscreen().Ancestor(screen)
 		if err := uiauto.Combine("click the consolidated consent screen read more button",
-			ui.WaitUntilExists(focusedButton),
-			ui.LeftClick(focusedButton),
+			ui.WaitUntilEnabled(readMoreButton),
+			ui.DoDefault(readMoreButton),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click the consolidated consent screen read more button")
-		}
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ConsolidatedConsentScreen.isReadMoreButtonShown()", &isReadMoreButtonShown); err != nil {
-			return errors.Wrap(err, "failed to evaluate whether the consolidated consent screen read more button is shown")
 		}
 	}
 
@@ -173,11 +186,13 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 		return errors.Wrap(err, "failed to wait for the consolidated consent read more to be hidden")
 	}
 
-	continueButton := nodewith.Name("Accept and continue").Role(role.Button)
+	acceptButton := nodewith.Role(role.Button).HasClass("action-button").Onscreen().Ancestor(
+		nodewith.Attribute("htmlId", "acceptButton").Ancestor(screen),
+	)
 
 	if err := uiauto.Combine("Click the consolidated consent screen accept button",
-		ui.WaitUntilExists(continueButton),
-		ui.LeftClick(continueButton),
+		ui.WaitUntilEnabled(acceptButton),
+		ui.DoDefault(acceptButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the consolidated consent screen accept button")
 	}
