@@ -20,10 +20,15 @@ var (
 	reImageUpdated = regexp.MustCompile(`image updated`)
 )
 
+type testUpdateDeepSleepConfig struct {
+	bus ti50.TpmBus
+	cmd string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    GSCUpdatePostReset,
-		Desc:    "Verify GSC post reset does not turn on the update until PLT_RST_L is asserted or TurnUpdateOn is sent",
+		Func:    GSCUpdateDeepSleep,
+		Desc:    "Verify GSC updates do not turn on the update until PLT_RST_L is asserted or TurnUpdateOn is sent",
 		Timeout: 7 * time.Minute,
 		Contacts: []string{
 			"cros-hwsec@google.com",
@@ -36,11 +41,30 @@ func init() {
 			"gsc_nightly"},
 		Fixture: fixture.SystemDevboard,
 		Params: []testing.Param{{
-			Name: "i2c",
-			Val:  ti50.TpmBusI2c,
+			Name: "i2c_post_reset",
+			Val: testUpdateDeepSleepConfig{
+				bus: ti50.TpmBusI2c,
+				cmd: "--post-reset",
+			},
 		}, {
-			Name:      "spi",
-			Val:       ti50.TpmBusSpi,
+			Name: "i2c_upstart",
+			Val: testUpdateDeepSleepConfig{
+				bus: ti50.TpmBusI2c,
+				cmd: "--upstart",
+			},
+		}, {
+			Name: "spi_post_reset",
+			Val: testUpdateDeepSleepConfig{
+				bus: ti50.TpmBusSpi,
+				cmd: "--post_reset",
+			},
+			ExtraAttr: []string{"gsc_h1_shield"},
+		}, {
+			Name: "spi_upstart",
+			Val: testUpdateDeepSleepConfig{
+				bus: ti50.TpmBusSpi,
+				cmd: "--upstart",
+			},
 			ExtraAttr: []string{"gsc_h1_shield"},
 		}},
 	})
@@ -66,15 +90,16 @@ func waitForUpdate(ctx context.Context, b utils.DevboardHelper, i *ti50.CrOSImag
 	return nil
 }
 
-// GSCUpdatePostReset requires HW setup with SuzyQ cable from devboard to drone/workstation.
-func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
+// GSCUpdateDeepSleep requires HW setup with SuzyQ cable from devboard to drone/workstation.
+func GSCUpdateDeepSleep(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
 	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
 	defer i.Close(ctx)
 
 	f := s.FixtValue().(*fixture.Value)
-	testBus := s.Param().(ti50.TpmBus)
+	config := s.Param().(testUpdateDeepSleepConfig)
+	testBus := config.bus
 
 	// Inform fixture that this test may replace the firmware image in flash.
 	th.MustSucceed(f.ImageMayBeUpdatedByTest(), "image may be updated")
@@ -95,7 +120,8 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 
 	// Ti50 devices turn the update on when PLT_RST_L is asserted. Cr50 waits
 	// until it sees the TurnUpdateOn vendor command
-	turnUpdateOnWithVC := f.TestbedProperties.TestbedType == ti50.GscH1Shield
+	turnUpdateOnWithVC := (config.cmd == "--upstart" ||
+		f.TestbedProperties.TestbedType == ti50.GscH1Shield)
 
 	s.Logf("Image under test %s: %s", currentVer, currentImage)
 
@@ -106,19 +132,27 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
 
-	out, _ := b.GSCToolCommandViaTPM(ctx, testBus, debugImage, "--post_reset")
+	out, _ := b.GSCToolCommandViaTPM(ctx, testBus, debugImage, config.cmd)
 	// GSCTool responds with exit status 1 if the update passed. The error
 	// isn't useful. Check for "image updated" in the output.
 	if !reImageUpdated.Match(out) {
 		s.Fatalf("Update failed: %s", out)
 	}
-	s.Logf("posted update: %s", out)
+	s.Logf("Ran update with %s: %s", config.cmd, out)
+
+	// Clear the UART buffer
+	err = i.ClearInput(ctx)
+	th.MustSucceed(err, "Failed to clear input")
 
 	if detectedReset(ctx, b, gpioMonitor) {
-		s.Fatal("GSC turned on the update immediately with post reset")
+		s.Fatalf("GSC turned on the update immediately with %s", config.cmd)
 	}
 
 	b.GpioApplyStrap(ctx, ti50.CCDModeOff)
+
+	version, err := i.VersionInfo(ctx)
+	th.MustSucceed(err, "get version")
+	s.Logf("version: %+v", version)
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 
@@ -134,7 +168,7 @@ func GSCUpdatePostReset(ctx context.Context, s *testing.State) {
 
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "wake GSC from deep sleep")
 
 	if detectedReset(ctx, b, gpioMonitor) {
 		s.Fatal("GSC reset before turning on the update")
