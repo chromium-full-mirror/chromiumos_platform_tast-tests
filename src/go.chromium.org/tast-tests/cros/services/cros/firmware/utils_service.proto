@@ -53,11 +53,6 @@ service UtilsService {
   // FlashUSBDrive flashes the attached USB drive with a ChromeOS test image.
   rpc FlashUSBDrive(FlashUSBDriveRequest) returns (google.protobuf.Empty) {}
 
-  // FirmwareBuildTargets returns the names of the firmware targets from the
-  // cros config yaml file.
-  rpc FirmwareBuildTargets(FirmwareBuildTargetsRequest)
-      returns (FirmwareBuildTargetsResponse) {}
-
   // ExtractAPFirmwareImage downloads and extracts the AP image from devservers.
   rpc ExtractAPFirmwareImage(ExtractFirmwareImageRequest)
       returns (ExtractFirmwareImageResponse) {}
@@ -104,11 +99,8 @@ message FlashUSBDriveRequest {
   string gsPath = 2;
 }
 
-// FirmwareBuildTargetsRequest is the request to the FirmwareBuildTargets call.
-message FirmwareBuildTargetsRequest {}
-
-// FirmwareBuildTargetsResponse is the response from the FirmwareBuildTargets
-// call.
+// FirmwareBuildTargetsResponse holds the firmware build target names from
+// config.yaml.
 message FirmwareBuildTargetsResponse {
   // The name of the coreboot build target. The name to use for image-NAME.bin
   // files and NAME.12345.678.0.tar.bz2 archives.

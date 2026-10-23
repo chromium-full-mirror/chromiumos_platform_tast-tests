@@ -15,14 +15,12 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
-	"gopkg.in/yaml.v2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -446,92 +444,6 @@ func (us *UtilsService) FlashUSBDrive(ctx context.Context, req *fwpb.FlashUSBDri
 		return &empty.Empty{}, nil
 	}
 	return nil, errors.Errorf("wrong version on %s after flashing, got %s, want %s", usbDevice, usbRelease, artifactsURL)
-}
-
-type configData struct {
-	ChromeOS struct {
-		Configs []struct {
-			Firmware struct {
-				BuildTargets struct {
-					// AP image name, if missing fallback to ImageName
-					Coreboot string `yaml:"coreboot"`
-					EC       string `yaml:"ec"`
-					ZephyrEC string `yaml:"zephyr-ec"`
-				} `yaml:"build-targets"`
-				ImageName string `yaml:"image-name"`
-			} `yaml:"firmware"`
-		}
-	}
-}
-
-// FirmwareBuildTargets returns the names of the firmware targets from the cros config yaml file.
-// This code matches the logic in infra/go/src/infra/cros/cmd/provision/cros-fw-provision/service/firmwareservice.go:ReadConfigYaml
-// TODO: Figure out how to share the code.
-func (us *UtilsService) FirmwareBuildTargets(ctx context.Context, req *fwpb.FirmwareBuildTargetsRequest) (*fwpb.FirmwareBuildTargetsResponse, error) {
-	retVal := &fwpb.FirmwareBuildTargetsResponse{}
-	out, err := testexec.CommandContext(ctx, "crosid").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to run crosid")
-	}
-	configIndexRe, err := regexp.Compile(`CONFIG_INDEX='([^']*)'`)
-	if err != nil {
-		return nil, errors.Wrap(err, "config index regex failed")
-	}
-	m := configIndexRe.FindSubmatch(out)
-	if m == nil {
-		return nil, errors.Wrapf(err, "regexp match of CONFIG_INDEX failed on %q", string(out))
-	}
-	configIndex, err := strconv.Atoi(string(m[1]))
-	if err != nil {
-		return nil, errors.Wrapf(err, "parse of CONFIG_INDEX %q failed", string(m[1]))
-	}
-	fwManifestKeyRe, err := regexp.Compile(`FIRMWARE_MANIFEST_KEY='([^']*)'`)
-	if err != nil {
-		return nil, errors.Wrap(err, "config index regex failed")
-	}
-	m = fwManifestKeyRe.FindSubmatch(out)
-	if m == nil {
-		return nil, errors.Wrapf(err, "regexp match of FIRMWARE_MANIFEST_KEY failed on %q", string(out))
-	}
-	retVal.FirmwareManifestKey = string(m[1])
-
-	testing.ContextLogf(ctx, "DUT configIndex = %d firmwareManifestKey = %s", configIndex, retVal.FirmwareManifestKey)
-	yamlPath := "/usr/share/chromeos-config/yaml/config.yaml"
-	configFile, err := os.Open(yamlPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open config.yaml")
-	}
-	defer configFile.Close()
-	configYaml := configData{}
-	parser := yaml.NewDecoder(configFile)
-	err = parser.Decode(&configYaml)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse config.yaml")
-	}
-	config := configYaml.ChromeOS.Configs[configIndex]
-	testing.ContextLogf(ctx, "config entry: %+v", config)
-	thisAPName := config.Firmware.BuildTargets.Coreboot
-	if thisAPName == "" {
-		thisAPName = config.Firmware.ImageName
-	}
-	if thisAPName != "" {
-		retVal.CorebootName = thisAPName
-	}
-	// Bizarrely, firmware branch builders use the coreboot name for the ec.bin file for zephyr binaries.
-	if config.Firmware.BuildTargets.ZephyrEC != "" {
-		retVal.StandaloneEcName = config.Firmware.BuildTargets.ZephyrEC
-		retVal.LegacyEcName = thisAPName
-	} else {
-		retVal.StandaloneEcName = config.Firmware.BuildTargets.EC
-		retVal.LegacyEcName = config.Firmware.BuildTargets.EC
-	}
-	// Special case for reef boards. See b/398900326
-	if retVal.CorebootName != retVal.LegacyEcName && retVal.LegacyEcName == "reef" {
-		testing.ContextLogf(ctx, "Overriding EC name to '%q", retVal.CorebootName)
-		retVal.LegacyEcName = retVal.CorebootName
-	}
-	testing.ContextLogf(ctx, "config.yaml image names AP: %s EC(legacy): %s EC(standalone): %s", retVal.CorebootName, retVal.LegacyEcName, retVal.StandaloneEcName)
-	return retVal, nil
 }
 
 type imageCandidate struct {

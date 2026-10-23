@@ -8,9 +8,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -206,10 +208,10 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Read the config from the DUT to determine which images to download.
-	fwTargets, err := h.RPCUtils.FirmwareBuildTargets(ctx, &fwpb.FirmwareBuildTargetsRequest{})
+	// Read the config to determine which images to download.
+	fwTargets, err := firmwareBuildTargets(ctx, s, h)
 	if err != nil {
-		s.Fatal("FirmwareBuildTargets: ", err)
+		s.Fatal("firmwareBuildTargets: ", err)
 	}
 
 	s.Logf("Found the FW targets: %s", fwTargets.String())
@@ -666,7 +668,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	oldECFile := fmt.Sprintf("%s/%s/ec.bin", oldMergedDir, fwTargets.FirmwareManifestKey)
 	shortCtx, cancel = context.WithTimeout(ctx, firmwareUpdateTimeout)
 	defer cancel()
-	err = h.DUT.Conn().CommandContext(shortCtx, "flashrom", "-p", "ec", "-r", oldECFile).Run(ssh.DumpLogOnError)
+	err = h.DUT.Conn().CommandContext(shortCtx, "flashrom", "-p", "ec", "-r", oldECFile).Run(ssh.DumpLogOnError) // NOLINT
 	if err != nil {
 		s.Fatalf("Failed to flashrom read ec to %q: %+v", oldECFile, err)
 	}
@@ -1009,4 +1011,106 @@ func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	}
 	testing.ContextLogf(speedometerCtx, "Speedometer Result: %f", result)
 	return result, nil
+}
+
+type configData struct {
+	ChromeOS struct {
+		Configs []struct {
+			Identity struct {
+				SKUID *int `yaml:"sku-id"`
+			} `yaml:"identity"`
+			Firmware struct {
+				BuildTargets struct {
+					// AP image name, if missing fallback to ImageName
+					Coreboot string `yaml:"coreboot"`
+					EC       string `yaml:"ec"`
+					ZephyrEC string `yaml:"zephyr-ec"`
+				} `yaml:"build-targets"`
+				ImageName string `yaml:"image-name"`
+			} `yaml:"firmware"`
+		}
+	}
+}
+
+var (
+	configIndexRe   = regexp.MustCompile(`CONFIG_INDEX='([^']*)'`)
+	fwManifestKeyRe = regexp.MustCompile(`FIRMWARE_MANIFEST_KEY='([^']*)'`)
+	skuRe           = regexp.MustCompile(`SKU='([^']*)'`)
+)
+
+// firmwareBuildTargets returns the names of the firmware targets from the cros config yaml file.
+// This code matches the logic in infra/go/src/infra/cros/cmd/provision/cros-fw-provision/service/firmwareservice.go:ReadConfigYaml
+// TODO: Figure out how to share the code.
+func firmwareBuildTargets(ctx context.Context, s *testing.State, h *firmware.Helper) (*fwpb.FirmwareBuildTargetsResponse, error) {
+	retVal := &fwpb.FirmwareBuildTargetsResponse{}
+	out, err := h.DUT.Conn().CommandContext(ctx, "crosid").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run crosid")
+	}
+	m := configIndexRe.FindSubmatch(out)
+	if m == nil {
+		return nil, errors.Errorf("regexp match of CONFIG_INDEX failed on %q", string(out))
+	}
+	configIndex, err := strconv.Atoi(string(m[1]))
+	if err != nil {
+		return nil, errors.Wrapf(err, "parse of CONFIG_INDEX %q failed", string(m[1]))
+	}
+	m = fwManifestKeyRe.FindSubmatch(out)
+	if m == nil {
+		return nil, errors.Errorf("regexp match of FIRMWARE_MANIFEST_KEY failed on %q", string(out))
+	}
+	retVal.FirmwareManifestKey = string(m[1])
+	m = skuRe.FindSubmatch(out)
+	if m == nil {
+		return nil, errors.Errorf("regexp match of SKU failed on %q", string(out))
+	}
+	sku := string(m[1])
+
+	testing.ContextLogf(ctx, "DUT configIndex = %d firmwareManifestKey = %s sku = %s", configIndex, retVal.FirmwareManifestKey, sku)
+	configReader, err := s.CloudStorage().Open(ctx, "build-artifact:///config.yaml")
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to download config.yaml from GCS, falling back to local file: ", err)
+		yamlBytes, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), "/usr/share/chromeos-config/yaml/config.yaml")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to open config.yaml")
+		}
+		configReader = io.NopCloser(bytes.NewReader(yamlBytes))
+	}
+	defer configReader.Close()
+	configYaml := configData{}
+	parser := yaml.NewDecoder(configReader)
+	err = parser.Decode(&configYaml)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse config.yaml")
+	}
+	if configIndex < 0 || configIndex >= len(configYaml.ChromeOS.Configs) {
+		return nil, errors.Errorf("CONFIG_INDEX %d out of range for config.yaml with %d configs", configIndex, len(configYaml.ChromeOS.Configs))
+	}
+	config := configYaml.ChromeOS.Configs[configIndex]
+	testing.ContextLogf(ctx, "config entry: %+v", config)
+	if config.Identity.SKUID != nil && strconv.Itoa(*config.Identity.SKUID) != sku {
+		return nil, errors.Errorf("config.yaml entry %d has sku-id %d, but crosid reported SKU %q", configIndex, *config.Identity.SKUID, sku)
+	}
+	thisAPName := config.Firmware.BuildTargets.Coreboot
+	if thisAPName == "" {
+		thisAPName = config.Firmware.ImageName
+	}
+	if thisAPName != "" {
+		retVal.CorebootName = thisAPName
+	}
+	// Bizarrely, firmware branch builders use the coreboot name for the ec.bin file for zephyr binaries.
+	if config.Firmware.BuildTargets.ZephyrEC != "" {
+		retVal.StandaloneEcName = config.Firmware.BuildTargets.ZephyrEC
+		retVal.LegacyEcName = thisAPName
+	} else {
+		retVal.StandaloneEcName = config.Firmware.BuildTargets.EC
+		retVal.LegacyEcName = config.Firmware.BuildTargets.EC
+	}
+	// Special case for reef boards. See b/398900326
+	if retVal.CorebootName != retVal.LegacyEcName && retVal.LegacyEcName == "reef" {
+		testing.ContextLogf(ctx, "Overriding EC name to '%q", retVal.CorebootName)
+		retVal.LegacyEcName = retVal.CorebootName
+	}
+	testing.ContextLogf(ctx, "config.yaml image names AP: %s EC(legacy): %s EC(standalone): %s", retVal.CorebootName, retVal.LegacyEcName, retVal.StandaloneEcName)
+	return retVal, nil
 }
