@@ -55,29 +55,28 @@ func init() {
 			// Warn users from sharing confidential information within company (screenshare_screen): COM_DATPROT_CUJ4_TASK2_WF1.
 			Value: "screenplay-e9384c4b-018c-44bf-bdbc-da9b53b1fbab",
 		}},
-		// TODO(b/442663465): Re-enable once screen recording (via Chrome extension) is available for MV3.
 		Params: []testing.Param{{
-			Name: "ash_blocked",
-			//ExtraAttr: []string{"group:golden_tier"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:golden_tier"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "blocked",
 				Restriction: restrictionlevel.Blocked,
 				Path:        screenshare.RestrictedPath,
 			},
 		}, {
-			Name: "ash_warn_proceeded",
-			//ExtraAttr: []string{"group:mainline"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_proceeded",
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_proceeded",
 				Restriction: restrictionlevel.WarnProceeded,
 				Path:        screenshare.RestrictedPath,
 			},
 		}, {
-			Name: "ash_warn_cancelled",
-			//ExtraAttr: []string{"group:golden_tier"},
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_warn_cancelled",
+			ExtraAttr: []string{"group:golden_tier"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshare.TestParams{
 				Name:        "warn_cancelled",
 				Restriction: restrictionlevel.WarnCancelled,
@@ -139,7 +138,7 @@ func DataLeakPreventionRulesListScreenshareEntireScreen(ctx context.Context, s *
 	}
 
 	var screenRecorder *uiauto.ScreenRecorder
-	screenRecorder, err = uiauto.NewScreenRecorder(ctx, tconn, cr)
+	screenRecorder, err = uiauto.NewScreenShareRecorder(ctx, tconn)
 
 	if err != nil {
 		s.Fatal("Failed to create ScreenRecorder: ", err)

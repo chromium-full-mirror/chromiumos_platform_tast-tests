@@ -276,6 +276,11 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs []
 		disabledFeatures = append(disabledFeatures, "WelcomeTour")
 	}
 
+	// Allow test extension offscreen documents to call getDisplayMedia without transient user activation.
+	if !contains(enabledFeatures, "GetDisplayMediaRequiresUserActivation") {
+		disabledFeatures = append(disabledFeatures, "GetDisplayMediaRequiresUserActivation")
+	}
+
 	if cfg.DisableAccessibilityManifestV3GoogleTts() {
 		disabledFeatures = append(disabledFeatures, "AccessibilityManifestV3GoogleTts")
 	}

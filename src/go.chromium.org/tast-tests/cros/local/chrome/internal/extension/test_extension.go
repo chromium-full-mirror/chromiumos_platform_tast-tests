@@ -140,6 +140,7 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
     "management",
     "metricsPrivate",
     "notifications",
+    "offscreen",
     "passwordsPrivate",
     "printing",
     "processes",
@@ -163,6 +164,8 @@ func writeTestExtension(dir, key, extraBgJs, clientID string) (id string, err er
 		{"manifest.json", manifest},
 		// Use tast library by default in Test extension. Append any extra JavaScript.
 		{"background.js", TastLibraryJS + extraBgJs},
+		{"offscreen.html", offscreenHTML},
+		{"offscreen.js", offscreenJS},
 	} {
 		if err = os.WriteFile(filepath.Join(dir, f.name), []byte(f.data), 0644); err != nil {
 			return "", err
@@ -303,6 +306,115 @@ tast.automation = (() => {
      },
   };
   return automation;
+})();
+`
+
+	offscreenHTML = `<!DOCTYPE html>
+<html>
+<head><script src="offscreen.js"></script></head>
+<body></body>
+</html>
+`
+
+	offscreenJS = `(() => {
+  let chunks = [];
+  let recorder = null;
+  let streamPromise = null;
+  let videoTrack = null;
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || msg.target !== 'offscreen-screen-recorder') {
+      return false;
+    }
+    (async () => {
+      try {
+        switch (msg.action) {
+          case 'request': {
+            if (videoTrack) {
+              videoTrack.stop();
+              videoTrack = null;
+            }
+            streamPromise = navigator.mediaDevices.getDisplayMedia({
+              video: { displaySurface: 'monitor' },
+              audio: false,
+            });
+            sendResponse({ ok: true });
+            break;
+          }
+          case 'start': {
+            chunks = [];
+            const stream = await streamPromise;
+            videoTrack = stream.getVideoTracks()[0];
+            recorder = new MediaRecorder(stream, {
+              mimeType: 'video/webm;codecs=vp9',
+            });
+            recorder.ondataavailable = (e) => {
+              chunks.push(e.data);
+            };
+            recorder.start();
+            sendResponse({ ok: true });
+            break;
+          }
+          case 'stop': {
+            const encodeChunks = () =>
+              new Promise((resolve) => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+              });
+            const result = await new Promise((resolve) => {
+              if (!recorder || recorder.state === 'inactive') {
+                if (videoTrack) {
+                  videoTrack.stop();
+                  videoTrack = null;
+                }
+                encodeChunks().then(resolve);
+                return;
+              }
+              recorder.onstop = () => {
+                encodeChunks().then(resolve);
+              };
+              recorder.stop();
+              if (videoTrack) {
+                videoTrack.stop();
+                videoTrack = null;
+              }
+            });
+            sendResponse({ ok: true, result });
+            break;
+          }
+          case 'frameStatus': {
+            const status = await new Promise((resolve) => {
+              const imageCapture = new ImageCapture(videoTrack);
+              imageCapture
+                .grabFrame()
+                .then((imageBitmap) => {
+                  if (imageBitmap.width) {
+                    resolve('Success');
+                  } else {
+                    resolve('Fail');
+                  }
+                })
+                .catch(() => {
+                  resolve('Fail');
+                });
+            });
+            sendResponse({ ok: true, result: status });
+            break;
+          }
+          default:
+            sendResponse({ ok: false, error: 'Unknown action: ' + msg.action });
+        }
+      } catch (e) {
+        sendResponse({
+          ok: false,
+          error: e ? (e.stack || e.message || String(e)) : 'Unknown error',
+        });
+      }
+    })();
+    return true;
+  });
 })();
 `
 )

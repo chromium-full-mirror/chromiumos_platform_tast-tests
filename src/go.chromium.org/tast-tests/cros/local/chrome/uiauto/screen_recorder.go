@@ -6,6 +6,7 @@ package uiauto
 
 import (
 	"context"
+	"encoding/base64"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -42,65 +43,47 @@ type testingState interface {
 
 func requestScreenShare(ctx context.Context, tconn *chrome.TestConn) (*ScreenRecorder, error) {
 	expr := `({
-			chunks: [],
-			recorder: null,
-			streamPromise: null,
-			videoTrack: null,
-			request: function() {
-				this.streamPromise = new Promise(resolve => {
-					chrome.desktopCapture.chooseDesktopMedia(["screen", "window", "tab"], (streamId) => {
-						navigator.mediaDevices.getUserMedia({
-							video: {
-								mandatory: {
-									chromeMediaSource: "desktop",
-									chromeMediaSourceId: streamId
-								}
-							}
-						}).then((stream) => resolve(stream));
+			ensureOffscreen: async function(recreate) {
+				const hasDoc = await chrome.offscreen.hasDocument();
+				if (hasDoc && recreate) {
+					await chrome.offscreen.closeDocument();
+				}
+				if (!hasDoc || recreate) {
+					await chrome.offscreen.createDocument({
+						url: 'offscreen.html',
+						reasons: ['DISPLAY_MEDIA', 'USER_MEDIA'],
+						justification: 'Screen share recording for Tast tests',
 					});
+				}
+			},
+			closeOffscreen: async function() {
+				const hasDoc = await chrome.offscreen.hasDocument();
+				if (hasDoc) {
+					await chrome.offscreen.closeDocument();
+				}
+			},
+			send: async function(action, recreate) {
+				await this.ensureOffscreen(recreate);
+				const resp = await chrome.runtime.sendMessage({
+					target: 'offscreen-screen-recorder',
+					action: action,
 				});
+				if (!resp || !resp.ok) {
+					throw new Error((resp && resp.error) || 'Failed offscreen action: ' + action);
+				}
+				return resp.result;
+			},
+			request: function() {
+				return this.send('request', true);
 			},
 			start: function() {
-				this.chunks = [];
-				return this.streamPromise.then(
-					stream => {
-						this.videoTrack = stream.getVideoTracks()[0];
-						this.recorder = new MediaRecorder(stream, {mimeType: 'video/webm;codecs=vp9'});
-						this.recorder.ondataavailable = (e) => {
-							this.chunks.push(e.data);
-						};
-						this.recorder.start();
-					}
-				);
+				return this.send('start', false);
 			},
 			stop: function() {
-				return new Promise((resolve, reject) => {
-					this.recorder.onstop = function() {
-						let blob = new Blob(this.chunks, {'type': 'video/webm'});
-						var reader = new FileReader();
-						reader.onload = () => {
-							resolve(reader.result);
-						}
-						reader.readAsDataURL(blob);
-					}.bind(this);
-					this.recorder.stop();
-					this.videoTrack.stop();
-				});
+				return this.send('stop', false);
 			},
 			frameStatus: function() {
-				return new Promise((resolve, reject) => {
-					const imageCapture = new ImageCapture(this.videoTrack)
-
-					imageCapture.grabFrame()
-					.then(function(imageBitmap) {
-						if (imageBitmap.width) {
-							resolve('Success');
-						}
-					})
-					.catch(function(error) {
-						resolve('Fail');
-					});
-				});
+				return this.send('frameStatus', false);
 			}
 		})
 	`
@@ -111,7 +94,7 @@ func requestScreenShare(ctx context.Context, tconn *chrome.TestConn) (*ScreenRec
 	sr := &ScreenRecorder{isRecording: false, videoRecorder: videoRecorder}
 
 	// Request to share the screen.
-	if err := sr.videoRecorder.Call(ctx, nil, `function() {this.request();}`); err != nil {
+	if err := sr.videoRecorder.Call(ctx, nil, `function() {return this.request();}`); err != nil {
 		return nil, errors.Wrap(err, "failed to request display media")
 	}
 
@@ -127,13 +110,26 @@ func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 	}, nil
 }
 
+// NewScreenShareRecorder creates a ScreenRecorder that shares and records the entire desktop screen via the test extension.
+func NewScreenShareRecorder(ctx context.Context, tconn *chrome.TestConn) (*ScreenRecorder, error) {
+	sr, err := requestScreenShare(ctx, tconn)
+	if err != nil {
+		return nil, err
+	}
+	if err := ChooseScreenRecorder(ctx, tconn); err != nil {
+		return nil, err
+	}
+	return sr, nil
+}
+
 // ChooseScreenRecorder makes the selection to record the entire desktop screen.
 func ChooseScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := New(tconn)
 	// There may be multiple "Choose what to share" nodes, so add First() here.
-	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
+	shareScreenDialog := nodewith.NameStartingWith("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
 	entireScreenTab := nodewith.NameRegex(regexp.MustCompile("(?i)Entire Screen")).Role(role.Tab).Ancestor(shareScreenDialog)
-	firstDisplay := nodewith.Role(role.Button).Focusable().Ancestor(shareScreenDialog).First()
+	entireScreenPane := nodewith.NameRegex(regexp.MustCompile("(?i)Entire Screen")).Role(role.TabPanel).Ancestor(shareScreenDialog)
+	firstDisplay := nodewith.Role(role.Button).HasClass("DesktopMediaSourceView").Focusable().Ancestor(entireScreenPane).First()
 	// The share button becomes focusable after the entire desktop button is clicked.
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
 
@@ -155,9 +151,10 @@ func NewWindowRecorder(ctx context.Context, tconn *chrome.TestConn, windowIndex 
 	}
 
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
+	shareScreenDialog := nodewith.NameStartingWith("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
 	windowTab := nodewith.Name("Window").Role(role.Tab).Ancestor(shareScreenDialog)
-	windowButton := nodewith.Role(role.Button).Ancestor(shareScreenDialog).Nth(windowIndex)
+	windowPane := nodewith.Name("Window").Role(role.TabPanel).Ancestor(shareScreenDialog)
+	windowButton := nodewith.Role(role.Button).HasClass("DesktopMediaSourceView").Ancestor(windowPane).Nth(windowIndex)
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
 
 	if err := Combine("start screen recorder through ui",
@@ -182,7 +179,7 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 	}
 
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
+	shareScreenDialog := nodewith.NameStartingWith("Choose what to share").HasClass("DesktopMediaPickerDialogView").First()
 	shareChromeTabOption := nodewith.NameRegex(regexp.MustCompile("(Chromium|Chrome) Tab")).Role(role.Tab).Ancestor(shareScreenDialog)
 	tabButton := nodewith.Role(role.Row).Ancestor(shareScreenDialog).Nth(tabIndex)
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
@@ -201,6 +198,16 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 // Start creates a new media recorder and starts to record the screen. As long as ScreenRecorder
 // is not recording, it can start to record again.
 func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) error {
+	if r.videoRecorder != nil {
+		if r.isRecording {
+			return errors.Errorf("recorder is already recording (isRecording is %t)", r.isRecording)
+		}
+		if err := r.videoRecorder.Call(ctx, nil, `function() {return this.start();}`); err != nil {
+			return errors.Wrap(err, "failed to start screen recorder")
+		}
+		r.isRecording = true
+		return nil
+	}
 	downloadsPath, err := StartFromKB(ctx, tconn, r.cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to start screen recording")
@@ -211,6 +218,16 @@ func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) erro
 
 // Stop ends the screen recording and stores the encoded base64 string.
 func (r *ScreenRecorder) Stop(ctx context.Context) error {
+	if r.videoRecorder != nil {
+		if !r.isRecording {
+			return errors.Errorf("recorder has not started recording (isRecording is %t)", r.isRecording)
+		}
+		if err := r.videoRecorder.Call(ctx, &r.result, `function() {return this.stop();}`); err != nil {
+			return errors.Wrap(err, "failed to stop screen recorder")
+		}
+		r.isRecording = false
+		return nil
+	}
 	if err := StopRecordFromUI(ctx, r.tconn); err != nil {
 		return errors.Wrap(err, "failed to stop screen recording")
 	}
@@ -220,6 +237,20 @@ func (r *ScreenRecorder) Stop(ctx context.Context) error {
 
 // SaveInBytes saves the latest encoded string into a decoded bytes file.
 func (r *ScreenRecorder) SaveInBytes(ctx context.Context, filepath string) error {
+	if r.videoRecorder != nil {
+		parts := strings.Split(r.result, ",")
+		if len(parts) < 2 {
+			return errors.New("invalid recording result")
+		}
+		bytes, err := base64.StdEncoding.DecodeString(parts[1])
+		if err != nil {
+			return errors.Wrap(err, "failed to decode base64 string into bytes")
+		}
+		if err := os.WriteFile(filepath, bytes, 0644); err != nil {
+			return errors.Wrapf(err, "failed to dump bytes to %s", filepath)
+		}
+		return nil
+	}
 	if err := SaveOneRecordFromKB(ctx, r.tconn, filepath, r.downloadsPath); err != nil {
 		return errors.Wrapf(err, "failed to save %s", filepath)
 	}
@@ -248,10 +279,28 @@ func (r *ScreenRecorder) FrameStatus(ctx context.Context) (string, error) {
 
 // Release frees the reference to Javascript for this video recorder.
 func (r *ScreenRecorder) Release(ctx context.Context) {
+	if r.videoRecorder != nil {
+		_ = r.videoRecorder.Call(ctx, nil, `function() {return this.closeOffscreen();}`)
+		r.videoRecorder.Release(ctx)
+	}
 }
 
 // StopAndSaveOnError ends the screen recording and save it on error.
 func (r *ScreenRecorder) StopAndSaveOnError(ctx context.Context, filepath string, hasError func() bool) {
+	if r.videoRecorder != nil {
+		if err := r.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop recording: ", err)
+			return
+		}
+		if hasError() {
+			testing.ContextLogf(ctx, "Saving screen record to %s", filepath)
+			if err := r.SaveInBytes(ctx, filepath); err != nil {
+				testing.ContextLog(ctx, "Failed to save screen record in bytes: ", err)
+			}
+		}
+		r.Release(ctx)
+		return
+	}
 	defer func() {
 		os.RemoveAll(r.downloadsPath)
 		r.downloadsPath = ""
