@@ -6,15 +6,19 @@ package login
 
 import (
 	"context"
+	"os"
 	"time"
 
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/session"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,6 +29,17 @@ type logoutMethod int
 const (
 	logoutShortcut logoutMethod = iota
 	logoutClickOnButton
+)
+
+const (
+	logoutStartedFlagFile = "/run/bootstat/stats-logout-started.written"
+	logoutStartedDoneFile = "/run/bootstat/stats-logout-started.written.done"
+	sendUptimeMetricsJob  = "send-uptime-metrics"
+	uptimeLogoutHistogram = "Uptime.Logout"
+	// send-uptime-metrics sets CHROME_LOGOUT_STARTED=-1000000 when the
+	// logout-started flag is missing, forcing samples into the 1000 s
+	// (1000000 ms) overflow bucket.
+	uptimeLogoutOverflowMin = 1000 * time.Second
 )
 
 func init() {
@@ -73,6 +88,11 @@ func Logout(ctx context.Context, s *testing.State) {
 		if cr != nil {
 			cr.Close(cleanupCtx)
 		}
+		// Restart the ui job so the Chrome instance started below with custom
+		// flags does not outlive the test.
+		if err := upstart.RestartJob(cleanupCtx, "ui"); err != nil {
+			s.Error("Failed to restart ui job: ", err)
+		}
 	}()
 
 	tconn, err := cr.TestAPIConn(ctx)
@@ -102,6 +122,20 @@ func Logout(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close(cleanupCtx)
 
+	// Stop any send-uptime-metrics job still running from the initial login
+	// prompt and clear stale flag and UMA files before signing out.
+	if err := upstart.StopJob(ctx, sendUptimeMetricsJob); err != nil {
+		s.Fatal("Failed to stop send-uptime-metrics before logout: ", err)
+	}
+	for _, p := range []string{logoutStartedFlagFile, logoutStartedDoneFile} {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+			s.Fatalf("Failed to remove %s: %v", p, err)
+		}
+	}
+	if err := metrics.ClearHistogramTransferFile(); err != nil {
+		s.Fatal("Failed to clear histogram transfer file: ", err)
+	}
+
 	switch method {
 	case logoutShortcut:
 		if err := logoutByShortcut(ctx, tconn); err != nil {
@@ -121,18 +155,36 @@ func Logout(ctx context.Context, s *testing.State) {
 		s.Fatal("Didn't get SessionStateChanged signal: ", ctx.Err())
 	}
 
+	s.Log("Waiting for send-uptime-metrics to consume logout-started flag")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := os.Stat(logoutStartedDoneFile); err != nil {
+			return err
+		}
+		return upstart.WaitForJobStatus(ctx, sendUptimeMetricsJob, upstartcommon.StopGoal, upstartcommon.WaitingState, upstart.RejectWrongGoal, 0)
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		s.Fatal("send-uptime-metrics did not consume logout-started flag: ", err)
+	}
+
 	// Close Chrome to do some cleanup.
 	// It will log some errors, as the session is closed already.
 	cr.Close(ctx)
 	cr = nil
 
 	if cr, err = chrome.New(ctx,
-		chrome.ExtraArgs("--skip-force-online-signin-for-testing"),
+		chrome.ExtraArgs("--skip-force-online-signin-for-testing", "--external-metrics-collection-interval=1"),
 		chrome.NoLogin(),
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 	); err != nil {
 		s.Fatal("Failed to restart Chrome for testing: ", err)
+	}
+
+	// Restarting Chrome at the login screen emits a second login-prompt-visible
+	// without a logout-started flag; stop send-uptime-metrics before its 10 s
+	// timeout writes a -1000000 ms sentinel sample over the real logout's
+	// Uptime.Logout sample.
+	if err := upstart.StopJob(ctx, sendUptimeMetricsJob); err != nil {
+		s.Fatal("Failed to stop send-uptime-metrics after restarting Chrome: ", err)
 	}
 
 	if tconn, err = cr.SigninProfileTestAPIConn(ctx); err != nil {
@@ -149,6 +201,16 @@ func Logout(ctx context.Context, s *testing.State) {
 
 	if _, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.LoggedIn }, 10*time.Second); err != nil {
 		s.Fatal("Failed to log in: ", err)
+	}
+
+	hist, err := metrics.WaitForHistogram(ctx, tconn, uptimeLogoutHistogram, 15*time.Second)
+	if err != nil {
+		s.Fatalf("Failed to get %s histogram: %v", uptimeLogoutHistogram, err)
+	}
+	for _, b := range hist.Buckets {
+		if time.Duration(b.Min)*time.Millisecond >= uptimeLogoutOverflowMin && b.Count > 0 {
+			s.Fatalf("%s recorded overflow bucket %v (full histogram: %v)", uptimeLogoutHistogram, b, hist)
+		}
 	}
 }
 
