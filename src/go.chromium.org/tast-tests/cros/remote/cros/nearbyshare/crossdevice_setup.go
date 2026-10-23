@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -268,19 +269,26 @@ func (*nearbyRemoteFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 
 // overridePhenotypeFlag sets the specified Phenotype flag to the provided value for all accounts on the device.
 func (f *nearbyRemoteFixture) overridePhenotypeFlag(ctx context.Context, pkg, flag, value, valueType string) error {
-	err := f.labstationConn.CommandContext(ctx, "adb", "-s", f.serialNumber,
-		"shell", "am", "broadcast", "-a", "com.google.android.gms.phenotype.FLAG_OVERRIDE",
+	shellCmd := shutil.EscapeSlice([]string{
+		"am", "broadcast", "--receiver-foreground",
+		"-a", "com.google.android.gms.phenotype.FLAG_OVERRIDE",
 		"--es", "package", pkg,
 		"--es", "user", `*`,
 		"--esa", "flags", flag,
 		"--esa", "values", value,
 		"--esa", "types", valueType,
-		"com.google.android.gms").Run(ssh.DumpLogOnError)
-	if err != nil {
-		return errors.Errorf("failed to execute overridePhenotypeFlag for flag: %s", flag)
+		"com.google.android.gms",
+	})
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		sctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		return f.labstationConn.CommandContext(sctx, "adb", "-s", f.serialNumber,
+			"shell", shellCmd).Run(ssh.DumpLogOnError)
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return errors.Wrapf(err, "failed to override phenotype flag %s", flag)
 	}
 
-	return err
+	return nil
 }
 
 // gmsCoreVersions returns both GMS Core versions on the phone.
