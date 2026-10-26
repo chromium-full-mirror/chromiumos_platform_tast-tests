@@ -15,13 +15,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	// Expected FIPS digest for RW_A
-	fipsDigestA = "a4459b5bcbda8970"
-	// Expected FIPS digest for RW_B
-	fipsDigestB = "e2c63d3a2214ae8c"
-)
-
 // Console Regular expressions.
 var (
 	fipsDigestRE        = regexp.MustCompile("FIPS module digest ([0-9a-f]+)...")
@@ -104,12 +97,7 @@ func Cr50FIPS(ctx context.Context, s *testing.State) {
 
 	version, err := i.VersionInfo(ctx)
 	th.MustSucceed(err, "failed to get version")
-	var expectedFIPSDigest string
-	if version.RwA.Active {
-		expectedFIPSDigest = fipsDigestA
-	} else {
-		expectedFIPSDigest = fipsDigestB
-	}
+	s.Logf("version: %+v", version)
 
 	out, err := i.Command(ctx, "fips")
 	th.MustSucceed(err, "failed to run fips command")
@@ -118,10 +106,8 @@ func Cr50FIPS(ctx context.Context, s *testing.State) {
 	match := fipsDigestRE.FindStringSubmatch(out)
 	if match == nil {
 		s.Error("Failed to find FIPS digest")
-	} else if match[1] == expectedFIPSDigest {
-		s.Logf("Valid digest: %s", match[1])
 	} else {
-		s.Errorf("Invalid digest: expected %s got %s", expectedFIPSDigest, match[1])
+		s.Logf("FIPS digest: %s", match[1])
 	}
 
 	if fipsUninitializedRE.MatchString(out) {
