@@ -93,7 +93,10 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, ur
 // If om is not nil (omnibox variants), the per-desk user input is replaced
 // by omnibox operations, a memory snapshot is taken after each desk, and,
 // unless om.param.KeepHeavySites, every window shows an on-DUT page.
-func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, om *omniboxEnv) ([]action.Action, int, func(ctx context.Context) error, error) {
+//
+// If testParam.ActiveMouseShake is set, desks 1 and 2 also shake the mouse
+// after the drag cycle, and desk 3 shakes the mouse instead of moving it.
+func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, testParam TestParam, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter, om *omniboxEnv) ([]action.Action, int, func(ctx context.Context) error, error) {
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
 	// the time that desk setup can take, to ensure we have time
@@ -149,6 +152,11 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 				if err := inputsimulations.RunDragMouseCycle(ctx, tconn, info); err != nil {
 					return err
 				}
+				if testParam.ActiveMouseShake {
+					if err := inputsimulations.ShakeMouseFor(ctx, tconn, 1500*time.Millisecond); err != nil {
+						return err
+					}
+				}
 
 				return inputsimulations.ScrollMouseDownFor(ctx, mw, 500*time.Millisecond, 6*time.Second)
 			},
@@ -165,6 +173,11 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 				if err := inputsimulations.RunDragMouseCycle(ctx, tconn, info); err != nil {
 					return err
 				}
+				if testParam.ActiveMouseShake {
+					if err := inputsimulations.ShakeMouseFor(ctx, tconn, 1500*time.Millisecond); err != nil {
+						return err
+					}
+				}
 
 				if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, time.Second, 6*time.Second); err != nil {
 					return errors.Wrap(err, "failed to scroll down with trackpad")
@@ -179,6 +192,9 @@ func setUpDesks(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, 
 				"https://webglsamples.org/aquarium/aquarium.html?numFish=1000",
 			},
 			onVisitAction: func(ctx context.Context) error {
+				if testParam.ActiveMouseShake {
+					return inputsimulations.ShakeMouseFor(ctx, tconn, 6*time.Second)
+				}
 				return inputsimulations.MoveMouseFor(ctx, tconn, 6*time.Second)
 			},
 			expectedNumWindows: 2,

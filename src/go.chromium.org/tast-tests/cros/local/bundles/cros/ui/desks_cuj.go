@@ -155,15 +155,15 @@ func init() {
 			// TODO(b/575873460): Remove once the shake to locate experiment is
 			// complete.
 			{
-				Name:      "shake_to_locate_disabled",
+				Name:      "shake_to_locate_active_disabled",
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val:       deskscuj.TestParam{},
+				Val:       deskscuj.TestParam{ActiveMouseShake: true},
 				Fixture:   "loggedInToCUJUserShakeToLocateDisabled",
 			},
 			{
-				Name:      "shake_to_locate_enabled",
+				Name:      "shake_to_locate_active_enabled",
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val:       deskscuj.TestParam{},
+				Val:       deskscuj.TestParam{ActiveMouseShake: true},
 				Fixture:   "loggedInToCUJUserShakeToLocateEnabled",
 			},
 		},

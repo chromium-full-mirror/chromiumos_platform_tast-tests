@@ -35,6 +35,10 @@ type TestParam struct {
 	Omnibox bool
 	// KeepHeavySites keeps the default sites (omnibox_heavy).
 	KeepHeavySites bool
+	// ActiveMouseShake adds rapid mouse shaking to the desk workflows, so that
+	// Shake to Locate Cursor actually enlarges and shrinks the cursor during
+	// the test.
+	ActiveMouseShake bool
 }
 
 // Run runs the desks CUJ by opening up 4 different desks and switching
@@ -154,7 +158,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(
 
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, cr, kw, mw, tpw, tw, om)
+	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, cr, testParam, kw, mw, tpw, tw, om)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up desks")
 	}

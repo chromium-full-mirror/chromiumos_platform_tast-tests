@@ -156,3 +156,37 @@ func RepeatMouseScroll(ctx context.Context, mw *input.MouseEventWriter, scrollDo
 		),
 	)(ctx)
 }
+
+// ShakeMouseFor repeatedly shakes the mouse horizontally around the center of
+// the primary display for |duration|. Each burst makes at least 10 direction
+// reversals within 1 second, with each stroke at least 24 DIP long, and is
+// followed by a pause. When Shake to Locate Cursor is on, every burst enlarges
+// the cursor and the pause lets it shrink back.
+func ShakeMouseFor(ctx context.Context, tconn *chrome.TestConn, duration time.Duration) error {
+	info, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the primary display info")
+	}
+	center := info.Bounds.CenterPoint()
+	const js = `async (cx, cy, durationMs) => {
+		const move = tast.promisify(chrome.autotestPrivate.mouseMove);
+		const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+		const end = Date.now() + durationMs;
+		while (Date.now() < end) {
+			for (let s = 0; s < 12; s++) {
+				const dir = (s % 2 === 0) ? 1 : -1;
+				await move({x: cx + dir * 20, y: cy}, 0);
+				await sleep(15);
+				await move({x: cx + dir * 60, y: cy}, 0);
+				await sleep(15);
+				await move({x: cx + dir * 100, y: cy}, 0);
+				await sleep(15);
+			}
+			await sleep(600);
+		}
+	}`
+	if err := tconn.Call(ctx, nil, js, center.X, center.Y, int(duration/time.Millisecond)); err != nil {
+		return errors.Wrap(err, "failed to shake mouse")
+	}
+	return nil
+}

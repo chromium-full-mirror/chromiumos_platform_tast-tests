@@ -1387,11 +1387,10 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 	// TODO(b/575873460): Remove once the shake to locate experiment is done.
-	// Variants of loggedInToCUJUserDisableARC and
-	// loggedInToCUJUserWithWebRTCEventLoggingDisableARC with shake to locate
-	// off and on. The enabled variants also turn on the settings toggle, which
-	// is off by default; the disabled variants turn the feature off explicitly
-	// so they remain a baseline after launch.
+	// Variants of loggedInToCUJUserDisableARC with shake to locate off and on.
+	// The enabled variant also turns on the settings toggle, which is off by
+	// default. The disabled variant turns the feature off explicitly so it
+	// remains a baseline after launch.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserShakeToLocateDisabled",
 		Desc: "Variant of loggedInToCUJUserDisableARC with the shake to locate feature disabled",
@@ -1426,57 +1425,6 @@ func init() {
 				chrome.EnableFeatures("AccessibilityShakeToLocate"),
 			},
 			disableARC:          true,
-			enableShakeToLocate: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateDisabled",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with the shake to locate feature disabled",
-		Contacts: []string{
-			"jackgeng@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: append(
-				webRTCOpts,
-				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.DisableFeatures("AccessibilityShakeToLocate"),
-			),
-			disableARC:  true,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStabilizationTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateEnabled",
-		Desc: "Variant of loggedInToCUJUserWithWebRTCEventLoggingDisableARC with the shake to locate feature and its settings toggle enabled",
-		Contacts: []string{
-			"jackgeng@google.com",
-			"cros-sw-perf@google.com",
-		},
-		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Data:         docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: append(
-				webRTCOpts,
-				chrome.EnableFeatures("PreferConstantFrameRate"),
-				chrome.EnableFeatures("AccessibilityShakeToLocate"),
-			),
-			disableARC:          true,
-			docsBlocker:         true,
 			enableShakeToLocate: true,
 		},
 		Parent:          "prepareForCUJ",

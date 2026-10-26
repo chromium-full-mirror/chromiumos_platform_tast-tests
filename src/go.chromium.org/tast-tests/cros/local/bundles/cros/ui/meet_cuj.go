@@ -680,42 +680,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWebUIOmniboxFullPopupEnabledAndOptimized",
 			},
-			// TODO(b/575873460): Remove once the shake to locate experiment is
-			// complete.
-			{
-				Name:      "docs_shake_to_locate_disabled",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:          []int{1, 3, 15},
-					Layout:        googlemeet.TiledLayout,
-					Present:       true,
-					Docs:          true,
-					Split:         true,
-					Cam:           true,
-					ZoomOut:       true,
-					Effects:       true,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateDisabled",
-			},
-			{
-				Name:      "docs_shake_to_locate_enabled",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:          []int{1, 3, 15},
-					Layout:        googlemeet.TiledLayout,
-					Present:       true,
-					Docs:          true,
-					Split:         true,
-					Cam:           true,
-					ZoomOut:       true,
-					Effects:       true,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingShakeToLocateEnabled",
-			},
 			// Inactive variants. No group should be specified for these tests.
 			// 4p Meet variants.
 			{
