@@ -165,6 +165,12 @@ const chromeNXDomainError = "DNS_PROBE_FINISHED_NXDOMAIN"
 // httpResponse is the expected HTTP response for DNS testing.
 const httpResponse = "dns test page"
 
+// httpPort is a non-default HTTP port used by the test HTTP server so Chrome's
+// HttpsUpgradesInterceptor (HttpsFirstBalancedModeAutoEnable) does not upgrade
+// plaintext http:// test navigations to https:// on port 443 (where the DoH
+// server listens with a certificate for www.example.com).
+const httpPort = "8080"
+
 // Template for the expected /etc/resolv.conf's data.
 const resolvConfTemplate = `
 {{- range .nameservers -}}
@@ -424,7 +430,7 @@ func queryDNS(ctx context.Context, c Client, cr *chrome.Chrome, a *arc.ARC, cont
 		}
 		return errors.New("failed to resolve domain: " + string(out))
 	case Chrome:
-		url := "http://" + opts.Domain
+		url := "http://" + net.JoinHostPort(opts.Domain, httpPort)
 		conn, err := cr.NewConn(ctx, url)
 		if err != nil {
 			return errors.Wrapf(err, "failed to do open %s", url)
@@ -787,7 +793,7 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subne
 	}
 
 	// Start a HTTP server. This is necessary for Chrome browser tests to do the connection.
-	httpserver := httpserver.New(httpserver.TCP4, "80", func(rw http.ResponseWriter, req *http.Request) {
+	httpserver := httpserver.New(httpserver.TCP4, httpPort, func(rw http.ResponseWriter, req *http.Request) {
 		if _, err := rw.Write([]byte(httpResponse)); err != nil {
 			testing.ContextLog(ctx, "Failed to write HTTP response: ", err)
 		}
