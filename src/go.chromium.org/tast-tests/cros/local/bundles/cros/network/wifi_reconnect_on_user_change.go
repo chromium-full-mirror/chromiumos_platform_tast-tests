@@ -36,8 +36,9 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
-		SoftwareDeps: []string{"wifi", "chrome"},
+		Attr: []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
+		// Meet devices (CFM) do not support regular consumer user login/logout flows.
+		SoftwareDeps: []string{"wifi", "chrome", "non_meet_device"},
 		Fixture:      "shillSimulatedWiFi.ehide",
 		// This test performs multiple login and logout. Thus use a long timeout
 		// here.
@@ -55,6 +56,17 @@ const (
 	// keepStateLogin starts Chrome with chrome.KeepState(), preserving the existing user
 	// profile and its saved Shill Wi-Fi configurations across logins.
 	keepStateLogin
+)
+
+// userProfileState specifies whether a user Shill profile should be pushed
+// (active) or popped (reverted to the default device profile).
+type userProfileState int
+
+const (
+	// userProfilePopped indicates only the default device profile is active.
+	userProfilePopped userProfileState = iota
+	// userProfilePushed indicates a user profile is pushed on top of the default profile.
+	userProfilePushed
 )
 
 // WifiReconnectOnUserChange sets up a WiFi AP with EAP, and configures
@@ -81,11 +93,45 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
+	mgr, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill manager proxy: ", err)
+	}
+	wifiMgr, err := shill.NewWifiManager(ctx, mgr)
+	if err != nil {
+		s.Fatal("Failed to obtain wifi manager: ", err)
+	}
+
+	const userProfileObjectPath = "/profile/chronos/shill"
+	waitForUserProfileState := func(ctx context.Context, state userProfileState) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			profile, err := mgr.ActiveProfile(ctx)
+			if err != nil {
+				return err
+			}
+			if state == userProfilePushed && profile.ObjectPath() != userProfileObjectPath {
+				return errors.Errorf("active profile is %s, want %s", profile.ObjectPath(), userProfileObjectPath)
+			}
+			if state == userProfilePopped && profile.ObjectPath() != shillconst.DefaultProfileObjectPath {
+				return errors.Errorf("active profile %s is not default", profile.ObjectPath())
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 30 * time.Second})
+	}
+
+	// Do logout by restarting ui and waiting for shill to pop the user profile.
+	logout := func(tag string) {
+		if err := upstart.RestartJob(ctx, "ui"); err != nil {
+			s.Fatalf("%s: Failed to logout by restarting ui: %v", tag, err)
+		}
+		if err := waitForUserProfileState(ctx, userProfilePopped); err != nil {
+			s.Fatalf("%s: Failed to wait for user profile to be popped: %v", tag, err)
+		}
+	}
+
 	// If the test requires a relog virtualnet must be started with Chrome logged
 	// out (b/300208832). Restart UI to force the logged out state.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to logout user before starting the test: ", err)
-	}
+	logout("Initial logout")
 
 	const (
 		// Constants for EAP. We use different identity and password for user and
@@ -100,15 +146,6 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 		testHostname = "test.wifi.reconnect"
 		httpResponse = "Hello world"
 	)
-
-	mgr, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create shill manager proxy: ", err)
-	}
-	wifiMgr, err := shill.NewWifiManager(ctx, mgr)
-	if err != nil {
-		s.Fatal("Failed to obtain wifi manager: ", err)
-	}
 
 	// Prepare temp dir for hosting hostapd config files.
 	tempDir, err := os.MkdirTemp(os.TempDir(), "")
@@ -214,7 +251,7 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 
 	// Group of util functions.
 
-	// Do login by starting Chrome.
+	// Do login by starting Chrome and waiting for shill to push the user profile.
 	login := func(tag string, mode loginStateMode) *chrome.Chrome {
 		var opts []chrome.Option
 		if mode == keepStateLogin {
@@ -224,14 +261,10 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("%s: Failed to login by starting Chrome: %v", tag, err)
 		}
-		return cr
-	}
-
-	// Do logout by restarting ui.
-	logout := func(tag string) {
-		if err := upstart.RestartJob(ctx, "ui"); err != nil {
-			s.Fatalf("%s: Failed to logout by restarting ui: %v", tag, err)
+		if err := waitForUserProfileState(ctx, userProfilePushed); err != nil {
+			s.Fatalf("%s: Failed to wait for user profile to be pushed: %v", tag, err)
 		}
+		return cr
 	}
 
 	// Trigger a scan and return the wifi service with ssid.
@@ -365,6 +398,10 @@ func WifiReconnectOnUserChange(ctx context.Context, s *testing.State) {
 			return
 		}
 		defer cr.Close(cleanupCtx)
+		if err := waitForUserProfileState(cleanupCtx, userProfilePushed); err != nil {
+			s.Log("Cleanup Login: Failed to wait for user profile to be pushed: ", err)
+			return
+		}
 		if err := wifiMgr.ForgetAP(cleanupCtx, ssid); err != nil {
 			s.Logf("Failed to remove WiFi service %s from user profile during cleanup: %v", ssid, err)
 		}
