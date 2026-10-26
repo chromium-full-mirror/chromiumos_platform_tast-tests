@@ -67,7 +67,7 @@ func fetchKdumpFiles(ctx context.Context, d *dut.DUT, outDir string) {
 		if err := linuxssh.GetFile(ctx, d.Conn(), src, dst, linuxssh.DereferenceSymlinks); err != nil {
 			testing.ContextLogf(ctx, "Failed to copy %s from the DUT to the host %s: %v", src, dst, err)
 		}
-		if err := os.Remove(src); err != nil {
+		if err := d.Conn().CommandContext(ctx, "rm", src).Run(); err != nil {
 			testing.ContextLogf(ctx, "Failed to remove %s from the DUT: %v", src, err)
 		}
 	}
