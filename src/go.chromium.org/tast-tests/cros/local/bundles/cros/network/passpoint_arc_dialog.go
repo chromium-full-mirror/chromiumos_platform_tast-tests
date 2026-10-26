@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/passpoint"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/hostapd"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
@@ -67,7 +68,7 @@ func init() {
 				legacy: true,
 			},
 		}},
-		Timeout:      7 * time.Minute,
+		Timeout:      9 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
 	})
 }
@@ -165,7 +166,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create screen recorder: ", err)
 	}
-	if recorder.Start(ctx, tconn); err != nil {
+	if err := recorder.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed to start screen recorder: ", err)
 	}
 	defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
@@ -216,25 +217,6 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 
 	// Add Passpoint credentials through the app.
 	s.Log("Adding Passpoint credentials")
-	if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 30*time.Second); err != nil {
-		s.Fatal("Failed to start app: ", err)
-	}
-	if err := d.Object(ui.ID(buttonID)).Click(ctx); err != nil {
-		s.Error("Failed click add Passpoint button: ", err)
-	}
-	defer func() {
-		a.Command(cleanupCtx, "cmd", "wifi", "remove-passpoint-config", creds.FQDN()).Run(testexec.DumpLogOnError)
-	}()
-	// Open the Passpoint credentials.
-	downloads := nodewith.Name("Downloads").First()
-	file := nodewith.Name(fileName).First()
-	if err := uiauto.Combine("open Passpoint credentials file",
-		ac.WaitUntilExists(downloads),
-		ac.DoDefaultUntil(downloads, ac.Exists(file)),
-		ac.RetryUntil(ac.DoubleClick(file), ac.Gone(file)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open Passpoint credentials file: ", err)
-	}
 
 	// Allow or reject the app from provisioning the Passpoint credentials.
 	// TODO(b/271777307): Use node's ID instead of name.
@@ -244,10 +226,48 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	} else {
 		button = nodewith.Name(dontAllowButton).First()
 	}
-	if err := uiauto.Combine("accept or reject the app's request",
-		ac.WaitUntilExists(button),
-		ac.DoDefaultUntil(button, ac.Gone(button)),
-	)(ctx); err != nil {
+
+	// Scope the file picker nodes to the "Select a file to open" dialog window so
+	// nodewith.Name(fileName) does not match recent-file chips in the Ash Launcher
+	// after the file picker closes. Also retry up to 3 times if ArcDocumentsUI
+	// (ArcSelectFilesEventHandlerActivity) hits a transient Mojo race while closing
+	// SelectFileDialog and fails to deliver the selected file URI to the app.
+	pickerWindow := nodewith.Name("Select a file to open").Role(role.Window)
+	downloads := nodewith.Name("Downloads").Ancestor(pickerWindow).First()
+	file := nodewith.Name(fileName).Ancestor(pickerWindow).First()
+	const maxDialogAttempts = 3
+	for attempt := 1; attempt <= maxDialogAttempts; attempt++ {
+		if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 30*time.Second); err != nil {
+			s.Fatal("Failed to wait for add Passpoint button: ", err)
+		}
+		if err := d.Object(ui.ID(buttonID)).Click(ctx); err != nil {
+			s.Fatal("Failed to click add Passpoint button: ", err)
+		}
+		if err := uiauto.Combine("open Passpoint credentials file",
+			ac.WaitUntilExists(downloads),
+			ac.DoDefaultUntil(downloads, ac.Exists(file)),
+			ac.RetryUntil(ac.DoubleClick(file), ac.Gone(pickerWindow)),
+		)(ctx); err != nil {
+			s.Fatal("Failed to open Passpoint credentials file: ", err)
+		}
+		if err := ac.WithTimeout(15 * time.Second).WaitUntilExists(button)(ctx); err != nil {
+			if stopErr := a.Command(ctx, "am", "force-stop", "com.android.documentsui").Run(testexec.DumpLogOnError); stopErr != nil {
+				s.Log("Failed to force-stop com.android.documentsui: ", stopErr)
+			}
+			if attempt == maxDialogAttempts {
+				s.Fatal("Failed to wait for Passpoint permission dialog: ", err)
+			}
+			s.Logf("Passpoint permission dialog did not appear on attempt %d/%d (%v); retrying", attempt, maxDialogAttempts, err)
+			continue
+		}
+		break
+	}
+
+	defer func() {
+		a.Command(cleanupCtx, "cmd", "wifi", "remove-passpoint-config", creds.FQDN()).Run(testexec.DumpLogOnError)
+	}()
+
+	if err := ac.DoDefaultUntil(button, ac.Gone(button))(ctx); err != nil {
 		s.Fatal("Failed to accept or reject app's request: ", err)
 	}
 
@@ -262,9 +282,10 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
 	// Wait for the station to associate with the access point.
-	if err := hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout); err != nil && params.allow {
-		s.Fatal("Failed to wait for STA association: ", err)
-	} else if err == nil && !params.allow {
+	err = hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout)
+	if err == nil && !params.allow {
 		s.Fatal("Unwanted STA association to the AP")
+	} else if err != nil && params.allow {
+		s.Fatal("Failed to wait for STA association: ", err)
 	}
 }
