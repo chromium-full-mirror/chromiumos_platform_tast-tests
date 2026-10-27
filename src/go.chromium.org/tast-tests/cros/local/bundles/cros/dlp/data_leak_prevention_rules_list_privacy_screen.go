@@ -133,7 +133,10 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	value, _ = privacyScreenValue(ctx)
+	value, err = privacyScreenValue(ctx)
+	if err != nil {
+		s.Fatal("Couldn't check value for privacy screen prop: ", err)
+	}
 	// Privacy screen should be disabled.
 	if value {
 		s.Errorf("Privacy screen prop value: got %v; want false", value)
@@ -160,21 +163,25 @@ func privacyScreenValue(ctx context.Context) (bool, error) {
 	}
 
 	// Get privacy-screen connector.
-	outputSlice := strings.Split(string(output), "privacy-screen:")
+	outputSlice := strings.Split(string(output), "privacy-screen hw-state:")
+	if len(outputSlice) <= 1 {
+		// Fallback to legacy style.
+		outputSlice = strings.Split(string(output), "privacy-screen:")
+	}
 
 	if len(outputSlice) <= 1 {
 		return false, errors.New("failed to find privacy screen prop")
 	}
 
 	for _, line := range strings.Split(outputSlice[1], "\n") {
-		// Check for prop value.
+		// Check for prop value (Disabled=0, Enabled=1, Disabled-locked=2, Enabled-locked=3).
 		matches := strings.Contains(line, "value:")
 		if matches {
-			if found := strings.Contains(line, "1"); found {
+			if found := strings.Contains(line, "1") || strings.Contains(line, "3"); found {
 				return true, nil
 			}
 
-			if found := strings.Contains(line, "0"); found {
+			if found := strings.Contains(line, "0") || strings.Contains(line, "2"); found {
 				return false, nil
 			}
 
