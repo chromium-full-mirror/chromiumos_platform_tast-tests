@@ -43,11 +43,6 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:              "arc_container",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				Fixture:           fixture.ChromePolicyLoggedInARCFilesUXEnabled,
-				ExtraSoftwareDeps: []string{"android_p"},
-			}, {
 				Name: "arc_vm",
 				ExtraAttr: []string{
 					"group:golden_tier_secondary",
