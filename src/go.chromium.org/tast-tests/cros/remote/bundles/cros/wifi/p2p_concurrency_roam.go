@@ -152,8 +152,10 @@ func P2PConcurrencyRoam(ctx context.Context, s *testing.State) {
 		s.Log("AP 1 BSSID: ", fromBSSID)
 		s.Log("AP 2 BSSID: ", roamBSSID)
 
-		var requestParams hostapd.BSSTMReqParams
-		requestParams.Neighbors = []string{roamBSSID}
+		requestParams := hostapd.BSSTMReqParams{
+			Neighbors:        []string{roamBSSID},
+			DisassocImminent: true,
+		}
 		if err := rt.SetupDUTForRoaming(ctx, wificell.DefaultDUT, fromBSSID, roamBSSID, testSSID, true); err != nil {
 			s.Fatal("DUT: failed to roam and wait for connection: ", err)
 		}
