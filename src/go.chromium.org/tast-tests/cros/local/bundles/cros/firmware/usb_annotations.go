@@ -39,7 +39,14 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_meets_kpi", "firmware_stressed", "firmware_bios_ro", "firmware_bios_rw"},
 		// Based on known un-annotated platforms that might not be updated.
-		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...), hwdep.X86()),
+		// Use SkipOnModel for nami and nautilus (which report platform
+		// "Poppy") because we want this test to run on Poppy-family
+		// boards like rammus and nocturne.
+		HardwareDeps: hwdep.D(
+			hwdep.SkipOnPlatform(unannotatedPlatforms...),
+			hwdep.SkipOnModel(unannotatedModels...),
+			hwdep.X86(),
+		),
 	})
 }
 
@@ -78,10 +85,24 @@ var unannotatedPlatforms = []string{
 	"elm",
 	"grunt",
 	"hana",
-	"nami",
-	"nautilus",
 	"oak",
 	"reef",
 	"sand",
 	"snappy",
+}
+
+var unannotatedModels = []string{
+	// nami
+	"akali",
+	"akali360",
+	"bard",
+	"ekko",
+	"pantheon",
+	"pyke",
+	"sona",
+	"syndra",
+	"vayne",
+	// nautilus
+	"nautilus",
+	"nautiluslte",
 }
