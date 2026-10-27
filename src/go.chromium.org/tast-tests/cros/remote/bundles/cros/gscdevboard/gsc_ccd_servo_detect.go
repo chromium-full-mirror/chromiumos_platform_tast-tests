@@ -20,90 +20,138 @@ import (
 var hypEcUartEnabled bool
 
 type expectedServoDetectResult struct {
-	rdd     ti50.CCDStateStandardVal
-	ccdMode ti50.CCDStateStandardVal
-	servo   ti50.CCDStateStandardVal
-	ccdUART ti50.CCDStateStandardVal
+	rdd       ti50.CCDStateStandardVal
+	keepAlive ti50.CCDStateStandardVal
+	ccdMode   ti50.CCDStateStandardVal
+	servo     ti50.CCDStateStandardVal
+	ccdUART   ti50.CCDStateStandardVal
 }
 
 // Map the commands run to their expected ccdstate values.
 var testServoDetectStates = map[string]expectedServoDetectResult{
 	// GSC detects servo is connected.
 	"servo_connect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOff,
-		ccdMode: ti50.CCDStateOff,
-		servo:   ti50.CCDStateOn,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOff,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOff,
+		servo:     ti50.CCDStateOn,
+		ccdUART:   ti50.CCDStateOff,
 	},
 	// GSC can detect Rdd when servo is connected.
 	"servo_connect, rdd_connect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateOn,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateOn,
+		ccdUART:   ti50.CCDStateOff,
 	},
 	// GSC enables CCD EC uart when servo is disconnected.
 	"servo_connect, rdd_connect, servo_disconnect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateUndetectable,
-		ccdUART: ti50.CCDStateOn,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 	// GSC can detect servo after it reboots.
 	"servo_connect, gsc_reboot": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOff,
-		ccdMode: ti50.CCDStateOff,
-		servo:   ti50.CCDStateOn,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOff,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOff,
+		servo:     ti50.CCDStateOn,
+		ccdUART:   ti50.CCDStateOff,
 	},
 	// GSC detects Rdd is connected.
 	"rdd_connect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateUndetectable,
-		ccdUART: ti50.CCDStateOn,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 	// GSC cannot detect servo when it already has the CCD EC uart enabled.
 	"rdd_connect, servo_connect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateUndetectable,
-		ccdUART: ti50.CCDStateOn,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 	// GSC can detect servo when it reboots even if CCD was enabled before the reset.
 	"rdd_connect, servo_connect, gsc_reboot": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateOn,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateOn,
+		ccdUART:   ti50.CCDStateOff,
 	},
 	// If GSC resets and servo is connected, it'll enable CCD EC uart after servo disconnects.
 	"rdd_connect, servo_connect, gsc_reboot, servo_disconnect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateUndetectable,
-		ccdUART: ti50.CCDStateOn,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 	// GSC can detect servo after Rdd disconnects.
 	"rdd_connect, servo_connect, rdd_disconnect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOff,
-		ccdMode: ti50.CCDStateOff,
-		servo:   ti50.CCDStateOn,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOff,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOff,
+		servo:     ti50.CCDStateOn,
+		ccdUART:   ti50.CCDStateOff,
 	},
 	// GSC can detect servo after Rdd disconnects.
 	"rdd_connect, servo_disconnect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOn,
-		ccdMode: ti50.CCDStateOn,
-		servo:   ti50.CCDStateUndetectable,
-		ccdUART: ti50.CCDStateOn,
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 	// GSC can detect servo is disconnected after Rdd disconnect.
 	"rdd_connect, servo_disconnect, rdd_disconnect": expectedServoDetectResult{
-		rdd:     ti50.CCDStateOff,
-		ccdMode: ti50.CCDStateOff,
-		servo:   ti50.CCDStateOff,
-		ccdUART: ti50.CCDStateOff,
+		rdd:       ti50.CCDStateOff,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOff,
+		servo:     ti50.CCDStateOff,
+		ccdUART:   ti50.CCDStateOff,
+	},
+	// CCD stays enabled. Rddkeepalive is enabled
+	"rdd_connect, rddkeepalive_on": expectedServoDetectResult{
+		rdd:       ti50.CCDStateOn,
+		keepAlive: ti50.CCDStateOn,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
+	},
+	// CCD stays enabled, because rddkeepalive is on
+	"rdd_connect, rddkeepalive_on, rdd_disconnect": expectedServoDetectResult{
+		// Ti50 and Cr50 have different Rdd behavior while keepalive is enabled.
+		// Ignore the rdd state. Just verify CCD is enabled.
+		rdd:       ti50.CCDStateNA,
+		keepAlive: ti50.CCDStateOn,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
+	},
+	// GSC can detect servo after Rdd disconnects.
+	"rdd_connect, rddkeepalive_on, rdd_disconnect, rddkeepalive_off": expectedServoDetectResult{
+		rdd:       ti50.CCDStateOff,
+		keepAlive: ti50.CCDStateOff,
+		ccdMode:   ti50.CCDStateOff,
+		servo:     ti50.CCDStateOff,
+		ccdUART:   ti50.CCDStateOff,
+	},
+	// Rddkeepalive should enable CCD
+	"rddkeepalive_on": expectedServoDetectResult{
+		// Ti50 and Cr50 have different Rdd behavior while keepalive is enabled.
+		// Ignore the rdd state. Just verify CCD is enabled.
+		rdd:       ti50.CCDStateNA,
+		keepAlive: ti50.CCDStateOn,
+		ccdMode:   ti50.CCDStateOn,
+		servo:     ti50.CCDStateUndetectable,
+		ccdUART:   ti50.CCDStateOn,
 	},
 }
 
@@ -132,6 +180,12 @@ func init() {
 			Name: "enable_uart_after_gsc_reboot_and_servo_disconnect",
 			Val:  []string{"rdd_connect", "servo_connect", "gsc_reboot", "servo_disconnect"},
 		}, {
+			Name: "rdd_keepalive",
+			Val:  []string{"rddkeepalive_on"},
+		}, {
+			Name: "update_rdd_after_keepalive_disable",
+			Val:  []string{"rdd_connect", "rddkeepalive_on", "rdd_disconnect", "rddkeepalive_off"},
+		}, {
 			Name: "update_servo_connected_after_rdd_disconnect",
 			Val:  []string{"rdd_connect", "servo_connect", "rdd_disconnect"},
 		}, {
@@ -155,6 +209,7 @@ func GSCCCDServoDetect(ctx context.Context, s *testing.State) {
 
 	runSetupCommand(ctx, b, th, i, "servo_disconnect")
 	runSetupCommand(ctx, b, th, i, "rdd_disconnect")
+	runSetupCommand(ctx, b, th, i, "rddkeepalive_off")
 	// Turn on the AP.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
@@ -195,8 +250,11 @@ func runCommandCheckState(ctx context.Context, s *testing.State, b utils.Devboar
 	th.MustSucceed(err, "failed to get gpioget output")
 	s.Logf("gpio: %+v", gpio)
 
-	if expected.rdd != ccdstate.Rdd.State {
+	if expected.rdd != ti50.CCDStateNA && expected.rdd != ccdstate.Rdd.State {
 		errors = append(errors, fmt.Sprintf("rdd mismatch: expected %s got %s", expected.rdd, ccdstate.Rdd))
+	}
+	if expected.keepAlive != ccdstate.KeepAlive.State {
+		errors = append(errors, fmt.Sprintf("rdd keepalive mismatch: expected %s got %s", expected.keepAlive, ccdstate.KeepAlive))
 	}
 	if expected.ccdMode != ccdstate.CCDModeSignal.State {
 		errors = append(errors, fmt.Sprintf("CCD_MODE mismatch: expected %s got %s", expected.ccdMode, ccdstate.CCDModeSignal))
@@ -257,6 +315,12 @@ func runSetupCommand(ctx context.Context, b utils.DevboardHelper, th utils.Firmw
 		b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	case "rdd_connect":
 		b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	case "rddkeepalive_off":
+		_, err := i.Command(ctx, "rddkeepalive disable")
+		th.MustSucceed(err, "failed to turn off rddkeepalive")
+	case "rddkeepalive_on":
+		_, err := i.Command(ctx, "rddkeepalive enable")
+		th.MustSucceed(err, "failed to turn on rddkeepalive")
 	case "servo_disconnect":
 		b.GpioApplyStrap(ctx, ti50.ServoMicroDisconnected)
 		// For servo disconnect DT shields put the uart signal back in
