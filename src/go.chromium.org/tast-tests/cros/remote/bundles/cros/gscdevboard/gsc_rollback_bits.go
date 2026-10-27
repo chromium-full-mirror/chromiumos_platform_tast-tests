@@ -18,6 +18,7 @@ import (
 const (
 	oldDTVersion string = "0.23.30"
 	oldH1Version string = "0.5.230"
+	oldOTVersion string = "0.24.210"
 
 	testInvalidateRW string = "invalidate RW"
 	testSecondUpdate string = "second update"
@@ -60,6 +61,8 @@ func GSCRollbackBits(ctx context.Context, s *testing.State) {
 	switch f.TestbedProperties.TestbedType {
 	case ti50.GscH1Shield:
 		oldVersion = oldH1Version
+	case ti50.GscOTShield:
+		oldVersion = oldOTVersion
 	case ti50.GscDTShield:
 		oldVersion = oldDTVersion
 	default:
