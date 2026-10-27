@@ -262,7 +262,7 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 			h.CloseRPCConnection(ctx)
 			waitBootCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
-			if err = h.WaitConnect(waitBootCtx); err == nil {
+			if err = h.WaitConnect(waitBootCtx, ResetEthernetDongle); err == nil {
 				return nil
 			}
 			// If WaitConnect didn't work, let it reset.
@@ -291,7 +291,7 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 		testing.ContextLog(ctx, "Error closing connections to DUT: ", err)
 	}
 	h.CloseRPCConnection(ctx)
-	return h.WaitConnect(ctx)
+	return h.WaitConnect(ctx, ResetEthernetDongle)
 }
 
 // DisallowServices prevents RequireRPCClient from being used for the lifetime of this Helper.
