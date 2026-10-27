@@ -65,13 +65,17 @@ func DeviceWeeklyScheduledSuspendMGS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome in MGS: ", err)
 	}
 	defer func(ctx context.Context) {
+		// Reconnect to Chrome in case the DevTools connection was dropped during suspend.
+		if err := cr.Reconnect(ctx); err != nil {
+			s.Error("Failed to reconnect to Chrome: ", err)
+		}
 		if err := m.Close(ctx); err != nil {
 			s.Error("Failed to close MGS: ", err)
 		}
 	}(cleanupCtx)
 
 	pb := policy.NewBlob()
-	pb.AddPolicies([]policy.Policy{
+	if err := pb.AddPolicies([]policy.Policy{
 		&policy.DeviceLocalAccounts{
 			Val: []policy.DeviceLocalAccountInfo{
 				{
@@ -86,7 +90,9 @@ func DeviceWeeklyScheduledSuspendMGS(ctx context.Context, s *testing.State) {
 		&policy.DeviceLocalAccountAutoLoginDelay{
 			Val: 0,
 		},
-	})
+	}); err != nil {
+		s.Fatal("Failed to add policies to blob: ", err)
+	}
 
 	if err := suspend.VerifyScheduledSuspend(ctx, fdms, cr, pb, true /* shouldSuspend */, false /* isLoginScreen */); err != nil {
 		s.Fatal("Failed to verify scheduled suspend: ", err)

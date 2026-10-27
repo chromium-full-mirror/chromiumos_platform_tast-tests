@@ -166,27 +166,6 @@ func VerifyScheduledSuspend(ctx context.Context, fdms *fakedms.FakeDMS, cr *chro
 	return ServeAndVerify(ctx, fdms, cr, pb, shouldSuspend, isLoginScreen, reader)
 }
 
-// VerifyScheduledResuspendDelay adds both DeviceWeeklyScheduledSuspend and
-// DeviceWeeklyScheduledResuspendDelayMs policies to the blob, serves and refreshes
-// policies, and verifies whether the device suspends on schedule.
-func VerifyScheduledResuspendDelay(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, pb *policy.Blob, shouldSuspend, isLoginScreen bool) error {
-	reader, err := syslog.NewChromeReader(ctx, "/var/log/chrome/chrome")
-	if err != nil {
-		return errors.Wrap(err, "failed to start log reader")
-	}
-	defer reader.Close()
-
-	pol := BuildDeviceWeeklyScheduledSuspend()
-	if err := pb.AddPolicy(pol); err != nil {
-		return errors.Wrap(err, "failed to add scheduled suspend policy")
-	}
-	if err := pb.AddPolicy(&policy.DeviceWeeklyScheduledResuspendDelayMs{Val: 5000}); err != nil {
-		return errors.Wrap(err, "failed to add resuspend delay policy")
-	}
-
-	return ServeAndVerify(ctx, fdms, cr, pb, shouldSuspend, isLoginScreen, reader)
-}
-
 // ServeAndVerify serves and refreshes the policy blob and verifies that the
 // device either suspends for the expected intervals or does not suspend at all.
 func ServeAndVerify(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, pb *policy.Blob, shouldSuspend, isLoginScreen bool, reader *syslog.ChromeReader) error {
