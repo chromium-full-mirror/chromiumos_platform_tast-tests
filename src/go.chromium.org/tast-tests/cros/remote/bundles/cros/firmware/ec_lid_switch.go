@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -81,6 +82,18 @@ func ECLidSwitch(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if err := h.Servo.OpenLid(ctx); err != nil {
+			s.Error("Failed to open lid in cleanup: ", err)
+		}
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted in cleanup: ", err)
+		}
+	}(cleanupCtx)
+
 	if err := h.RequireRPCUtils(ctx); err != nil {
 		s.Fatal("Requiring RPC utils: ", err)
 	}
