@@ -325,12 +325,51 @@ func (h *Helper) RequireRPCClient(ctx context.Context) error {
 		return errors.Wrap(err, "dut not connected")
 	}
 	testing.ContextLog(ctx, "Opening RPCClient connection")
-	cl, err := rpc.Dial(ctx, h.DUT, h.rpcHint)
-	if err != nil {
-		return errors.Wrap(err, "dialing RPC connection")
+	// Allow enough time for a cold page-in of the local bundle binary on slow
+	// eMMC right after boot while preventing a hung handshake from consuming
+	// the entire test timeout.
+	const rpcDialTimeout = 2 * time.Minute
+	dialCtx, cancelDial := context.WithTimeout(ctx, rpcDialTimeout)
+	defer cancelDial()
+
+	type dialResult struct {
+		cl  *rpc.Client
+		err error
 	}
-	h.RPCClient = cl
-	return nil
+	ch := make(chan dialResult, 1)
+	go func() {
+		// Pass ctx rather than dialCtx because rpc.Dial binds the lifetime
+		// of the remote gRPC server process to the context passed to it.
+		cl, err := rpc.Dial(ctx, h.DUT, h.rpcHint)
+		ch <- dialResult{cl, err}
+	}()
+	select {
+	case res := <-ch:
+		if res.err != nil {
+			return errors.Wrap(res.err, "dialing RPC connection")
+		}
+		h.RPCClient = res.cl
+		return nil
+	case <-dialCtx.Done():
+		testing.ContextLogf(ctx, "RPCClient dial timed out after %s; disconnecting DUT", rpcDialTimeout)
+		if err := h.DisconnectDUT(ctx); err != nil {
+			testing.ContextLog(ctx, "Error disconnecting DUT after RPC dial timeout: ", err)
+		}
+		select {
+		case res := <-ch:
+			if res.cl != nil {
+				res.cl.Close(ctx)
+			}
+		case <-time.After(10 * time.Second):
+			testing.ContextLog(ctx, "rpc.Dial still blocked after DUT disconnect; abandoning it")
+			go func() {
+				if res := <-ch; res.cl != nil {
+					res.cl.Close(ctx)
+				}
+			}()
+		}
+		return errors.Wrap(dialCtx.Err(), "dialing RPC connection timed out")
+	}
 }
 
 // RequireRPCUtils creates a firmware.UtilsServiceClient, unless one already exists.
