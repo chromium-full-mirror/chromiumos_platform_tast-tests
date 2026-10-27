@@ -51,6 +51,8 @@ const (
 	ChromePolicyLoggedInBruschetta = "chromePolicyLoggedInBruschetta"
 	// ChromePolicyLoggedInBaguette is a fixture name.
 	ChromePolicyLoggedInBaguette = "chromePolicyLoggedInBaguette"
+	// ChromePolicyLoggedInCrostini is a fixture name.
+	ChromePolicyLoggedInCrostini = "chromePolicyLoggedInCrostini"
 	// ChromePolicyLoggedInBruschettaWithFieldtrialConfig is a fixture name.
 	ChromePolicyLoggedInBruschettaWithFieldtrialConfig = "chromePolicyLoggedInBruschettaWithFieldtrialConfig"
 	// ChromeEnrolledLoggedIn is a fixture name.

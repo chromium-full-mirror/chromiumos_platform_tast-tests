@@ -148,19 +148,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "crostiniBookwormPolicy",
-		Desc:     "Install Crostini with Bookworm, with Chrome logged in with policy",
-		Contacts: []string{"clumptini+oncall@google.com"},
-		Impl: &crostiniFixture{preData: preTestDataBookworm,
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.EnableFeatures("NewFilesPolicyUX"), chrome.DisableFeatures("CrostiniContainerless")}, nil
-			},
-		},
+		Name:            "crostiniBookwormPolicy",
+		Desc:            "Install Crostini with Bookworm, with Chrome logged in with policy",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
-		Parent:          fixture.ChromePolicyLoggedIn,
+		Parent:          fixture.ChromePolicyLoggedInCrostini,
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
@@ -250,15 +246,14 @@ type preTestData struct {
 
 // crostiniFixture holds the runtime state of the fixture.
 type crostiniFixture struct {
-	cr            *chrome.Chrome
-	tconn         *chrome.TestConn
-	cont          *vm.Container
-	kb            *input.KeyboardEventWriter
-	preData       *preTestData
-	postData      *PostTestData
-	values        *perf.Values
-	logDir        string
-	extraOptsFunc chrome.OptionsCallback
+	cr       *chrome.Chrome
+	tconn    *chrome.TestConn
+	cont     *vm.Container
+	kb       *input.KeyboardEventWriter
+	preData  *preTestData
+	postData *PostTestData
+	values   *perf.Values
+	logDir   string
 }
 
 // FixtureData is the data returned by SetUp and passed to tests.
@@ -548,15 +543,14 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 }
 
 type baguetteFixture struct {
-	cr            *chrome.Chrome
-	tconn         *chrome.TestConn
-	cont          *vm.Container
-	kb            *input.KeyboardEventWriter
-	preData       *preTestData
-	postData      *PostTestData
-	values        *perf.Values
-	logDir        string
-	extraOptsFunc chrome.OptionsCallback
+	cr       *chrome.Chrome
+	tconn    *chrome.TestConn
+	cont     *vm.Container
+	kb       *input.KeyboardEventWriter
+	preData  *preTestData
+	postData *PostTestData
+	values   *perf.Values
+	logDir   string
 }
 
 func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
