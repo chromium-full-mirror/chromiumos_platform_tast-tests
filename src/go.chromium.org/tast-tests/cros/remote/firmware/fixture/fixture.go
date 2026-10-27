@@ -634,11 +634,14 @@ func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		if err := firmware.PollToSetChargerStatus(ctx, i.value.Helper, true); err != nil {
 			s.Log("Failed to attach charger: ", err)
 		}
-		i.value.Helper.CloseRPCConnection(ctx)
-		connectTimeout, cancel := context.WithTimeout(ctx, i.value.Helper.Config.DelayRebootToPing)
-		defer cancel()
-		if err := i.value.Helper.WaitConnect(connectTimeout, firmware.ResetEthernetDongle); err != nil {
-			s.Log("Failed to reconnect to dut after changing charger status: ", err)
+		if !i.value.Helper.DUT.Connected(ctx) {
+			s.Log("DUT not reachable after setting charger status; reconnecting")
+			i.value.Helper.CloseRPCConnection(ctx)
+			connectTimeout, cancel := context.WithTimeout(ctx, i.value.Helper.Config.DelayRebootToPing)
+			defer cancel()
+			if err := i.value.Helper.WaitConnect(connectTimeout, firmware.ResetEthernetDongle); err != nil {
+				s.Log("Failed to reconnect to dut after changing charger status: ", err)
+			}
 		}
 	}
 

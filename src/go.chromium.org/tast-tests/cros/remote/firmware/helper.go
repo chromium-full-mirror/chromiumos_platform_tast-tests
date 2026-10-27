@@ -157,8 +157,9 @@ const (
 	// in the process of waking up from hibernation.
 	FromHibernation WaitConnectOption = iota
 
-	// ResetEthernetDongle resets the ethernet dongle
-	// for speed-up in ssh connection.
+	// ResetEthernetDongle power-cycles the servo ethernet dongle once,
+	// after the first failed connection attempt, to speed up reconnecting;
+	// it is a no-op if the DUT connects on the first try.
 	ResetEthernetDongle
 
 	// SkipPDRoleSnk skips setting pd role as snk if setting
@@ -856,19 +857,13 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	if h.DUT == nil {
 		return h.waitDutS0(ctx)
 	}
-	// Resetting ethernet dongle might speed up connection to the dut.
-	// At the moment, it seems that only servo v4.1 supports this feature.
-	if wcOptsContain(opts, ResetEthernetDongle) {
-		if err := h.ResetServoEthernetDongle(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset ethernet")
-		}
-	}
 	hasDUTPDDataRole, err := h.Servo.HasControl(ctx, string(servo.DUTPDDataRole))
 	if err != nil {
 		return errors.Wrap(err, "failed to check for control")
 	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
 	dfpFailures := 0
+	resetDongle := wcOptsContain(opts, ResetEthernetDongle)
 	for {
 		deadline, ok := ctx.Deadline()
 		if ok {
@@ -903,6 +898,14 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 		}(ctx)
 		if err == nil {
 			return nil
+		}
+		// Resetting ethernet dongle might speed up connection to the dut.
+		// At the moment, it seems that only servo v4.1 supports this feature.
+		if resetDongle {
+			resetDongle = false
+			if err := h.ResetServoEthernetDongle(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to reset ethernet dongle: ", err)
+			}
 		}
 
 		select {
