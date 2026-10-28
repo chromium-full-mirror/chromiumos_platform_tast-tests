@@ -72,6 +72,8 @@ const (
 	// testInProgressPath is the path to a file containing the name of the
 	// currently-running test, if any.
 	testInProgressPath = "/run/crash_reporter/test-in-prog"
+	// kmsgPath is the path to the kernel log buffer device.
+	kmsgPath = "/dev/kmsg"
 
 	// BIOSExt is the extension for bios crash files.
 	BIOSExt = ".bios_log"
@@ -683,25 +685,61 @@ func shouldMarkTestInProgress(ctx context.Context) bool {
 	return markTestInProgress
 }
 
+// logKmsgTestMarker appends a test start/end marker ("tast: <name> ========
+// start|end") to /dev/kmsg. crash_reporter's KernelCollector parses this format
+// from preserved ramoops/pstore logs across panic reboots (where tmpfs
+// /run/crash_reporter/test-in-prog is lost) to report
+// in_progress_integration_test.
+func logKmsgTestMarker(ctx context.Context, path, name, stage string) {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to open %s: %v", path, err)
+		return
+	}
+	defer f.Close()
+	if _, err := fmt.Fprintf(f, "tast: %s ======== %s\n", name, stage); err != nil {
+		testing.ContextLogf(ctx, "Failed to write to %s: %v", path, err)
+	}
+}
+
 // MarkTestInProgress writes |name| to |testInProgressPath|, indicating to crash_reporter
-// that the given test is in progress.
+// that the given test is in progress, and logs a start marker to /dev/kmsg.
 func MarkTestInProgress(ctx context.Context, name string) error {
-	if !shouldMarkTestInProgress(ctx) {
+	return markTestInProgress(ctx, name, testInProgressPrefixVar.Value(), testInProgressPath, kmsgPath, shouldMarkTestInProgress(ctx))
+}
+
+// markTestInProgress implements MarkTestInProgress with explicit paths and
+// options so unit tests can exercise it without touching system paths or
+// runtime variables.
+func markTestInProgress(ctx context.Context, name, prefix, inProgPath, kmsgFile string, shouldMark bool) error {
+	// Always log to /dev/kmsg even when !shouldMark (crash.markTestInProgress=false
+	// exists so crash tests can manage test-in-prog themselves without collision,
+	// whereas /dev/kmsg does not touch that file), and omit prefix to preserve the
+	// canonical test name matching KernelCollector's \S+ format.
+	logKmsgTestMarker(ctx, kmsgFile, name, "start")
+	if !shouldMark {
 		return nil
 	}
-	if err := os.WriteFile(testInProgressPath, []byte(testInProgressPrefixVar.Value()+name), 0644); err != nil {
+	if err := os.WriteFile(inProgPath, []byte(prefix+name), 0644); err != nil {
 		return errors.Wrap(err, "failed to write in-progress test name")
 	}
 	return nil
 }
 
-// MarkTestDone removes the file indicating which test is running.
-func MarkTestDone(ctx context.Context) error {
+// MarkTestDone removes the file indicating which test is running and logs an end marker to /dev/kmsg.
+func MarkTestDone(ctx context.Context, name string) error {
+	return markTestDone(ctx, name, testInProgressPath, kmsgPath, shouldMarkTestInProgress(ctx))
+}
+
+// markTestDone implements MarkTestDone with explicit paths and options so unit
+// tests can exercise it without touching system paths or runtime variables.
+func markTestDone(ctx context.Context, name, inProgPath, kmsgFile string, shouldMark bool) error {
+	logKmsgTestMarker(ctx, kmsgFile, name, "end")
 	// Don't remove the test-in-prog file if it's not created by tast in MarkTestInProgress function.
-	if !shouldMarkTestInProgress(ctx) {
+	if !shouldMark {
 		return nil
 	}
-	if err := os.Remove(testInProgressPath); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(inProgPath); err != nil && !os.IsNotExist(err) {
 		return errors.Wrap(err, "failed to remove in-progress test name")
 	}
 	return nil

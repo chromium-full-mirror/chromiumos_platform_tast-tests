@@ -87,7 +87,6 @@ var orderedHooks []string = []string{
 	"cleanupChecksHook",
 	"actionLoggerHook",
 	"cujCleanup",
-	"debugInfoHook", // Prefer to run this hook at the end if possible.
 }
 
 // HookState includes certain fixture state information that is

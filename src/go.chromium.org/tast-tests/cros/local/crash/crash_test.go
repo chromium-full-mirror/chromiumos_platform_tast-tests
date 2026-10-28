@@ -592,3 +592,90 @@ func TestCleanupDevcoredump(t *gotesting.T) {
 		t.Fatalf("cleanupDevcoredump failed to write '0' to %s/data", dirCD1)
 	}
 }
+
+func TestMarkTestInProgressAndDone(t *gotesting.T) {
+	ctx := context.Background()
+	checkFile := func(t *gotesting.T, path, want string) {
+		t.Helper()
+		got, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("Failed to read %s: %v", path, err)
+		}
+		if string(got) != want {
+			t.Errorf("%s = %q; want %q", filepath.Base(path), string(got), want)
+		}
+	}
+
+	t.Run("NormalLifecycleWithPrefix", func(t *gotesting.T) {
+		td := testutil.TempDir(t)
+		defer os.RemoveAll(td)
+		inProg, kmsg := filepath.Join(td, "test-in-prog"), filepath.Join(td, "kmsg")
+		if err := os.WriteFile(kmsg, nil, 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := markTestInProgress(ctx, "arc.RarPerf.vm", "prefix:", inProg, kmsg, true); err != nil {
+			t.Fatalf("markTestInProgress failed: %v", err)
+		}
+		checkFile(t, inProg, "prefix:arc.RarPerf.vm")
+		checkFile(t, kmsg, "tast: arc.RarPerf.vm ======== start\n")
+
+		// Calling markTestDone twice also verifies missing test-in-prog is ignored.
+		for i := 0; i < 2; i++ {
+			if err := markTestDone(ctx, "arc.RarPerf.vm", inProg, kmsg, true); err != nil {
+				t.Fatalf("markTestDone call %d failed: %v", i+1, err)
+			}
+		}
+		if _, err := os.Stat(inProg); !os.IsNotExist(err) {
+			t.Errorf("test-in-prog stat err = %v; want not exist", err)
+		}
+		checkFile(t, kmsg, "tast: arc.RarPerf.vm ======== start\n"+
+			"tast: arc.RarPerf.vm ======== end\n"+
+			"tast: arc.RarPerf.vm ======== end\n")
+	})
+
+	t.Run("ShouldMarkFalse", func(t *gotesting.T) {
+		td := testutil.TempDir(t)
+		defer os.RemoveAll(td)
+		inProg, kmsg := filepath.Join(td, "test-in-prog"), filepath.Join(td, "kmsg")
+		if err := os.WriteFile(kmsg, nil, 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := markTestInProgress(ctx, "crash.KernelCrash", "", inProg, kmsg, false); err != nil {
+			t.Fatalf("markTestInProgress failed: %v", err)
+		}
+		if _, err := os.Stat(inProg); !os.IsNotExist(err) {
+			t.Errorf("test-in-prog stat err = %v; want not exist", err)
+		}
+		// Simulate a crash test managing test-in-prog itself; markTestDone must leave it intact.
+		if err := os.WriteFile(inProg, []byte("custom.Test"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := markTestDone(ctx, "crash.KernelCrash", inProg, kmsg, false); err != nil {
+			t.Fatalf("markTestDone failed: %v", err)
+		}
+		checkFile(t, inProg, "custom.Test")
+		checkFile(t, kmsg, "tast: crash.KernelCrash ======== start\ntast: crash.KernelCrash ======== end\n")
+	})
+
+	t.Run("MissingKmsg", func(t *gotesting.T) {
+		td := testutil.TempDir(t)
+		defer os.RemoveAll(td)
+		inProg, kmsg := filepath.Join(td, "test-in-prog"), filepath.Join(td, "missing-kmsg")
+
+		if err := markTestInProgress(ctx, "kernel.Panic", "", inProg, kmsg, true); err != nil {
+			t.Fatalf("markTestInProgress failed: %v", err)
+		}
+		checkFile(t, inProg, "kernel.Panic")
+		if err := markTestDone(ctx, "kernel.Panic", inProg, kmsg, true); err != nil {
+			t.Fatalf("markTestDone failed: %v", err)
+		}
+		if _, err := os.Stat(inProg); !os.IsNotExist(err) {
+			t.Errorf("test-in-prog stat err = %v; want not exist", err)
+		}
+		if _, err := os.Stat(kmsg); !os.IsNotExist(err) {
+			t.Errorf("kmsg stat err = %v; want not exist (must not create regular file)", err)
+		}
+	})
+}

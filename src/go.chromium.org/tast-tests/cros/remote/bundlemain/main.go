@@ -32,6 +32,23 @@ import (
 
 const varLogMsgPath = "/var/log/messages"
 
+// logRemoteTestMarker appends a test start/end marker ("tast: <name> ========
+// start|end") to the DUT's /dev/kmsg. crash_reporter's KernelCollector parses
+// this format from preserved ramoops/pstore logs across panic reboots (where
+// tmpfs /run/crash_reporter/test-in-prog is lost) to report
+// in_progress_integration_test.
+func logRemoteTestMarker(ctx context.Context, d *dut.DUT, name, stage string) {
+	if !d.Connected(ctx) {
+		return
+	}
+	// Check -c first because root shell `>>` opens with O_CREAT and would
+	// silently create a regular /dev/kmsg file if the device node is absent.
+	const script = `if [ -c /dev/kmsg ]; then printf 'tast: %s ======== %s\n' "$1" "$2" >> /dev/kmsg; fi`
+	if err := d.Conn().CommandContext(ctx, "sh", "-c", script, "_", name, stage).Run(); err != nil {
+		testing.ContextLogf(ctx, "Failed to log remote test %s marker to /dev/kmsg: %v", stage, err)
+	}
+}
+
 func hwsecGetDACounter(ctx context.Context, s *testing.TestHookState) (uint, error) {
 	cmdRunner := hwsecremote.NewLoglessCmdRunner(s.DUT())
 	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
@@ -118,6 +135,8 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 	varLogMsgLineCounts := make(map[string]*linuxssh.WordCountInfo)
 
 	if s.DUT() != nil {
+		logRemoteTestMarker(ctx, s.DUT(), s.TestName(), "start")
+
 		// Store current DA value before running the tast.
 		hwsecDACounter, err = hwsecGetDACounter(ctx, s)
 		if err != nil {
@@ -173,6 +192,9 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 					return
 				}
 			}
+			// Run after WaitConnect (the test may have rebooted or dropped SSH) and
+			// before early return on !s.HasError() so passing tests close their marker.
+			logRemoteTestMarker(ctx, dut, s.TestName(), "end")
 
 			// Ensure the TPM is in the expect state after tast finish.
 			if err := testing.Poll(ctx, func(ctx context.Context) error {
