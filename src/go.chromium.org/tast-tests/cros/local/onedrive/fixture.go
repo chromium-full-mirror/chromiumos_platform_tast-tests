@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
 	"go.chromium.org/tast/core/errors"
@@ -209,8 +210,10 @@ type onedriveFixture struct {
 	// Used to share the path between SetUp() and PreTest().
 	srcFiles map[string]string
 	fdms     *fakedms.FakeDMS
+	policies []policy.Policy
 	// Whether camera save location should be set to OneDrive.
 	cameraSaveOnedrive bool
+	cameraFolder       string
 	// Whether to skip preparing the download sub-folder.
 	skipDownloadSubFolder bool
 }
@@ -238,7 +241,6 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	var err error
 	var driveFsClient *drivefs.DriveFs
 	var driveAPIClient *drivefs.APIClient
-	var cameraFolder string
 
 	if f.provider == filesconsts.DriveFs {
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
@@ -271,10 +273,11 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 				// Set CameraSaveLocation policy with the value set to the
 				// cameraFolder in OneDrive root, denoted by ${microsoft_onedrive} variable.
 				// See https://www.chromium.org/administrators/policy-list-3/user-data-directory-variables/
-				cameraFolder = fmt.Sprintf("Camera_%d", rand.Intn(1000000))
-				policies = append(policies, &policy.CameraSaveLocation{Val: "${microsoft_onedrive}/" + cameraFolder})
+				f.cameraFolder = fmt.Sprintf("Camera_%d", rand.Intn(1000000))
+				policies = append(policies, &policy.CameraSaveLocation{Val: "${microsoft_onedrive}/" + f.cameraFolder})
 			}
-			pb.AddPolicies(policies)
+			f.policies = policies
+			pb.AddPolicies(f.policies)
 			if err := fdms.WritePolicyBlob(pb); err != nil {
 				s.Fatal("Failed to write policies to FakeDMS: ", err)
 			}
@@ -331,7 +334,7 @@ func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		DriveFs:        driveFsClient,
 		DriveAPIClient: driveAPIClient,
 		fakeDMS:        f.fdms,
-		CameraFolder:   cameraFolder,
+		CameraFolder:   f.cameraFolder,
 	}
 	return f.data
 }
@@ -350,6 +353,14 @@ func (f *onedriveFixture) Reset(ctx context.Context) error {
 	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
 		testing.ContextLog(ctx, "Failed trying to close all windows: ", err)
 	}
+	if f.fdms != nil && len(f.policies) > 0 {
+		pb := policy.NewBlob()
+		pb.PolicyUser = fixtures.Username
+		pb.AddPolicies(f.policies)
+		if err := policyutil.ServeBlobAndRefresh(ctx, f.fdms, f.cr, pb); err != nil {
+			return errors.Wrap(err, "failed to restore policies")
+		}
+	}
 	return nil
 }
 
@@ -361,9 +372,17 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	if recorder != nil {
 		if err := recorder.Start(ctx, f.tconn); err != nil {
 			s.Log("Failed to start screen recorder: ", err)
+		} else {
+			f.screenRecorder = recorder
 		}
-		f.screenRecorder = recorder
 	}
+	shouldStopRecorder := true
+	defer func() {
+		if shouldStopRecorder && f.screenRecorder != nil {
+			f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+			f.screenRecorder = nil
+		}
+	}()
 
 	var generatedFiles []TestFile
 	if !f.skipDownloadSubFolder {
@@ -418,6 +437,7 @@ func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	if err := ms365.ClearBrowserCookiesForOffice(ctx, f.cr); err != nil {
 		s.Fatal("Failed to clear browser cookies for office website: ", err)
 	}
+	shouldStopRecorder = false
 }
 
 // PostTests makes a best effort attempt to restore the state to where it was pretest.
@@ -469,6 +489,7 @@ func (f *onedriveFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 
 	if f.screenRecorder != nil {
 		f.screenRecorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+		f.screenRecorder = nil
 	}
 }
 
