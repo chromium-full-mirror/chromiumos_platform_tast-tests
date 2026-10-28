@@ -457,10 +457,10 @@ func (a *App) Restart(ctx context.Context, tb *testutil.TestBridge) error {
 // AcceptCloudSaveWarning waits for and accepts the cloud save warning dialog if
 // it appears.
 func (a *App) AcceptCloudSaveWarning(ctx context.Context) error {
-	if err := a.conn.WaitForExpr(ctx, "document.querySelector('cloud-save-warning-dialog').shadowRoot.querySelector('cr-dialog')"); err != nil {
+	if err := a.conn.WaitForExpr(ctx, "!!(document.querySelector('cloud-save-warning-dialog')?.shadowRoot?.querySelector('dialog[open], cr-dialog'))"); err != nil {
 		return errors.Wrap(err, "cloud save warning dialog not found")
 	}
-	if err := a.conn.Eval(ctx, "document.querySelector('cloud-save-warning-dialog').shadowRoot.querySelector('cr-button').click();", nil); err != nil {
+	if err := a.conn.Eval(ctx, "document.querySelector('cloud-save-warning-dialog').shadowRoot.querySelector('#ack-button, cr-button').click();", nil); err != nil {
 		return errors.Wrap(err, "failed to click the accept button on cloud save warning dialog")
 	}
 	return nil
