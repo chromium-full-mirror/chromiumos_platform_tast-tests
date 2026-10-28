@@ -345,22 +345,33 @@ type wifiEnv struct {
 	br string
 }
 
-// Cleanup shuts down all the servers.
+// Cleanup removes the simulated WiFi service from shill and shuts down all the servers.
 func (e *wifiEnv) Cleanup(ctx context.Context) error {
+	var lastErr error
+	updateLastErrAndLog := func(err error) {
+		lastErr = err
+		testing.ContextLog(ctx, "Cleanup failed: ", lastErr)
+	}
+	if e.Service != nil {
+		if err := e.Service.Remove(ctx); err != nil {
+			updateLastErrAndLog(errors.Wrap(err, "failed to remove WiFi service"))
+		}
+	}
 	if e.Router != nil {
 		if err := e.Router.Cleanup(ctx); err != nil {
-			return err
+			updateLastErrAndLog(err)
 		}
 	}
 	if e.hostapd != nil && e.hostapd.Process != nil {
 		// Stop hostapd using SIGTERM to let the process stop the access point
 		// correctly and remove the bridge interface.
 		if err := e.hostapd.Signal(unix.SIGTERM); err != nil {
-			return errors.Wrap(err, "failed to kill hostapd process")
+			updateLastErrAndLog(errors.Wrap(err, "failed to kill hostapd process"))
+		} else {
+			e.hostapd.Wait()
 		}
-		e.hostapd.Wait()
 	}
-	return nil
+	return lastErr
 }
 
 // CreateWifiRouterEnv create a virtualnet Env with the given options. Different

@@ -77,7 +77,7 @@ func DropInvalidPackets(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create virtual Ethernet env: ", err)
 	}
 	defer func() {
-		if err := ethEnv.Cleanup(ctx); err != nil {
+		if err := ethEnv.Cleanup(cleanupCtx); err != nil {
 			s.Error("Failed to clean up virtual Ethernet env: ", err)
 		}
 	}()
@@ -86,7 +86,7 @@ func DropInvalidPackets(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create virtual WiFi env: ", err)
 	}
 	defer func() {
-		if err := wifiEnv.Cleanup(ctx); err != nil {
+		if err := wifiEnv.Cleanup(cleanupCtx); err != nil {
 			s.Error("Failed to clean up virtual WiFi env: ", err)
 		}
 	}()
