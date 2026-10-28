@@ -203,6 +203,14 @@ func Logout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to log in: ", err)
 	}
 
+	// --enable-oobe-test-api preloads the hidden OOBE dialog, keeping
+	// BEST_EFFORT tasks like ExternalMetrics fenced until a visible page loads.
+	conn, err := cr.NewConn(ctx, "about:blank")
+	if err != nil {
+		s.Fatal("Failed to open about:blank: ", err)
+	}
+	defer conn.Close()
+
 	hist, err := metrics.WaitForHistogram(ctx, tconn, uptimeLogoutHistogram, 15*time.Second)
 	if err != nil {
 		s.Fatalf("Failed to get %s histogram: %v", uptimeLogoutHistogram, err)
