@@ -61,6 +61,17 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to sleep")
 		}
 
+		// Ensure any same-boot developer-disable FWMP latch is cleared before
+		// setting FWMP.
+		if err := s.DUT().Conn().CommandContext(ctx, "sh", "-c",
+			"if [ -e /run/lockbox/fwmp_locked_flags ]; then "+
+				"rm -f /run/lockbox/fwmp_locked_flags && "+
+				"restart device_managementd && "+
+				"gdbus wait --system org.chromium.DeviceManagement; "+
+				"fi").Run(ssh.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to reset device_managementd FWMP latch")
+		}
+
 		// Set FWMP flags in a poll to increase the chances of success.
 		s.Log("Setting firmware management parameters")
 		reOwnerPassword := regexp.MustCompile(`flags:\s*(0|1)`)
@@ -92,23 +103,53 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// Verify that TPM owner password is present.
-	out, err := s.DUT().Conn().CommandContext(ctx, "tpm_manager_client", "status", "--nonsensitive").Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to get TMP status: ", err)
-	}
-	reOwnerPassword := regexp.MustCompile(`is_owner_password_present: (\S*)`)
-	ownerPasswordState := reOwnerPassword.FindSubmatch(out)
-	if ownerPasswordState == nil {
-		s.Fatalf("No match found with regex %q in the following output: %s", reOwnerPassword, out)
-	}
-	if string(ownerPasswordState[1]) != "true" {
-		s.Fatal("TPM owner password is not present, and received output: ", string(out))
-	}
-
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Failed to create mode switcher: ", err)
+	}
+
+	reOwnerPassword := regexp.MustCompile(`is_owner_password_present: (\S*)`)
+	checkReadyForFWMP := func(ctx context.Context) error {
+		out, err := s.DUT().Conn().CommandContext(ctx, "tpm_manager_client", "status", "--nonsensitive").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get TPM status")
+		}
+		ownerPasswordState := reOwnerPassword.FindSubmatch(out)
+		if ownerPasswordState == nil {
+			return errors.Errorf("no match found with regex %q in the following output: %s", reOwnerPassword, out)
+		}
+		if string(ownerPasswordState[1]) != "true" {
+			return errors.Errorf("TPM owner password is not present: %s", string(out))
+		}
+
+		statusOut, err := s.DUT().Conn().CommandContext(ctx, "device_management_client", "--action=install_attributes_get_status").Output(ssh.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get install attributes status")
+		}
+		if status := strings.TrimSpace(string(statusOut)); status != "FIRST_INSTALL" {
+			return errors.Errorf("install attributes status is %q, want FIRST_INSTALL", status)
+		}
+		return nil
+	}
+
+	// Setting FWMP requires TPM owner password to be present and install
+	// attributes to be in FIRST_INSTALL state. If a prior test finalized
+	// install attributes or cleared the owner password, clear the TPM and
+	// re-take ownership first.
+	if err := checkReadyForFWMP(ctx); err != nil {
+		s.Logf("DUT not ready for setting FWMP (%v); clearing TPM and taking ownership", err)
+		if err := s.DUT().Conn().CommandContext(ctx, "crossystem", "clear_tpm_owner_request=1").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set clear_tpm_owner_request=1: ", err)
+		}
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			s.Fatal("Failed to reboot DUT to clear TPM: ", err)
+		}
+		if err := s.DUT().Conn().CommandContext(ctx, "tpm_manager_client", "take_ownership").Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to take TPM ownership: ", err)
+		}
+		if err := testing.Poll(ctx, checkReadyForFWMP, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 3 * time.Second}); err != nil {
+			s.Fatal("TPM and install attributes did not become ready after TPM clear: ", err)
+		}
 	}
 
 	if h.HasAPFwState {
