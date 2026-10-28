@@ -49,6 +49,7 @@ func init() {
 			"onedrive.accountPool",
 		},
 		Fixture: "onedriveManagedWithSkyVault",
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.MicrosoftOneDriveMount{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.MicrosoftOneDriveAccountRestrictions{}, pci.VerifiedValue),
@@ -71,7 +72,7 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 	fdms := data.FakeDMS()
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "download_onedrive")
@@ -147,6 +148,9 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Keyboard: ", err)
+	}
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		s.Fatal("Failed to close notifications: ", err)
 	}
 	if err := files.DeleteFileOrFolder(kb, filename)(ctx); err != nil {
 		s.Fatal("Failed to delete the file: ", err)

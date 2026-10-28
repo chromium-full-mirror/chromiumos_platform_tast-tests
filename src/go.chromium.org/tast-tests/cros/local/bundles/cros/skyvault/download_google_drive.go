@@ -86,7 +86,7 @@ func DownloadGoogleDrive(ctx context.Context, s *testing.State) {
 	if err := files.OpenDrive()(ctx); err != nil {
 		s.Fatal("Failed to open Drive: ", err)
 	}
-	if err := files.FileExists(filename); err == nil {
+	if err := files.FileExists(filename)(ctx); err == nil {
 		if err := files.DeleteFileOrFolder(kb, filename)(ctx); err != nil {
 			s.Fatal("Failed to remove old downloads in Drive: ", err)
 		}

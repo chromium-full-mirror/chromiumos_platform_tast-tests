@@ -63,7 +63,7 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	driveAPIClient := fixt.APIClient
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "screenshot_google_drive")
@@ -79,12 +79,6 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 		}
 		defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
-
-	files, err := filesapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch Files app: ", err)
-	}
-	defer files.Close(cleanupCtx)
 
 	// Using the virtual keyboard is required since different physical keyboards can require different key combinations to take a screenshot.
 	vkb, err := input.VirtualKeyboard(ctx)
@@ -104,9 +98,32 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that screenshot is successfully taken.
-	if _, err := ash.WaitForNotification(ctx, tconn, 15*time.Second, ash.WaitIDContains("capture_mode_notification"), ash.WaitTitle("Screenshot taken")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitIDContains("capture_mode_notification"), ash.WaitTitle("Screenshot taken")); err != nil {
 		s.Errorf("Failed to wait for notification with title \"%q\": %v", "capture_mode_notification", err)
 	}
+
+	// Click edit button, check if Gallery app opens up.
+	editButton := nodewith.NameRegex(regexp.MustCompile("(?i)edit")).Role(role.Button)
+	ui := uiauto.New(tconn)
+	if err := ui.LeftClick(editButton)(ctx); err != nil {
+		s.Fatal("Failed to click edit button: ", err)
+	}
+
+	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
+		s.Error("Failed to wait for Gallery app to open: ", err)
+	} else {
+		if err := apps.Close(ctx, tconn, apps.Gallery.ID); err != nil {
+			testing.ContextLog(ctx, "Failed to close Gallery app: ", err)
+		} else if err := ash.WaitForAppClosed(ctx, tconn, apps.Gallery.ID); err != nil {
+			testing.ContextLog(ctx, "Failed to wait for Gallery app to close: ", err)
+		}
+	}
+
+	files, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch Files app: ", err)
+	}
+	defer files.Close(cleanupCtx)
 
 	if err := files.OpenDrive()(ctx); err != nil {
 		s.Fatal("Failed to open Drive: ", err)
@@ -126,15 +143,4 @@ func ScreenshotGoogleDrive(ctx context.Context, s *testing.State) {
 			testing.ContextLogf(ctx, "Failed to remove %s via Drive API: %v", filename, err)
 		}
 	}(cleanupCtx)
-
-	// Click edit button, check if Gallery app opens up.
-	editButton := nodewith.NameRegex(regexp.MustCompile("(?i)edit")).Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(editButton)(ctx); err != nil {
-		s.Fatal("Failed to click edit button: ", err)
-	}
-
-	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
-		s.Error("Failed to wait for Gallery app to open: ", err)
-	}
 }

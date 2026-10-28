@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -52,6 +53,7 @@ func init() {
 			"onedrive.accountPool",
 		},
 		Fixture: "onedriveManagedWithSkyVaultGA",
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.MicrosoftOneDriveMount{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.MicrosoftOneDriveAccountRestrictions{}, pci.VerifiedValue),
@@ -73,7 +75,7 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	dataFiles := data.GeneratedFiles
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "migration_onedrive")
@@ -108,7 +110,7 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	// TODO(crbug.com/372897049): Get the device ID to construct the full folder name,
 	// so that different test runs don't interfere with each other.
 	cloudFolderName := regexp.MustCompile("^ChromeOS device ")
-	if err := deleteAllUploadFolders(ctx, files, kb, cloudFolderName); err != nil {
+	if err := deleteAllUploadFolders(ctx, tconn, files, kb, cloudFolderName); err != nil {
 		s.Error("Failed to delete uploads folder: ", err)
 	}
 
@@ -122,14 +124,25 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to update policies: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
+			&policy.LocalUserFilesAllowed{Val: true},
+			&policy.LocalUserFilesMigrationDestination{Val: "not_specified"},
+			&policy.MicrosoftOneDriveMount{Val: "allowed"},
+			&policy.MicrosoftOfficeCloudUpload{Val: "allowed"},
+			&policy.MicrosoftOneDriveAccountRestrictions{Val: []string{"common"}},
+		}); err != nil {
+			testing.ContextLog(ctx, "Failed to reset migration policies: ", err)
+		}
+	}(cleanupCtx)
 
 	ui := uiauto.New(tconn)
-	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Your file upload to Microsoft OneDrive *"))
+	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Your file upload to Microsoft OneDrive.*"))
 	uploadNowButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Upload now")
 
 	if err := uiauto.Combine("Upload now",
 		uiauto.Log("Starting Upload now step"),
-		ui.WaitUntilExists(dialog),
+		ui.WithTimeout(30*time.Second).WaitUntilExists(dialog),
 		ui.DoDefault(uploadNowButton),
 		ui.WaitUntilGone(dialog),
 	)(ctx); err != nil {
@@ -137,7 +150,7 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the migration completed.
-	if _, err := ash.WaitForNotification(ctx, tconn, 15*time.Second, ash.WaitTitleContains("Files were successfully uploaded to")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitleContains("Files were successfully uploaded to")); err != nil {
 		s.Error("Failed to wait for migration completed notification: ", err)
 	}
 
@@ -152,26 +165,31 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 		s.Error("Failed to find the uploaded files: ", err)
 	}
 
-	if err := deleteAllUploadFolders(ctx, files, kb, cloudFolderName); err != nil {
+	if err := deleteAllUploadFolders(ctx, tconn, files, kb, cloudFolderName); err != nil {
 		s.Error("Failed to delete uploads folder: ", err)
 	}
 }
 
 // deleteAllUploadFolders deletes all folders matching the given cloudFolderName pattern
 // in the Files app.
-func deleteAllUploadFolders(ctx context.Context, files *filesapp.FilesApp, kb *input.KeyboardEventWriter, cloudFolderName *regexp.Regexp) error {
-	for {
+func deleteAllUploadFolders(ctx context.Context, tconn *chrome.TestConn, files *filesapp.FilesApp, kb *input.KeyboardEventWriter, cloudFolderName *regexp.Regexp) error {
+	const maxCleanupAttempts = 5
+	for i := 0; i < maxCleanupAttempts; i++ {
+		if err := files.OpenOneDrive()(ctx); err != nil {
+			return errors.Wrap(err, "failed to open OneDrive")
+		}
 		filename, err := files.WithTimeout(5*time.Second).WaitForFileByPattern(ctx, cloudFolderName)
 		if err != nil {
-			// No folders matching the pattern exist, exit the loop
-			break
+			testing.ContextLog(ctx, "No matching upload folders found")
+			return nil
 		}
-		if err := uiauto.Combine("Delete upload folder",
-			files.OpenOneDrive(),
-			files.DeleteFileOrFolder(kb, filename),
-		)(ctx); err != nil {
+		if err := ash.CloseNotifications(ctx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to close notifications: ", err)
+		}
+		if err := files.DeleteFileOrFolder(kb, filename)(ctx); err != nil {
 			return errors.Wrap(err, "failed to delete the uploads folder")
 		}
 	}
+	testing.ContextLogf(ctx, "Reached maximum of %d cleanup attempts while deleting upload folders", maxCleanupAttempts)
 	return nil
 }

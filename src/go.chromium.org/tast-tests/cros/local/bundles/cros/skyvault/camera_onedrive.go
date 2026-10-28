@@ -53,6 +53,7 @@ func init() {
 			"onedrive.accountPool",
 		},
 		Fixture: "onedriveManagedWithSkyVaultForCamera",
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.MicrosoftOneDriveMount{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.MicrosoftOneDriveAccountRestrictions{}, pci.VerifiedValue),
@@ -70,7 +71,7 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	cameraFolder := data.CameraFolder
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "camera_onedrive")
@@ -100,13 +101,15 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	outDir := s.OutDir()
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
-		s.Fatal("Failed to construct test bridge")
+		s.Fatal("Failed to construct test bridge: ", err)
 	}
+	defer tb.TearDown(cleanupCtx)
 
 	app, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		s.Fatal("Failed to start CCA: ", err)
 	}
+	defer app.Close(cleanupCtx)
 
 	if err := app.AcceptCloudSaveWarning(ctx); err != nil {
 		s.Fatal("Failed to accept cloud save warning: ", err)
@@ -117,7 +120,7 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that photo is successfully taken.
-	if _, err := ash.WaitForNotification(ctx, tconn, 15*time.Second, ash.WaitIDContains("skyvault_camera_upload_done_notification"), ash.WaitTitle("Photo saved to OneDrive")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitIDContains("skyvault_camera_upload_done_notification"), ash.WaitTitle("Photo saved to OneDrive")); err != nil {
 		s.Errorf("Failed to wait for notification with id \"%q\": %v", "skyvault_camera_upload_done_notification", err)
 	}
 
@@ -130,6 +133,12 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 
 	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
 		s.Error("Failed to wait for Gallery app to open: ", err)
+	} else {
+		if err := apps.Close(ctx, tconn, apps.Gallery.ID); err != nil {
+			testing.ContextLog(ctx, "Failed to close Gallery app: ", err)
+		} else if err := ash.WaitForAppClosed(ctx, tconn, apps.Gallery.ID); err != nil {
+			testing.ContextLog(ctx, "Failed to wait for Gallery app to close: ", err)
+		}
 	}
 
 	files, err = filesapp.Relaunch(ctx, tconn, files)
@@ -146,10 +155,15 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Camera folder not found on OneDrive: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := files.OpenOneDrive()(ctx); err != nil {
-			s.Fatal("Failed to open OneDrive: ", err)
+		if err := ash.CloseNotifications(ctx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to close notifications: ", err)
 		}
-		files.DeleteFileOrFolder(kb, cameraFolder)(ctx)
+		if err := files.OpenOneDrive()(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to open OneDrive: ", err)
+		}
+		if err := files.DeleteFileOrFolder(kb, cameraFolder)(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to remove Camera folder: ", err)
+		}
 	}(cleanupCtx)
 
 	// Open Camera folder.

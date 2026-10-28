@@ -70,7 +70,7 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 	fdms := fixt.FakeDMS
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "migration_google_drive")
@@ -95,7 +95,7 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 		s.Error("Failed to clean up Drive: ", err)
 	}
 
-	// Set OneDrive and SkyVault policies.
+	// Set Google Drive and SkyVault policies.
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
 		&policy.LocalUserFilesAllowed{Val: false},
 		&policy.LocalUserFilesMigrationDestination{Val: "google_drive"},
@@ -103,9 +103,18 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to update policies: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
+			&policy.LocalUserFilesAllowed{Val: true},
+			&policy.LocalUserFilesMigrationDestination{Val: "not_specified"},
+			&policy.DriveDisabled{Val: false},
+		}); err != nil {
+			testing.ContextLog(ctx, "Failed to reset migration policies: ", err)
+		}
+	}(cleanupCtx)
 
 	ui := uiauto.New(tconn)
-	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Your file upload to Google Drive *"))
+	dialog := nodewith.Role(role.Dialog).NameRegex(regexp.MustCompile("Your file upload to Google Drive.*"))
 	uploadNowButton := nodewith.Ancestor(dialog).Role(role.Button).Name("Upload now")
 
 	if err := uiauto.Combine("Upload now",
@@ -116,6 +125,16 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to click Upload now: ", err)
 	}
+	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Removing files")
+		if err := files.OpenDrive()(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to open Drive: ", err)
+		}
+		exactFolderName, err := files.WithTimeout(5*time.Second).WaitForFileByPattern(ctx, cloudFolderName)
+		if err == nil {
+			cleanUploads(ctx, exactFolderName, testFile, dfs, driveAPIClient)
+		}
+	}(cleanupCtx)
 
 	// Verify that the migration completed.
 	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitleContains("Files were successfully uploaded to")); err != nil {
@@ -129,13 +148,6 @@ func MigrationGoogleDrive(ctx context.Context, s *testing.State) {
 		files.WithTimeout(10*time.Second).WaitForFile(testFile),
 	)(ctx); err != nil {
 		s.Error("Failed to find the uploaded files: ", err)
-	}
-
-	testing.ContextLog(ctx, "Removing files")
-	files.OpenDrive()(ctx)
-	exactFolderName, err := files.WaitForFileByPattern(ctx, cloudFolderName)
-	if err == nil {
-		cleanUploads(ctx, exactFolderName, testFile, dfs, driveAPIClient)
 	}
 }
 
@@ -181,14 +193,17 @@ func deleteAllUploadFoldersGoogleDrive(ctx context.Context, files *filesapp.File
 		return errors.Wrap(err, "failed to open Drive")
 	}
 
-	for {
+	const maxCleanupAttempts = 5
+	for i := 0; i < maxCleanupAttempts; i++ {
 		folderName, err := files.WithTimeout(5*time.Second).WaitForFileByPattern(ctx, cloudFolderName)
-		if err != nil { // No folders matching the pattern exist, exit the loop
-			break
+		if err != nil {
+			testing.ContextLog(ctx, "No matching upload folders found")
+			return nil
 		}
 
 		cleanUploads(ctx, folderName, testFile, dfs, driveAPIClient)
 	}
+	testing.ContextLogf(ctx, "Reached maximum of %d cleanup attempts while deleting upload folders", maxCleanupAttempts)
 	return nil
 }
 

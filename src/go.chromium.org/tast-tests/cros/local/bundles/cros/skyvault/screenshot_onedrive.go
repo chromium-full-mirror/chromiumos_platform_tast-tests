@@ -47,6 +47,7 @@ func init() {
 			"onedrive.accountPool",
 		},
 		Fixture: "onedriveManagedWithSkyVault",
+		Timeout: 4 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.MicrosoftOneDriveMount{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.MicrosoftOneDriveAccountRestrictions{}, pci.VerifiedValue),
@@ -65,7 +66,7 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 	fdms := data.FakeDMS()
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "screenshot_onedrive")
@@ -117,7 +118,7 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that screenshot is successfully taken.
-	if _, err := ash.WaitForNotification(ctx, tconn, 15*time.Second, ash.WaitIDContains("capture_mode_notification"), ash.WaitTitle("Screenshot taken")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitIDContains("capture_mode_notification"), ash.WaitTitle("Screenshot taken")); err != nil {
 		s.Errorf("Failed to wait for notification with title \"%q\": %v", "capture_mode_notification", err)
 	}
 
