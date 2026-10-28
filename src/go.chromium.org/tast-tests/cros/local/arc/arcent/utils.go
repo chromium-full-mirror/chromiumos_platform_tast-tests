@@ -114,7 +114,7 @@ func ValidateDisabledAppLaunch(ctx context.Context, tconn *chrome.TestConn, a *a
 func ValidateBlockedAppInstall(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, blockedPackage string, timeout time.Duration) error {
 	testing.ContextLog(ctx, "Validating install attempt for a blocked app")
 	return PollAppPageState(ctx, tconn, a, blockedPackage, func(ctx context.Context) error {
-		if err := playstore.FindAndDismissErrorDialog(ctx, d); err != nil {
+		if err := playstore.FindAndDismissPrompts(ctx, d); err != nil {
 			return errors.Wrap(err, "failed to dismiss server error dialog")
 		}
 

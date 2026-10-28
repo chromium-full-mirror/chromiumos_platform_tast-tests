@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -83,23 +84,33 @@ func FindActionButton(ctx context.Context, d *ui.Device, actionText string, time
 
 // findAnyExists finds and returns the first object that exists.
 func findAnyExists(ctx context.Context, timeout time.Duration, objects ...*ui.Object) (*ui.Object, error) {
+	_, targetObject, err := findAnyExistsWithIndex(ctx, timeout, objects...)
+	return targetObject, err
+}
+
+// findAnyExistsWithIndex finds and returns the first object that exists with its index.
+func findAnyExistsWithIndex(ctx context.Context, timeout time.Duration, objects ...*ui.Object) (int, *ui.Object, error) {
 	var targetObject *ui.Object
+	index := -1
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		for _, object := range objects {
+		for i, object := range objects {
 			if err := object.Exists(ctx); err == nil {
 				targetObject = object
+				index = i
 				return nil
 			}
 		}
 		return errors.New("failed to find any given objects")
 	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
 
-	return targetObject, err
+	return index, targetObject, err
 }
 
-// FindAndDismissErrorDialog finds and dismisses all possible intermittent errors in Play Store.
-func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
+// FindAndDismissPrompts finds and dismisses possible prompts in Play Store.
+func FindAndDismissPrompts(ctx context.Context, d *ui.Device) error {
 	const (
+		findPromptTimeout = 3 * time.Second
+
 		serverErrorText           = "Server busy.*|Server error|Error.*server.*|.*connection with the server.|Connection timed out."
 		cantDownloadText          = "Can.t download.*"
 		cantInstallText           = "Can.t install.*"
@@ -111,7 +122,7 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		itemNotFoundText          = ".*item.*could not be found.*"
 		discountOfPlayPassText    = "Get .* off Play Pass"
 		trialOfPlayPassText       = "Get a 1-month trial of Google Play Pass"
-		tryPlayPassText           = "Try Google Play Pass"
+		tryGooglePlayText         = "Try Google Play.*"
 		stayInLoopText            = "Want to stay in the loop.*"
 
 		acceptButtonText       = "accept"
@@ -120,12 +131,13 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		noThanksButtonText     = "No thanks"
 		tryAgainOrOkButtonText = "Try again|OK"
 		notNowButtonText       = "Not now"
+		playMoreText           = "Play more.*"
 	)
-
-	for _, val := range []struct {
+	type Prompt struct {
 		dialogText string
 		buttonText string
-	}{
+	}
+	prompts := []Prompt{
 		// Due to timing of propagation of policy, the UI may be enabled but the item is not available.
 		{itemNotFoundText, okButtonText},
 		// These are intermittent server side errors that can happen under load.
@@ -153,13 +165,29 @@ func FindAndDismissErrorDialog(ctx context.Context, d *ui.Device) error {
 		// Press "Not now" to dismiss if the dialog of "Get a 1-month trial of Google Play Pass" pops up.
 		{trialOfPlayPassText, notNowButtonText},
 		// Press "Not now" to dismiss if the dialog of "Try Google Play Pass" pops up.
-		{tryPlayPassText, notNowButtonText},
+		{tryGooglePlayText, notNowButtonText},
 		// Press "Not now" to dismiss if the dialog of "Want to stay in the loop?" pops up.
 		{stayInLoopText, notNowButtonText},
-	} {
-		if err := FindAndDismissDialog(ctx, d, val.dialogText, val.buttonText); err != nil {
-			return err
+		// Press "Not now" to dismiss if the dialog of "Play more and spend less with Play Pass" pops up.
+		{playMoreText, notNowButtonText},
+	}
+
+	dialogObjects := make([]*ui.Object, 0, len(prompts))
+	for _, prompt := range prompts {
+		dialogObjects = append(dialogObjects, d.Object(ui.TextMatches("(?i)"+prompt.dialogText)))
+	}
+	for len(prompts) > 0 {
+		index, _, err := findAnyExistsWithIndex(ctx, findPromptTimeout, dialogObjects...)
+		if err != nil {
+			break
 		}
+		prompt := prompts[index]
+		testing.ContextLogf(ctx, "Clearing prompt %q", prompt.dialogText)
+		if err := FindAndDismissDialog(ctx, d, prompt.dialogText, prompt.buttonText); err != nil {
+			return errors.Wrapf(err, "failed to dismiss prompt %q", prompt.dialogText)
+		}
+		prompts = slices.Delete(prompts, index, index+1)
+		dialogObjects = slices.Delete(dialogObjects, index, index+1)
 	}
 
 	return nil
@@ -296,7 +324,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 	}
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := FindAndDismissErrorDialog(ctx, d); err != nil {
+		if err := FindAndDismissPrompts(ctx, d); err != nil {
 			return testing.PollBreak(err)
 		}
 
