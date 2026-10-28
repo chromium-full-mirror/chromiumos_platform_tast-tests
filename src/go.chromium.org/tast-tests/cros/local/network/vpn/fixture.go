@@ -374,6 +374,8 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Failed to start log saver: ", err)
 	}
 
+	resetShillVPNState(ctx)
+
 	if f.certsManager != nil {
 		if err := f.certsManager.delete(ctx); err != nil {
 			s.Error("Failed to delete certificates: ", err)

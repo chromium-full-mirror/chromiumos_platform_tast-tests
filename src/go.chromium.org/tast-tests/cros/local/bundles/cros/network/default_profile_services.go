@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -36,6 +37,10 @@ func DefaultProfileServices(ctx context.Context, s *testing.State) {
 		// ssid is a fake service name chosen unlikely to match any SSID present over-the-air.
 		ssid = "org.chromium.DfltPrflSrvcsTest"
 	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	// We lose connectivity along the way here, and if that races with the
 	// recover_duts network-recovery hooks, it may interrupt us.
@@ -82,6 +87,26 @@ func DefaultProfileServices(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to configure service: ", err)
 	}
+	defer func(ctx context.Context) {
+		m, err := shill.NewManager(ctx)
+		if err != nil {
+			s.Error("Failed creating shill manager proxy for cleanup: ", err)
+			return
+		}
+		svc, err := m.FindMatchingService(ctx, map[string]interface{}{
+			shillconst.ServicePropertyType: "wifi",
+			shillconst.ServicePropertyName: ssid,
+		})
+		if err != nil {
+			if err.Error() != shillconst.ErrorMatchingServiceNotFound {
+				s.Error("Failed finding configured service for cleanup: ", err)
+			}
+			return
+		}
+		if err := svc.Remove(ctx); err != nil {
+			s.Error("Failed removing configured service: ", err)
+		}
+	}(cleanupCtx)
 
 	// Restart shill to ensure that configurations persist across reboot.
 	if err := upstart.StopJob(ctx, shill.JobName); err != nil {

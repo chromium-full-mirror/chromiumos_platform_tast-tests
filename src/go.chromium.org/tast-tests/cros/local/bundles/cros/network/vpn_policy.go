@@ -194,6 +194,7 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	serviceGUID := s.TestName() + "_guid"
+	serviceName := "Policy VPN" + s.TestName()
 	onc := &policy.ONC{
 		Certificates: []*policy.ONCCertificate{
 			{
@@ -206,7 +207,7 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 		NetworkConfigurations: []*policy.ONCNetworkConfiguration{
 			{
 				GUID: serviceGUID,
-				Name: "Policy VPN" + s.TestName(),
+				Name: serviceName,
 				Type: "VPN",
 				VPN:  vpnONC,
 			},
@@ -246,6 +247,14 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{netPolicy}); err != nil {
 		s.Fatal("Failed to update policy: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{}); err != nil {
+			s.Error("Failed to clear policy during cleanup: ", err)
+		}
+		if err := vpn.RemoveVPNProfile(ctx, serviceName); err != nil {
+			s.Error("Failed to remove VPN service during cleanup: ", err)
+		}
+	}(cleanupCtx)
 	// GoBigSleepLint: Time for Chrome to pick up client certificate based on
 	// ClientCertPattern and apply to shill service. There is no signal to poll
 	// for the readiness of this operation.

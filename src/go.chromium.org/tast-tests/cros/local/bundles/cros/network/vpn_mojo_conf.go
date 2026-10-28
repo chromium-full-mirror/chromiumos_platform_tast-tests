@@ -7,12 +7,14 @@ package network
 import (
 	"context"
 	"reflect"
+	"time"
 
 	types "go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -243,6 +245,10 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 		// really importing a cert.
 	} {
 		s.Run(ctx, tc.subtest, func(ctx context.Context, s *testing.State) {
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+			defer cancel()
+
 			guid, err := networkConfig.ConfigureNetwork(ctx, tc.mojoProperties, false)
 			if err != nil {
 				s.Fatal("Failed to call ConfigureNetwork(): ", err)
@@ -254,6 +260,11 @@ func VPNMojoConf(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatalf("Failed to verify %s VPN service: %v", tc.subtest, err)
 			}
+			defer func(ctx context.Context) {
+				if err := svc.Remove(ctx); err != nil {
+					s.Errorf("Failed to remove %s VPN service: %v", tc.subtest, err)
+				}
+			}(cleanupCtx)
 
 			// Verifies service properties.
 			props, err := svc.GetProperties(ctx)

@@ -620,6 +620,12 @@ func (m *Manager) AddPasspointCredentials(ctx context.Context, profile dbus.Obje
 	return m.Call(ctx, "AddPasspointCredentials", profile, props).Err
 }
 
+// RemovePasspointCredentials removes Passpoint credentials matching "props" from
+// "profile" using the method RemovePasspointCredentials() from Shill Manager.
+func (m *Manager) RemovePasspointCredentials(ctx context.Context, profile dbus.ObjectPath, props map[string]interface{}) error {
+	return m.Call(ctx, "RemovePasspointCredentials", profile, props).Err
+}
+
 // CreateFakeUserProfile creates a fake user profile in Shill on top of the
 // default profile for test purpose.
 func (m *Manager) CreateFakeUserProfile(ctx context.Context, name string) (path dbus.ObjectPath, err error) {

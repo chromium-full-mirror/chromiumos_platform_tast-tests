@@ -131,6 +131,28 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 	// Configure shill services with certificate and key ID.
 	// Limited properties are added as the services won't be connected.
 	// The test only needs the service to be stored and then loaded.
+	defer func(ctx context.Context) {
+		m, err := shill.NewManager(ctx)
+		if err != nil {
+			s.Error("Failed creating shill manager proxy for cleanup: ", err)
+			return
+		}
+		for _, tc := range tcs {
+			svc, err := m.FindMatchingService(ctx, map[string]interface{}{
+				shillconst.ServicePropertyType: shillconst.TypeWifi,
+				shillconst.ServicePropertyName: tc.ssid,
+			})
+			if err != nil {
+				if err.Error() != shillconst.ErrorMatchingServiceNotFound {
+					s.Errorf("Failed finding shill service %q for cleanup: %v", tc.ssid, err)
+				}
+				continue
+			}
+			if err := svc.Remove(ctx); err != nil {
+				s.Errorf("Failed removing shill service %q: %v", tc.ssid, err)
+			}
+		}
+	}(cleanupCtx)
 	for _, tc := range tcs {
 		id, err := getCurrentPKCSID(ctx, tc, c)
 		if err != nil {

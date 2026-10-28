@@ -103,6 +103,7 @@ func PasspointSubscriptionDetailUI(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to login: ", err)
 	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -126,6 +127,11 @@ func PasspointSubscriptionDetailUI(ctx context.Context, s *testing.State) {
 	if err := m.AddPasspointCredentials(ctx, profile.ObjectPath(), props); err != nil {
 		s.Fatal("Failed to add Passpoint credentials to Shill: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := m.RemovePasspointCredentials(ctx, profile.ObjectPath(), props); err != nil {
+			s.Error("Failed to remove Passpoint credentials from Shill: ", err)
+		}
+	}(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 	const pageShortURL = "knownNetworks"
