@@ -110,12 +110,21 @@ func TestAndreiboard(t *testing.T) {
 	checkMatch(errors.New("(wanted c): read nothing"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
 	checkMatch(nil, 0, "ab")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("ab")))
 
-	t.Log("Buffer full condition should result in error")
+	t.Log("Full buffer without a match should drop the older half and keep reading")
 	dut, port = createDut(ctrl, 5)
 	gomock.InOrder(
 		expectRead(port, 5, []byte("abcde")),
+		expectRead(port, 2, []byte("fg")),
 	)
-	checkMatch(errors.New("(wanted f): buffer full"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("f")))
+	checkMatch(nil, 0, "efg")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("efg")))
+
+	t.Log("Full buffer without a match should still report read errors")
+	dut, port = createDut(ctrl, 5)
+	gomock.InOrder(
+		expectRead(port, 5, []byte("abcde")),
+		expectRead(port, 2, []byte("")),
+	)
+	checkMatch(errors.New("(wanted f): read nothing"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("f")))
 
 	t.Log("Should be able to match after beginning of string")
 	dut, port = createDut(ctrl, 5)

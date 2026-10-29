@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // BufferedConsole represents a UART console that can be read or written to.
@@ -82,6 +83,12 @@ func (c *BufferedConsole) readSerial(ctx context.Context) error {
 
 // ReadSerialSubmatch reads from the port until one regex is matched.  In case multiple
 // regexs match, the first (leftmost) one will be returned.
+//
+// If the buffer fills up before any regex matches (e.g. the chip printed a lot of
+// unrelated output before the expected response), the older half of the buffer is
+// discarded and reading continues. The discarded data has already been checked
+// against every regex. A match longer than about half of the buffer could be
+// missed this way; increase bufMax if that ever becomes a problem.
 func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, regularExpressions ...*regexp.Regexp) (whichRegularExpression int, output [][]byte, err error) {
 	for {
 		for i := 0; i < len(regularExpressions); i++ {
@@ -93,6 +100,11 @@ func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, regularExpress
 				c.readBufLen = copy(c.readBuf, c.readBuf[indices[1]:c.readBufLen])
 				return i, re.FindSubmatch(buf), nil
 			}
+		}
+		if c.readBufLen == len(c.readBuf) {
+			discard := c.readBufLen / 2
+			testing.ContextLogf(ctx, "Console read buffer full, discarding the oldest %d bytes", discard)
+			c.readBufLen = copy(c.readBuf, c.readBuf[discard:c.readBufLen])
 		}
 		err := c.readSerial(ctx)
 		if err != nil {
