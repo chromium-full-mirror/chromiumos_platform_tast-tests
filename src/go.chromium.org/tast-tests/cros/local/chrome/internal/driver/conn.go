@@ -312,8 +312,7 @@ func (tconn *TestConn) WaitForExprFailOnErrWithTimeout(ctx context.Context, expr
 // performance drawback on low-end devices. This method deactivates the
 // automation API and resets internal states. See: https://crbug.com/1096719.
 func (tconn *TestConn) ResetAutomation(ctx context.Context) error {
-	testing.ContextLog(ctx, "Warning: ResetAutomation is currently disabled for Extension Manifest V3")
-	return nil
+	return tconn.Call(ctx, nil, "tast.automation.reset")
 }
 
 // PrivateReleaseAllObjects releases all remote JavaScript objects not released yet.

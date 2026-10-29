@@ -224,38 +224,95 @@ tast.promisify = function(f) {
 tast.bind = function(obj, name) {
   return obj[name].bind(obj);
 };
-tast.poll = async function(predicate, intervalMs) {
-  return new Promise(resolve => {
-    const intervalId = setInterval(() => {
-      if (predicate()) {
-        clearInterval(intervalId);
-        resolve();
-      }
-    }, intervalMs);
-  });
+tast.poll = async function(predicate, intervalMs, timeoutMs = 10000) {
+  const startTime = Date.now();
+  while (!(await predicate())) {
+    if (Date.now() - startTime >= timeoutMs)
+      throw new Error('tast.poll timed out');
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
 };
 tast.automation = (() => {
   let desktop;
   let timerId;
   let autoRelease = false;
 
+  let gettingDesktop;
   let pendingReleaseDesktop;
   let desktopRefCount = 0;
+  let listeners = [];
+  let protoHooked = false;
+
+  const origGetDesktop = globalThis.chrome?.automation?.getDesktop ?
+      tast.promisify(chrome.automation.getDesktop.bind(chrome.automation)) :
+      undefined;
+
+  function hookNodeProto(root) {
+    if (protoHooked || !root)
+      return;
+    let nodeProto = Object.getPrototypeOf(root);
+    while (nodeProto && !Object.hasOwn(nodeProto, 'addEventListener'))
+      nodeProto = Object.getPrototypeOf(nodeProto);
+    if (!nodeProto?.addEventListener || !nodeProto?.removeEventListener)
+      return;
+    const origAdd = nodeProto.addEventListener;
+    const origRemove = nodeProto.removeEventListener;
+    nodeProto.addEventListener = function(type, cb, ...args) {
+      origAdd.call(this, type, cb, ...args);
+      listeners = listeners.filter(
+          x => !(x.node === this && x.type === type && x.cb === cb));
+      listeners.push({node: this, type, cb});
+    };
+    nodeProto.removeEventListener = function(type, cb, ...args) {
+      listeners = listeners.filter(
+          x => !(x.node === this && x.type === type && x.cb === cb));
+      origRemove.call(this, type, cb, ...args);
+    };
+    protoHooked = true;
+  }
+
+  function releaseDesktopNow() {
+    if (timerId) {
+      clearTimeout(timerId);
+      timerId = undefined;
+    }
+    if (!desktop)
+      return;
+
+    // Remove all tracked listeners (including the desktop "focus" listener
+    // added in getDesktop) so the total listener count across all trees drops
+    // to 0 and triggers automation tree teardown.
+    const toRemove = listeners;
+    listeners = [];
+    for (const {node, type, cb} of toRemove) {
+      try {
+        node.removeEventListener(type, cb);
+      } catch {}
+    }
+
+    pendingReleaseDesktop = desktop;
+    desktop = undefined;
+    desktopRefCount = 0;
+  }
 
   function scheduleRelease() {
     if (timerId)
       return;
 
-    timerId = setTimeout(() => {
-      // Serves as a release to balance the addEventListener call in
-      // getDesktop. This should be the last listener on the tree so that it
-      // triggers automation tree tearing down.
-      desktop.removeEventListener("focus", doNothing);
+    timerId = setTimeout(releaseDesktopNow, 10000);
+  }
 
-      pendingReleaseDesktop = desktop;
-      desktop = undefined;
-      timerId = undefined;
-    }, 10000);
+  async function waitPendingRelease() {
+    if (pendingReleaseDesktop) {
+      try {
+        await tast.poll(() => {
+          return !pendingReleaseDesktop ||
+              pendingReleaseDesktop.role === undefined;
+        }, 10);
+      } finally {
+        pendingReleaseDesktop = undefined;
+      }
+    }
   }
 
   let doNothing = () => {};
@@ -266,33 +323,40 @@ tast.automation = (() => {
         timerId = undefined;
       }
 
-      // Wait for previous automation tree to finish tearing down before
-      // creating a new one.
-      if (pendingReleaseDesktop) {
-        await tast.poll(() => {
-          return !pendingReleaseDesktop ||
-              pendingReleaseDesktop.role === undefined;
-        }, 100);
-        pendingReleaseDesktop = undefined;
+      while (!desktop) {
+        if (!gettingDesktop) {
+          gettingDesktop = (async () => {
+            try {
+              // Wait for previous automation tree to finish tearing down before
+              // creating a new one.
+              await waitPendingRelease();
+
+              const d = await origGetDesktop();
+              hookNodeProto(d);
+
+              // Serves as an addRef to keep the automation tree. It is balanced
+              // in releaseDesktopNow.
+              d.addEventListener("focus", doNothing);
+              desktop = d;
+            } finally {
+              gettingDesktop = undefined;
+            }
+          })();
+        }
+        await gettingDesktop;
       }
 
-      if (desktop) {
-        ++desktopRefCount;
-        return desktop;
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = undefined;
       }
-
-      desktop = await tast.promisify(chrome.automation.getDesktop)();
-      desktopRefCount = 1;
-
-      // Serves as an addRef to keep the automation tree. It is balanced in
-      // the timer callback in scheduleRelease.
-      desktop.addEventListener("focus", doNothing);
+      ++desktopRefCount;
       return desktop;
      },
 
      "releaseDesktop": () => {
        if (desktopRefCount <= 0) {
-         throw new Error('unexpected releaseDesktop call');
+         return;
        }
        --desktopRefCount;
        if (desktopRefCount == 0) {
@@ -301,10 +365,36 @@ tast.automation = (() => {
        }
      },
 
+     "reset": async () => {
+       while (gettingDesktop) {
+         try {
+           await gettingDesktop;
+         } catch {}
+       }
+       releaseDesktopNow();
+       await waitPendingRelease();
+     },
+
      "setAutoRelease": (newAutoRelease) => {
        autoRelease = newAutoRelease;
      },
   };
+
+  if (origGetDesktop) {
+    chrome.automation.getDesktop = (cb) => {
+      return automation.getDesktop().then((d) => {
+        try {
+          cb?.(d);
+          return d;
+        } finally {
+          automation.releaseDesktop();
+        }
+      }, () => {
+        cb?.();
+      });
+    };
+  }
+
   return automation;
 })();
 `
