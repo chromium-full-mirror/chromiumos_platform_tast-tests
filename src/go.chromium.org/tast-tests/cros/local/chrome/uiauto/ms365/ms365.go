@@ -25,10 +25,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	defaultUITimeout    = 15 * time.Second
-	officePWAInstallURL = "https://www.microsoft365.com/?from=Homescreen"
-)
+const defaultUITimeout = 15 * time.Second
 
 // Ms365 represents an instance of the Microsoft 365 app UI.
 type Ms365 struct {
@@ -659,35 +656,34 @@ func (ms *Ms365) WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn *chrom
 	return ms.waitForMicrosoft365EditorWindowAndClose(tconn, fileName, true /*=ignoreCloseError*/)
 }
 
-// InstallPWA installs Office PWA.
+// InstallPWA installs the Microsoft 365 PWA using ChromeOS's built-in Office
+// web app installer, preserving apps.Microsoft365.ID even when
+// microsoft365.com redirects to m365.cloud.microsoft.
 func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	conn, err := cr.NewConn(ctx, officePWAInstallURL)
+	conn, err := cr.NewConn(ctx, "chrome://cloud-upload/")
 	if err != nil {
-		return errors.Wrap(err, "failed to open office website")
+		return errors.Wrap(err, "failed to open chrome://cloud-upload/")
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
-	window := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile(".*Microsoft 365.*"))
-	installIcon := nodewith.ClassName("PwaInstallView").Role(role.Button)
-	installButton := nodewith.Name("Install").Role(role.Button)
-
-	// Somewhat hacky, but we install the PWA before logging in, as it's the only
-	// way to stop the site from redirecting from microsoft365.com, where the
-	// web app manifest is linked in the page (via ODFS), vs newer domains where
-	// it's not and installation via omnibox isn't possible.
-	if err := uiauto.Combine("Install Office PWA through omnibox",
-		ms.ui.WaitUntilExists(window),
-		ms.ui.WithTimeout(30*time.Second).WaitUntilExists(installIcon),
-		ms.ui.LeftClick(installIcon),
-		// The popup containing Install button takes time to appear sometimes.
-		ms.ui.WithTimeout(time.Minute).WaitUntilExists(installButton),
-		ms.ui.LeftClick(installButton))(ctx); err != nil {
-		return errors.Wrap(err, "failed to install Office PWA")
+	installCtx, installCancel := context.WithTimeout(ctx, time.Minute)
+	defer installCancel()
+	var installed bool
+	const installExpr = `(async () => {
+		const {CloudUploadBrowserProxy} = await import('chrome://cloud-upload/cloud_upload_browser_proxy.js');
+		const res = await CloudUploadBrowserProxy.getInstance().handler.installOfficeWebApp();
+		return res.installed;
+	})()`
+	if err := conn.Eval(installCtx, installExpr, &installed); err != nil {
+		return errors.Wrap(err, "failed to install Office PWA via cloud-upload handler")
+	}
+	if !installed {
+		return errors.New("installOfficeWebApp returned installed=false")
 	}
 	return ash.WaitForChromeAppInstalled(ctx, ms.tconn, apps.Microsoft365.ID, time.Minute)
 }

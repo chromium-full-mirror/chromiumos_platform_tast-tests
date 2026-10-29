@@ -6,7 +6,9 @@ package filemanager
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -24,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -83,37 +86,253 @@ func init() {
 	})
 }
 
-// signinInsideM365 handles the situation where Microsoft asks to click on a
-// "Sign in" button again when opening the M365 PWA with a file.
-func signinInsideM365(ui *uiauto.Context) uiauto.Action {
-	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365")
-	m365ShareButton := nodewith.Role(role.PopUpButton).Name("Share").Focusable().Ancestor(m365Window)
-	m365SigninErrorMitigation := nodewith.Role(role.StaticText).NameContaining("Sign in").Ancestor(m365Window)
+var (
+	errAttachmentReopenNeeded = errors.New("M365 sign-in landed on OneDrive home; reopen attachment")
+	oneDriveHomeRegex         = regexp.MustCompile(`(?i)^(.*- )?OneDrive($| - .*)`)
+)
+
+// completeM365SignIn advances through Microsoft account chooser, credential,
+// and post-password prompts until the M365 editor finishes loading fileName.
+func completeM365SignIn(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms365.Ms365, fileName string) uiauto.Action {
+	fileStem := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	m365StemWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileStem).First()
+	signInButton := nodewith.Role(role.Button).Name("Sign in").Ancestor(m365StemWindow).First()
+
+	editorWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileName).First()
+	editorContainer := nodewith.Attribute("htmlId", "EditorContainer").Ancestor(editorWindow).First()
+	documentContents := nodewith.Role(role.GenericContainer).Name("Document Contents").Ancestor(editorWindow).First()
+	ribbon := nodewith.Role(role.Toolbar).Name("Ribbon").Ancestor(editorWindow).First()
+	headerToolbar := nodewith.Role(role.Toolbar).Name("Header").Ancestor(editorWindow).First()
+	wacPageImg := nodewith.Role(role.Image).HasClass("WACPageImg").Ancestor(editorWindow).First()
+	oneDriveRoot := nodewith.Role(role.RootWebArea).NameRegex(oneDriveHomeRegex).First()
+	oneDriveWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameRegex(oneDriveHomeRegex).First()
+	oneDriveCloseButton := nodewith.Role(role.Button).Name("Close").HasClass("FrameCaptionButton").Ancestor(oneDriveWindow)
+
+	msSignInWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i)(Sign in.*)|(Pick an account)")).First()
+	accountTile := nodewith.Ancestor(msSignInWindow).Role(role.Button).NameContaining(ms365App.UserName).First()
+	useAnotherAccountButton := nodewith.Ancestor(msSignInWindow).Role(role.Button).Name("Use another account").First()
+	usernameInput := nodewith.Ancestor(msSignInWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(email|someone@example.com).*"))
+	visibleUsernameInput := usernameInput.Visible()
+
+	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i)(Sign in.*)|(Enter your password)|(Get a code to sign in)|(Other ways to sign in)|(Choose a way to sign in)|(Verify your identity)")).First()
+	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(p|P)assword.*"))
+	visiblePasswordInput := passwordInput.Visible()
+	otherWaysButton := nodewith.Ancestor(msPasswordWindow).Role(role.Button).NameRegex(regexp.MustCompile("(?i)Other ways to sign in.*")).First()
+	useYourPasswordInsteadButton := nodewith.Ancestor(msPasswordWindow).NameRegex(regexp.MustCompile("(?i).*Use your password.*")).First()
+
+	chromeSavePasswordWindow := nodewith.Role(role.Window).Name("Save password?")
+	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never")
+
+	msUpdateTermsWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i).*updating our terms.*")).First()
+	msUpdateTermsNextButton := nodewith.Ancestor(msUpdateTermsWindow).Role(role.Button).Name("Next").First()
+
+	msConfirmSignInWindow := nodewith.Role(role.RootWebArea).Name("Is your security info still accurate?")
+	msConfirmSignInButton := nodewith.Ancestor(msConfirmSignInWindow).Name("Looks good!").First()
+
+	msStaySignedInWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(Microsoft account|Sign in to your( Microsoft)? account|" + regexp.QuoteMeta("Stay signed in?") + ")"))
+	msStaySignedInYesButton := nodewith.Ancestor(msStaySignedInWindow).Role(role.Button).Name("Yes").First()
+	msStaySignedInYesText := nodewith.Ancestor(msStaySignedInWindow).Role(role.StaticText).Name("Yes").First()
+
+	msAcceptPermissionWindow := nodewith.Role(role.RootWebArea).NameContaining("Let this app access your info?")
+	msAcceptPermissionButton := nodewith.Ancestor(msAcceptPermissionWindow).Role(role.Button).NameRegex(regexp.MustCompile("^(Accept|Yes)$")).First()
+
+	finders := []*nodewith.Finder{
+		signInButton,
+		accountTile,
+		useAnotherAccountButton,
+		visibleUsernameInput,
+		visiblePasswordInput,
+		otherWaysButton,
+		useYourPasswordInsteadButton,
+		chromeNeverSaveButton,
+		msUpdateTermsNextButton,
+		msConfirmSignInButton,
+		msStaySignedInYesButton,
+		msStaySignedInYesText,
+		msAcceptPermissionButton,
+		editorContainer,
+		documentContents,
+		ribbon,
+		headerToolbar,
+		wacPageImg,
+		oneDriveRoot,
+	}
 
 	return func(ctx context.Context) error {
-		if err := ui.WaitUntilExists(m365Window)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find the M365 window")
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get keyboard")
 		}
+		defer kb.Close(ctx)
 
-		if err := uiauto.Combine("Try to click the sign in button on the Microsoft error screen",
-			ui.WaitUntilExists(m365SigninErrorMitigation),
-			ui.DoDefault(m365SigninErrorMitigation),
-			ui.WaitUntilExists(m365ShareButton),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to sign in")
+		ui60 := ui.WithTimeout(60 * time.Second)
+		for step := 0; step < 10; step++ {
+			found, err := ui60.FindAnyExists(ctx, finders...)
+			if err != nil {
+				return errors.Wrap(err, "failed waiting for Microsoft sign-in or M365 editor")
+			}
+
+			switch found {
+			case editorContainer, documentContents, ribbon, headerToolbar, wacPageImg:
+				if ui.Exists(signInButton)(ctx) != nil {
+					return nil
+				}
+				found = signInButton
+			case oneDriveRoot:
+				testing.ContextLog(ctx, "M365 sign-in landed on OneDrive home; closing window to reopen attachment")
+				if err := uiauto.New(tconn).WithTimeout(15*time.Second).LeftClickUntil(oneDriveCloseButton, ui.Gone(oneDriveWindow))(ctx); err != nil {
+					return errors.Wrap(err, "failed to close OneDrive home window after sign-in")
+				}
+				if err := ui.WaitUntilGone(oneDriveRoot)(ctx); err != nil {
+					return errors.Wrap(err, "failed waiting for OneDrive home root web area to close")
+				}
+				return errAttachmentReopenNeeded
+			}
+
+			if found == accountTile || (found == useAnotherAccountButton && ui.Exists(accountTile)(ctx) == nil) {
+				testing.ContextLogf(ctx, "Selecting existing Microsoft account tile for %s in M365 PWA", ms365App.UserName)
+				if err := ui.LeftClickUntil(accountTile, ui.Gone(accountTile))(ctx); err != nil {
+					return errors.Wrap(err, "failed to select Microsoft account tile")
+				}
+				continue
+			}
+
+			switch found {
+			case signInButton:
+				if err := ui.LeftClickUntil(signInButton, ui.Gone(signInButton))(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Sign in button in M365 window")
+				}
+			case useAnotherAccountButton:
+				if err := ui.LeftClickUntil(useAnotherAccountButton, ui.Exists(visibleUsernameInput))(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Use another account")
+				}
+			case visibleUsernameInput:
+				if err := uiauto.Combine("Enter MS username in M365 PWA",
+					ms365App.ChooseSearchEngine(),
+					ui.WaitUntilExists(visibleUsernameInput),
+					ui.LeftClickUntilFocused(usernameInput),
+					kb.TypeAction(ms365App.UserName),
+					kb.AccelAction("Enter"),
+					ui.WaitUntilGone(visibleUsernameInput),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to enter Microsoft username")
+				}
+			case otherWaysButton:
+				if err := ui.LeftClickUntil(otherWaysButton, ui.Exists(useYourPasswordInsteadButton))(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Other ways to sign in")
+				}
+			case useYourPasswordInsteadButton:
+				if err := ui.LeftClickUntil(useYourPasswordInsteadButton, ui.Exists(visiblePasswordInput))(ctx); err != nil {
+					return errors.Wrap(err, "failed to click Use your password")
+				}
+			case visiblePasswordInput:
+				if err := uiauto.Combine("Enter MS password in M365 PWA",
+					ui.WaitUntilExists(visiblePasswordInput),
+					ui.LeftClickUntilFocused(passwordInput),
+					kb.TypeAction(ms365App.Password),
+					kb.AccelAction("Enter"),
+					ui.WaitUntilGone(visiblePasswordInput),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to enter Microsoft password")
+				}
+			case chromeNeverSaveButton:
+				if err := ui.LeftClickUntil(chromeNeverSaveButton, ui.Gone(chromeNeverSaveButton))(ctx); err != nil {
+					return errors.Wrap(err, "failed to dismiss Save password prompt")
+				}
+			case msUpdateTermsNextButton:
+				if err := uiauto.Combine("Accept MS updated terms",
+					ui.ScrollToVisible(msUpdateTermsNextButton),
+					ui.LeftClickUntil(msUpdateTermsNextButton, ui.Gone(msUpdateTermsNextButton)),
+					ui.WaitUntilGone(msUpdateTermsWindow),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to accept updated Microsoft terms")
+				}
+			case msConfirmSignInButton:
+				if err := uiauto.Combine("Confirm MS security info",
+					ui.ScrollToVisible(msConfirmSignInButton),
+					ui.LeftClickUntil(msConfirmSignInButton, ui.Gone(msConfirmSignInButton)),
+					ui.WaitUntilGone(msConfirmSignInWindow),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to confirm Microsoft security info")
+				}
+			case msStaySignedInYesButton, msStaySignedInYesText:
+				if err := uiauto.Combine("MS Stay Signed In",
+					ui.ScrollToVisible(found),
+					ui.LeftClickUntil(found, ui.Gone(found)),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to confirm Stay signed in prompt")
+				}
+			case msAcceptPermissionButton:
+				if err := uiauto.Combine("MS permission screen",
+					ui.ScrollToVisible(msAcceptPermissionButton),
+					kb.TypeKeyAction(input.KEY_END),
+					ui.LeftClickUntil(msAcceptPermissionButton, ui.Gone(msAcceptPermissionButton)),
+				)(ctx); err != nil {
+					return errors.Wrap(err, "failed to accept Microsoft permission prompt")
+				}
+			}
 		}
-
-		return nil
+		return errors.New("exceeded maximum sign-in steps in M365 window")
 	}
 }
 
-// closeAllOtherTabs closes all other tabs besides the Outlook tab.
-func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
-	outlookTab, err := browser.GetTabByTitle(ctx, tconn, "*Outlook*")
-	if err != nil {
-		return errors.Wrap(err, "failed to get Outlook tab")
+// signinInsideM365 handles the situation where SharePoint or Office Online asks
+// to sign in (for example via SharePoint's AccessDenied.aspx "Sign in" link or
+// an Office Online "Sign in" button) before showing the file in the M365 PWA.
+func signinInsideM365(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms365.Ms365, fileName string) uiauto.Action {
+	fileStem := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	m365StemWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileStem).First()
+	m365PWAToolbar := nodewith.Role(role.Pane).HasClass("WebAppFrameToolbarView").Ancestor(m365StemWindow)
+	signInButton := nodewith.Role(role.Button).Name("Sign in").Ancestor(m365StemWindow).First()
+	signInLink := nodewith.Role(role.Link).Name("Sign in").Ancestor(m365StemWindow).First()
+
+	editorWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileName).First()
+	editorContainer := nodewith.Attribute("htmlId", "EditorContainer").Ancestor(editorWindow).First()
+	documentContents := nodewith.Role(role.GenericContainer).Name("Document Contents").Ancestor(editorWindow).First()
+	ribbon := nodewith.Role(role.Toolbar).Name("Ribbon").Ancestor(editorWindow).First()
+	headerToolbar := nodewith.Role(role.Toolbar).Name("Header").Ancestor(editorWindow).First()
+	wacPageImg := nodewith.Role(role.Image).HasClass("WACPageImg").Ancestor(editorWindow).First()
+
+	msSignInWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i)(Sign in.*)|(Pick an account)")).First()
+	oneDriveRoot := nodewith.Role(role.RootWebArea).NameRegex(oneDriveHomeRegex).First()
+
+	finders := []*nodewith.Finder{
+		signInButton,
+		signInLink,
+		msSignInWindow,
+		oneDriveRoot,
+		editorContainer,
+		documentContents,
+		ribbon,
+		headerToolbar,
+		wacPageImg,
 	}
 
+	return func(ctx context.Context) error {
+		found, err := ui.WithTimeout(60*time.Second).FindAnyExists(ctx, finders...)
+		if err != nil {
+			return errors.Wrap(err, "failed to find Sign in prompt or editor in M365 window")
+		}
+
+		switch found {
+		case editorContainer, documentContents, ribbon, headerToolbar, wacPageImg:
+			return nil
+		case signInButton, signInLink:
+			if err := ui.WaitUntilExists(m365PWAToolbar)(ctx); err != nil {
+				return errors.Wrap(err, "failed to find M365 PWA toolbar before signing in")
+			}
+			if err := ui.LeftClickUntil(found, ui.Gone(found))(ctx); err != nil {
+				return errors.Wrap(err, "failed to click Sign in in M365 window")
+			}
+		}
+
+		return completeM365SignIn(ui, tconn, ms365App, fileName)(ctx)
+	}
+}
+
+// closeAllOtherTabs closes all other tabs besides the Outlook mail tab and
+// ChromeOS system web apps, including Outlook Safe Links interstitial tabs.
+func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
 	allTabs, err := browser.AllTabs(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get all tabs")
@@ -121,9 +340,20 @@ func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
 
 	var tabsToClose []int
 	for _, tab := range allTabs {
-		if tab.ID != outlookTab.ID {
-			tabsToClose = append(tabsToClose, tab.ID)
+		lowerURL := strings.ToLower(tab.URL)
+		if strings.HasPrefix(lowerURL, "chrome://") {
+			continue
 		}
+		if !strings.Contains(lowerURL, "safelink") &&
+			(strings.Contains(lowerURL, "outlook.office.com") ||
+				strings.Contains(lowerURL, "outlook.cloud.microsoft") ||
+				strings.Contains(lowerURL, "outlook.live.com")) {
+			continue
+		}
+		tabsToClose = append(tabsToClose, tab.ID)
+	}
+	if len(tabsToClose) == 0 {
+		return nil
 	}
 	return browser.CloseTabsByID(ctx, tconn, tabsToClose)
 }
@@ -154,8 +384,8 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 			Url:                    "https://www.microsoft365.com/?from=Homescreen",
 			DefaultLaunchContainer: "window",
 			CreateDesktopShortcut:  true,
-			CustomName:             "",
-			FallbackAppName:        "",
+			CustomName:             "Microsoft 365",
+			FallbackAppName:        "Microsoft 365",
 			CustomIcon: &policy.WebAppInstallForceListValueCustomIcon{
 				Hash: "",
 				Url:  "",
@@ -168,7 +398,7 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 			DefaultLaunchContainer: "window",
 			CreateDesktopShortcut:  true,
 			CustomName:             "",
-			FallbackAppName:        "",
+			FallbackAppName:        "Outlook",
 			CustomIcon: &policy.WebAppInstallForceListValueCustomIcon{
 				Hash: "",
 				Url:  "",
@@ -230,7 +460,6 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_open_from_outlook")
 
 	// Open the most recent Mail from the Inbox which should contain 3 links to Office files.
-	m365Window := nodewith.Role(role.Window).NameContaining("Microsoft 365")
 	outlookContext := nodewith.Role(role.RootWebArea).NameContaining("Outlook").First()
 	messageList := nodewith.Role(role.ListBox).NameContaining("Message").Ancestor(outlookContext)
 	linkEmail := nodewith.Role(role.ListBoxOption).NameContaining("Tast Test Outlook Links").Ancestor(messageList)
@@ -248,27 +477,50 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 
 	// Open the links in the Mail and wait for M365 to show the file.
 	fileNames := []string{"Tast_Outlook_Excel.xlsx", "Tast_Outlook_Powerpoint.pptx", "Tast_Outlook_Word.docx"}
+	safelinkError := nodewith.Role(role.StaticText).NameContaining("We can't check the safety of this website").First()
 	for _, fileName := range fileNames {
+		fileStem := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 		emailLink := nodewith.Role(role.Link).Name(fileName).Ancestor(outlookContext)
+		m365FileWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileStem).First()
+		m365FilePWAToolbar := nodewith.Role(role.Pane).HasClass("WebAppFrameToolbarView").Ancestor(m365FileWindow)
 
 		interval := 1 * time.Second
 		if err := action.Retry(3, func(ctx context.Context) error {
 			// Opening the link with a left click to make sure that we test exactly the same behavior, a user would experience.
-			if err = uiauto.Combine("Open the link in the mail",
+			if err := uiauto.Combine("Open the link in the mail",
 				ui.WaitUntilExists(emailLink),
 				ui.LeftClick(emailLink),
-				ui.WithTimeout(20*time.Second).WaitUntilExists(m365Window),
 			)(ctx); err != nil {
+				if closeErr := closeAllOtherTabs(ctx, tconn); closeErr != nil {
+					s.Log("Failed to close all other tabs: ", closeErr)
+				}
+				return errors.Wrap(err, "failed to click the link in the mail")
+			}
+
+			found, err := ui.WithTimeout(30*time.Second).FindAnyExists(ctx, m365FilePWAToolbar, safelinkError)
+			if err != nil || found == safelinkError {
+				if err == nil {
+					err = errors.New("Outlook Safe Links returned an error interstitial")
+				}
 				// Close all other tabs besides Outlook.
-				if err := closeAllOtherTabs(ctx, tconn); err != nil {
-					s.Log("Failed to close all other tabs: ", err)
+				if closeErr := closeAllOtherTabs(ctx, tconn); closeErr != nil {
+					s.Log("Failed to close all other tabs: ", closeErr)
 				}
 
 				return errors.Wrap(err, "failed to open the link in the mail")
 			}
 
-			if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
+			if err := uiauto.Combine("Sign in if needed and close M365 window",
+				signinInsideM365(ui, tconn, ms365App, fileName),
+				ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName),
+			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to close M365 window")
+			}
+
+			if !param.outlookAsPWA {
+				if closeErr := closeAllOtherTabs(ctx, tconn); closeErr != nil {
+					s.Log("Failed to close all other tabs: ", closeErr)
+				}
 			}
 
 			return nil
@@ -292,10 +544,12 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 
 	// Expand the attachments if they exist and are not expanded.
 	attachmentExpandButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, false)
-	attachmentExpandButtonExpanded := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, false)
+	attachmentExpandButtonExpanded := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, true)
 
 	if err := ui.Exists(attachmentExpandButton)(ctx); err == nil {
-		ui.DoDefaultUntil(attachmentExpandButton, ui.Exists(attachmentExpandButtonExpanded))(ctx)
+		if err := ui.DoDefaultUntil(attachmentExpandButton, ui.Exists(attachmentExpandButtonExpanded))(ctx); err != nil {
+			s.Log("Failed to expand attachments: ", err)
+		}
 	}
 
 	// Open the attachments in the Mail and wait for M365 to show the file.
@@ -313,21 +567,32 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to open the attachment in the mail: ", err)
 		}
 
-		if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
-			if err = uiauto.Combine("Retry close after clicking signin",
-				signinInsideM365(ui),
-				ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName),
+		signInErr := signinInsideM365(ui, tconn, ms365App, fileName)(ctx)
+		if errors.Is(signInErr, errAttachmentReopenNeeded) {
+			if err := uiauto.Combine("Re-open the attachment after M365 sign-in",
+				ui.WaitUntilExists(openInApplicationButton),
+				ui.DoDefault(openInApplicationButton),
 			)(ctx); err != nil {
-				s.Fatal("Failed to close M365 window: ", err)
+				s.Fatal("Failed to re-open the attachment in the mail: ", err)
 			}
+			signInErr = signinInsideM365(ui, tconn, ms365App, fileName)(ctx)
+		}
+		if signInErr != nil {
+			s.Fatal("Failed to sign in to M365 window: ", signInErr)
+		}
+		if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
+			s.Fatal("Failed to close M365 window: ", err)
 		}
 
 		// Close the office dialog again.
-		closeOfficeFileDialog := nodewith.Role(role.MenuItem).Name("Close").Focusable().Ancestor(outlookContext)
-		if err := uiauto.Combine("Close the office file dialog in Outlook",
-			ui.WaitUntilExists(closeOfficeFileDialog),
-			ui.DoDefault(closeOfficeFileDialog),
-		)(ctx); err != nil {
+		officeFileDialog := nodewith.Role(role.Dialog).Ancestor(outlookContext).First()
+		closeDialogButton := nodewith.Role(role.Button).Name("Close").Focusable().Ancestor(officeFileDialog).First()
+		closeDialogMenuItem := nodewith.Role(role.MenuItem).Name("Close").Focusable().Ancestor(outlookContext).First()
+		if foundClose, err := ui.WithTimeout(10*time.Second).FindAnyExists(ctx, closeDialogButton, closeDialogMenuItem); err == nil {
+			if err := ui.DoDefaultUntil(foundClose, ui.Gone(foundClose))(ctx); err != nil {
+				s.Log("Failed to close the office file dialog in Outlook: ", err)
+			}
+		} else {
 			// Don't crash since the dialog maybe doesn't exist anymore and we can try to proceed with the test.
 			s.Log("Failed to close the office file dialog in Outlook: ", err)
 		}
