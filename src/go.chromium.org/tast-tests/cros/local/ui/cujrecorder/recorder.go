@@ -821,6 +821,10 @@ func (r *Recorder) StartTracingWithExtraCategories(ctx context.Context, outDir, 
 	extraCategories := extraChromeCategoriesForTracing.Value() + strings.Join(categories, ",")
 	testing.ContextLog(ctx, "Adding the following extra categories to the perfetto trace config: ", extraCategories)
 	if extraCategories != "" {
+		if r.perfettoTmpConfigCleanup != nil {
+			r.perfettoTmpConfigCleanup(ctx)
+			r.perfettoTmpConfigCleanup = nil
+		}
 		cleanup, configPath, err := addExtraChromeTraceCategories(ctx, perfettoCfgPath, extraCategories)
 		if err != nil {
 			return err
@@ -834,9 +838,15 @@ func (r *Recorder) StartTracingWithExtraCategories(ctx context.Context, outDir, 
 		perfettoCfgPath)
 	sess, err := tracing.StartSession(ctx, perfettoCfgPath, tracing.WithTraceDataPath(tracePath), tracing.WithCompression())
 	if err != nil {
+		if r.perfettoTmpConfigCleanup != nil {
+			r.perfettoTmpConfigCleanup(ctx)
+			r.perfettoTmpConfigCleanup = nil
+		}
 		return errors.Wrap(err, "failed to start tracing")
 	}
-	r.Annotate(ctx, "Start_tracing")
+	if !r.startedAtTm.IsZero() {
+		r.Annotate(ctx, "Start_tracing")
+	}
 	r.sessions[tracePath] = sess
 	r.activeSession = sess
 	return nil
@@ -848,10 +858,17 @@ func (r *Recorder) StopTracing(ctx context.Context) error {
 		return errors.New("can't stop tracing because there is no active session")
 	}
 	testing.ContextLog(ctx, "Stopping active system tracing session")
-	if err := r.activeSession.Stop(ctx); err != nil {
+	err := r.activeSession.Stop(ctx)
+	if r.perfettoTmpConfigCleanup != nil {
+		r.perfettoTmpConfigCleanup(ctx)
+		r.perfettoTmpConfigCleanup = nil
+	}
+	if err != nil {
 		return errors.Wrap(err, "failed to stop tracing")
 	}
-	r.Annotate(ctx, "Stop_tracing")
+	if !r.startedAtTm.IsZero() {
+		r.Annotate(ctx, "Stop_tracing")
+	}
 	r.activeSession = nil
 	return nil
 }
@@ -875,6 +892,10 @@ func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 // Close clears states for all trackers.
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
+	if r.perfettoTmpConfigCleanup != nil {
+		r.perfettoTmpConfigCleanup(ctx)
+		r.perfettoTmpConfigCleanup = nil
+	}
 	if r.options.DisplayPowerStatus != power.DisplayPowerAllOn {
 		testing.ContextLog(ctx, "Turning on display")
 		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
@@ -1322,6 +1343,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 	}
 	if r.perfettoTmpConfigCleanup != nil {
 		r.perfettoTmpConfigCleanup(ctx)
+		r.perfettoTmpConfigCleanup = nil
 	}
 
 	if r.screenshotRecorder != nil {

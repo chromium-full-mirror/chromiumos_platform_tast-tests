@@ -1056,10 +1056,11 @@ func initializeLoginPerfTest(ctx context.Context,
 }
 
 type loginPerfTracingConfig struct {
-	configFilePath  string
-	extraCategories []string
-	resultOutDir    string
-	resultFileName  string
+	configFilePath       string
+	extraCategories      []string
+	resultOutDir         string
+	resultFileName       string
+	logoutResultFileName string
 }
 
 // measureLoginPerformance is the actual test flow that could executed multiple times to get average data or generate tracing. Tracing is disabled if `tracingConfig` is nil.
@@ -1073,20 +1074,21 @@ func measureLoginPerformance(
 	*chrome.Chrome,
 	[]*histogram.Histogram,
 	map[perf.Metric][]float64,
+	func(context.Context),
 	error,
 ) {
 	var expectedHistograms []string
 	{
 		displCount, err := modetest.NumberOfOutputsConnected(ctx)
 		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, "failed to get connected display count")
+			return nil, nil, nil, nil, errors.Wrap(err, "failed to get connected display count")
 		}
 		expectedHistograms = constructExpectedHistograms(param, displCount > 0)
 	}
 
 	cr, err := loginPerfStartToLoginScreen(ctx, signinExtManifestKey, param)
 	if err != nil {
-		return cr, nil, nil, errors.Wrap(err, "failed to start to login screen")
+		return cr, nil, nil, nil, errors.Wrap(err, "failed to start to login screen")
 	}
 
 	// The actual test function
@@ -1156,7 +1158,7 @@ func measureLoginPerformance(
 	// Full test run, instantiate recorders.
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		return cr, nil, nil, errors.Wrap(err, "creating login test api connection failed")
+		return cr, nil, nil, nil, errors.Wrap(err, "creating login test api connection failed")
 	}
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
@@ -1172,7 +1174,7 @@ func measureLoginPerformance(
 		cujrecorder.RecorderOptions{RecordLoginEvents: true},
 	)
 	if err != nil {
-		return cr, nil, nil, errors.Wrap(err, "failed to create a CUJ recorder")
+		return cr, nil, nil, nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer cujRecorder.Close(closeCtx)
 
@@ -1182,7 +1184,7 @@ func measureLoginPerformance(
 		cujrecorder.AnyChromeCommonMetricConfigs(),
 	} {
 		if err := cujRecorder.AddCollectedMetrics(metricConfig...); err != nil {
-			return cr, nil, nil, errors.Wrap(err, "failed to add recorded metrics")
+			return cr, nil, nil, nil, errors.Wrap(err, "failed to add recorded metrics")
 		}
 	}
 
@@ -1237,17 +1239,51 @@ func measureLoginPerformance(
 		return nil
 	}
 	if err := cujRecorder.Run(ctx, cujFunc); err != nil {
-		return cr, nil, nil, errors.Wrap(err, "failed to run the test scenario")
+		return cr, nil, nil, nil, errors.Wrap(err, "failed to run the test scenario")
 	}
 	tpsValues := perf.NewValues()
 	if err := cujRecorder.Record(ctx, tpsValues); err != nil {
-		return cr, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
+		return cr, nil, nil, nil, errors.Wrap(err, "failed to collect the data from the recorder")
 	}
-	if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to save trace files: ", err)
+	var stopLogoutTracing func(context.Context)
+	if tracingConfig != nil && tracingConfig.logoutResultFileName != "" {
+		// Use closeCtx so defer cancel() on return does not SIGKILL the
+		// perfetto process before logoutAndStore runs in LoginPerf.
+		if err := cujRecorder.StartTracingWithExtraCategories(closeCtx,
+			tracingConfig.resultOutDir,
+			tracingConfig.logoutResultFileName,
+			tracingConfig.configFilePath,
+			tracingConfig.extraCategories...); err != nil {
+			testing.ContextLog(ctx, "Failed to start logout tracing: ", err)
+			if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to save trace files: ", err)
+			}
+		} else {
+			stopLogoutTracing = func(ctx context.Context) {
+				if err := cujRecorder.StopTracing(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to stop logout tracing: ", err)
+				}
+				if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to save trace files: ", err)
+				}
+			}
+			// cujRecorder.StartTracingWithExtraCategories spawns the perfetto
+			// CLI in the background without waiting for traced to arm
+			// Chrome's track_event producer over IPC, and exposes no
+			// readiness signal; wait 1 s so track_event is armed before
+			// session_manager sends SIGTERM on logout.
+			// GoBigSleepLint: Wait for background perfetto CLI to arm Chrome's track_event producer.
+			if err := testing.Sleep(ctx, time.Second); err != nil {
+				testing.ContextLog(ctx, "Failed to sleep after starting logout tracing: ", err)
+			}
+		}
+	} else {
+		if err := cujRecorder.SaveTraceFiles(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to save trace files: ", err)
+		}
 	}
 
-	return cr, histograms, tpsValues.GetValues(), err
+	return cr, histograms, tpsValues.GetValues(), stopLogoutTracing, err
 }
 
 func constructExpectedHistograms(param loginPerfTestParam, hasDisplay bool) []string {
@@ -1434,7 +1470,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				var tpsValues map[perf.Metric][]float64
 				var err error
 				// Fill in external 'cr'.
-				cr, histograms, tpsValues, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, nil /*tracingConfig*/)
+				cr, histograms, tpsValues, _, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, nil /*tracingConfig*/)
 				r.Values().MergeWithSuffix("", tpsValues)
 				return histograms, err
 			}),
@@ -1480,17 +1516,23 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		tracingExtraCategories = strings.Split(cmdlineVarTracingExtraCategories.Value(), ",")
 	}
 	tracingConfig := &loginPerfTracingConfig{
-		configFilePath:  s.DataPath(loginPerfTraceConfigFileName),
-		extraCategories: tracingExtraCategories,
-		resultOutDir:    s.OutDir(),
-		resultFileName:  fmt.Sprintf("%s-trace.data", testName),
+		configFilePath:       s.DataPath(loginPerfTraceConfigFileName),
+		extraCategories:      tracingExtraCategories,
+		resultOutDir:         s.OutDir(),
+		resultFileName:       fmt.Sprintf("%s-trace.data", testName),
+		logoutResultFileName: fmt.Sprintf("%s-logout-trace.data", testName),
 	}
 
 	var tracingHistograms []*metrics.Histogram
 	var tpsValues map[perf.Metric][]float64
+	var stopLogoutTracing func(context.Context)
 
-	cr, tracingHistograms, tpsValues, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, tracingConfig)
+	cr, tracingHistograms, tpsValues, stopLogoutTracing, err = measureLoginPerformance(ctx, signinExtManifestKey, creds, param, tracingConfig)
 	defer func() {
+		if stopLogoutTracing != nil {
+			stopLogoutTracing(closeCtx)
+			stopLogoutTracing = nil
+		}
 		// cr is not valid after logout.
 		if cr == nil {
 			s.Log("tracing cleanup: Chrome is nil, will not close")
@@ -1509,6 +1551,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
 	}
 	cr = nil
+	if stopLogoutTracing != nil {
+		stopLogoutTracing(ctx)
+		stopLogoutTracing = nil
+	}
 	tracingValues.ForEach(func(name string, value []float64) {
 		if len(value) != 1 {
 			s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
