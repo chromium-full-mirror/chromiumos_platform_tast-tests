@@ -54,6 +54,11 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureAssertsPanic()),
 			},
 			{
+				Name:              "assert_nested",
+				Val:               "crash assert assert",
+				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureAssertsPanic()),
+			},
+			{
 				Name: "divzero",
 				Val:  "crash divzero",
 			},
