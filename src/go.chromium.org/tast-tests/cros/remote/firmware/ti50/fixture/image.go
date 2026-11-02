@@ -378,7 +378,11 @@ func tastImageAndJSONExists(ctx context.Context, tastParentURL, imageDir string)
 			psRe := regexp.MustCompile(`.*/firmware-ti50-postsubmit/([^/]+)-[0-9]+/`)
 			psm := psRe.FindStringSubmatch(artifactsDir)
 			if psm != nil {
-				imageGlob2 = gsPrefix + filepath.Join(releaseBucket, "ti50/nt-signed", psm[1], "ti50_Ti50NuvoTitanSemiProdKeys_"+imageDir+".bin")
+				if strings.Contains(imageDir, "ti50a") {
+					imageGlob2 = gsPrefix + filepath.Join(releaseBucket, "ti50/nt-signed", psm[1], "ti50a_Ti50NuvoTitanSemiProdKeys_"+imageDir+".bin")
+				} else {
+					imageGlob2 = gsPrefix + filepath.Join(releaseBucket, "ti50/nt-signed", psm[1], "ti50_Ti50NuvoTitanSemiProdKeys_"+imageDir+".bin")
+				}
 			}
 		}
 		if imageGlob2 == "" {
