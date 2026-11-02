@@ -28,7 +28,7 @@ func init() {
 			"chromeos-bt-team@google.com",
 		},
 		BugComponent:    "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
-		Attr:            []string{"group:bluetooth", "bluetooth_floss_flaky"},
+		Attr:            []string{"group:bluetooth", "bluetooth_floss_flaky", "group:connectivity_smoke"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(4)},
 		SoftwareDeps:    []string{"chrome"},
 		ServiceDeps:     []string{"tast.cros.bluetooth.BluetoothService"},
