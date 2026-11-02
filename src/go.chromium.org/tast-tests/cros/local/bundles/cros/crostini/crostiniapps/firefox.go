@@ -8,6 +8,7 @@ package crostiniapps
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -22,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/vm"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Firefox test page content. Contains a single input box which is focused upon launch for user input. The test page contains two input boxes to test tab behaviour.
@@ -47,13 +49,25 @@ func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda 
 	}
 
 	maximizeWindow := func(ctx context.Context) error {
-		// Maximise the firefox window so that elements can be found easily.
-		activeWindow, err := ash.GetActiveWindow(ctx, tconn)
+		// Explicitly find Firefox's Crostini window rather than calling
+		// ash.GetActiveWindow, which races with Wayland ExoShellSurface
+		// activation and can maximize the Terminal window instead.
+		ffWin, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
+			return w.WindowType == ash.WindowTypeCrostini && strings.Contains(w.Title, "Mozilla Firefox") && w.IsVisible && w.CanFocus
+		})
 		if err != nil {
-			return errors.Wrap(err, "failed to get active window")
+			return errors.Wrap(err, "failed to find visible Firefox window")
 		}
-		if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
-			return errors.Wrap(err, "failed to maximize Chrome window")
+		if err := ffWin.ActivateWindow(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to activate Firefox window")
+		}
+		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+			return w.ID == ffWin.ID && w.IsActive
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed waiting for Firefox window to be active")
+		}
+		if err := ash.SetWindowStateAndWait(ctx, tconn, ffWin.ID, ash.WindowStateMaximized); err != nil {
+			return errors.Wrap(err, "failed to maximize Firefox window")
 		}
 		return nil
 	}
