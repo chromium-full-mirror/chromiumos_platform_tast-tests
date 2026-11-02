@@ -257,6 +257,7 @@ func (s *Settings) GetSharedFolders(ctx context.Context) ([]string, error) {
 
 	var listOfFolders []string
 	err := testing.Poll(ctx, func(ctx context.Context) error {
+		listOfFolders = nil
 		// Find "Shared folders will appear here". It will be displayed if no folder is shared.
 		textErr := s.ui.WithTimeout(2 * time.Second).WaitUntilExists(emptySharedFoldersMsg)(ctx)
 

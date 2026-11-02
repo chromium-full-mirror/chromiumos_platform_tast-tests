@@ -259,25 +259,39 @@ func (c *Container) Stop(ctx context.Context) error {
 	// Always close the LxdContainerStopping watcher regardless of success.
 	defer stopping.Close(cleanupCtx)
 
-	resp := &cpb.StopLxdContainerResponse{}
-	if err := dbusutil.CallProtoMethod(ctx, c.VM.Concierge.ciceroneObj, ciceroneInterface+".StopLxdContainer",
-		&cpb.StopLxdContainerRequest{
-			VmName:        c.VM.name,
-			ContainerName: c.containerName,
-			OwnerId:       c.VM.Concierge.ownerID,
-		}, resp); err != nil {
+	// StopLxdContainer fails with "Instance is busy running a "update" operation"
+	// when LXD is still updating the container, which happens right after a
+	// time zone update (b/588632987). Wait for running LXD operations and retry.
+	// TODO(b/588632987): Remove this retry and call StopLxdContainer once when
+	// the bug is fixed.
+	var status cpb.StopLxdContainerResponse_Status
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := c.VM.WaitForLXDOperations(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for LXD background operations")
+		}
+		resp := &cpb.StopLxdContainerResponse{}
+		if err := dbusutil.CallProtoMethod(ctx, c.VM.Concierge.ciceroneObj, ciceroneInterface+".StopLxdContainer",
+			&cpb.StopLxdContainerRequest{
+				VmName:        c.VM.name,
+				ContainerName: c.containerName,
+				OwnerId:       c.VM.Concierge.ownerID,
+			}, resp); err != nil {
+			return err
+		}
+		status = resp.GetStatus()
+		switch status {
+		case cpb.StopLxdContainerResponse_STOPPED, cpb.StopLxdContainerResponse_STOPPING:
+			return nil
+		default:
+			return errors.Errorf("failed to stop container: %v and failure reason: %v", status, resp.GetFailureReason())
+		}
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
 		return err
 	}
 
-	switch resp.GetStatus() {
-	case cpb.StopLxdContainerResponse_STOPPED:
+	if status == cpb.StopLxdContainerResponse_STOPPED {
 		// The container has already stopped, just return.
 		return nil
-	case cpb.StopLxdContainerResponse_STOPPING:
-		// In this case, the code moves on to the next part - ContainerShutdownSignal.
-		// It does not go to default.
-	default:
-		return errors.Errorf("failed to stop container: %v and failure reason: %v", resp.GetStatus(), resp.GetFailureReason())
 	}
 
 	sigResult := &cpb.ContainerShutdownSignal{}
@@ -608,6 +622,12 @@ func (c *Container) CreateCopy(ctx context.Context, name string) error {
 	// It prevents race conditions when the container is using the filesystem.
 	if err := c.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop the container before taking snapshot")
+	}
+
+	// Wait for any LXD background operations triggered during container shutdown
+	// to complete before copying the container.
+	if err := c.VM.WaitForLXDOperations(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for LXD background operations before copying container")
 	}
 
 	if _, err := c.VM.LXCCommand(ctx, "copy", c.containerName, name); err != nil {

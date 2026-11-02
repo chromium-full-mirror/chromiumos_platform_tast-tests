@@ -283,9 +283,12 @@ func (vm *VM) LXCCommandCombined(ctx context.Context, lxcArgs ...string) (string
 
 // WaitForLXDOperations waits for all LXD background operations to finish.
 func (vm *VM) WaitForLXDOperations(ctx context.Context) error {
+	// Fields must be exported so encoding/json can unmarshal "description" and
+	// "status" from `lxc operation list -f json`; unexported fields remain empty
+	// and cause Running operations (such as container "update") to be ignored.
 	type Operation struct {
-		description string
-		status      string
+		Description string `json:"description"`
+		Status      string `json:"status"`
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -300,9 +303,9 @@ func (vm *VM) WaitForLXDOperations(ctx context.Context) error {
 		}
 
 		for _, op := range ops {
-			if op.status == "Running" {
-				testing.ContextLogf(ctx, "LXD operation with description %q is still running", op.description)
-				return errors.Errorf("operation with description %q is still running", op.description)
+			if op.Status == "Running" {
+				testing.ContextLogf(ctx, "LXD operation with description %q is still running", op.Description)
+				return errors.Errorf("operation with description %q is still running", op.Description)
 			}
 		}
 

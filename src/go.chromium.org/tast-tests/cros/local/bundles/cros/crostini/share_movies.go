@@ -139,12 +139,21 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 	}
 	defer st.Close(cleanupCtx)
 
-	shared, err := st.GetSharedFolders(ctx)
-	if err != nil {
-		s.Fatal("Failed to find the shared folders list: ", err)
-	}
-	if want := []string{filesapp.Playfiles + " › " + Movies}; !reflect.DeepEqual(shared, want) {
-		s.Fatalf("Failed to verify shared folders list, got %s, want %s", shared, want)
+	// Poll GetSharedFolders because Seneschal SharePath updates the Settings UI
+	// asynchronously and GetSharedFolders can initially return an empty slice if
+	// "Shared folders will appear here" is still rendered on first load.
+	want := []string{filesapp.Playfiles + " › " + Movies}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		shared, err := st.GetSharedFolders(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the shared folders list")
+		}
+		if !reflect.DeepEqual(shared, want) {
+			return errors.Errorf("got %q, want %q", shared, want)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		s.Fatal("Failed to verify shared folders list: ", err)
 	}
 
 	// Verify inside Crostini.
