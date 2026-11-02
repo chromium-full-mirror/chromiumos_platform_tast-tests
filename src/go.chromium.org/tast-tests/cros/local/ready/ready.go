@@ -130,9 +130,11 @@ func ensureSystemService(ctx context.Context, systemServicesTimeout time.Duratio
 		"tpm_managerd",
 	}
 	type jobError struct {
-		job string
-		err error
+		job     string
+		waitErr error
+		err     error
 	}
+	const daemonJobTimeout = time.Minute
 	ch := make(chan *jobError)
 	for _, job := range daemonJobs {
 		go func(job string) {
@@ -143,18 +145,44 @@ func ensureSystemService(ctx context.Context, systemServicesTimeout time.Duratio
 			}
 
 			testing.ContextLogf(ctx, "Ensuring %s service is running", job)
-			err := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.TolerateWrongGoal, time.Minute)
-			if err == nil {
+			waitErr := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.TolerateWrongGoal, daemonJobTimeout)
+			if waitErr == nil {
 				testing.ContextLogf(ctx, "Success: %s service setup complete", job)
 				ch <- nil
-			} else {
-				ch <- &jobError{job, err}
+				return
 			}
+
+			err := waitErr
+			if ctx.Err() == nil {
+				// If a core system daemon failed to start before ready.Wait (or was left
+				// in stop/waiting), record waitErr for platform.CheckProcesses to report,
+				// and attempt to start the job explicitly so unrelated tests in the shard
+				// do not fail with downstream timeouts.
+				testing.ContextLogf(ctx, "WARNING: %s did not reach running state (%v); attempting explicit start via EnsureJobRunning", job, waitErr)
+				startCtx, cancel := context.WithTimeout(ctx, daemonJobTimeout)
+				defer cancel()
+				err = upstart.EnsureJobRunning(startCtx, job)
+				if err == nil {
+					testing.ContextLogf(ctx, "Success: %s service recovered via EnsureJobRunning", job)
+				}
+			}
+			ch <- &jobError{job: job, waitErr: waitErr, err: err}
 		}(job)
 	}
+	// Note: Do not remove DaemonJobsLogLocation at the start of ensureSystemService.
+	// Once EnsureJobRunning recovers a stopped daemon in the initial ready.Wait
+	// call, subsequent ready.Wait calls on the same boot (such as during Tast test
+	// retries) will see the daemon already running; keeping the /tmp log across
+	// retries ensures platform.CheckProcesses still catches the failure.
 	for range daemonJobs {
 		if je := <-ch; je != nil {
-			testing.ContextLogf(ctx, "Failed waiting for job %v: %v", je.job, je.err)
+			msg := fmt.Sprintf("Job %s did not reach running state prior to recovery: %v", je.job, je.waitErr)
+			if err := errorLogAppendError(DaemonJobsLogLocation, msg); err != nil {
+				testing.ContextLog(ctx, err.Error())
+			}
+			if je.err != nil {
+				testing.ContextLogf(ctx, "Failed waiting for job %v: %v", je.job, je.err)
+			}
 		}
 	}
 
@@ -398,6 +426,10 @@ func ensureTPMInitialized(ctx context.Context) error {
 		return nil
 	}, nil)
 }
+
+// DaemonJobsLogLocation is the location of the error log for daemonJobs in ensureSystemService.
+// If all expected daemon jobs reached running state without needing recovery, the file should not exist.
+const DaemonJobsLogLocation = "/tmp/ready-daemonJobs.err"
 
 // ClearPoliciesLogLocation is the location of the error log for clearPolicies.
 // If the removing policies did not encounter any errors the file should not exist.

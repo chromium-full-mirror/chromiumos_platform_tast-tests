@@ -6,11 +6,13 @@ package platform
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
 
+	"go.chromium.org/tast-tests/cros/local/ready"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -78,6 +80,19 @@ func CheckProcesses(ctx context.Context, s *testing.State) {
 	for _, names := range expected {
 		if _, ok := needed[names]; ok {
 			s.Errorf("%v not running", names)
+		}
+	}
+
+	// Also check if ready.Wait had to recover any stopped system daemon via
+	// EnsureJobRunning before tests started, so boot-time daemon startup
+	// failures are still caught here even after recovery.
+	if contents, err := os.ReadFile(ready.DaemonJobsLogLocation); err != nil && !os.IsNotExist(err) {
+		s.Errorf("Failed to read error log %q: %v", ready.DaemonJobsLogLocation, err)
+	} else if err == nil {
+		for _, line := range strings.Split(strings.TrimSpace(string(contents)), "\n") {
+			if line != "" {
+				s.Errorf("Found error log for ready.go: %s", line)
+			}
 		}
 	}
 }
