@@ -27,7 +27,7 @@ func init() {
 }
 
 func SHANI(ctx context.Context, s *testing.State) {
-	const testBin = "/usr/local/share/vboot/tests/vb2_sha256_x86_tests"
+	const testBin = "/usr/local/share/vboot/tests/vb2_sha256_tests"
 	err := testexec.CommandContext(ctx, testBin).Run(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatal("vb2_sha256_x86_tests failed: ", err)
