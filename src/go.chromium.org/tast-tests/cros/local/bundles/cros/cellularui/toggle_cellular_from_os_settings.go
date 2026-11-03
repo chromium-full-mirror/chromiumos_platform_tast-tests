@@ -28,6 +28,7 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		SoftwareDeps:   []string{"chrome"},
 		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_carrier_agnostic"},
+		Timeout:        3 * time.Minute,
 		Fixture:        "cellularE2ELocal",
 	})
 }
@@ -36,7 +37,7 @@ func init() {
 // Cellular state using the Cellular toggle on the OS Settings page.
 func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	cr, err := chrome.New(ctx)
@@ -58,6 +59,11 @@ func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize autoconnect to false: ", err)
 	}
 	defer cleanup(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := helper.EnsureEnabled(ctx); err != nil {
+			s.Error("Failed to ensure cellular is enabled during cleanup: ", err)
+		}
+	}(cleanupCtx)
 
 	app, err := ossettings.Launch(ctx, tconn)
 	if err != nil {
@@ -75,7 +81,8 @@ func ToggleCellularFromOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	state := false
-	const iterations = 5
+	// Keep iterations even so Cellular finishes enabled on the happy path.
+	const iterations = 6
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling Cellular (iteration %d of %d)", i+1, iterations)
 

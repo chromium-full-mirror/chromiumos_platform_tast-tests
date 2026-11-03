@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/networkui/netconfig"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,9 +35,18 @@ func init() {
 
 // MojoCellularToggle enables/distable cellular network using Mojo and confirms using shill helper
 func MojoCellularToggle(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	cr := s.FixtValue().(*cellular.FixtData).Chrome
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
+	defer func(ctx context.Context) {
+		if err := helper.EnsureEnabled(ctx); err != nil {
+			s.Error("Failed to ensure cellular is enabled during cleanup: ", err)
+		}
+	}(cleanupCtx)
 
 	if _, err := helper.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable cellular: ", err)
@@ -46,9 +56,10 @@ func MojoCellularToggle(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get network Mojo Object: ", err)
 	}
-	defer netConn.Close(ctx)
+	defer netConn.Close(cleanupCtx)
 
-	const iterations = 5
+	// Keep iterations even so Cellular finishes enabled on the happy path.
+	const iterations = 6
 	for i := 0; i < iterations; i++ {
 		enabled := i%2 != 0
 		s.Logf("Toggling Cellular state to %t (iteration %d of %d)", enabled, i+1, iterations)
