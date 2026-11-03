@@ -170,25 +170,6 @@ func (t *TpmHandle) Send(request []byte) ([]byte, error) {
 	return response, nil
 }
 
-// NvUndefineSpace undefines the NV space indicated by the passed public area.
-func (t *TpmHandle) NvUndefineSpace(p tpm2.TPMSNVPublic) error {
-	nvName, err := tpm2.NVName(&p)
-	if err != nil {
-		return errors.Join(errors.New("failed to get NV name: "), err)
-	}
-	nvHandle := tpm2.NamedHandle{
-		Handle: p.NVIndex,
-		Name:   *nvName,
-	}
-
-	undef := tpm2.NVUndefineSpace{
-		AuthHandle: tpm2.TPMRHPlatform,
-		NVIndex:    nvHandle,
-	}
-	_, err = undef.Execute(t)
-	return err
-}
-
 // TpmvInvalidateInactiveRW invalidates the gsc image in the inactive RW.
 func (t *TpmHandle) TpmvInvalidateInactiveRW() error {
 	_, err := t.tpmvWrapSendRecv(0x14, []byte{}, 0)

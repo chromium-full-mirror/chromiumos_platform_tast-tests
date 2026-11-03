@@ -97,7 +97,7 @@ func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTCo
 	if _, err := startup.Execute(tpm); err != nil {
 		s.Fatal("TPM startup error: ", err)
 	}
-	if err := tpm.NvUndefineSpace(ti50.FwmpAttr()); err != nil {
+	if err := tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex); err != nil {
 		s.Fatal("Could not undefined FWMP: ", err)
 	}
 	if err := tpm.TpmvCommitNvmem(); err != nil {

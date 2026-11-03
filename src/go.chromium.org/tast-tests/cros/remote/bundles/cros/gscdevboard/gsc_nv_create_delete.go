@@ -84,7 +84,7 @@ func testNvSpace(b utils.DevboardHelper, i *ti50.CrOSImage, tpm *utils.TpmHelper
 	}
 
 	// Attempt to clean up state in case the NV was already defined.
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	def := tpm2.NVDefineSpace{
 		AuthHandle: tpm2.TPMRHPlatform,
@@ -138,7 +138,7 @@ func testNvSpace(b utils.DevboardHelper, i *ti50.CrOSImage, tpm *utils.TpmHelper
 		return errors.Errorf("Read mismatch: %v", resp.Data.Buffer)
 	}
 
-	if err := tpm.NvUndefineSpace(attr); err != nil {
+	if err := tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex); err != nil {
 		return errors.Join(errors.New("NVUndefineSpace failed: "), err)
 	}
 

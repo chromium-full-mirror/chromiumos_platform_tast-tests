@@ -48,8 +48,7 @@ func Ti50EFS2(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOn, ti50.FfClamshell)
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work.
-	attr := ti50.KernelAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.KernelNvIndex)
 
 	// Note if this goes last, it fails with a timeout reading EC console, but if even one of
 	// the preceding tests is commented out, then it doesn't. It does not seem to be flaky if
@@ -251,7 +250,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	if _, err := def.Execute(tpm); err != nil {
 		s.Fatal("NVDefineSpace failed: ")
 	}
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	nvName, err := tpm2.NVName(&attr)
 	if err != nil {
@@ -374,7 +373,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	}
 
 	attr := ti50.KernelAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	s.Log("Setting up kernel file with random ec hash: ", hash)
 	kernelFile := makeKernelFile(hash)
@@ -387,7 +386,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	if _, err := def.Execute(tpm); err != nil {
 		s.Fatal("NVDefineSpace failed: ")
 	}
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	nvName, err := tpm2.NVName(&attr)
 	if err != nil {
@@ -567,7 +566,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	}
 
 	attr := ti50.KernelAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	s.Log("Setting up kernel file with random ec hash: ", hash)
 	kernelFile := makeKernelFile(hash)
@@ -580,7 +579,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	if _, err := def.Execute(tpm); err != nil {
 		s.Fatal("NVDefineSpace failed: ")
 	}
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	nvName, err := tpm2.NVName(&attr)
 	if err != nil {

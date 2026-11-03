@@ -166,7 +166,7 @@ func GSCPCRFWMPPolicy(ctx context.Context, s *testing.State) {
 	if testParams.testWrite {
 		_, err = def.Execute(tpm)
 		th.MustSucceed(err, "failed to define FWMP before PCR0 is extended")
-		defer tpm.NvUndefineSpace(attr)
+		defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 	}
 
 	if testParams.extend != "" {
@@ -206,7 +206,7 @@ func GSCPCRFWMPPolicy(ctx context.Context, s *testing.State) {
 			return
 		}
 		th.MustSucceed(err, "failed to define FWMP after PCR0 is extended")
-		defer tpm.NvUndefineSpace(attr)
+		defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 		s.Log("Defined the FWMP after PCR0 extend")
 	}
 

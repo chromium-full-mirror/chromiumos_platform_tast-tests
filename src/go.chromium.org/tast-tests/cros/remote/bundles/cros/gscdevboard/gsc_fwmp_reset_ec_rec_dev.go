@@ -111,7 +111,7 @@ func GSCFWMPResetECRecDev(ctx context.Context, s *testing.State) {
 // trying to extend PCR0 to all supported boot modes
 func setFWMPCheckPCR0ECResetBehavior(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, desc string, expectReset, setFwmp bool, fwmp uint32) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CCDModeOff, ti50.FfClamshell)
-	tpm.NvUndefineSpace(ti50.FwmpAttr())
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex)
 	// Wipe the TPM to completely remove the fwmp.
 	err := i.WipeTpmWithCCDOpen(ctx)
 	if err != nil {
@@ -142,7 +142,7 @@ func setFWMPCheckPCR0ECResetBehavior(ctx context.Context, s *testing.State, b ut
 		if _, err := def.Execute(tpm); err != nil {
 			s.Fatalf("%s: NVDefineSpace failed: %+v", desc, err)
 		}
-		defer tpm.NvUndefineSpace(attr)
+		defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 		// Write the fwmp file data to new space.
 		write := tpm2.NVWrite{
 			AuthHandle: tpm2.TPMRHPlatform,
@@ -183,7 +183,7 @@ func setFWMPCheckPCR0ECResetBehavior(ctx context.Context, s *testing.State, b ut
 	if err != nil {
 		s.Errorf("%s: unexpected non-standard PCR0 behavior: %+v", desc, err)
 	}
-	tpm.NvUndefineSpace(ti50.FwmpAttr())
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex)
 }
 
 // extendPCR0CheckECReset verifies the GSC behavior after trying to extend PCR0

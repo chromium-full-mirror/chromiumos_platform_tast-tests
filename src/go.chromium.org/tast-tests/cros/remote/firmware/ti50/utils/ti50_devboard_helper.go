@@ -704,8 +704,7 @@ func (h DevboardHelper) ResetAndTpmRemoveFWMP(ctx context.Context, i *ti50.CrOSI
 	if err := tpm.TpmvCommitNvmem(); err != nil {
 		return tpm, errors.Wrap(err, "failed to enable commits")
 	}
-	attr := ti50.FwmpAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex)
 	return tpm, nil
 }
 

@@ -60,9 +60,9 @@ func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 
 	// Undefine to ensure we're starting clean.
 	attr := ti50.KernelAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 	// Make sure we clean up if the test fails.
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	v0Data := []byte{0x02, 0x4c, 0x57, 0x52, 0x47, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
 		0x55}
@@ -77,7 +77,7 @@ func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 	if _, err := def.Execute(tpm); err != nil {
 		s.Fatal("NVDefineSpace failed: ")
 	}
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 
 	nvName, err := tpm2.NVName(&attr)
 	if err != nil {
@@ -114,7 +114,7 @@ func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 	), "CheckSendEcPacket failed.")
 
 	s.Log("Undefine NV space")
-	if err := tpm.NvUndefineSpace(attr); err != nil {
+	if err := tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex); err != nil {
 		s.Fatal("Undefine failed: ")
 	}
 
@@ -156,7 +156,7 @@ func GSCKernelAntirollback(ctx context.Context, s *testing.State) {
 	), "CheckSendEcPacket failed.")
 
 	s.Log("Undefine NV space")
-	if err := tpm.NvUndefineSpace(attr); err != nil {
+	if err := tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex); err != nil {
 		s.Fatal("Undefine failed: ")
 	}
 

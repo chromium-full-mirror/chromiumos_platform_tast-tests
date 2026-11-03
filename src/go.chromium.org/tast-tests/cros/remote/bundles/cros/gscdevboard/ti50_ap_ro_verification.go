@@ -133,8 +133,7 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	// Ensure there is no FWMP file
 	tpm := b.ResetAndTpmStartup(ctx, i)
-	attr := ti50.FwmpAttr()
-	tpm.NvUndefineSpace(attr)
+	tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex)
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "NVCommit")
 
 	// Flash bad image on AP SPI chip. GSC held in reset after done
@@ -166,7 +165,7 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	s.Log("Create FWMP file that blocks CCD open (and bypass keycombo)")
 	tpm = b.ResetAndTpmStartup(ctx, i)
 	writeBlockingFWMPFile(ctx, s, b, tpm)
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, ti50.FwmpNvIndex)
 
 	// Restart GSC and ensure system held in reset
 	b.VerifyVerificationResultOnReboot(ctx, i, wantVerificationResult)

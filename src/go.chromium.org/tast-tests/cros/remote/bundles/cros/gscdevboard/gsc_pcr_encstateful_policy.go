@@ -167,7 +167,7 @@ func GSCPCREncstatefulPolicy(ctx context.Context, s *testing.State) {
 		return
 	}
 	th.MustSucceed(err, "failed to define EncStateful after PCR0 is extended")
-	defer tpm.NvUndefineSpace(attr)
+	defer tpm.UndefineNVSpace(tpm2.TPMRHPlatform, attr.NVIndex)
 	s.Log("Defined EncStateful after PCR0 extend")
 
 	s.Log("Write EncStateful")
