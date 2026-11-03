@@ -7,7 +7,6 @@ package ti50
 import (
 	"context"
 	"regexp"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
@@ -50,7 +49,7 @@ func (c *BufferedConsole) IsOpen() bool {
 
 // Close closes the console port.
 func (c *BufferedConsole) Close(ctx context.Context) error {
-	// Pull everything from console we can and write to file, but ignore error if encountered
+	// Discard pending input; errors are ignored.
 	_ = c.ClearInput(ctx)
 
 	if c.port != nil {
@@ -133,17 +132,20 @@ func (c *BufferedConsole) ReadSerialBytes(ctx context.Context, size int) (output
 	}
 }
 
-// ClearInput clears any pending input that hasn't been read yet.
+// ClearInput delegates to FlushSerial, discarding everything buffered in
+// BufferedConsole and in the underlying serial.Port (for DUTControlPort,
+// draining until the channel has been quiet for up to 20 ms).
+//
+// Note:
+//   - CommandImage.WaitUntilBooted() calls getPrompt() -> ClearInput(), which
+//     waits at most 20 ms for quiet instead of the 100 ms readTimeout when the
+//     console is idle.
+//   - Discarded backlog is not checked against fatal/panic regular expressions.
+//   - For ConnectedPort, Flush invokes tcflush(TCIOFLUSH), which also discards
+//     output not yet transmitted (only DUTControl openers use BufferedConsole
+//     today).
 func (c *BufferedConsole) ClearInput(ctx context.Context) error {
-	ctx2, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-	defer cancel()
-	err := c.readSerial(ctx2)
-	c.readBufLen = 0
-	if errors.Is(err, context.DeadlineExceeded) {
-		// Return nil if it was our ctx2 that timed out.
-		return ctx.Err()
-	}
-	return err
+	return c.FlushSerial(ctx)
 }
 
 // WriteSerial writes to the serial port.

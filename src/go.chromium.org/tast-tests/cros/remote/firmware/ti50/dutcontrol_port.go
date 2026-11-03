@@ -23,29 +23,31 @@ type DUTControlPort struct {
 	unreadBuf   []byte
 }
 
-// Read bytes into buffer and return number of bytes read.
-// Bytes already written to the port shall be moved into buf, up to its size.
-func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error) {
-	err = nil
-	// Consume all waiting ConsoleSerialData without blocking.
-nonblock:
+func (p *DUTControlPort) drainNonBlocking(discard bool) error {
+	var err error
 	for {
 		select {
 		case d, more := <-p.data:
-			if d != nil {
+			if d != nil && !discard {
 				p.unreadBuf = append(p.unreadBuf, d.Data...)
 			}
 			if !more {
-				err = io.EOF
-				break nonblock
+				return io.EOF
 			}
-			if err == nil && d.Err != "" {
+			if err == nil && d != nil && d.Err != "" {
 				err = errors.New(d.Err)
 			}
 		default:
-			break nonblock
+			return err
 		}
 	}
+}
+
+// Read bytes into buffer and return number of bytes read.
+// Bytes already written to the port shall be moved into buf, up to its size.
+func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error) {
+	// Consume all waiting ConsoleSerialData without blocking.
+	err = p.drainNonBlocking(false)
 
 	// If we have at least 1 byte unread, return without blocking.
 	if len(p.unreadBuf) > 0 || err != nil {
@@ -65,7 +67,7 @@ nonblock:
 		}
 		if !more {
 			err = io.EOF
-		} else if d.Err != "" {
+		} else if d != nil && d.Err != "" {
 			err = errors.New(d.Err)
 		}
 		n := copy(buf, p.unreadBuf)
@@ -105,9 +107,48 @@ func (p *DUTControlPort) Write(ctx context.Context, buf []byte) (int, error) {
 	}
 }
 
-// Flush un-read/written bytes.
+const flushQuietWindow = 20 * time.Millisecond
+
+// Flush discards unreadBuf and drains pending ConsoleSerialData chunks from
+// the data channel. When readTimeout > 0, Flush continues draining until no
+// new chunk arrives within min(20ms, readTimeout) (bounded by ctx) so that
+// chunks already in flight from devboardsvc/HyperDebug are also discarded.
 func (p *DUTControlPort) Flush(ctx context.Context) error {
-	return errors.New("Flush not supported")
+	p.unreadBuf = nil
+	if err := p.drainNonBlocking(true); err != nil || p.readTimeout <= 0 {
+		return err
+	}
+
+	quietWindow := min(flushQuietWindow, p.readTimeout)
+	timer := time.NewTimer(quietWindow)
+	defer timer.Stop()
+
+	var err error
+	for {
+		select {
+		case d, more := <-p.data:
+			if !more {
+				return io.EOF
+			}
+			if err == nil && d != nil && d.Err != "" {
+				err = errors.New(d.Err)
+			}
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			timer.Reset(quietWindow)
+		case <-timer.C:
+			return err
+		case <-ctx.Done():
+			if err != nil {
+				return err
+			}
+			return ctx.Err()
+		}
+	}
 }
 
 // Close closes the port.

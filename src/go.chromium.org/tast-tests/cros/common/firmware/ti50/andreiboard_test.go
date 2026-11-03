@@ -164,4 +164,41 @@ func TestAndreiboard(t *testing.T) {
 	dut, port = createDut(ctrl, 5)
 	expectRead(port, 5, []byte("abc"))
 	checkMatch(nil, 0, "abc")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc"), regexp.MustCompile("ab")))
+
+	t.Log("ClearInput discards buffered bytes and delegates to port.Flush")
+	dut, port = createDut(ctrl, 5)
+	gomock.InOrder(
+		expectRead(port, 5, []byte("abcde")),
+		expectRead(port, 2, []byte("")),
+		port.EXPECT().Flush(ctx).Return(nil),
+		expectRead(port, 5, []byte("xyz")),
+	)
+	checkMatch(errors.New("(wanted f): read nothing"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("f")))
+	if err := dut.ClearInput(ctx); err != nil {
+		t.Fatal("ClearInput error: ", err)
+	}
+	checkMatch(nil, 0, "xyz")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("cde|xyz")))
+
+	t.Log("ClearInput succeeds when read buffer is full")
+	dut, port = createDut(ctrl, 5)
+	gomock.InOrder(
+		expectRead(port, 5, []byte("abcde")),
+		port.EXPECT().Flush(ctx).Return(nil),
+		expectRead(port, 5, []byte("xyz")),
+	)
+	if _, err := dut.ReadSerialBytes(ctx, 6); err == nil {
+		t.Fatal("ReadSerialBytes unexpectedly succeeded")
+	}
+	if err := dut.ClearInput(ctx); err != nil {
+		t.Fatal("ClearInput error on full buffer: ", err)
+	}
+	checkMatch(nil, 0, "xyz")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abcde|xyz")))
+
+	t.Log("ClearInput propagates port.Flush error")
+	dut, port = createDut(ctrl, 5)
+	wantFlushErr := errors.New("flush failed")
+	port.EXPECT().Flush(ctx).Return(wantFlushErr)
+	if err := dut.ClearInput(ctx); err != wantFlushErr {
+		t.Fatalf("ClearInput error = %v, want %v", err, wantFlushErr)
+	}
 }
