@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -197,4 +198,108 @@ func MakeFWMPFile(flags uint32) []byte {
 	out[7] = byte(flags >> 24) // flags (4 of 4)
 	out[0] = Crc8(out[2:])     // crc
 	return out
+}
+
+// TCGSubtest is the shared subtest entry-point signature used by all GSCTCG*
+// compliance test suites.
+type TCGSubtest = func(ctx context.Context, s *testing.State, th *ti50.TpmHandle)
+
+// TCGTestState abstracts the testing.State methods used by RunTCGSubtest.
+type TCGTestState interface {
+	FirmwareTestingHelperDelegate
+	FixtValue() interface{}
+	Param() interface{}
+	Log(args ...interface{})
+	Fatal(args ...interface{})
+	Error(args ...interface{})
+}
+
+// RunTCGSubtest initializes the GSC devboard on the SPI TPM bus, discovers target
+// TPM capabilities via InitTestConfig, runs the parameterized TCGSubtest from
+// s.Param(), and verifies that the GSC did not hard-reset during the subtest.
+func RunTCGSubtest[S TCGTestState](ctx context.Context, s S) {
+	b := NewDevboardHelper(s, s.FixtValue().(*fixture.Value))
+	i := ti50.MustOpenCrOSImage(ctx, b, s, b.TestbedType)
+	defer i.Close(ctx)
+
+	s.Log("Restarting GSC with SPI straps")
+	tpm := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CCDModeOff, ti50.FfClamshell)
+
+	th := tpm.TpmHandle
+	if err := th.InitTestConfig(); err != nil {
+		s.Fatal("Failed to initialize TPM test config: ", err)
+	}
+	th.ResetCallback = func(ctx context.Context, startup bool) {
+		if err := th.TpmvCommitNvmem(); err != nil {
+			s.Log("TpmvCommitNvmem before reset failed: ", err)
+		}
+		b.ResetWithStraps(ctx, ti50.CCDModeOff, ti50.FfClamshell, ti50.TpmSpi, ti50.ApOff)
+		if err := i.WaitUntilBooted(ctx); err != nil {
+			b.Fatalf("GSC failed to boot after reset: %v", err)
+		}
+		b.GpioApplyStrap(ctx, ti50.ApOnSpi)
+		tpmHelper := b.Tpm(ctx, ti50.TpmBusSpi)
+		b.WaitForTpm(ctx, tpmHelper)
+		newTPM := tpmHelper.TpmHandle
+		newTPM.Config = th.Config
+		newTPM.Rand = th.Rand
+		newTPM.ResetCallback = th.ResetCallback
+		// On host emulation, the simulated entropy source may briefly return
+		// TPM_RC_RETRY right after reset before TPM2_Startup; poll GetRandom
+		// (bounded to 10 attempts) until the TPM command dispatcher has finished
+		// post-reset init and returns TPM_RC_INITIALIZE instead of TPM_RC_RETRY.
+		if b.TestbedType == ti50.GscHostEmulation {
+			for range 10 {
+				if _, err := (tpm2.GetRandom{BytesRequested: 1}).Execute(newTPM); !ti50.IsRC(err, tpm2.TPMRCRetry) {
+					break
+				}
+			}
+		}
+		*th = *newTPM
+		if startup {
+			b.WaitForTpmStartup(ctx, &TpmHelper{TpmHandle: th, h: b})
+		}
+	}
+	if err := th.EntityCleanup(); err != nil {
+		s.Fatal("Failed initial TPM entity cleanup: ", err)
+	}
+	defer func() {
+		if err := th.EntityCleanup(); err != nil {
+			s.Error("Failed post-test TPM entity cleanup: ", err)
+		}
+		// CommandImage.Command does not call getPrompt/ClearInput, so drain
+		// any console output emitted during the subtest before Sysinfo.
+		_ = i.ClearInput(ctx)
+		if sysinfo, err := i.Sysinfo(ctx); err != nil {
+			s.Error("Failed to get sysinfo: ", err)
+		} else if sysinfo.ResetFlags&ti50.GscResetFlagHard != 0 {
+			s.Error("GSC crashed (hard reset) during test")
+		}
+	}()
+
+	fn, ok := s.Param().(func(context.Context, S, *ti50.TpmHandle))
+	if !ok {
+		s.Fatal("Unsupported TCG subtest function type")
+	}
+	fn(ctx, s, th)
+}
+
+// TCGResetAndStartup resets the GSC on the SPI bus and executes
+// TPM2_Startup(TPM_SU_CLEAR), updating th in place while preserving th.Config,
+// th.Rand, and th.ResetCallback.
+func TCGResetAndStartup(ctx context.Context, th *ti50.TpmHandle) {
+	if th == nil || th.ResetCallback == nil {
+		panic("TCGResetAndStartup called on TpmHandle without ResetCallback")
+	}
+	th.ResetCallback(ctx, true)
+}
+
+// TCGResetWithoutStartup resets the GSC on the SPI bus and waits for the TPM
+// DID_VID register without sending TPM2_Startup, updating th in place while
+// preserving th.Config, th.Rand, and th.ResetCallback.
+func TCGResetWithoutStartup(ctx context.Context, th *ti50.TpmHandle) {
+	if th == nil || th.ResetCallback == nil {
+		panic("TCGResetWithoutStartup called on TpmHandle without ResetCallback")
+	}
+	th.ResetCallback(ctx, false)
 }

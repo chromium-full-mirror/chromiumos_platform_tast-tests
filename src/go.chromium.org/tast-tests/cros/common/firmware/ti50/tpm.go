@@ -7,6 +7,7 @@ package ti50
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -124,14 +125,22 @@ func mapSubcommand(subcommand uint16) string {
 
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
 type TpmHandle struct {
-	b   DevBoard
-	Ctx context.Context
-	Bus TpmBus
+	b             DevBoard
+	Ctx           context.Context
+	Bus           TpmBus
+	Config        *TpmConfig
+	Rand          *TestRand
+	ResetCallback func(ctx context.Context, startup bool)
 }
 
 // NewTpmHandle create a new TpmHandle that can be used with tpm2 library
 func NewTpmHandle(ctx context.Context, b DevBoard, bus TpmBus) *TpmHandle {
-	return &TpmHandle{b: b, Ctx: ctx, Bus: bus}
+	return &TpmHandle{
+		b:    b,
+		Ctx:  ctx,
+		Bus:  bus,
+		Rand: NewTestRand(defaultTestSeed()),
+	}
 }
 
 func sizeMismatchStr(subcommand uint16, expected, real int) string {
@@ -602,4 +611,54 @@ func (t *TpmHandle) ReadWidevineRot(size, offset uint16) (WvRotReadResponse, err
 	wvResp.Data = response.Data.Buffer
 
 	return wvResp, nil
+}
+
+const (
+	defaultMaxNVBufferSize uint16         = 512
+	nvIndexFirst           tpm2.TPMHandle = 0x01000000
+	nvIndexLast            tpm2.TPMHandle = 0x01FFFFFF
+)
+
+// HashSize returns the digest size in bytes for the given TPM hash algorithm ID,
+// or 0 if the algorithm is not a recognized hash algorithm.
+func HashSize(alg tpm2.TPMAlgID) int {
+	if h, err := alg.Hash(); err == nil {
+		return h.Size()
+	}
+	return 0
+}
+
+// ComputeHash computes the digest of the concatenated data slices using alg.
+func ComputeHash(alg tpm2.TPMAlgID, data ...[]byte) ([]byte, error) {
+	h, err := alg.Hash()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unsupported hash algorithm 0x%x", uint16(alg))
+	}
+	hasher := h.New()
+	for _, d := range data {
+		_, _ = hasher.Write(d)
+	}
+	return hasher.Sum(nil), nil
+}
+
+// ComputeHMAC computes the HMAC of the concatenated data slices using alg and key.
+func ComputeHMAC(alg tpm2.TPMAlgID, key []byte, data ...[]byte) ([]byte, error) {
+	h, err := alg.Hash()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unsupported HMAC hash algorithm 0x%x", uint16(alg))
+	}
+	mac := hmac.New(h.New, key)
+	for _, d := range data {
+		_, _ = mac.Write(d)
+	}
+	return mac.Sum(nil), nil
+}
+
+// KDFa computes the TPM 2.0 KDFa key derivation function in counter mode.
+func KDFa(hashAlg tpm2.TPMAlgID, key []byte, label string, contextU, contextV []byte, bits int) ([]byte, error) {
+	h, err := hashAlg.Hash()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unsupported KDFa hash algorithm 0x%x", uint16(hashAlg))
+	}
+	return tpm2.KDFa(h, key, label, contextU, contextV, bits), nil
 }
