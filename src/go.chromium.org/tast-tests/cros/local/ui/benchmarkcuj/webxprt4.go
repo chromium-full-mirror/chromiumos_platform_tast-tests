@@ -26,7 +26,7 @@ var WebXPRT4Timeout = 45 * time.Minute
 var WebXPRT4Info = benchmarkInfo{
 	name:           "WebXPRT4",
 	windowState:    ash.WindowStateMaximized,
-	benchmarkURL:   "http://www.principledtechnologies.com/benchmarkxprt/webxprt",
+	benchmarkURL:   "https://www.principledtechnologies.com/benchmarkxprt/webxprt/2021/wx4_build_3_7_3/",
 	benchmarkRun:   RunWebXPRT4,
 	benchmarkScore: RetrieveWebXPRT4Score,
 }
@@ -34,7 +34,7 @@ var WebXPRT4Info = benchmarkInfo{
 // RunWebXPRT4 runs the WebXPRT4 test.
 func RunWebXPRT4(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context, params map[string]string) error {
 	// Running WebXPRT4 is just navigating to the driver page so wait until it's over.
-	if err := benchmarkConn.Navigate(ctx, `http://www.principledtechnologies.com/benchmarkxprt/webxprt/2021/wx4_build_3_7_3/auto.php?testtype=1&tests=63&result=2`); err != nil {
+	if err := benchmarkConn.Navigate(ctx, `https://www.principledtechnologies.com/benchmarkxprt/webxprt/2021/wx4_build_3_7_3/auto.php?testtype=1&tests=63&result=2`); err != nil {
 		return errors.Wrap(err, "failed to start WebXPRT4")
 	}
 	if err := benchmarkConn.WaitForExprWithTimeout(ctx, `document.getElementsByTagName("overallscore").length == 1`, WebXPRT4Timeout); err != nil {
