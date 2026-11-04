@@ -137,39 +137,17 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	if len(ifaces.Client) < 1 {
 		s.Fatal("Test requires at least one simulated client interface")
 	}
-	// Start AP.
-	ap := passpoint.AccessPoint{
-		SSID:               "passpoint-ttls-home-oi",
-		Domain:             fqdn,
-		Realms:             []string{fqdn},
-		RoamingConsortiums: []string{passpoint.HomeOI},
-		Auth:               passpoint.AuthTTLS,
-	}
-	server := ap.ToServer(ifaces.AP[0], s.OutDir())
-	if err := server.Start(ctx); err != nil {
-		s.Fatal("Failed to start access point: ", err)
-	}
-	defer server.Stop()
-	// Create a monitor to collect access point events.
-	h := hostapd.NewMonitor()
-	if err := h.Start(ctx, server); err != nil {
-		s.Fatal("Failed to start hostapd monitor: ", err)
-	}
-	defer func() {
-		if err := h.Stop(cleanupCtx); err != nil {
-			testing.ContextLog(cleanupCtx, "Failed to stop hostapd monitor: ", err)
-		}
-	}()
-
-	// Start screen recording, to help with debugging errors.
+	// Start screen recording, to help with debugging errors. Do not fail the
+	// test if the screen recorder fails to start (e.g., due to Files app UI node
+	// ambiguity when creating its output folder).
 	recorder, err := uiauto.NewScreenRecorder(ctx, tconn, cr)
 	if err != nil {
-		s.Fatal("Failed to create screen recorder: ", err)
+		s.Log("Failed to create screen recorder: ", err)
+	} else if err := recorder.Start(ctx, tconn); err != nil {
+		s.Log("Failed to start screen recorder: ", err)
+	} else {
+		defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
-	if err := recorder.Start(ctx, tconn); err != nil {
-		s.Fatal("Failed to start screen recorder: ", err)
-	}
-	defer recorder.StopAndSaveOnError(cleanupCtx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 
 	// Provision Passpoint credentials from ARC.
 	creds := passpoint.Credentials{
@@ -201,7 +179,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	defer func() {
 		testing.ContextLog(cleanupCtx, "Uninstalling Passpoint app")
 		if err := a.Uninstall(cleanupCtx, pkg); err != nil {
-			s.Fatal("Failed to uninstall Passpoint app: ", err)
+			s.Error("Failed to uninstall Passpoint app: ", err)
 		}
 	}()
 	s.Log("Starting app")
@@ -237,8 +215,19 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	file := nodewith.Name(fileName).Ancestor(pickerWindow).First()
 	const maxDialogAttempts = 3
 	for attempt := 1; attempt <= maxDialogAttempts; attempt++ {
-		if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 30*time.Second); err != nil {
-			s.Fatal("Failed to wait for add Passpoint button: ", err)
+		if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 15*time.Second); err != nil {
+			// Re-foreground the Passpoint test activity and dismiss any system
+			// dialogs in case the activity was obscured or stopped when closing
+			// DocumentsUI.
+			if dlgErr := a.CloseSystemDialogs(ctx); dlgErr != nil {
+				s.Log("Failed to close ARC system dialogs: ", dlgErr)
+			}
+			if startErr := activity.Start(ctx, tconn); startErr != nil {
+				s.Log("Failed to restart test activity: ", startErr)
+			}
+			if err := d.Object(ui.ID(buttonID)).WaitForExists(ctx, 15*time.Second); err != nil {
+				s.Fatal("Failed to wait for add Passpoint button: ", err)
+			}
 		}
 		if err := d.Object(ui.ID(buttonID)).Click(ctx); err != nil {
 			s.Fatal("Failed to click add Passpoint button: ", err)
@@ -271,6 +260,32 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to accept or reject app's request: ", err)
 	}
 
+	// Start the Passpoint AP after the dialog decision so Shill does not
+	// pre-discover the AP during ARC UI setup before the credentials are
+	// provisioned.
+	ap := passpoint.AccessPoint{
+		SSID:               "passpoint-ttls-home-oi",
+		Domain:             fqdn,
+		Realms:             []string{fqdn},
+		RoamingConsortiums: []string{passpoint.HomeOI},
+		Auth:               passpoint.AuthTTLS,
+	}
+	server := ap.ToServer(ifaces.AP[0], s.OutDir())
+	if err := server.Start(ctx); err != nil {
+		s.Fatal("Failed to start access point: ", err)
+	}
+	defer server.Stop()
+	// Create a monitor to collect access point events.
+	h := hostapd.NewMonitor()
+	if err := h.Start(ctx, server); err != nil {
+		s.Fatal("Failed to start hostapd monitor: ", err)
+	}
+	defer func() {
+		if err := h.Stop(cleanupCtx); err != nil {
+			testing.ContextLog(cleanupCtx, "Failed to stop hostapd monitor: ", err)
+		}
+	}()
+
 	// Check for connection.
 	wifi, err := shill.NewWifiManager(ctx, m)
 	if err != nil {
@@ -281,8 +296,16 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	if _, err := wifi.ScanAndWaitForService(ctx, ap.SSID, time.Minute); err != nil {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
-	// Wait for the station to associate with the access point.
+	// Wait for the station to associate with the access point. If the first scan
+	// completed before ArcNetHostImpl finished forwarding the Passpoint
+	// credentials to Shill, request another active scan and wait once more.
 	err = hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout)
+	if err != nil && params.allow {
+		if scanErr := m.RequestScan(ctx, shill.TechnologyWifi); scanErr != nil {
+			s.Log("Failed to request follow-up Wi-Fi scan: ", scanErr)
+		}
+		err = hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout)
+	}
 	if err == nil && !params.allow {
 		s.Fatal("Unwanted STA association to the AP")
 	} else if err != nil && params.allow {
