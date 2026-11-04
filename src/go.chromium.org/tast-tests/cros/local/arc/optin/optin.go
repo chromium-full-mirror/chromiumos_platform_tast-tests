@@ -31,6 +31,19 @@ const (
 	PlayStoreCloseTimeout = 1 * time.Minute
 )
 
+// The following timeouts are vars so unit tests can override them.
+var (
+	// termsLoadTimeout bounds each ToS load attempt so a stalled webview does not
+	// exhaust OptinTimeout.
+	termsLoadTimeout = 45 * time.Second
+	// termsNetworkWaitTimeout is the maximum time to wait for network connectivity
+	// to recover before clicking retry when a USB Ethernet reset (e.g. ~19.7s
+	// r8152 drop on kukui/katsu) occurs after login.
+	termsNetworkWaitTimeout = 20 * time.Second
+	// termsRetryDelay is the delay before each retry attempt.
+	termsRetryDelay = 5 * time.Second
+)
+
 // arcApp maps ArcAppDict definition
 // https://cs.chromium.org/chromium/src/chrome/common/extensions/api/autotest_private.idl
 type arcApp struct {
@@ -51,8 +64,38 @@ type arcApp struct {
 }
 
 const (
-	errorPageLoaded = "appWindow.contentWindow.document.querySelector('#error.section:not([hidden])')"
-	errorMessage    = "appWindow.contentWindow.document.getElementById('error-message')?.innerText"
+	// Allow up to 4 attempts so ToS loading recovers across both post-watchdog
+	// delayed ERR_ABORTED events from a canceled navigation and ~20s USB
+	// Ethernet reconnect windows.
+	defaultTermsLoadAttempts = 4
+
+	errorPageLoaded    = "appWindow.contentWindow.document.querySelector('#error.section:not([hidden])')"
+	errorMessage       = "appWindow.contentWindow.document.getElementById('error-message')?.innerText"
+	retryTermsLoadExpr = `(() => {
+		if (!appWindow) {
+			return;
+		}
+		const doc = appWindow.contentWindow.document;
+		const errorSection = doc.querySelector('#error.section:not([hidden])');
+		// startTermsViewLoading_() is a no-op while state_ === LoadState.LOADING,
+		// so stop the hung webview and reset state_ before retrying.
+		if (termsPage && termsPage.state_ === LoadState.LOADING) {
+			if (termsPage.termsView_) {
+				termsPage.termsView_.stop();
+			}
+			termsPage.state_ = LoadState.ABORTED;
+		}
+		// Clicking #button-retry sends an async native message to ArcSupportHost
+		// before showPage('terms') hides #error.section. Hide #error.section
+		// immediately before clicking so the next waitForTerms poll does not match
+		// the stale error page from the previous attempt.
+		if (errorSection) {
+			errorSection.hidden = true;
+			doc.getElementById('button-retry').click();
+		} else if (termsPage) {
+			termsPage.startTermsViewLoading_();
+		}
+	})()`
 )
 
 // SetPlayStoreEnabled is a wrapper for chrome.autotestPrivate.setPlayStoreEnabled.
@@ -60,59 +103,84 @@ func SetPlayStoreEnabled(ctx context.Context, tconn *chrome.TestConn, enabled bo
 	return tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.setPlayStoreEnabled)`, enabled)
 }
 
+// jsEvaluator abstracts chrome.Conn for unit testing.
+type jsEvaluator interface {
+	WaitForExpr(ctx context.Context, expr string) error
+	Eval(ctx context.Context, expr string, out any) error
+}
+
 // waitForTerms waits for terms of service page to load in optin dialog.
-func waitForTerms(ctx context.Context, conn *chrome.Conn) error {
+func waitForTerms(ctx context.Context, conn jsEvaluator) error {
+	waitCtx, cancel := context.WithTimeout(ctx, termsLoadTimeout)
+	defer cancel()
+
 	for _, condition := range []string{
 		"port != null",
 		"termsPage != null",
 		fmt.Sprintf("termsPage.isManaged_ || termsPage.state_ == LoadState.LOADED || %s", errorPageLoaded),
 	} {
-		if err := conn.WaitForExpr(ctx, condition); err != nil {
+		if err := conn.WaitForExpr(waitCtx, condition); err != nil {
 			return err
 		}
 	}
 
 	var msg string
-	if err := conn.Eval(ctx, fmt.Sprintf("%s?%s:''", errorPageLoaded, errorMessage), &msg); err == nil && msg != "" {
+	if err := conn.Eval(waitCtx, fmt.Sprintf("%s ? (%s || 'Unknown error') : ''", errorPageLoaded, errorMessage), &msg); err != nil {
+		return err
+	} else if msg != "" {
 		return errors.New(msg)
 	}
 
 	return nil
 }
 
-// sleepAndPressRetryButton sleeps for 5 seconds and presses the retry button
-func sleepAndPressRetryButton(ctx context.Context, conn *chrome.Conn) error {
+// sleepAndPressRetryButton sleeps briefly, waits for network connectivity, and retries the terms view.
+func sleepAndPressRetryButton(ctx context.Context, conn jsEvaluator) error {
 	// GoBigSleepLint: Sleep briefly before retrying.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := testing.Sleep(ctx, termsRetryDelay); err != nil {
 		return errors.Wrap(err, "failed to sleep for re-attempt")
 	}
 
-	if err := conn.Eval(ctx, "appWindow.contentWindow.document.getElementById('button-retry').click()", nil); err != nil {
+	// On boards such as kukui/katsu, the Servo v4 USB hub resets r8152 eth0 for
+	// ~19.7s right after cryptohome mount. Wait for navigator.onLine (best-effort)
+	// before triggering the retry so attempts are not burned while offline.
+	netCtx, cancel := context.WithTimeout(ctx, termsNetworkWaitTimeout)
+	defer cancel()
+	if err := conn.WaitForExpr(netCtx, "navigator.onLine"); err != nil && ctx.Err() != nil {
+		return errors.Wrap(ctx.Err(), "context expired while waiting for network before retry")
+	}
+
+	if err := conn.Eval(ctx, retryTermsLoadExpr, nil); err != nil {
 		return errors.Wrap(err, "failed to press the retry button")
 	}
 
 	return nil
 }
 
-// withRetry returns a function that attempts to perform an action, if action fails, presses retry button
-// and attempts to perform the action again until action succeeds or until attempt count exceeds maxAttempts.
-func withRetry(actionName string, action func(context.Context, *chrome.Conn) error, maxAttempts int, conn *chrome.Conn) uiauto.Action {
-	isRecoveryNeeded := false
+// withRetry returns an action that runs action and, on failure, waits for
+// recovery via sleepAndPressRetryButton before retrying up to maxAttempts
+// times.
+func withRetry(actionName string, action func(context.Context, jsEvaluator) error, maxAttempts int, conn jsEvaluator) uiauto.Action {
+	var lastErr error
 	return uiauto.Retry(maxAttempts, uiauto.NamedAction(actionName, func(ctx context.Context) error {
-		if isRecoveryNeeded {
-			if err := sleepAndPressRetryButton(ctx, conn); err != nil {
-				return err
+		if lastErr != nil {
+			if recErr := sleepAndPressRetryButton(ctx, conn); recErr != nil {
+				// Preserve the failure from the previous attempt rather than
+				// masking it with a context error during retry sleep.
+				return errors.Wrapf(lastErr, "retry recovery failed (%v)", recErr)
 			}
 		}
 
-		err := action(ctx, conn)
-		if err == nil {
+		actErr := action(ctx, conn)
+		if actErr == nil {
 			return nil
 		}
+		if ctx.Err() != nil && lastErr != nil {
+			return errors.Wrapf(lastErr, "retry attempt interrupted (%v)", actErr)
+		}
 
-		isRecoveryNeeded = true
-
-		return err
+		lastErr = actErr
+		return actErr
 	}))
 }
 
@@ -215,7 +283,7 @@ func perform(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wai
 
 	SetPlayStoreEnabled(ctx, tconn, true)
 
-	if err := FindOptInExtensionPageAndAcceptTerms(ctx, cr, 2 /*maxAttempts*/, wait); err != nil {
+	if err := FindOptInExtensionPageAndAcceptTerms(ctx, cr, defaultTermsLoadAttempts, wait); err != nil {
 		return err
 	}
 
