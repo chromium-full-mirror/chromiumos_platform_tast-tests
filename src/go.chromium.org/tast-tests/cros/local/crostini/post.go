@@ -18,6 +18,13 @@ import (
 // PostTimeout is the standard time reserved for post-test tasks.
 var PostTimeout = 30 * time.Second
 
+// containerLogsTimeout and containerCleanupTimeout cap guest commands so a
+// stalled VM cannot starve subsequent VM log collection or fixture cleanup.
+const (
+	containerLogsTimeout    = 15 * time.Second
+	containerCleanupTimeout = 10 * time.Second
+)
+
 // RunCrostiniPostTest runs hooks that should run after every test but before
 // the precondition closes (if it's going to) e.g. collecting logs from the
 // container.
@@ -40,11 +47,8 @@ func RunCrostiniPostTest(ctx context.Context, p PreData) {
 	// Container logs require a running VM and container. If one
 	// hasn't been set, we can't fetch them.
 	if p.Container != nil {
-		trySaveContainerLogs(ctx, dir, p.Container)
-
-		if err := p.Container.Cleanup(ctx, "."); err != nil {
-			testing.ContextLog(ctx, "Failed to remove all files in home directory in the container: ", err)
-		}
+		trySaveContainerLogs(ctx, dir, p.Container, p.Post)
+		cleanupContainerHome(ctx, p.Container)
 	} else {
 		testing.ContextLog(ctx, "No active container, can't get journalctl logs")
 	}
@@ -95,11 +99,8 @@ func RunBaguettePostTest(ctx context.Context, p PreData) {
 	// Container logs require a running VM and container. If one
 	// hasn't been set, we can't fetch them.
 	if p.Container != nil {
-		trySaveContainerLogs(ctx, dir, p.Container)
-
-		if err := p.Container.Cleanup(ctx, "."); err != nil {
-			testing.ContextLog(ctx, "Failed to remove all files in home directory in the container: ", err)
-		}
+		trySaveContainerLogs(ctx, dir, p.Container, p.Post)
+		cleanupContainerHome(ctx, p.Container)
 	} else {
 		testing.ContextLog(ctx, "No active container, can't get journalctl logs")
 	}
@@ -111,47 +112,82 @@ func RunBaguettePostTest(ctx context.Context, p PreData) {
 	}
 }
 
-// When we run trySaveContainerLogs we only want to capture logs since we last
-// ran i.e. from the test that just finished, not all logs since the start of
-// the suite. Sadly, Debian's journalctl in stable is too old to support cursor
-// files, so we have to parse a cursor out of the log stream and remember it
-// between calls to trySaveContainerLogs.
-var cursor string
+func cleanupContainerHome(ctx context.Context, cont *vm.Container) {
+	cleanupCtx, cancel := context.WithTimeout(ctx, containerCleanupTimeout)
+	defer cancel()
+	if err := cont.Cleanup(cleanupCtx, "."); err != nil {
+		testing.ContextLog(ctx, "Failed to remove all files in home directory in the container: ", err)
+	}
+}
 
 // trySaveContainerLogs fetches new (i.e. since last time the function
-// successfully ran) logs from the container and writes them to
-// crostini_journalctl.txt
-func trySaveContainerLogs(ctx context.Context, dir string, cont *vm.Container) {
+// successfully ran for this VM) logs from the container and writes them to
+// crostini_journalctl.txt.
+func trySaveContainerLogs(ctx context.Context, dir string, cont *vm.Container, post *PostTestData) {
 	if cont == nil {
 		testing.ContextLog(ctx, "No active container")
 		return
 	}
+	cmdCtx, cancel := context.WithTimeout(ctx, containerLogsTimeout)
+	defer cancel()
+
 	args := []string{"sudo", "journalctl", "--no-pager", "--show-cursor"}
-	if cursor != "" {
-		args = append(args, "--cursor")
-		args = append(args, cursor)
+	if post != nil && post.journalCursor != "" {
+		args = append(args, "--cursor", post.journalCursor)
+	} else {
+		// Limit initial queries (including setup failures) to the current boot
+		// and a bounded line count so slow low-perf DUTs do not time out
+		// streaming historical logs.
+		args = append(args, "-b", "-n", "2000")
 	}
-	cmd := cont.Command(ctx, args...)
-	output, err := cmd.Output()
-	if err != nil {
-		testing.ContextLog(ctx, "Error running journalctl: ", err)
+	cmd := cont.Command(cmdCtx, args...)
+	output, cmdErr := cmd.Output()
+	if cmdErr != nil {
+		testing.ContextLog(ctx, "Error running journalctl: ", cmdErr)
+		// Preserve journalCursor on timeouts so partial output does not lose our
+		// position, but clear it on non-timeout failures in case the cursor
+		// became invalid.
+		if cmdCtx.Err() == nil && post != nil {
+			post.journalCursor = ""
+		}
+	}
+	if len(output) == 0 {
 		return
 	}
 
 	path := filepath.Join(dir, "crostini_journalctl.txt")
-	err = os.WriteFile(path, output, 0644)
-	if err != nil {
+	if err := os.WriteFile(path, output, 0644); err != nil {
 		testing.ContextLog(ctx, "Error writing journalctl to log: ", err)
 		return
 	}
 
-	cursorMarker := []byte("-- cursor: ")
-	pos := bytes.LastIndex(output, cursorMarker)
-	if pos == -1 {
+	// Only advance the cursor when journalctl completed cleanly so partial
+	// output on timeout cannot corrupt subsequent incremental fetches.
+	if cmdErr != nil || post == nil {
+		return
+	}
+	cursor := parseJournalCursor(output)
+	if cursor == "" {
+		// If journalctl exited cleanly without a cursor (e.g. "-- No entries --"
+		// after a journal rollback or vacuum), reset journalCursor so later
+		// calls fall back to a bounded initial capture instead of staying stuck.
+		post.journalCursor = ""
 		testing.ContextLog(ctx, "No journalctl cursor found")
 		return
 	}
-	cursor = string(output[pos+len(cursorMarker):])
+	post.journalCursor = cursor
+}
+
+// parseJournalCursor extracts the cursor from the final "-- cursor: ..." line
+// emitted by `journalctl --show-cursor`, or returns "" if absent.
+func parseJournalCursor(output []byte) string {
+	trimmed := bytes.TrimRight(output, "\r\n")
+	lastNL := bytes.LastIndexByte(trimmed, '\n')
+	after, ok := bytes.CutPrefix(trimmed[lastNL+1:], []byte("-- cursor: "))
+	if !ok {
+		return ""
+	}
+	return string(bytes.TrimSpace(after))
 }
 
 func writeLXCLogs(ctx context.Context, dir string, machine *vm.VM) {

@@ -525,6 +525,9 @@ var startedByDlcBookwormPre = &preImpl{
 type PostTestData struct {
 	// Persistent reader for VM logs.
 	vmLogReader *vm.LogReader
+	// journalCursor tracks the last journalctl cursor captured for this VM
+	// lifecycle so incremental PostTest calls stay scoped to the same VM.
+	journalCursor string
 }
 
 // Implementation of crostini's precondition.

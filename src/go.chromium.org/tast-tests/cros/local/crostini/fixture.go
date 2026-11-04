@@ -238,7 +238,7 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "baguettePolicy",
+		Name:            fixture.BaguettePolicy,
 		Desc:            "Install Baguette, with Chrome logged in with policy",
 		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &baguetteFixture{preData: &preTestData{}},
@@ -247,6 +247,20 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          fixture.ChromePolicyLoggedInBaguette,
+		Vars:            []string{"keepState"},
+		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.BaguettePolicyWithoutArc,
+		Desc:            "Install Baguette without ARC enabled, with Chrome logged in with policy",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &baguetteFixture{preData: &preTestData{}},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          fixture.ChromePolicyLoggedInBaguetteWithoutARC,
 		Vars:            []string{"keepState"},
 		BugComponent:    "b:658562", // ChromeOS > Software > GuestOS
 	})
@@ -484,6 +498,11 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 		f.preData.startedOK = resetSucceeds
 	}()
 
+	// resetContainer restores the pre-test container snapshot, rolling back
+	// the guest journal and invalidating any cursor from the previous test.
+	if f.postData != nil {
+		f.postData.journalCursor = ""
+	}
 	if err := resetContainer(ctx, f.cont, f.cr, f.tconn, true); err != nil {
 		return err
 	}
@@ -635,12 +654,19 @@ func (f *baguetteFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		// Install Baguette.
 		iOptions := &cui.InstallationOptions{UserName: f.cr.NormalizedUser()}
 		if _, err := cui.InstallBaguette(ctx, f.tconn, f.cr, iOptions); err != nil {
-			// Try to retrieve crostini_journalctl if the container is starting
-			// but the installation fails.
-			if termina, err := vm.GetRunningVM(ctx, f.cr.NormalizedUser(), vm.Termina); err != nil {
-				s.Log("Cannot get running VM: ", err)
-			} else if termina != nil {
-				termina.TrySaveContainerLogs(ctx, s.OutDir())
+			// Baguette is containerless (no LXD or chronos user in the guest),
+			// so connect via DefaultContainer with a short timeout on cleanupCtx
+			// (since ctx may have expired and GetRunningConcierge blocks in
+			// dbusutil.WaitForService if concierge is down) and assign f.cont so
+			// the deferred RunBaguettePostTest saves crostini_journalctl.txt and
+			// cleanUp uninstalls the partially installed VM.
+			contCtx, cancel := context.WithTimeout(cleanupCtx, 5*time.Second)
+			cont, contErr := vm.DefaultContainer(contCtx, f.cr.NormalizedUser())
+			cancel()
+			if contErr != nil {
+				s.Log("Cannot connect to running container: ", contErr)
+			} else {
+				f.cont = cont
 			}
 			s.Fatal("Failed to install Crostini: ", err)
 		}

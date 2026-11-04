@@ -49,7 +49,7 @@ func init() {
 			}, {
 				Name:              "baguette_lowperf",
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           fixture.BaguettePolicy,
+				Fixture:           fixture.BaguettePolicyWithoutArc,
 				Timeout:           7 * time.Minute,
 			},
 		},

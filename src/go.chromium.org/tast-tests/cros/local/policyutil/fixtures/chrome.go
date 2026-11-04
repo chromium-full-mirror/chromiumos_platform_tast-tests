@@ -144,6 +144,31 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:         fixture.ChromePolicyLoggedInBaguetteWithoutARC,
+		Desc:         "Logged into a user session with Baguette support without ARC enabled",
+		Contacts:     []string{"clumptini+oncall@google.com"},
+		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				// Disable ARC on low-performance DUTs so concurrent ARCVM and
+				// Baguette VM startup does not trigger Critical memory pressure
+				// and tab discarding of the Settings or Terminal app.
+				return []chrome.Option{
+					chrome.EnableFeatures("CrostiniContainerless"),
+					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
+					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+					chrome.ARCDisabled(),
+				}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:         fixture.ChromePolicyLoggedInCrostini,
 		Desc:         "Logged into a user session with Crostini support and files new policy UX enabled",
 		Contacts:     []string{"clumptini+oncall@google.com", "chromeos-commercial-remote-management@google.com"},

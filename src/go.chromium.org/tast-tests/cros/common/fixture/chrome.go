@@ -8,6 +8,8 @@ package fixture
 const (
 	// Logged in and ready to install baguette.
 	BaguettePolicy = "baguettePolicy"
+	// BaguettePolicyWithoutArc installs Baguette without ARC enabled, with Chrome logged in with policy.
+	BaguettePolicyWithoutArc = "baguettePolicyWithoutArc"
 	// Logged into a user session.
 	ChromeLoggedIn = "chromeLoggedIn"
 	// Logged into a user session without select to speak manifest v3.
