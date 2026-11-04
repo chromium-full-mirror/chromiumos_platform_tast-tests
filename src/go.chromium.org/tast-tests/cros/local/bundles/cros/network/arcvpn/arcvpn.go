@@ -152,7 +152,13 @@ func broadcastLaunchVPNIntent(ctx context.Context, a *arc.ARC, extraArgs ...stri
 	// Only components with android.permission.BIND_VPN_SERVICE can bind to
 	// VPNs, so we can't directly start the service from a non-root shell.
 	// Instead, have a broadcast receiver ask that the system start the VPN.
-	args := []string{"--include-stopped-packages", "--receiver-include-background"}
+	// Include --receiver-foreground so the broadcast is dispatched on the
+	// foreground queue rather than waiting behind background boot broadcasts.
+	args := []string{
+		"--include-stopped-packages",
+		"--receiver-include-background",
+		"--receiver-foreground",
+	}
 	args = append(args, extraArgs...)
 	if _, err := a.BroadcastIntent(ctx, VPNTestAppBroadcast, args...); err != nil {
 		return errors.Wrapf(err, "failed to send %s intent", VPNTestAppBroadcast)
@@ -171,10 +177,12 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 
 	// Poll since it might take some time for the service to start/stop.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		cmd := a.Command(ctx, "dumpsys", "activity", "services", pkg+"/"+svc)
+		cmdCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		cmd := a.Command(cmdCtx, "dumpsys", "activity", "services", pkg+"/"+svc)
 		o, err := cmd.Output(testexec.DumpLogOnError)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute 'dumpsys activity services' commmand")
+			return errors.Wrap(err, "failed to execute 'dumpsys activity services' command")
 		}
 
 		// Use raw string so we can directly use backslashes
@@ -190,7 +198,7 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		return errors.Wrapf(err, "service not in expected running state of %t", expectedRunning)
 	}
 	return nil

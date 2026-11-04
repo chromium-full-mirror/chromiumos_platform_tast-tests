@@ -70,7 +70,7 @@ func verifyVPNWithTestCase(ctx context.Context, s *testing.State, a *arc.ARC, tc
 	// If the main body of the function times out, we still want to reserve a few
 	// seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 6*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
 
 	// Save the ARC network dumpsys as close to the time of error as possible, in case

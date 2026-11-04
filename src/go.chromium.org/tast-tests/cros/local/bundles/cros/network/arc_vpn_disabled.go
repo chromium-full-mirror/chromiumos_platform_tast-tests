@@ -34,7 +34,7 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 	// If the main body of the test times out, we still want to reserve a
 	// few seconds to allow for our cleanup code to run.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
 
 	a := s.FixtValue().(vpn.FixtureEnv).ARC
@@ -48,8 +48,8 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable ARC VPN: ", err)
 	}
 	defer func() {
-		if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
-			s.Fatal("Failed to enable ARC VPN: ", err)
+		if err := arcvpn.SetARCVPNEnabled(cleanupCtx, a, true); err != nil {
+			s.Error("Failed to enable ARC VPN: ", err)
 		}
 	}()
 
