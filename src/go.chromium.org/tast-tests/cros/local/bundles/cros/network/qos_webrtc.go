@@ -51,9 +51,10 @@ func init() {
 		//     detection behavior.
 		Attr: []string{"group:network", "network_platform"},
 		// `no_chrome_dcheck`: To avoid chrome crashes affecting the test execution.
+		// `non_meet_device`: Meet devices do not support regular consumer login.
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
 		// crrev.com/c/5119091 is in the kernel upstream branch.
-		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_chrome_dcheck", "no_kernel_upstream"},
+		SoftwareDeps: []string{"bpf", "wifi", "chrome", "no_chrome_dcheck", "no_kernel_upstream", "non_meet_device"},
 		Data:         webrtc.TestFiles(),
 		Timeout:      5 * time.Minute, // need to start Chrome in the test
 	})

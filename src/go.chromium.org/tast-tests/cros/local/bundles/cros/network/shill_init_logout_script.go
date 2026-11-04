@@ -18,10 +18,11 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillInitLogoutScript,
-		Desc:         "Test that shill init logout script perform as expected",
+		Desc:         "Test that shill init logout script performs as expected",
 		Contacts:     []string{"cros-networking@google.com", "hugobenichi@google.com"},
 		BugComponent: "b:1493959",
-		SoftwareDeps: []string{"chrome"},
+		// Meet devices do not support regular consumer user login flows.
+		SoftwareDeps: []string{"chrome", "non_meet_device"},
 		Attr:         []string{"group:network", "network_platform", "group:release-health", "release-health_network"},
 	})
 }
