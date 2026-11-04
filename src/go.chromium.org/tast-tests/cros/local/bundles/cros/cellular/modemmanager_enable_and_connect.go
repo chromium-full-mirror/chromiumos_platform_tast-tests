@@ -47,7 +47,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer func(ctx context.Context) {
 		if err := modem.Enable(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem enable failed with: ", err)
@@ -55,15 +55,25 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem disconnect failed with: ", err)
 		}
-		if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{"apn": ""}); err != nil {
-			testing.ContextLog(ctx, "Failed to clear the initial EPS bearer settings: ", err)
-		}
 	}(cleanupCtx)
 	defer cancel()
 
 	optionalAPNExist := false
 	optionalAPNSucceeded := false
+	usedApns := map[string]struct{}{}
 	for _, knownAPN := range knownAPNs {
+		mmApnInfo := knownAPN.GetAPNForModemManager()
+		if apnName, ok := mmApnInfo[mmconst.BearerPropertyApn].(string); ok {
+			// GetKnownAPNsForOperator returns both DEFAULT+IA and DEFAULT-only entries
+			// for the same APN name (with DEFAULT+IA ordered first) so Shill tests can
+			// exercise both configurations. Skip duplicate APN names here so a subsequent
+			// DEFAULT-only entry does not overwrite the attach APN with an empty APN ("").
+			if _, exists := usedApns[apnName]; exists {
+				continue
+			}
+			usedApns[apnName] = struct{}{}
+		}
+
 		// Test Disable / Enable / Connect / Disconnect.
 		s.Log("Disable")
 		if err := modem.Disable(ctx); err != nil {
@@ -79,7 +89,6 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 			optionalAPNExist = true
 		}
 
-		mmApnInfo := knownAPN.GetAPNForModemManager()
 		attachApn := map[string]interface{}{"apn": ""}
 		if knownAPN.IsAttachAPN() {
 			attachApn = mmApnInfo
@@ -97,8 +106,8 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		}
 		// Set the multiplex property
 		mmApnInfo[mmconst.BearerPropertyMultiplex] = mmconst.BearerMultiplexSupportRequested
-		s.Log("Connecting with ", mmApnInfo)
 		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
+		s.Log("Connecting with ", mmApnInfo)
 
 		if _, err = modem.Connect(ctx, mmApnInfo); err != nil {
 			if knownAPN.Optional {
@@ -117,6 +126,15 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 
 		if err := modem.EnsureConnectState(ctx, false); err != nil {
 			s.Fatal("Modem not disconnected: ", err)
+		}
+
+		// When a carrier defines multiple optional APNs (e.g., LTE "broadband" and
+		// 5G "nrbroadband" on AT&T), only one may be provisioned on the SIM. Stop
+		// once an optional APN succeeds so a subsequent unprovisioned optional APN
+		// does not overwrite the working attach APN in modem NVM and leave the modem
+		// detached.
+		if knownAPN.Optional {
+			break
 		}
 	}
 
