@@ -7,9 +7,12 @@ package crostini
 import (
 	"context"
 	"reflect"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -87,11 +90,46 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	const Movies = "Movies"
-	if err := uiauto.Combine("open Play files and click Manage with Linux on Movies",
-		filesApp.OpenPlayfiles(),
-		filesApp.ClickContextMenuItem(Movies, sharedfolders.ShareWithLinux),
-		sharedFolders.AddFolder(filesapp.Playfiles+" › "+Movies))(ctx); err != nil {
+	// Bring the Files app window back to the foreground in case windows opened
+	// during Play Store opt-in left it behind another window.
+	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
+		return w.AppID == apps.FilesSWA.ID || strings.HasPrefix(w.Title, filesapp.FilesTitlePrefix)
+	})
+	if err == nil {
+		if err := w.ActivateWindow(ctx, tconn); err != nil {
+			s.Log("Failed to activate Files app window: ", err)
+		}
+	}
+
+	// Immediately after Play Store opt-in, "Play files" in the Files app
+	// navigation tree can still be an unmounted GuestOsPlaceholder
+	// (fake-entry://guest-os/0) while ARCVM's /media/fuse/android_files volume is
+	// mounting or restarting. Clicking "Play files" in that state changes the
+	// window title to "Files - Play files" while the file list remains empty
+	// until the directory is re-entered after the volume finishes mounting.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := filesApp.WithTimeout(15 * time.Second).OpenPlayfiles()(ctx); err != nil {
+			return errors.Wrap(err, "failed to open Play files")
+		}
+		if err := filesApp.WithTimeout(10 * time.Second).WaitForFile(Movies)(ctx); err != nil {
+			// Switch back to "My files" so the next OpenPlayfiles call re-enters "Play files".
+			_ = filesApp.WithTimeout(10 * time.Second).OpenMyFiles()(ctx)
+			return errors.Wrap(err, "Movies folder is not yet populated in Play files")
+		}
+		// Use ClickContextMenuItem (LeftClick) instead of DoDefault: Files app's
+		// <cr-menu-item> only activates on mouseup when selected via mouseover,
+		// which DoDefault does not trigger.
+		if err := filesApp.WithTimeout(15*time.Second).ClickContextMenuItem(Movies, sharedfolders.ShareWithLinux)(ctx); err != nil {
+			// Switch back to "My files" so the next OpenPlayfiles call re-enters "Play files".
+			_ = filesApp.WithTimeout(10 * time.Second).OpenMyFiles()(ctx)
+			return errors.Wrap(err, "failed to click Share with Linux on Movies")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 2 * time.Second}); err != nil {
 		s.Fatal("Failed to share Movies with Crostini: ", err)
+	}
+	if err := sharedFolders.AddFolder(filesapp.Playfiles + " › " + Movies)(ctx); err != nil {
+		s.Fatal("Failed to record shared Movies folder: ", err)
 	}
 
 	// Verify on Settings.
