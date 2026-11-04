@@ -38,7 +38,10 @@ import (
 )
 
 const (
-	installationTimeout    = 15 * time.Minute
+	// Allow 5 minutes beyond cui.InstallationTimeout for pre/post-install
+	// fixture setup steps (Settings UI launch, fontconfig cache, LXD
+	// snapshot, Terminal relaunch, etc.).
+	installationTimeout    = cui.InstallationTimeout + 5*time.Minute
 	checkContainerTimeout  = time.Minute
 	takeSnapshotTimeout    = 5 * time.Second
 	restoreSnapshotTimeout = 10 * time.Second
@@ -46,6 +49,16 @@ const (
 	postTestTimeout        = 40 * time.Second
 	uninstallationTimeout  = 2 * time.Minute
 	restartCrostiniTimeout = 30*time.Second + terminalapp.LaunchTerminalTimeout
+
+	// Restarting Chrome and mounting cryptohome on low-end devices with debug
+	// kernels (*-debug-kernel-informational) can exceed the default Chrome
+	// login timeouts. Increase the login and SetUp timeouts (including the
+	// 15s failure screenshot reservation in chrome.NewLoggedInFixture) by
+	// 2 minutes.
+	chromeLoginTimeout            = chrome.LoginTimeout + 2*time.Minute
+	chromeFixtureSetUpTimeout     = chrome.FixtureSetUpTimeout + 2*time.Minute
+	chromeGAIALoginTimeout        = chrome.GAIALoginTimeout + 2*time.Minute
+	chromeGAIAFixtureSetUpTimeout = chromeGAIALoginTimeout + (chrome.FixtureSetUpTimeout - chrome.LoginTimeout)
 
 	// snapshotName is the snapshot name for the container.
 	snapshotName = "snapshot"
@@ -58,6 +71,7 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
+			opts = append(opts, chrome.CustomLoginTimeout(chromeLoginTimeout))
 			// Enable ARC++ if it is supported. We do this on every
 			// supported device because some tests rely on it and this
 			// lets us reduce the number of distinct fixture. If
@@ -71,7 +85,7 @@ func init() {
 			}
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		SetUpTimeout:    chromeFixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -84,6 +98,7 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
+			opts = append(opts, chrome.CustomLoginTimeout(chromeGAIALoginTimeout))
 			if arc.Supported() {
 				opts = append(opts, chrome.ARCSupported())
 				opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
@@ -93,7 +108,7 @@ func init() {
 			}
 			return append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))), nil
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout,
+		SetUpTimeout:    chromeGAIAFixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -106,10 +121,10 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
-			opts = append(opts, chrome.ARCDisabled())
+			opts = append(opts, chrome.CustomLoginTimeout(chromeLoginTimeout), chrome.ARCDisabled())
 			return opts, nil
 		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		SetUpTimeout:    chromeFixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},
@@ -122,10 +137,10 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
-			opts = append(opts, chrome.ARCDisabled())
+			opts = append(opts, chrome.CustomLoginTimeout(chromeGAIALoginTimeout), chrome.ARCDisabled())
 			return append(opts, chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName))), nil
 		}),
-		SetUpTimeout:    chrome.GAIALoginTimeout,
+		SetUpTimeout:    chromeGAIAFixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars:            []string{"keepState"},

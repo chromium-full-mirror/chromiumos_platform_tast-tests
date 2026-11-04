@@ -33,7 +33,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const installationTimeout = 14 * time.Minute
+// InstallationTimeout is the maximum time allowed for installing Crostini from the UI.
+// Installing Crostini (Termina VM startup, LXD container unpack, and garcon
+// initialization) on low-end ARM64/x86 devices with debug kernels
+// (*-debug-kernel-informational) can exceed 14 minutes.
+const InstallationTimeout = 20 * time.Minute
 
 // InstallWindow is the finder for Crostini install window.
 var InstallWindow = nodewith.NameRegex(regexp.MustCompile(`^Set up Linux`)).Role(role.RootWebArea)
@@ -156,7 +160,7 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 		defer cancel()
 		go func(ctx context.Context) {
 			continueButton := nodewith.Name("Continue anyway").Role(role.Button).First()
-			if err := ui.WithTimeout(installationTimeout).WaitUntilExists(continueButton)(ctx); err != nil {
+			if err := ui.WithTimeout(InstallationTimeout).WaitUntilExists(continueButton)(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to find the upgrade alert before timeout: ", err)
 				return
 			}
@@ -175,7 +179,7 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 		ui.WithTimeout(30*time.Second).DoDefaultUntil(installButton, ui.WithTimeout(2*time.Second).WaitUntilExists(installingMsg)),
 		// The installation message seems unstable, thus using WaitUntilGoneFor
 		// instead of WaitUntilGone.
-		ui.WithTimeout(installationTimeout).WaitUntilGoneFor(installingMsg, 2*time.Second),
+		ui.WithTimeout(InstallationTimeout).WaitUntilGoneFor(installingMsg, 2*time.Second),
 	)(ctx); err != nil {
 		if message, _ := p.checkErrorMessage(cleanupCtx); message != "" {
 			return errors.Errorf("error in installer dialog: %s", message)
