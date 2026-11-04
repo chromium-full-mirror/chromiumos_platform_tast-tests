@@ -400,7 +400,7 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 		if err := q.Call(ctx, &currentLocation, expr); err != nil {
 			// Reset lastLocation on error.
 			lastLocation = coords.Rect{}
-			return testing.PollBreak(errors.New("failed to get node location after the initial retrieval, perhaps the node disappears"))
+			return testing.PollBreak(errors.Wrap(err, "failed to get node location after the initial retrieval, perhaps the node disappears"))
 		}
 		if currentLocation != lastLocation {
 			lastLocation = currentLocation
