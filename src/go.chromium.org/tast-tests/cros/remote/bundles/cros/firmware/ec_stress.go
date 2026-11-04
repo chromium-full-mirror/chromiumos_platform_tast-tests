@@ -651,7 +651,7 @@ func startBackgroundProcess(ctx context.Context, h *firmware.Helper, cmd, output
 
 	// Background process killer runs in background on remote,
 	// and kills the above background process after wall clock timeout.
-	backgroundKillCmd := fmt.Sprintf("{ nohup bash -c 'declare -i END=$(date +%%s -d \"%v seconds\"); while [ $(date +%%s) -lt  $END ]; do sleep 0.1; done; kill -9 %d $(pgrep -P %d 2>/dev/null);' </dev/null &> /dev/null & };", timeout.Seconds(), pid, pid)
+	backgroundKillCmd := fmt.Sprintf("{ nohup bash -c 'declare -i END=$(date +%%s -d \"%v seconds\"); while [ $(date +%%s) -lt $END ] && kill -0 %d 2>/dev/null; do sleep 0.1; done; kill -9 %d $(pgrep -P %d 2>/dev/null);' </dev/null &> /dev/null & };", timeout.Seconds(), pid, pid, pid)
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", backgroundKillCmd).Run(); err != nil {
 		return nil, errors.Wrap(err, "failed to start background process killer")
 	}
