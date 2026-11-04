@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/guestos"
@@ -63,7 +62,7 @@ func CommandVim(ctx context.Context, s *testing.State) {
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
@@ -74,14 +73,24 @@ func CommandVim(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
+	if strings.Contains(s.TestName(), "baguette") {
+		// Close Terminal on cleanup even if CommandVim fails so the parent
+		// policy fixture's PostTest window-count check does not fail.
+		defer func(ctx context.Context) {
+			if s.HasError() && terminalApp.UI().Exists(terminalapp.RootWindow.First())(ctx) != nil {
+				return
+			}
+			if err := terminalApp.Close()(ctx); err != nil {
+				if s.HasError() {
+					s.Log("Failed to exit Terminal window: ", err)
+				} else {
+					s.Error("Failed to exit Terminal window: ", err)
+				}
+			}
+		}(cleanupCtx)
+	}
 
 	if err := guestos.CommandVim(ctx, terminalApp, keyboard, cont); err != nil {
 		s.Fatal("Vim test failed: ", err)
-	}
-
-	if strings.Contains(s.TestName(), "baguette") {
-		if err = apps.Close(ctx, tconn, apps.Terminal.ID); err != nil {
-			s.Fatal("Failed to exit Terminal window: ", err)
-		}
 	}
 }

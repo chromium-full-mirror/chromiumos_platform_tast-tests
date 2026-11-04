@@ -16,11 +16,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
 
 // CommandVim creates a file using vim and checks the file contents.
 func CommandVim(ctx context.Context, terminal *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, guest vm.Guest) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Check that vim is preinstalled.
 	if err := guest.Command(ctx, "vim", "--version").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to execute vim")
@@ -37,17 +42,44 @@ func CommandVim(ctx context.Context, terminal *terminalapp.TerminalApp, keyboard
 	vimTypedLine := terminalapp.AsRow(nodewith.NameStartingWith(testString).First())
 	vimSaveCmd := terminalapp.AsRow(nodewith.NameStartingWith(":x").First())
 
+	cleanupVim := func(ctx context.Context) {
+		// Send SIGTERM and wait up to 1s so vim can run its signal handler and
+		// exit the alternate screen buffer cleanly. If vim is wedged and requires
+		// SIGKILL, resolve its tty character device first, kill it, and then exit
+		// the alternate screen (\033[?1049l) without clearing the primary screen.
+		_ = guest.Command(ctx, "sh", "-c", fmt.Sprintf(
+			`if pkill -TERM -x vim; then `+
+				`for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -x vim >/dev/null || break; sleep 0.1; done; `+
+				`for pid in $(pgrep -x vim); do `+
+				`tty=""; `+
+				`if [ -c "/proc/$pid/fd/1" ]; then tty=$(readlink "/proc/$pid/fd/1" 2>/dev/null || true); fi; `+
+				`kill -9 "$pid" 2>/dev/null || true; `+
+				`if [ -n "$tty" ] && [ -c "$tty" ]; then printf '\033[?1049l' > "$tty" 2>/dev/null || true; fi; `+
+				`done; `+
+				`fi; rm -f %s .%s.swp`,
+			testFile, testFile)).Run()
+	}
+	defer func() {
+		cleanupVim(cleanupCtx)
+	}()
+
+	attempt := 0
 	if err := uiauto.Retry(3, func(ctx context.Context) error {
-		// Clean up any lingering vim process or partial file from a previous attempt.
-		_ = guest.Command(ctx, "pkill", "-9", "vim").Run()
-		_ = guest.Command(ctx, "rm", "-f", testFile, "."+testFile+".swp").Run()
+		attempt++
+		cleanupVim(ctx)
+		if attempt > 1 {
+			_ = ui.WithTimeout(5 * time.Second).WaitUntilGone(vimEmptyLine)(ctx)
+			_ = ui.WithTimeout(5 * time.Second).WaitUntilGone(vimInsertMode)(ctx)
+		}
 		if err := terminal.WaitForPromptWithTimeout(15 * time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "terminal prompt not ready before launching vim")
 		}
 
 		if err := uiauto.Combine("create a file with vim",
-			// Open file through running command vim -n filename in Terminal.
-			terminal.RunCommand(keyboard, fmt.Sprintf("vim -n %s", testFile)),
+			// Pass -u NONE -N to skip defaults.vim so vim does not enable xterm
+			// mouse reporting (mouse=a), which would corrupt bash input if a
+			// retry clicks the terminal after vim is killed.
+			terminal.RunCommand(keyboard, fmt.Sprintf("vim -u NONE -N -n %s", testFile)),
 			// Wait for vim buffer screen to render before sending keys.
 			ui.WithTimeout(15*time.Second).WaitUntilExists(vimEmptyLine),
 			// Type i to enter edit mode and wait for -- INSERT -- indicator.
