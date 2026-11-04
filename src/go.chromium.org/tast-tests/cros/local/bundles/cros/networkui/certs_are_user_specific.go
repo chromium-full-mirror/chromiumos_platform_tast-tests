@@ -29,12 +29,12 @@ type certsAreUserSpecificTestParams struct {
 }
 
 const (
-	// In each test scenario, login and import certificates take 1 minute and up to 1 time,
+	// In each test scenario, login and import certificates take 1-2 minutes and up to 1 time,
 	// login and verify the surface take 2 minutes each and up to 2 times.
-	// Therefore, each scenario requires a 5 minute execution time.
-	testScenarioTimeout = 5 * time.Minute
+	// Therefore, each scenario requires a 6 minute execution time.
+	testScenarioTimeout = 6 * time.Minute
 	// The clean up action requires a longer time due to it involves chrome login and series of UI operations.
-	cleanUpReserveTimeout = 2 * time.Minute
+	cleanUpReserveTimeout = 3 * time.Minute
 )
 
 func init() {
@@ -48,10 +48,11 @@ func init() {
 		BugComponent:   "b:1000044", // ChromeOSSoftwareCommercialCommercial Networking
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Attr:           []string{"group:network", "network_e2e"},
-		SoftwareDeps:   []string{"chrome"},
+		// Meet devices do not support regular consumer user login flows.
+		SoftwareDeps: []string{"chrome", "non_meet_device"},
 		// Import binding and non-binding certs from regular user.
 		// Import non-binding certs from guest user.
-		Timeout: 3 * (testScenarioTimeout + cleanUpReserveTimeout),
+		Timeout: 3*(testScenarioTimeout+cleanUpReserveTimeout) + time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "certificate_manager",
@@ -102,9 +103,11 @@ func CertsAreUserSpecific(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, test.name, func(ctx context.Context, s *testing.State) {
-			cleanupCtx := ctx
+			subCtx, subCancel := context.WithTimeout(ctx, testScenarioTimeout+cleanUpReserveTimeout)
+			defer subCancel()
+			cleanupCtx := subCtx
 			// The clean up action requires a longer time due to it involves chrome login and series of UI operations.
-			ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
+			ctx, cancel := ctxutil.Shorten(cleanupCtx, cleanUpReserveTimeout)
 			defer cancel()
 
 			certs, err := test.user.loginAndImportCerts(ctx, certificate.TestCert1(), test.importType)
