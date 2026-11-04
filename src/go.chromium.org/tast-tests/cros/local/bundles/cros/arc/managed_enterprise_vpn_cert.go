@@ -35,7 +35,7 @@ const (
 	managedEntVpnAccountPoolName = "arc.managedEntVpnAccountPool"
 	vpnPackage                   = "com.paloaltonetworks.globalprotect"
 	vpnAppName                   = "GlobalProtect"
-	vpnServerURL                 = "palo-okta.capse-iss.com"
+	vpnServerURL                 = "vpn.capse-demo.com"
 	vpnConnectedState            = "CONNECTED"
 
 	connectShieldButtonID           = ":id/btnShield"
@@ -46,7 +46,7 @@ const (
 	errorMessageTextID              = ":id/tvInfo"
 	skipEnableNotificationsButtonID = ":id/btnSkip"
 
-	arcCertInstallLogRegex = `ArcCertInstaller::InstallArcCert User_.*`
+	arcCertInstallLogRegex = `ArcCertInstaller::InstallArcCert .*`
 	skipArcTermsLogRegex   = `Skip ARC Terms of Service negotiation`
 )
 
