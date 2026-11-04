@@ -74,7 +74,7 @@ func CheckCPURoutine(ctx context.Context, s *testing.State) {
 
 	// Test CPU routine.
 	pollOpts := testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}
-	if err := ui.WithPollOpts(pollOpts).LeftClick(cpuButton)(ctx); err != nil {
+	if err := ui.WithPollOpts(pollOpts).DoDefault(cpuButton)(ctx); err != nil {
 		s.Fatal("Could not click the CPU test button: ", err)
 	}
 	s.Log("Starting CPU test routine")
@@ -112,12 +112,14 @@ func CheckCPURoutine(ctx context.Context, s *testing.State) {
 	}
 
 	// Cancel the test after first routine succeeds.
+	// Use DoDefault without EnsureFocused because the next CPU routine starts
+	// immediately after the first routine finishes and saturates all CPU cores,
+	// which can cause focus event waiting and coordinate clicks to time out.
 	cancelBtn := diagnosticsapp.DxCancelTestButton.Ancestor(diagnosticsapp.DxRootNode)
 	if err := uiauto.Combine("click Cancel",
 		ui.WithTimeout(20*time.Second).WaitUntilExists(cancelBtn),
 		ui.MakeVisible(cancelBtn),
-		ui.WithTimeout(20*time.Second).EnsureFocused(cancelBtn),
-		ui.WithPollOpts(pollOpts).LeftClick(cancelBtn),
+		ui.WithPollOpts(pollOpts).DoDefault(cancelBtn),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click cancel button: ", err)
 	}
