@@ -8,11 +8,33 @@ package arcwifi
 import (
 	"context"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
+
+// AddNetwork invokes the adb command "cmd wifi add-network" with the given
+// arguments inside ARC, retrying if the ARC internal handler times out and
+// outputs "Save failed" (see b/356289753).
+func AddNetwork(ctx context.Context, a *arc.ARC, args ...string) error {
+	cmdArgs := append([]string{"wifi", "add-network"}, args...)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := a.Command(ctx, "cmd", cmdArgs...).Output()
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to execute cmd wifi add-network"))
+		}
+		if strings.Contains(string(out), "Save failed") {
+			return errors.Errorf("cmd wifi add-network failed with output: %s", strings.TrimSpace(string(out)))
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  15 * time.Second,
+		Interval: time.Second,
+	})
+}
 
 // ForgetNetwork invokes the adb command to forget the WiFi network with ssid
 // inside ARC.
@@ -23,9 +45,9 @@ func ForgetNetwork(ctx context.Context, a *arc.ARC, ssid string) error {
 	}
 
 	for _, network := range strings.Split(string(out), "\n") {
-		// Get network information by shell cmd, if len(network) is 0, means len(netInfos) is also 0,
-		// information line is empty, skip.
-		if len(network) == 0 {
+		network = strings.TrimSpace(network)
+		// Skip empty lines or non-network status lines (e.g., "No networks").
+		if !strings.HasPrefix(network, "networkid=") {
 			continue
 		}
 		netInfos := strings.Split(network, " ")

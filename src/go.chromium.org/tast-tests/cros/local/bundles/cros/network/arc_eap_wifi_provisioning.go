@@ -7,13 +7,11 @@ package network
 import (
 	"context"
 	"encoding/base64"
-	"regexp"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcwifi"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/certutil"
@@ -121,26 +119,22 @@ func ARCEAPWifiProvisioning(ctx context.Context, s *testing.State) {
 
 	caCert := base64.StdEncoding.EncodeToString([]byte(testCerts.CACred.Cert))
 
-	cmd := []string{"wifi", "add-network", apSSID, "eap", "--username", eap.TestUser, "--ca-cert", caCert, "--domain-suffix", domainSuffix, "--alt-subject", altSubjectMatch}
+	args := []string{apSSID, "eap", "--username", eap.TestUser, "--ca-cert", caCert, "--domain-suffix", domainSuffix, "--alt-subject", altSubjectMatch}
 	switch apAuth {
 	case eap.AuthTTLS:
-		cmd = append(cmd, "--eap-method", "TTLS", "--phase2", "MSCHAPV2", "--password", eap.TestPassword)
+		args = append(args, "--eap-method", "TTLS", "--phase2", "MSCHAPV2", "--password", eap.TestPassword)
 	case eap.AuthTLS:
 		pkcs12Cert, err := certutil.PreparePKCS12Cert(ctx, testCerts)
 		if err != nil {
 			s.Fatal("Failed to create PKCS#12 certificate: ", err)
 		}
 		clientCert := base64.StdEncoding.EncodeToString([]byte(pkcs12Cert))
-		cmd = append(cmd, "--eap-method", "TLS", "--client-cert", clientCert)
+		args = append(args, "--eap-method", "TLS", "--client-cert", clientCert)
 	}
 
 	// Provision WiFi credentials from ARC.
-	failReg := regexp.MustCompile(`.*Save failed.*`)
-	if out, err := a.Command(ctx, "cmd", cmd...).Output(testexec.DumpLogOnError); err != nil {
-		// If the output contains failure message, it indicates failure to add network.
+	if err := arcwifi.AddNetwork(ctx, a, args...); err != nil {
 		s.Fatal("Failed to add EAP WiFi config from ARC: ", err)
-	} else if failReg.Match(out) {
-		s.Fatal("Failed to add EAP WiFi, output is: ", string(out))
 	}
 
 	removed := false
@@ -149,7 +143,7 @@ func ARCEAPWifiProvisioning(ctx context.Context, s *testing.State) {
 			return
 		}
 		if err := arcwifi.ForgetNetwork(cleanupCtx, a, apSSID); err != nil {
-			s.Fatal("Failed to forget network: ", err)
+			s.Error("Failed to forget network: ", err)
 		}
 	}(cleanupCtx)
 

@@ -8,11 +8,9 @@ import (
 	"context"
 	"encoding/hex"
 	"reflect"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcwifi"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -111,24 +109,15 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Append customized args of every test case to base cmd that is shared to form a cmd.
-	baseCmd := []string{"wifi", "add-network", "GoogleGuest", "open"}
-	out, err := a.Command(ctx, "cmd", append(baseCmd, tc.args...)...).Output(testexec.DumpLogOnError)
-	// If the output contains failure message, it indicates failure to add network.
-	if err != nil {
+	baseArgs := []string{"GoogleGuest", "open"}
+	if err := arcwifi.AddNetwork(ctx, a, append(baseArgs, tc.args...)...); err != nil {
 		s.Fatal("Failed to add network: ", err)
 	}
 	defer func() {
 		if err := arcwifi.ForgetNetwork(cleanupCtx, a, tc.ssid); err != nil {
-			s.Fatal("Failed to forget network: ", err)
+			s.Error("Failed to forget network: ", err)
 		}
 	}()
-
-	failReg := regexp.MustCompile(`.*Save failed.*`)
-	if failReg.Match(out) {
-		// This may be caused by the ARC main internal handler is blocked, so the call is timeout.
-		// See detail: b/356289753
-		s.Fatal("Failed to add network, output is: ", string(out), ", might be caused by that the call is timeout")
-	}
 
 	services, _, err := m.ServicesByTechnology(ctx, shill.TechnologyWifi)
 	if err != nil {
