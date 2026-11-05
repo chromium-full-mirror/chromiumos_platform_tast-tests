@@ -44,7 +44,7 @@ func init() {
 			Name: "i2c_post_reset",
 			Val: testUpdateDeepSleepConfig{
 				bus: ti50.TpmBusI2c,
-				cmd: "--post-reset",
+				cmd: "--post_reset",
 			},
 		}, {
 			Name: "i2c_upstart",
