@@ -45,10 +45,11 @@ type Session struct {
 	testExtConn    *Conn // connection to test extension exposing APIs
 	signinExtConn  *Conn // connection to signin profile test extension
 	tracingStarted bool
+	guestMode      bool
 }
 
 // NewSession connects to a local Chrome process and creates a new Session.
-func NewSession(ctx context.Context, execPath, debuggingPortPath string, portWait cdputil.PortWaitOption, agg *jslog.Aggregator) (cr *Session, retErr error) {
+func NewSession(ctx context.Context, execPath, debuggingPortPath string, portWait cdputil.PortWaitOption, agg *jslog.Aggregator, guestMode bool) (cr *Session, retErr error) {
 	ctx, st := timing.Start(ctx, "connect")
 	defer st.End()
 
@@ -72,6 +73,7 @@ func NewSession(ctx context.Context, execPath, debuggingPortPath string, portWai
 		watcher:        watcher,
 		agg:            agg,
 		tracingStarted: false,
+		guestMode:      guestMode,
 	}, nil
 }
 
@@ -183,31 +185,56 @@ func (s *Session) NewConnForTarget(ctx context.Context, tm TargetMatcher) (*Conn
 	return s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
 }
 
-// NewConnForWorkerTarget find a worker out of all available targets and returns a valid connection to the
-// all matched by tm.
+// NewConnForWorkerTarget polls available targets matched by tm and returns a
+// valid connection to the first unattached worker target that passes check.
 func (s *Session) NewConnForWorkerTarget(ctx context.Context, tm TargetMatcher, check func(*Conn) bool) (*Conn, error) {
-	targets, err := s.devsess.WaitForTargets(ctx, tm)
-	if err != nil {
+	var matchedConn *Conn
+	// Remember targets that have already been checked so subsequent poll
+	// iterations run check at most once per TargetID.
+	checkedTargets := make(map[TargetID]bool)
+	// Poll until a matching worker registers and passes check, since in
+	// split-incognito or Guest sessions the wrong profile's worker can register
+	// slightly before the expected profile's worker.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		targets, err := s.devsess.FindTargets(ctx, func(t *Target) bool {
+			return !checkedTargets[t.TargetID] && tm(t)
+		})
+		if err != nil {
+			return err
+		}
+		if len(targets) == 0 {
+			if len(checkedTargets) > 0 {
+				return errors.Errorf("no new targets matched (%d checked targets failed check)", len(checkedTargets))
+			}
+			return errors.New("no targets matched")
+		}
+		var lastError error
+		for _, t := range targets {
+			if t.Attached {
+				continue
+			}
+			conn, err := s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
+			if err != nil {
+				lastError = err
+				continue
+			}
+			checkedTargets[t.TargetID] = true
+			if check(conn) {
+				matchedConn = conn
+				return nil
+			}
+			// Close rejected worker connections so DevTools targets do not remain
+			// attached while polling for a matching worker.
+			conn.Close()
+		}
+		if lastError != nil {
+			return lastError
+		}
+		return errors.New("failed to find connection to target")
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond}); err != nil {
 		return nil, s.watcher.ReplaceErr(err)
 	}
-	var lastError error
-	for _, t := range targets {
-		if t.Attached {
-			continue
-		}
-		conn, err := s.newConnInternal(ctx, t.TargetID, t.Type, t.URL)
-		if err != nil {
-			lastError = err
-			continue
-		}
-		if check(conn) {
-			return conn, nil
-		}
-	}
-	if lastError != nil {
-		return nil, lastError
-	}
-	return nil, errors.New("failed to find connection to target")
+	return matchedConn, nil
 }
 
 // TryNewConnForTarget tries to connect to the matched target without waiting. It iterates through all
@@ -271,12 +298,33 @@ func (s *Session) testAPIConnFor(ctx context.Context, extConn **Conn, extID stri
 	testing.ContextLog(ctx, "Waiting for test API extension at ", bgURL)
 	var err error
 	check := func(conn *Conn) bool {
-		if err := conn.WaitForExpr(ctx, extension.TastLibraryLoadedExpr); err != nil {
+		// Bound per-worker readiness checks so a terminating or unresponsive
+		// candidate worker cannot starve the outer poll loop.
+		checkCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		if err := conn.WaitForExpr(checkCtx, extension.TastLibraryLoadedExpr); err != nil {
 			testing.ContextLog(ctx, "Test API extension unavailable: ", err)
 			return false
 		}
+		if extID == extension.TestExtensionID {
+			var inIncognito bool
+			if err := conn.Eval(checkCtx, "Boolean(chrome.extension && chrome.extension.inIncognitoContext)", &inIncognito); err != nil {
+				testing.ContextLog(ctx, "Failed to evaluate chrome.extension.inIncognitoContext: ", err)
+				return false
+			}
+			// TestExtension uses "incognito": "split". In Guest mode, workers spawn
+			// in both the original (non-OTR) guest profile and the active OTR guest
+			// profile, and user keyed services (e.g. SystemWebAppManager) only exist
+			// on the OTR guest profile. Conversely, in non-guest sessions an open
+			// incognito window spawns an OTR worker that must not be selected as the
+			// primary session TestAPIConn.
+			if inIncognito != s.guestMode {
+				testing.ContextLogf(ctx, "Skipping test API worker %s with inIncognitoContext=%t (guestMode=%t)", conn.TargetID, inIncognito, s.guestMode)
+				return false
+			}
+		}
 		if autotestPrivateSupported {
-			if err := conn.Eval(ctx, "chrome.autotestPrivate.initializeEvents()", nil); err != nil {
+			if err := conn.Eval(checkCtx, "chrome.autotestPrivate.initializeEvents()", nil); err != nil {
 				testing.ContextLog(ctx, "chrome.autotestPrivate.initializeEvents evaluation failed: ", err)
 				return false
 			}

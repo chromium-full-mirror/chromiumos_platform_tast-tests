@@ -415,7 +415,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		}
 	}()
 
-	sess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, agg)
+	sess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, agg, cfg.LoginMode() == config.GuestLogin)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to establish connection to Chrome Debugging Protocol with debugging port path=%q", cdputil.DebuggingPortPath)
 	}
@@ -458,7 +458,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		if err := login.LogIn(ctx, cfg, sess); err == login.ErrNeedNewSession {
 			// Restart session.
 			testing.ContextLog(ctx, "Resstart chrome session: LogIn requested new session. Attempting to reconnect")
-			newSess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, agg)
+			newSess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, agg, cfg.LoginMode() == config.GuestLogin)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to reconnect to restarted session")
 			}
@@ -692,7 +692,7 @@ func (c *Chrome) Reconnect(ctx context.Context) error {
 	defer cancel()
 
 	// Create a new session.
-	newSess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, c.agg)
+	newSess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.WaitPort, c.agg, c.cfg.LoginMode() == config.GuestLogin)
 	if err != nil {
 		return err
 	}

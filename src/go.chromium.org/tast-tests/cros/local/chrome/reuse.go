@@ -45,7 +45,7 @@ func reuseSession(ctx context.Context, cfg *config.Config, forceReuse bool) (cr 
 			agg.Close()
 		}
 	}()
-	sess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.NoWaitPort, agg)
+	sess, err := driver.NewSession(ctx, ashproc.ExecPath, cdputil.DebuggingPortPath, cdputil.NoWaitPort, agg, cfg.LoginMode() == config.GuestLogin)
 	if err != nil {
 		return nil, err
 	}
