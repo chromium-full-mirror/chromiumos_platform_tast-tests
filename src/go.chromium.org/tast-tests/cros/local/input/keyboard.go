@@ -26,6 +26,9 @@ const (
 	vendorID  = 0x1234
 	productID = 0x5678
 	versionID = 0x1
+
+	// virtKbdNamePrefix is the device name prefix assigned by virtualKeyboard.
+	virtKbdNamePrefix = "Tast virtual keyboard "
 )
 
 // KeyboardEventWriter supports injecting events into a keyboard device.
@@ -100,12 +103,22 @@ func KeyboardImpl(ctx context.Context, tabletModeForceDisabled bool, delay time.
 // physical keyboard otherwise returns boolean stating a physical keyboard was
 // not found.
 func findPhysicalKeyboardDevInfo(ctx context.Context) (bool, *devInfo, error) {
-	infos, err := readDevices("")
+	return findPhysicalKeyboardDevInfoFromRoot(ctx, "")
+}
+
+// findPhysicalKeyboardDevInfoFromRoot reads input devices under root (or "/" when
+// root is empty) and returns the first non-virtual physical keyboard device.
+func findPhysicalKeyboardDevInfoFromRoot(ctx context.Context, root string) (bool, *devInfo, error) {
+	infos, err := readDevices(root)
 	if err != nil {
 		return false, nil, errors.Wrap(err, "failed to read devices")
 	}
 	for _, info := range infos {
-		if info.isKeyboard() && info.phys != "" {
+		// Virtual keyboards created by createVirtual set phys equal to their device
+		// name ("Tast virtual keyboard ..."), so exclude them when searching for a
+		// physical keyboard lest a caller open an ephemeral uinput device node
+		// without owning its backing /dev/uinput descriptor.
+		if info.isKeyboard() && info.phys != "" && !strings.HasPrefix(info.name, virtKbdNamePrefix) {
 			testing.ContextLogf(ctx, "Using existing keyboard device %+v", info)
 			return true, info, nil
 		}
@@ -171,7 +184,7 @@ func virtualKeyboard(ctx context.Context, deviceID devID) (*KeyboardEventWriter,
 	kw := &KeyboardEventWriter{Delay: defaultDelay}
 
 	// Include our PID in the device name to be extra careful in case an old bundle process hasn't exited.
-	name := fmt.Sprintf("Tast virtual keyboard %d.%d", os.Getpid(), nextVirtKbdNum)
+	name := fmt.Sprintf("%s%d.%d", virtKbdNamePrefix, os.Getpid(), nextVirtKbdNum)
 	nextVirtKbdNum++
 	testing.ContextLogf(ctx, "Creating virtual keyboard device %q", name)
 

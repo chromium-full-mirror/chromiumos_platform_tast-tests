@@ -5,6 +5,7 @@
 package input
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -224,5 +225,106 @@ func TestReadInputDevices(t *testing.T) {
 		if exp.path != info.Path {
 			t.Errorf("info %d path %q doesn't match expected %q", i, info.Path, exp.path)
 		}
+	}
+}
+
+func TestFindPhysicalKeyboardDevInfo(t *testing.T) {
+	ctx := context.Background()
+
+	const virtKbdEntry = `
+I: Bus=0003 Vendor=1234 Product=5678 Version=0001
+N: Name="Tast virtual keyboard 1234.1"
+P: Phys=Tast virtual keyboard 1234.1
+S: Sysfs=/devices/virtual/input/input9
+U: Uniq=
+H: Handlers=sysrq kbd leds event1
+B: PROP=0
+B: EV=120013
+B: KEY=402000000 3803078f800d001 feffffdfffefffff fffffffffffffffe
+B: MSC=10
+B: LED=7
+`
+	const emptyPhysKbdEntry = `
+I: Bus=0011 Vendor=0001 Product=0001 Version=ab83
+N: Name="Synthesized keyboard without phys"
+P: Phys=
+S: Sysfs=/devices/virtual/input/input10
+U: Uniq=
+H: Handlers=sysrq kbd leds event3
+B: PROP=0
+B: EV=120013
+B: KEY=402000000 3803078f800d001 feffffdfffefffff fffffffffffffffe
+B: MSC=10
+B: LED=7
+`
+	const physKbdEntry = `
+I: Bus=0011 Vendor=0001 Product=0001 Version=ab83
+N: Name="AT Translated Set 2 keyboard"
+P: Phys=isa0060/serio0/input0
+S: Sysfs=/devices/platform/i8042/serio0/input/input3
+U: Uniq=
+H: Handlers=sysrq event2
+B: PROP=0
+B: EV=120013
+B: KEY=402000000 3803078f800d001 feffffdfffefffff fffffffffffffffe
+B: MSC=10
+B: LED=7
+`
+
+	for _, tc := range []struct {
+		name     string
+		files    map[string]string
+		wantFind bool
+		wantPath string
+	}{
+		{
+			name: "excludes_tast_virtual_and_empty_phys_keyboards",
+			files: map[string]string{
+				procDevices: virtKbdEntry + emptyPhysKbdEntry,
+				filepath.Join(sysfsDir, "devices/virtual/input/input9/event1/name"):  "",
+				filepath.Join(sysfsDir, "devices/virtual/input/input10/event3/name"): "",
+				filepath.Join(deviceDir, "event1"):                                   "",
+				filepath.Join(deviceDir, "event3"):                                   "",
+			},
+			wantFind: false,
+		},
+		{
+			name: "finds_physical_keyboard_after_tast_virtual_keyboard",
+			files: map[string]string{
+				procDevices: virtKbdEntry + physKbdEntry,
+				filepath.Join(sysfsDir, "devices/virtual/input/input9/event1/name"):               "",
+				filepath.Join(sysfsDir, "devices/platform/i8042/serio0/input/input3/event2/name"): "",
+				filepath.Join(deviceDir, "event1"):                                                "",
+				filepath.Join(deviceDir, "event2"):                                                "",
+			},
+			wantFind: true,
+			wantPath: filepath.Join(deviceDir, "event2"),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			td := testutil.TempDir(t)
+			defer os.RemoveAll(td)
+
+			if err := testutil.WriteFiles(td, tc.files); err != nil {
+				t.Fatal(err)
+			}
+
+			found, info, err := findPhysicalKeyboardDevInfoFromRoot(ctx, td)
+			if err != nil {
+				t.Fatalf("findPhysicalKeyboardDevInfoFromRoot(%q) failed: %v", td, err)
+			}
+			if found != tc.wantFind {
+				t.Fatalf("findPhysicalKeyboardDevInfoFromRoot(%q) found = %v; want %v (info=%+v)", td, found, tc.wantFind, info)
+			}
+			if !tc.wantFind {
+				if info != nil {
+					t.Fatalf("findPhysicalKeyboardDevInfoFromRoot(%q) info = %+v; want nil", td, info)
+				}
+				return
+			}
+			if info == nil || info.path != tc.wantPath {
+				t.Fatalf("findPhysicalKeyboardDevInfoFromRoot(%q) info = %+v; want path %q", td, info, tc.wantPath)
+			}
+		})
 	}
 }

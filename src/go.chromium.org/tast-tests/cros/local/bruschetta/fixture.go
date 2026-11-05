@@ -128,6 +128,7 @@ func init() {
 		Impl:            &bruschettaAppsFixture{deviceMode: devicemode.ClamshellMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
+		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
@@ -348,6 +349,7 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		}
 	}
 
+	var ta *terminalapp.TerminalApp
 	if installerRunning {
 		s.Log("Installer VM is running, waiting for it to stop")
 		if err := f.concierge.WaitForVMStop(ctx, f.vm); err != nil {
@@ -355,15 +357,16 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		}
 		// Now use the terminal app to boot the VM.
 		s.Log("Starting installed VM")
-		if _, err := terminalapp.FindBruschetta(ctx, f.tconn); err != nil {
+		if ta, err = terminalapp.FindBruschetta(ctx, f.tconn); err != nil {
 			s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
 		}
 	} else {
 		s.Log("Installer VM is already closed, waiting for VM to start")
-		if _, err := terminalapp.WaitForBruschettaPrompt(ctx, f.tconn); err != nil {
+		if ta, err = terminalapp.WaitForBruschettaPrompt(ctx, f.tconn); err != nil {
 			s.Fatal("Failed to wait for bruschetta VM to start: ", err)
 		}
 	}
+	closeTerminalKeyboard(ctx, ta)
 
 	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		s.Fatal("Failed to close terminal app: ", err)
@@ -398,10 +401,11 @@ func (f *bruschettaFixture) Reset(ctx context.Context) error {
 	}
 
 	// Start up the VM, if it's not already running.
-	_, err := terminalapp.LaunchBruschetta(ctx, f.tconn)
+	ta, err := terminalapp.LaunchBruschetta(ctx, f.tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to start bruschetta VM using terminal app")
 	}
+	closeTerminalKeyboard(ctx, ta)
 	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		return errors.Wrap(err, "failed to close terminal app")
 	}
@@ -425,6 +429,21 @@ func (f *bruschettaFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		s.Log("Failed to request keep awake: ", err)
 	} else {
 		f.releaseKeepAwake = cleanup
+	}
+
+	// Re-open the keyboard device in place (since tests hold the original f.kb
+	// pointer in FixtureData.KB) if its underlying /dev/input/eventN node was
+	// removed across tests or tablet-mode transitions.
+	if f.kb != nil {
+		if _, err := os.Stat(f.kb.Device()); err != nil {
+			_ = f.kb.Close(ctx)
+			*f.kb = input.KeyboardEventWriter{}
+			if newKB, err := input.Keyboard(ctx); err != nil {
+				s.Fatal("Failed to recreate keyboard device: ", err)
+			} else {
+				*f.kb = *newKB
+			}
+		}
 	}
 }
 
@@ -508,8 +527,21 @@ func (f *bruschettaAppsFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	return p
 }
 
-func (f *bruschettaAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
-func (f *bruschettaAppsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *bruschettaAppsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Re-assert the target device mode before each test in case a preceding test
+	// (such as switch_tablet) failed before reverting out of tablet mode.
+	// Discard the returned revert closure so PostTest does not restore a leaked
+	// tablet mode; SetUp and TearDown preserve the pre-fixture state via f.revertDeviceMode.
+	if _, err := devicemode.EnsureDeviceMode(ctx, f.tconn, f.deviceMode); err != nil {
+		s.Fatalf("Failed to set device mode to %s: %s", f.deviceMode, err)
+	}
+}
+
+func (f *bruschettaAppsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if _, err := devicemode.EnsureDeviceMode(ctx, f.tconn, f.deviceMode); err != nil {
+		s.Logf("Failed to reset device mode to %s after test: %s", f.deviceMode, err)
+	}
+}
 
 func (f *bruschettaAppsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.revertDeviceMode != nil {
@@ -582,4 +614,15 @@ func installBruschetta(ctx context.Context, tconn *chrome.TestConn) error {
 
 func removeBruschetta(ctx context.Context, tconn *chrome.TestConn) error {
 	return tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.removeBruschetta)`, defaultVMName)
+}
+
+// closeTerminalKeyboard closes the keyboard writer created by TerminalApp so
+// any virtual uinput keyboard created on headless boards is destroyed
+// immediately rather than left open until garbage collection.
+func closeTerminalKeyboard(ctx context.Context, ta *terminalapp.TerminalApp) {
+	if ta != nil && ta.Kb != nil {
+		if err := ta.Kb.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close terminal keyboard: ", err)
+		}
+	}
 }
