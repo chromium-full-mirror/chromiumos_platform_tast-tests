@@ -34,17 +34,71 @@ const html = `<!DOCTYPE html>
 <input style="width: 100%" />
 `
 
-// Slower devices could take up to two minutes to start Firefox.
-const firefoxStartupTimeout = 2 * time.Minute
-const testPageName = "test_page.html"
+const (
+	// Slower devices could take up to two minutes to start Firefox.
+	firefoxStartupTimeout = 2 * time.Minute
+	testPageTitle         = "Crostini Firefox Input Test Page"
+	testPageName          = "test_page.html"
+	firefoxPoliciesName   = "policies.json"
+	firefoxPoliciesPath   = "/etc/firefox/policies/policies.json"
+	firefoxPoliciesJSON   = `{"policies":{` +
+		`"DisableTelemetry":true,` +
+		`"OverrideFirstRunPage":"",` +
+		`"SkipTermsOfUse":true,` +
+		`"Preferences":{` +
+		`"browser.tabs.warnOnClose":{"Value":false,"Status":"locked"},` +
+		`"datareporting.policy.dataSubmissionPolicyBypassNotification":{"Value":true,"Status":"locked"},` +
+		`"datareporting.policy.firstRunURL":{"Value":"","Status":"locked"}` +
+		`}}}`
+)
 
-var firefoxWindow = nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
-var testPageTab = uidetection.TextBlock([]string{"Crostini", "Firefox", "Input", "Test", "Page"}).WithinA11yNode(firefoxWindow).First()
+var (
+	firefoxWindow  = nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
+	testPageWindow = nodewith.NameContaining(testPageTitle).Role(role.Window).First()
+)
+
+// configureFirefoxForTestPage installs temporary enterprise policies (including
+// locked Preferences) to suppress first-run "Firefox Privacy Notice" / ToU tabs
+// and multi-tab close prompts so the test page opens as the sole active tab.
+func configureFirefoxForTestPage(ctx context.Context, cont *vm.Container) error {
+	if err := cont.WriteFile(ctx, firefoxPoliciesName, firefoxPoliciesJSON); err != nil {
+		return errors.Wrap(err, "failed to write Firefox policies")
+	}
+	if err := cont.Command(ctx, "sudo", "mkdir", "-p", "/etc/firefox/policies").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to create Firefox policies directory")
+	}
+	if err := cont.Command(ctx, "chmod", "0644", firefoxPoliciesName).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to set permissions on Firefox policies file")
+	}
+	if err := cont.Command(ctx, "sudo", "mv", firefoxPoliciesName, firefoxPoliciesPath).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to install Firefox policies")
+	}
+	return nil
+}
+
+// CleanupFirefoxTestPageFiles removes the temporary test page and Firefox
+// enterprise policy files from the container. Callers should pass a reserved
+// cleanup context (created via ctxutil.Shorten) so cleanup still succeeds if
+// the main test context times out.
+func CleanupFirefoxTestPageFiles(ctx context.Context, cont *vm.Container) error {
+	var firstErr error
+	// Container.RemoveAll executes "sudo rm -rf", so it removes root-owned /etc
+	// files and ignores paths that were already moved or never created.
+	for _, path := range []string{testPageName, firefoxPoliciesName, firefoxPoliciesPath} {
+		if err := cont.RemoveAll(ctx, path); err != nil && firstErr == nil {
+			firstErr = errors.Wrapf(err, "failed to remove file %s", path)
+		}
+	}
+	return firstErr
+}
 
 // LaunchFirefoxWithTestPage creates a test webpage and launches it with the Firefox app.
-func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda *uidetection.Context, ui *uiauto.Context, cont *vm.Container, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
+func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, cont *vm.Container, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
 	// Create a file with test page.
 	if err := cont.WriteFile(ctx, testPageName, html); err != nil {
+		return err
+	}
+	if err := configureFirefoxForTestPage(ctx, cont); err != nil {
 		return err
 	}
 
@@ -73,11 +127,12 @@ func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda 
 	}
 
 	if err := uiauto.Combine("create test page in terminal and open in firefox",
-		terminalApp.RunCommand(keyboard, "firefox-esr "+testPageName),
+		terminalApp.RunCommand(keyboard, "MOZ_CRASHREPORTER_DISABLE=1 firefox-esr "+testPageName),
 		ui.WithTimeout(firefoxStartupTimeout).WaitUntilExists(firefoxWindow),
 		maximizeWindow,
-		// Wait until the page is loaded.
-		uda.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(testPageTab),
+		// Wait until Firefox sets the Wayland window title from <title> once the
+		// test page loads as the active tab.
+		ui.WithTimeout(firefoxStartupTimeout).WaitUntilExists(testPageWindow),
 	)(ctx); err != nil {
 		return err
 	}
@@ -85,21 +140,14 @@ func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda 
 	return nil
 }
 
-// CloseFirefoxTestPage removes the testfile and closes the Firefox webpage using keyboard shortcuts, then waits for the window to close.
-func CloseFirefoxTestPage(ctx context.Context, uda *uidetection.Context, ui *uiauto.Context, cont *vm.Container, keyboard *input.KeyboardEventWriter) error {
-	// Firefox may open up another default page like "Privacy Notice", so keep pressing ctrl+w twice before checking the window is gone.
-	if err := ui.WithInterval(time.Second).RetryUntil(
+// CloseFirefoxTestPage closes the Firefox webpage using keyboard shortcuts and
+// waits for the window to close.
+func CloseFirefoxTestPage(ctx context.Context, ui *uiauto.Context, keyboard *input.KeyboardEventWriter) error {
+	// Retry pressing ctrl+w until the Firefox window closes, in case multiple tabs are open.
+	return ui.WithInterval(time.Second).RetryUntil(
 		keyboard.AccelAction("ctrl+w"),
 		ui.WithTimeout(3*time.Second).WaitUntilGone(firefoxWindow),
-	)(ctx); err != nil {
-		return err
-	}
-
-	// Remove the test page file.
-	if err := cont.RemoveAll(ctx, testPageName); err != nil {
-		return errors.Errorf("failed to remove file %s: %s", testPageName, err)
-	}
-	return nil
+	)(ctx)
 }
 
 // VerifyFirefoxLaunchAndClose verifies that firefox window exists and firefox on shelf.
@@ -107,16 +155,22 @@ func CloseFirefoxTestPage(ctx context.Context, uda *uidetection.Context, ui *uia
 // It also closes firefox.
 func VerifyFirefoxLaunchAndClose(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter) error {
 	const startupTimeout = 2 * time.Minute // slower devices could take up to two minutes to start Firefox.
-	ud := uidetection.NewDefault(tconn)
+	// Use a 15s per-branch timeout rather than the 60s default so fallback
+	// branches do not stall for 2 minutes when first-run tabs are suppressed.
+	ud := uidetection.NewDefault(tconn).WithTimeout(15 * time.Second).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	ui := uiauto.New(tconn).WithTimeout(startupTimeout)
 	firefoxWindow := nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
 
-	// Check firefox window.
+	// Check firefox window. Accept "New Tab" in addition to the first-run
+	// welcome text in case first-run tabs were suppressed or already dismissed.
 	if err := uiauto.Combine("verify Firefox",
 		ui.WaitUntilExists(firefoxWindow),
 		uiauto.IfFailThen(
-			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
-			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
+			uiauto.IfFailThen(
+				ud.WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
+				ud.WaitUntilExists(uidetection.TextBlock([]string{"New", "Tab"}).WithinA11yNode(firefoxWindow).First()),
+			),
 		),
 	)(ctx); err != nil {
 		return err

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -67,6 +66,11 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := crostiniapps.CleanupFirefoxTestPageFiles(ctx, cont); err != nil {
+			s.Log("Failed to clean up Firefox test page files: ", err)
+		}
+	}(cleanupCtx)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
@@ -74,9 +78,8 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 
 	const inputEmoji = "😂"
 	ui := uiauto.New(tconn)
-	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, tconn, uda, ui, cont, terminalApp, keyboard); err != nil {
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, tconn, ui, cont, terminalApp, keyboard); err != nil {
 		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
@@ -93,7 +96,7 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to take app screenshot: ", err)
 	}
 
-	if err := crostiniapps.CloseFirefoxTestPage(ctx, uda, ui, cont, keyboard); err != nil {
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, keyboard); err != nil {
 		s.Fatal("Failed to close firefox: ", err)
 	}
 }
