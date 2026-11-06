@@ -2277,11 +2277,23 @@ func (h *Helper) RebootWithSSHCommand(ctx context.Context, fromMode fwCommon.Boo
 	if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
 	}
-	reconnectTimeout := h.Config.DelayRebootToPing
-	if fromMode == fwCommon.BootModeDev {
-		reconnectTimeout = h.Config.FirmwareScreen + DevScreenTimeout + h.Config.DelayRebootToPing
+	if ok, err := h.Servo.HasControl(ctx, string(servo.ImageUSBKeyPwr)); err == nil && ok {
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+			testing.ContextLog(ctx, "Failed to turn off USB mux after reboot: ", err)
+		}
 	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
+	if fromMode == fwCommon.BootModeDev {
+		ms, err := NewModeSwitcher(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to create mode switcher")
+		}
+		return ms.RunBypasserUntilDUTConnected(ctx, RunBypasser{
+			BypasserMethod:        ms.BypassDevMode,
+			RepeatBypasser:        true,
+			WaitUntilDUTConnected: h.Config.FirmwareScreen + h.Config.SoftwareSyncUpdate + DevScreenTimeout + h.Config.DelayRebootToPing,
+		})
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to the DUT")
