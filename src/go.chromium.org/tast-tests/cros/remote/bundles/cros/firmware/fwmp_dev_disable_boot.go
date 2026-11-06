@@ -400,7 +400,7 @@ func confirmContinueToNorm(ctx context.Context, h *firmware.Helper, ms *firmware
 
 	connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancel()
-	if err := h.WaitConnect(connectCtx); err != nil {
+	if err := h.WaitConnect(connectCtx, firmware.ResetEthernetDongle); err != nil {
 		return err
 	}
 
