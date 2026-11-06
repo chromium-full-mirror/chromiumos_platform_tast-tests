@@ -132,10 +132,10 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 			needsRestoreFromDevMode = false
 			rolledBackKernB = false
 		}
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
+		}
 		if bootMode == common.BootModeNormal {
-			if err := h.EnsureDUTBooted(ctx); err != nil {
-				s.Fatal("Failed to ensure DUT booted: ", err)
-			}
 			s.Log("Sync KERN-A/B backups from host to DUT")
 			if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
 				kernAHostBackup.Name(): kernelBackup.KernA.BackupPath,
@@ -147,11 +147,11 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 
 		if err := h.RequireKernelServiceClient(ctx); err != nil {
 			s.Error("Failed to connect to kernel service: ", err)
-		}
-
-		s.Log("Restoring kernel from backup")
-		if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
-			s.Error("Failed to restore kernel from backup: ", err)
+		} else {
+			s.Log("Restoring kernel from backup")
+			if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
+				s.Error("Failed to restore kernel from backup: ", err)
+			}
 		}
 
 		s.Log("Delete backup files from DUT")
