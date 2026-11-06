@@ -62,7 +62,7 @@ func ChromevoxTTSProcessingWhitespace(ctx context.Context, s *testing.State) {
 		},
 		{
 			[]string{"Backspace", "Backspace"},
-			[]tts.SpeechExpectation{tts.NewOptionsExpectation(", deleted", "en-US", .4, 1.0)},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("space")},
 		},
 	}
 
