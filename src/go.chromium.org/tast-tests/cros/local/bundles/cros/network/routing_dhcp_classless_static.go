@@ -236,9 +236,17 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 	}
 	defer server2.Cleanup(cleanupCtx)
 
+	// Also include a 0.0.0.0/0 default route in Option 121 alongside the
+	// standard Option 3 router from WithDHCPServer. shill must not install a
+	// 0.0.0.0/0 destination routing rule at kDstRulePriority that would hijack
+	// default traffic from the primary base network (b/516658596).
+	defaultClasslessRoute := dnsmasq.Route{
+		Prefix:  &net.IPNet{IP: net.IPv4zero, Mask: net.IPv4Mask(0, 0, 0, 0)},
+		Gateway: dhcpSubnet.GetAddrEndWith(1),
+	}
 	dnsmasqServer := dnsmasq.New(
 		dnsmasq.WithDHCPServer(dhcpSubnet),
-		dnsmasq.WithDHCPClasslessStaticRoutes([]dnsmasq.Route{server1.Route, server2.Route}),
+		dnsmasq.WithDHCPClasslessStaticRoutes([]dnsmasq.Route{defaultClasslessRoute, server1.Route, server2.Route}),
 		dnsmasq.WithInterface(br),
 	)
 	if err := testEnv.TestRouter.StartServer(ctx, "dnsmasq", dnsmasqServer); err != nil {
