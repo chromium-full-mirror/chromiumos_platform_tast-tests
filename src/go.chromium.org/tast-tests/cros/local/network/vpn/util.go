@@ -121,7 +121,15 @@ func RemoveVPNProfile(ctx context.Context, name string) error {
 	}
 
 	testing.ContextLog(ctx, "Removing VPN service ", svc)
-	return svc.Remove(ctx)
+	if err := svc.Remove(ctx); err != nil {
+		// If the service D-Bus object was concurrently destroyed (for example,
+		// when clearing an ONC policy in Chrome), treat it as already removed.
+		if strings.Contains(err.Error(), "doesn't exist") {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 // FindVPNService returns a VPN service matching the given |serviceGUID| in

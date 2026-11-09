@@ -251,6 +251,10 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{}); err != nil {
 			s.Error("Failed to clear policy during cleanup: ", err)
 		}
+		// ServeAndRefresh only waits for Chrome to fetch the updated policy; Chrome
+		// removes the managed ONC VPN configuration from Shill asynchronously.
+		// Explicitly call RemoveVPNProfile to ensure the Shill service is removed
+		// before the test exits.
 		if err := vpn.RemoveVPNProfile(ctx, serviceName); err != nil {
 			s.Error("Failed to remove VPN service during cleanup: ", err)
 		}
