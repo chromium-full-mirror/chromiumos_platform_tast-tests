@@ -178,6 +178,9 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 
 	const hostname1 = "test-hostname-1"
 	const hostname2 = "test-hostname-2"
+	// Use a hostname containing only hex characters and a hyphen to verify that
+	// dhcpcd does not misinterpret it as a hardware address (b/579864384).
+	const hostnameHex = "ab-00cd"
 	const profileName1 = "profile1"
 	const profileName2 = "profile2"
 
@@ -206,13 +209,18 @@ func DHCPHostname(ctx context.Context, s *testing.State) {
 		s.Fatal("Leases in dnsmasq does not contain the expected hostname")
 	}
 
+	setHostname(hostnameHex)
+	if !hasHostname(hostnameHex) {
+		s.Fatal("Leases in dnsmasq does not contain the expected hex-only hostname")
+	}
+
 	setHostname("")
-	if hasHostname(hostname1) || hasHostname(hostname2) {
+	if hasHostname(hostname1) || hasHostname(hostname2) || hasHostname(hostnameHex) {
 		s.Fatal("Leases in dnsmasq still contains the hostname which should be removed")
 	}
 
 	popProfile(profileName2)
-	if hasHostname(hostname1) || hasHostname(hostname2) {
+	if hasHostname(hostname1) || hasHostname(hostname2) || hasHostname(hostnameHex) {
 		s.Fatal("Leases in dnsmasq still contains the hostname which should be removed")
 	}
 }
