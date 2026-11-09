@@ -266,29 +266,31 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		return keys
 	}
 
-	// Generates traffic for each source on each server and returns map keyed by
-	// the counters we expect to find based on the servers and sources provided.
-	runIO := func(users []string) {
+	// Generates traffic for each source on each server.
+	runIO := func(ctx context.Context, users []string) error {
 		for _, u := range users {
 			if err := txrx(ctx, svr, msg, u); err != nil {
-				s.Fatalf("Failed to run i/o test for %v:%v:%v: %v", u, svr.fam.String(), svr.dst(), err)
+				return errors.Wrapf(err, "failed to run i/o test for %v:%v:%v", u, svr.fam.String(), svr.dst())
 			}
 		}
+		return nil
 	}
 
 	// Tests that traffic counters increase by at least an expected amount across
 	// two consecutive runs. Only counters that map to keys are considered.
 	// genTraffic is expected to generate traffic where both tx and rx should
 	// larger than msgLen.
-	test := func(keys map[string]bool, genTraffic func()) {
+	test := func(keys map[string]bool, genTraffic func(ctx context.Context) error) {
 		// Generate initial set of counters and verify we have all expected
 		// counters. Since patchpanel may need some time to install the iptables
 		// rules even after routing is ready, use a Poll here.
 		testing.ContextLog(ctx, "Generating traffic to get counters for baseline")
 		var base map[string]*counters
-		if err := testing.Poll(ctx, func(context.Context) error {
-			genTraffic()
-			base := getCounters(keys)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := genTraffic(ctx); err != nil {
+				return err
+			}
+			base = getCounters(keys)
 			for k := range keys {
 				if _, ok := base[k]; !ok {
 					return errors.Errorf("expected baseline counter missing %v", k)
@@ -296,7 +298,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{
-			Timeout:  10 * time.Second,
+			Timeout:  15 * time.Second,
 			Interval: 2 * time.Second,
 		}); err != nil {
 			s.Fatal("Expected baseline counter missing: ", err)
@@ -308,7 +310,9 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Generating traffic to get counters for comparison")
 		const iterations = 20
 		for i := 0; i < iterations; i++ {
-			genTraffic()
+			if err := genTraffic(ctx); err != nil {
+				s.Fatal("Failed to generate comparison traffic: ", err)
+			}
 		}
 		expectedDiff := uint64(iterations * msgLen)
 		comp := getCounters(keys)
@@ -336,8 +340,8 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		})
 		test(
 			expected,
-			func() {
-				runIO([]string{
+			func(ctx context.Context) error {
+				return runIO(ctx, []string{
 					"kerberosd", // SYSTEM
 					"debugd",    // USER
 					"chronos",   // CHROME
@@ -367,12 +371,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		}
 		test(
 			expected,
-			func() {
-				runIO([]string{"chronos"})
+			func(ctx context.Context) error {
+				return runIO(ctx, []string{"chronos"})
 			})
 	}
 
-	vmTest := func(srcs []pp.TrafficCounter_Source, f func(addr net.IP) error) {
+	vmTest := func(srcs []pp.TrafficCounter_Source, f func(ctx context.Context, addr net.IP) error) {
 		handler := func(resp http.ResponseWriter, req *http.Request) {
 			// Request payload is unused. Log any error on failure though to help
 			// debug if the test fails.
@@ -397,10 +401,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start HTTP server: ", err)
 		}
 		test(expected,
-			func() {
-				if err := f(svr.addr); err != nil {
-					s.Fatalf("Failed to run HTTP i/o test for %v:%v: %v", param.ipFamily.String(), svr.dst(), err)
+			func(ctx context.Context) error {
+				if err := f(ctx, svr.addr); err != nil {
+					return errors.Wrapf(err, "failed to run HTTP i/o test for %v:%v", param.ipFamily.String(), svr.dst())
 				}
+				return nil
 			})
 	}
 
@@ -415,7 +420,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSTINI_VM},
-			func(addr net.IP) error {
+			func(ctx context.Context, addr net.IP) error {
 				addrStr := addr.String()
 				if param.ipFamily == tcIPv6 {
 					addrStr = "[" + addrStr + "]"
@@ -442,15 +447,19 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
-			func(addr net.IP) error {
-				// Use dumpsys to generate some traffic to/from the HTTP server. Note
-				// that we cannot control the tx packet length here. We should consider
-				// switching to use the QoS test app which can send and receive UDP
-				// packets directly.
+			func(ctx context.Context, addr net.IP) error {
+				addrStr := addr.String()
+				if param.ipFamily == tcIPv6 {
+					addrStr = "[" + addrStr + "]"
+				}
+
+				// Use dumpsys to generate some traffic to/from the HTTP server. Append
+				// msg to the URL path so the HTTP GET request is also larger than
+				// msgLen.
 				args := []string{
 					"wifi",
 					"tools", "http", "host_default",
-					"http://" + addr.String(),
+					"http://" + addrStr + "/" + msg,
 				}
 				return a.Command(ctx, "dumpsys", args...).Run(testexec.DumpLogOnError)
 			})
