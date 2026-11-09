@@ -47,6 +47,16 @@ const (
 
 const (
 	tempDir string = "/usr/local/tmp"
+	// eventWatchTimeout bounds how long the dbus watcher that DoTest sets up
+	// before running the file commands keeps collecting EnqueueRecord calls,
+	// i.e. how long it waits for secagentd to report every expected file
+	// event. secagentd normally flushes its batches every batchIntervalS
+	// seconds, but shortly after a (re)start its main thread can stall for
+	// tens of seconds while it hashes large executables (e.g. a >1 GB chrome
+	// binary) that other processes exec, which delays every batch. Waiting for
+	// the events instead of sleeping for a fixed multiple of the batch interval
+	// keeps the test fast in the common case and tolerant of such stalls.
+	eventWatchTimeout = 90 * time.Second
 )
 
 type restoreFile struct {
@@ -157,11 +167,12 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		f.Logf("Detected %q in log file, file plugin should be activated..starting test", tc.syncText)
 	}
 
-	stopDbusMonitoring, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid, true)
+	ew, stopWatcher, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, eventWatchTimeout, true)
 	if err != nil {
 		f.Fatal("Failed to setup dbus monitoring: ", err)
 		return
 	}
+	defer stopWatcher()
 	// key is the pid of the process triggering a file event.
 	// value is the criteria the resulting file event should be evaluated
 	// against.
@@ -308,26 +319,70 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		}
 	}
 
-	// Wait for the current batch to be flushed.
-	// GoBigSleepLint: Using poll here doesn't make sense. There is no
-	// particular condition we can poll for. This is simply giving secagentd
-	// ample time to process and post events to dbus and is an educated guess.
-	// TODO(b/278252387): Convert this to poll when tast's
-	// dbusutil.DbusEventMonitor supports it.
-	if err := testing.Sleep(ctx, 3*batchIntervalS*time.Second); err != nil {
-		f.Fatal("Failed to sleep: ", err)
+	// Wait until every expected file event has been reported over D-Bus
+	// instead of sleeping for a fixed multiple of the batch interval, which
+	// expired too early whenever secagentd was stalled (see eventWatchTimeout).
+	if err := f.waitForExpectedEvents(ew, expectedResults); err != nil {
+		f.Log("Stopped waiting for file events: ", err)
 	}
 
-	bFileEvents, _ := f.collectFileDbusMessages(ctx, expectedResults,
-		stopDbusMonitoring)
+	if len(expectedResults) > 0 {
+		for pid, e := range expectedResults {
+			f.Logf("command [%d]%v expecting a %v", pid, e.command, e.eventType)
+		}
+		f.Error("Test failed, not all expectations met")
+	}
+}
 
-	// Check to make sure we see file events with the proper process ID
-	// and then check the actual file event.
+// waitForExpectedEvents consumes the EnqueueRecord calls observed by ew and
+// retires the entries of expectedResults that they satisfy. It returns as soon
+// as expectedResults is empty, or with an error once the watcher stops, e.g.
+// because its timeout elapsed.
+func (f FileEvent) waitForExpectedEvents(ew *dbusutil.EventWatcher, expectedResults map[uint64]*expectedResult) error {
+	var fileEvents []*xdr.FileEventAtomicVariant
+	numRecords := 0
+	defer func() {
+		f.Logf("secagentd enqueued %d events", numRecords)
+		if len(expectedResults) > 0 {
+			// Log why the file events seen so far did not satisfy the
+			// remaining expectations.
+			f.retireMetExpectations(fileEvents, expectedResults, true)
+		}
+	}()
 
-	// we go through all file events and when we find a matching event we will
-	// retire the entry in the expectation map. A passing condition is that the
-	// expectation map is empty.
-	for _, fileEvent := range bFileEvents {
+	for len(expectedResults) > 0 {
+		method, ok := <-ew.Events()
+		if !ok {
+			return errors.Wrap(ew.Err(), "dbus event watcher stopped")
+		}
+		numRecords++
+		events, err := f.handleEnqueueRecord(method, expectedResults)
+		if err != nil {
+			f.Error("Invalid EnqueueRecord call: ", err)
+			continue
+		}
+		fileEvents = append(fileEvents, events...)
+		// The exec events describing the commands and the file events they
+		// caused come from different plugins and thus from different
+		// batches, so re-examine every file event seen so far whenever a new
+		// record arrives.
+		f.retireMetExpectations(fileEvents, expectedResults, false)
+	}
+	return nil
+}
+
+// retireMetExpectations deletes from expectedResults every expectation that
+// one of fileEvents satisfies. Mismatches are only logged when verbose is
+// true because the same unmatched event may be re-examined several times
+// while the remaining batches are awaited.
+func (f FileEvent) retireMetExpectations(fileEvents []*xdr.FileEventAtomicVariant, expectedResults map[uint64]*expectedResult, verbose bool) {
+	logf := func(format string, args ...any) {
+		if verbose {
+			f.Logf(format, args...)
+		}
+	}
+
+	for _, fileEvent := range fileEvents {
 		modify := fileEvent.GetSensitiveModify()
 		read := fileEvent.GetSensitiveRead()
 		var process, parentProcess *xdr.Process
@@ -349,7 +404,7 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 			actualEventType = readEvent
 			sensitiveFileType = read.FileRead.SensitiveFileType
 		} else {
-			f.Error("encountered an empty file event, no read, no modify found")
+			continue
 		}
 
 		ok := false
@@ -360,37 +415,37 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 		}
 		eInfo := fmt.Sprintf("[%d] cmd %q ", pid, expectedResult.command)
 		if expectedResult.eventType != actualEventType {
-			f.Logf("MISMATCH[event type] - %v expected %q actual %q", eInfo,
+			logf("MISMATCH[event type] - %v expected %q actual %q", eInfo,
 				expectedResult.eventType,
 				actualEventType)
 			continue
 		}
 		if !proto.Equal(process, expectedResult.process) {
-			f.Logf("MISMATCH - %v process - expected:%q actual: %q", eInfo,
+			logf("MISMATCH - %v process - expected:%q actual: %q", eInfo,
 				expectedResult.process, process)
 			continue
 		}
 		if !proto.Equal(parentProcess, expectedResult.parentProcess) {
-			f.Logf("MISMATCH - %v parent process - expected: %q actual: %q",
-				eInfo, expectedResult.process, process)
+			logf("MISMATCH - %v parent process - expected: %q actual: %q",
+				eInfo, expectedResult.parentProcess, parentProcess)
 			continue
 		}
 
 		if expectedResult.fileType != *sensitiveFileType {
-			f.Logf("MISMATCH - %v sensitiveFileType - expected: %q actual: %q",
+			logf("MISMATCH - %v sensitiveFileType - expected: %q actual: %q",
 				eInfo, expectedResult.fileType, *sensitiveFileType)
 			continue
 		}
 
-		if err = matchAttributes(afterImage, expectedResult.afterStat); err != nil {
-			f.Logf("MISMATCH - [%v] %v after_image attribute matching failed: %v", pid, eInfo, err)
+		if err := matchAttributes(afterImage, expectedResult.afterStat); err != nil {
+			logf("MISMATCH - [%v] %v after_image attribute matching failed: %v", pid, eInfo, err)
 			continue
 		}
 
 		if modify != nil { //validation specific to modify
-			f.Logf("expectation for pid=%v and event is a modify", pid)
+			logf("expectation for pid=%v and event is a modify", pid)
 			if modify.GetFileModify().GetModifyType() != *expectedResult.eventSubType {
-				f.Logf("MISMATCH - [%v] %v  expected:%q actual:%q",
+				logf("MISMATCH - [%v] %v  expected:%q actual:%q",
 					pid, eInfo, expectedResult.eventSubType,
 					modify.GetFileModify().GetModifyType())
 				continue
@@ -399,24 +454,17 @@ func (f FileEvent) DoTest(ctx context.Context, tc *testDetails) {
 			if *modify.GetFileModify().ModifyType == xdr.FileModify_MODIFY_ATTRIBUTE ||
 				*modify.GetFileModify().ModifyType == xdr.FileModify_WRITE_AND_MODIFY_ATTRIBUTE {
 				if beforeAttributes == nil {
-					f.Logf("%v missing beforeAttributes", modify.GetFileModify())
+					logf("%v missing beforeAttributes", modify.GetFileModify())
 					continue
 				}
-				if err = matchAttributes(beforeAttributes, expectedResult.beforeStat); err != nil {
-					f.Logf("%v before_image attributes mismatch:%v", eInfo, err)
+				if err := matchAttributes(beforeAttributes, expectedResult.beforeStat); err != nil {
+					logf("%v before_image attributes mismatch:%v", eInfo, err)
 					continue
 				}
 			}
 		}
 		// retire the expectation, everything matches.
 		delete(expectedResults, pid)
-	}
-
-	if len(expectedResults) > 0 {
-		for pid, e := range expectedResults {
-			f.Logf("command [%d]%v expecting a %v", pid, e.command, e.eventType)
-		}
-		f.Error("Test failed, not all expectations met")
 	}
 }
 
@@ -656,82 +704,77 @@ func appendRWCommandDetails(ctx context.Context, cmdDetails []*commandDetail, fi
 	return cmdDetails
 }
 
-func (f FileEvent) collectFileDbusMessages(ctx context.Context,
-	expectedResults map[uint64]*expectedResult,
-	stopDbusMonitoring func() ([]dbusutil.CalledMethod, error)) ([]*xdr.FileEventAtomicVariant, error) { // Collect the log of EnqueueRecord dbus calls to Missived.
-	calledMethods, err := stopDbusMonitoring()
-	if err != nil {
-		return nil, errors.Wrap(err,
-			"failed to capture EnqueueRecord dbus calls to missived")
+// handleEnqueueRecord parses one EnqueueRecord dbus call made to missived.
+// Exec events of the commands in expectedResults are recorded in the
+// corresponding expectation, and the batched file events are returned.
+func (f FileEvent) handleEnqueueRecord(method *dbusutil.CalledMethod, expectedResults map[uint64]*expectedResult) ([]*xdr.FileEventAtomicVariant, error) {
+	if len(method.Arguments) == 0 {
+		return nil, nil
 	}
-	f.Logf("secagentd enqueued %d events", len(calledMethods))
+	arg, ok := method.Arguments[0].([]byte)
+	if !ok {
+		return nil, nil
+	}
+	enq := &rep.EnqueueRecordRequest{}
+	if err := proto.Unmarshal(arg, enq); err != nil {
+		return nil, errors.Wrap(err,
+			"failed to unmarshal an EnqueueRecordRequest")
+	}
 
-	var bFileEvents []*xdr.FileEventAtomicVariant
-	for _, method := range calledMethods {
-		if len(method.Arguments) == 0 {
-			continue
-		}
-		arg, ok := method.Arguments[0].([]byte)
-		if !ok {
-			continue
-		}
-		enq := &rep.EnqueueRecordRequest{}
-		if err := proto.Unmarshal(arg, enq); err != nil {
+	f.Logf("Destination is %s", enq.GetRecord().GetDestination())
+
+	// Save off matching ProcessExecs.
+	if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_PROCESS {
+		pe := &xdr.XdrProcessEvent{}
+		if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
 			return nil, errors.Wrap(err,
-				"failed to unmarshal an EnqueueRecordRequest")
+				"failed to unmarshal data for a CROS_SECURITY_PROCESS record")
 		}
-
-		f.Logf("Destination is %s", enq.GetRecord().GetDestination())
-
-		// Save off matching ProcessExecs.
-		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_PROCESS {
-			pe := &xdr.XdrProcessEvent{}
-			if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
-				return nil, errors.Wrap(err,
-					"failed to unmarshal data for a CROS_SECURITY_PROCESS record")
-			}
-			for _, v := range pe.GetBatchedEvents() {
-				if v.GetProcessExec() != nil {
-					processExec := v.GetProcessExec()
-					pid := processExec.GetSpawnProcess().GetCanonicalPid()
-					if r, ok := expectedResults[pid]; ok {
-						if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
-							return nil, errors.Wrap(err,
-								"CROS_SECURITY_PROCESS process exec has an invalid common field")
-						}
-						r.process = processExec.GetSpawnProcess()
-						r.processTimeUs = uint64(v.GetCommon().GetCreateTimestampUs())
-						// since we captured the exec the metafirst appearance in
-						// the file event should always be false.
-						*r.process.MetaFirstAppearance = false
-						r.parentProcess = processExec.GetProcess()
-						// same with the parent.
-						*r.parentProcess.MetaFirstAppearance = false
-						f.Logf("pid(%d)executed : %q", *r.process.CanonicalPid, *r.process.Commandline)
+		for _, v := range pe.GetBatchedEvents() {
+			if v.GetProcessExec() != nil {
+				processExec := v.GetProcessExec()
+				pid := processExec.GetSpawnProcess().GetCanonicalPid()
+				if r, ok := expectedResults[pid]; ok {
+					// Report but keep going so that the other events of the
+					// batch still retire their expectations.
+					if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+						f.Errorf("CROS_SECURITY_PROCESS process exec of pid %d has an invalid common field: %v", pid, err)
 					}
+					r.process = processExec.GetSpawnProcess()
+					r.processTimeUs = uint64(v.GetCommon().GetCreateTimestampUs())
+					// since we captured the exec the metafirst appearance in
+					// the file event should always be false.
+					*r.process.MetaFirstAppearance = false
+					r.parentProcess = processExec.GetProcess()
+					// same with the parent.
+					*r.parentProcess.MetaFirstAppearance = false
+					f.Logf("pid(%d)executed : %q", *r.process.CanonicalPid, *r.process.Commandline)
 				}
 			}
 		}
-		// Save off file events.
-		eventType := ""
-		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_FILE {
-			fe := &xdr.XdrFileEvent{}
-			if err := proto.Unmarshal(enq.GetRecord().GetData(), fe); err != nil {
-				return nil, errors.Wrap(err,
-					"failed to unmarshal data for a CROS_SECURITY_FILE record")
+	}
+	// Save off file events.
+	var bFileEvents []*xdr.FileEventAtomicVariant
+	if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_FILE {
+		fe := &xdr.XdrFileEvent{}
+		if err := proto.Unmarshal(enq.GetRecord().GetData(), fe); err != nil {
+			return nil, errors.Wrap(err,
+				"failed to unmarshal data for a CROS_SECURITY_FILE record")
+		}
+		for _, v := range fe.GetBatchedEvents() {
+			eventType := ""
+			if v.GetSensitiveRead() != nil {
+				eventType = "Sensitive Read"
+			} else if v.GetSensitiveModify() != nil {
+				eventType = "Sensitive Modify"
+			} else {
+				f.Error("encountered an empty file event, no read, no modify found")
+				continue
 			}
-			for _, v := range fe.GetBatchedEvents() {
-				bFileEvents = append(bFileEvents, v)
-				if v.GetSensitiveRead() != nil {
-					eventType = "Sensitive Read"
-				} else if v.GetSensitiveModify() != nil {
-					eventType = "Sensitive Modify"
-				}
-				if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
-					return nil, errors.Wrapf(err,
-						"CROS_SECURITY_FILE %v has an invalid common field", eventType)
-				}
+			if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+				f.Errorf("CROS_SECURITY_FILE %v has an invalid common field: %v", eventType, err)
 			}
+			bFileEvents = append(bFileEvents, v)
 		}
 	}
 	return bFileEvents, nil
