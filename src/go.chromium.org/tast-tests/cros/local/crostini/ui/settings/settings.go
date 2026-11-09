@@ -132,7 +132,7 @@ func OpenLinuxSettings(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 
 	// Open the sub Settings.
 	for _, setting := range subSettings {
-		if err := uiauto.New(tconn).LeftClick(nodewith.Name(setting).Role(role.Link).Ancestor(ossettings.WindowFinder))(ctx); err != nil {
+		if err := s.ui.DoDefault(nodewith.Name(setting).Role(role.Link).Ancestor(ossettings.WindowFinder))(ctx); err != nil {
 			return nil, errors.Wrapf(err, "failed to open sub setting %s", setting)
 		}
 	}
@@ -299,7 +299,7 @@ func (s *Settings) UnshareFolder(ctx context.Context, folder string) error {
 	// the guest. This can happen if a file was recently accessed, so try a couple
 	// of times to unshare and only return an error if that fails.
 	retryUnshare := uiauto.Combine("retry unsharing",
-		s.ui.LeftClick(tryAgainButton),
+		s.ui.DoDefault(tryAgainButton),
 		s.ui.WaitUntilGone(unshareFailDlg),
 		s.ui.EnsureGoneFor(unshareFailDlg, 5*time.Second))
 	retryIfFailed := uiauto.IfSuccessThen(
@@ -307,7 +307,7 @@ func (s *Settings) UnshareFolder(ctx context.Context, folder string) error {
 		s.ui.WithPollOpts(testing.PollOptions{Interval: 5 * time.Second}).Retry(4, retryUnshare))
 
 	return uiauto.Combine("unshare folder "+folder,
-		s.ui.LeftClick(folderButton),
+		s.ui.DoDefault(folderButton),
 		retryIfFailed,
 		uiauto.IfSuccessThen(s.ui.Exists(sharedFoldersList), s.ui.WaitUntilGone(folderButton)),
 	)(ctx)
@@ -342,7 +342,7 @@ func (s *Settings) Remove() uiauto.Action {
 		s.ClickRemove(),
 		uiauto.IfSuccessThen(
 			s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveConfirmDialog.Self),
-			s.ui.LeftClickUntil(
+			s.ui.DoDefaultUntil(
 				RemoveConfirmDialog.Delete,
 				s.ui.WithTimeout(shortUITimeout).WaitUntilGone(RemoveConfirmDialog.Self),
 			)),
@@ -368,7 +368,7 @@ var ResizeDiskDialog = resizeDiskDialogStruct{
 func (s *Settings) ClickChange() uiauto.Action {
 	return uiauto.Combine("click button resize and wait for resize dialog and slider",
 		s.tconn.ResetAutomation,
-		s.ui.LeftClick(resizeButton),
+		s.ui.DoDefault(resizeButton),
 		s.ui.WithTimeout(time.Minute).WaitUntilExists(ResizeDiskDialog.Slider))
 }
 
@@ -532,7 +532,7 @@ func (s *Settings) GetCurAndTargetDiskSize(ctx context.Context) (curSize, target
 	testing.ContextLogf(ctx, "The target size is: %d", targetSize)
 
 	if err := uiauto.Combine("click button Cancel and wait resize dialog gone",
-		s.ui.LeftClick(ResizeDiskDialog.Cancel),
+		s.ui.DoDefault(ResizeDiskDialog.Cancel),
 		// TODO (crbug/1232877): remove this line when crbug/1232877 is resolved.
 		s.tconn.ResetAutomation,
 		s.ui.WaitUntilGone(ResizeDiskDialog.Self))(ctx); err != nil {
@@ -567,7 +567,7 @@ func (s *Settings) Resize(ctx context.Context, targetSize uint64) (string, uint6
 	sizeOnSlider := nodeInfo.Name
 
 	if err := uiauto.Combine("to click button Resize on Resize Linux disk dialog",
-		s.ui.LeftClick(ResizeDiskDialog.Resize),
+		s.ui.DoDefault(ResizeDiskDialog.Resize),
 		// TODO (crbug/1232877): remove this line when crbug/1232877 is resolved.
 		s.tconn.ResetAutomation,
 		s.ui.WaitUntilGone(ResizeDiskDialog.Self))(ctx); err != nil {
@@ -665,13 +665,13 @@ func (s *Settings) ShareUSBDevice(ctx context.Context, deviceName string) error 
 	deviceButton := nodewith.Name(deviceName).Role(role.ToggleButton).Ancestor(manageUSBPage)
 	waitUntilShared := s.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(deviceButton, true)
 	return uiauto.Combine(fmt.Sprintf("share a USB device %q", deviceName),
-		s.ui.LeftClick(deviceButton),
+		s.ui.DoDefault(deviceButton),
 		uiauto.IfFailThen(
 			waitUntilShared,
 			uiauto.IfSuccessThen(
 				s.ui.Exists(shareUSBFailDlg),
 				uiauto.Combine("share device in use",
-					s.ui.LeftClick(continueButton),
+					s.ui.DoDefault(continueButton),
 					waitUntilShared,
 				),
 			),
@@ -685,7 +685,7 @@ func (s *Settings) UnshareUSBDevice(ctx context.Context, deviceName string) erro
 	deviceButton := nodewith.Name(deviceName).Role(role.ToggleButton).Ancestor(manageUSBPage)
 	waitUntilUnshared := s.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(deviceButton, false)
 	return uiauto.Combine(fmt.Sprintf("unshare a USB device %q", deviceName),
-		s.ui.LeftClick(deviceButton),
+		s.ui.DoDefault(deviceButton),
 		waitUntilUnshared,
 	)(ctx)
 }
