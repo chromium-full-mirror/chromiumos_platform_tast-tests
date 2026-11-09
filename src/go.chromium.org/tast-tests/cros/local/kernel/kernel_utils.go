@@ -223,18 +223,14 @@ func GetCgptTable(ctx context.Context, rootDevWithoutPart string) (map[string]*p
 }
 
 // RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable.
-func RestoreCgptAttributes(ctx context.Context, rootDevWithoutPart string, _ map[string]*pb.CgptPartition) error {
-	cgptTable, err := GetCgptTable(ctx, rootDevWithoutPart)
-	if err != nil {
-		return errors.Wrap(err, "failed to get current cgpt table")
-	}
+func RestoreCgptAttributes(ctx context.Context, rootDevWithoutPart string, cgptTable map[string]*pb.CgptPartition) error {
 	testing.ContextLog(ctx, "Restoring passed CGPT attributes to: ", rootDevWithoutPart)
-	for label, part := range cgptTable {
-		partitionNumber := cgptTable[label].PartitionNumber
-		rootDevWithPart := RootDevPartitionPath(rootDevWithoutPart, int(partitionNumber))
-		if len(part.Attrs) == 0 {
+	for _, part := range cgptTable {
+		if part == nil || len(part.Attrs) == 0 {
 			continue
 		}
+		partitionNumber := part.PartitionNumber
+		rootDevWithPart := RootDevPartitionPath(rootDevWithoutPart, int(partitionNumber))
 		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(int(partitionNumber))}
 		for _, attr := range part.Attrs {
 			switch attr.Name {
