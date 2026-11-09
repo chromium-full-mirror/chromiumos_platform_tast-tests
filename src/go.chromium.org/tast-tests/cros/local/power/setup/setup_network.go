@@ -148,7 +148,9 @@ func DisableNetworkMulticast(ctx context.Context, iface string) (CleanupCallback
 	}, nil
 }
 
-// DisableAllMulticast disables multicast on all ethernet and wlan interfaces.
+// DisableAllMulticast disables multicast on all ethernet and wlan interfaces,
+// and disables hardware broadcast reception on routed r8152 USB ethernet
+// interfaces.
 func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
 	return Nested(ctx, "disable network multicast", func(s *Setup) error {
 		pattern := regexp.MustCompile("(eth|wlan).*")
@@ -163,6 +165,9 @@ func DisableAllMulticast(ctx context.Context) (CleanupCallback, error) {
 			}
 			s.Add(DisableNetworkMulticast(ctx, iface))
 		}
+		// Run after DisableNetworkMulticast because toggling multicast triggers
+		// the kernel driver to reset RCR_AB=1 asynchronously.
+		s.Add(disableR8152Broadcast(ctx))
 		return nil
 	})
 }
