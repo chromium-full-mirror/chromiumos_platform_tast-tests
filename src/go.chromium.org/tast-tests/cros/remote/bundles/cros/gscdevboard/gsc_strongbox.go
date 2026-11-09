@@ -40,7 +40,7 @@ func init() {
 		}, {
 			Name:      "ti50a",
 			Fixture:   fixture.GSCOpenCCDTi50a,
-			ExtraAttr: []string{"gsc_image_ti50a", "gsc_dt_shield", "gsc_ot_shield"},
+			ExtraAttr: []string{"gsc_image_ti50a", "gsc_dt_shield", "gsc_ot_shield", "gsc_he"},
 		}},
 	})
 }
