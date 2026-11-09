@@ -342,9 +342,10 @@ func (s *Settings) Remove() uiauto.Action {
 		s.ClickRemove(),
 		uiauto.IfSuccessThen(
 			s.ui.WithTimeout(shortUITimeout).WaitUntilExists(RemoveConfirmDialog.Self),
-			s.ui.DoDefaultUntil(
-				RemoveConfirmDialog.Delete,
-				s.ui.WithTimeout(shortUITimeout).WaitUntilGone(RemoveConfirmDialog.Self),
+			uiauto.Combine("confirm removing Linux",
+				s.ui.WaitUntilEnabled(RemoveConfirmDialog.Delete),
+				s.ui.DoDefault(RemoveConfirmDialog.Delete),
+				s.ui.WaitUntilGone(RemoveConfirmDialog.Self),
 			)),
 		s.ui.WithTimeout(2*time.Minute).WaitUntilExists(TurnOnButton))
 }
