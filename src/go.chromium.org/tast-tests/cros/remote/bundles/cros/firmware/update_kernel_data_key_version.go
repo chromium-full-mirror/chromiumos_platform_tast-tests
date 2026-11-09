@@ -54,8 +54,9 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 		devKeysDir = "/usr/share/vboot/devkeys"
 	)
 	var (
-		keysDir = filepath.Join(tempDir, "autest/keys")
-		h       = s.FixtValue().(*fixture.Value).Helper
+		lockFile = filepath.Join(tempDir, "lock")
+		keysDir  = filepath.Join(tempDir, "autest/keys")
+		h        = s.FixtValue().(*fixture.Value).Helper
 	)
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -83,10 +84,24 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	if err := fs.MkDir(ctx, tempDir, 0777); err != nil {
 		s.Fatal("Failed to make the temp directory: ", err)
 	}
+	// Unlike /tmp (tmpfs), /usr/local is bind-mounted from
+	// /mnt/stateful_partition/dev_image and persists across reboots.
+	// /usr/sbin/chromeos-setgoodkernel (run by update_engine 60s after
+	// boot-complete) checks [ -f /usr/local/tmp/faft/lock ] and exits early
+	// instead of rewriting kernel GPT priorities before ColdReset.
+	if err := fs.WriteFile(ctx, lockFile, nil, 0644); err != nil {
+		s.Fatal("Failed to create FAFT lockfile: ", err)
+	}
+	if err := h.DUT.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to sync FAFT lockfile: ", err)
+	}
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
 	defer cancel()
 	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
+		}
 		if err := h.RequireRPCClient(ctx); err != nil {
 			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 		}
@@ -104,6 +119,9 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 	kernelNeedsRestore := true
 	defer func(ctx context.Context) {
 		if kernelNeedsRestore {
+			if err := h.EnsureDUTBooted(ctx); err != nil {
+				s.Fatal("Failed to ensure DUT booted: ", err)
+			}
 			if err := h.RequireKernelServiceClient(ctx); err != nil {
 				s.Fatal("Failed to connect to kernel service: ", err)
 			}
@@ -242,14 +260,6 @@ func UpdateKernelDataKeyVersion(ctx context.Context, s *testing.State) {
 
 // coldResetToKernelPartition checks active kernel vs target, reboots DUT to target on mismatch.
 func coldResetToKernelPartition(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, target *pb.Partition) error {
-	testing.ContextLog(ctx, "Sleeping for 10s")
-	// GoBigSleepLint: There is a risk that the priority value may revert to its
-	// original setting if the priority is set immediately after
-	// EnsureBothKernelCopiesBootable() and SetBothKernelBootable().
-	// Add a 10-second delay before setting the priority.
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for 10 seconds")
-	}
 	testing.ContextLog(ctx, "Rebooting DUT to KERN-", target.Copy.String())
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, target); err != nil {
 		return errors.Wrapf(err, "failed to prioritize KERN-%s", target.Copy.String())
