@@ -12,7 +12,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -64,69 +63,13 @@ func CorruptFWSectionTest(ctx context.Context, backupManager *fixture.FirmwareBa
 		return errors.Wrap(err, "failed to copy firmware backup image to DUT")
 	}
 
-	out, err = h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
-	if err != nil {
-		return errors.Wrap(err, "failed to create servo temp dir")
-	}
-	servoTempDir := strings.TrimSuffix(string(out), "\n")
-	defer func() {
-		if err := h.ServoProxy.RunCommand(cleanupContext, false, "rm", "-rf", servoTempDir); err != nil {
-			retErr = errors.Join(retErr, errors.Wrap(err, "failed deleting servo temp dir"))
-		}
-	}()
-
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		return errors.Wrap(err, "failed to clear event log")
 	}
 
 	restoreFirmware := func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Restoring AP firmware via servo")
-
-		backupOnServoProxy := fmt.Sprintf("%s/bios_backup.bin", servoTempDir)
-		if err := backupManager.CopyBackupToServoProxy(ctx, h.ServoProxy, fixture.FirmwareAP, backupOnServoProxy); err != nil {
-			return errors.Wrap(err, "failed to copy backup to ServoProxy")
-		}
-
-		// futility doesn't know that you can't flash AP over C2D2, so switch the active controller to CCD.
-		if hasC2D2, err := h.Servo.HasC2D2(ctx); err != nil {
-			return errors.Wrap(err, "failed check c2d2")
-		} else if hasC2D2 {
-			if err := h.Servo.RequireCCD(ctx); err != nil {
-				return errors.Wrap(err, "failed enable CCD")
-			}
-		}
-		if out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
-			"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
-			return errors.Wrapf(err, "failed restoring firmware via servo: %s", string(out))
-		}
-		// In b/314059450 it was discovered that some devices don't come back on after futility update.
-		if hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
-			testing.ContextLog(ctx, "Error checking for chrome ec: ", err)
-		} else if hasEC {
-			testing.ContextLog(ctx, "Waiting for DUT to power on")
-			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
-				"G3", "S0"); err != nil {
-				return errors.Wrap(err, "failed to get power state after restoring firmware")
-			}
-			powerState, err := h.Servo.GetECSystemPowerState(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to get power state")
-			}
-			if powerState == "G3" {
-				testing.ContextLog(ctx, "DUT is in G3, pressing power key to wake")
-				err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn))
-				if err != nil {
-					return errors.Wrap(err, "failed to press power")
-				}
-				if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout,
-					"S0"); err != nil {
-					return errors.Wrap(err, "failed to wait for S0 after power button")
-				}
-			}
-		}
-
-		if err := h.WaitConnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to WaitConnect after reset")
+		if err := backupManager.RestoreAPRWViaServo(ctx, h); err != nil {
+			return err
 		}
 		shouldRestoreFirmware = false
 		return nil

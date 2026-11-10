@@ -6,12 +6,16 @@ package fixture
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -204,6 +208,89 @@ func (b *FirmwareBackupManager) CopyBackupToServoProxy(ctx context.Context, pxy 
 	p := b.backupPaths[fwType]
 	if err := pxy.PutFiles(ctx, false, map[string]string{p: dst}); err != nil {
 		return errors.Wrapf(err, "failed to copy backup file to ServoProxy from %q to %q", p, dst)
+	}
+	return nil
+}
+
+// RestoreAPRWViaServo flashes the AP RW firmware sections from the backup back to the DUT
+// over servo (assuming write protect is enabled), powers the DUT on if it stays in G3
+// (b/314059450), and waits for SSH.
+func (b *FirmwareBackupManager) RestoreAPRWViaServo(ctx context.Context, h *firmware.Helper) (retErr error) {
+	if b == nil || !b.IsBackupAvailable(FirmwareAP) {
+		return errors.Errorf("backup not available for firmware type: %v", FirmwareAP)
+	}
+	if h == nil {
+		return errors.New("firmware helper is nil")
+	}
+	if err := h.RequireServo(ctx); err != nil {
+		return errors.Wrap(err, "failed to connect to servod")
+	}
+	testing.ContextLog(ctx, "Restoring AP RW firmware via servo")
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	out, err := h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
+	if err != nil {
+		return errors.Wrap(err, "failed to create servo temp dir")
+	}
+	servoTempDir := strings.TrimSuffix(string(out), "\n")
+	defer func() {
+		if err := h.ServoProxy.RunCommand(cleanupCtx, false, "rm", "-rf", servoTempDir); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed deleting servo temp dir"))
+		}
+	}()
+
+	backupOnServoProxy := filepath.Join(servoTempDir, "bios_backup.bin")
+	if err := b.CopyBackupToServoProxy(ctx, h.ServoProxy, FirmwareAP, backupOnServoProxy); err != nil {
+		return errors.Wrap(err, "failed to copy backup to ServoProxy")
+	}
+
+	// futility doesn't know that you can't flash AP over C2D2, so switch the active controller to CCD.
+	if hasC2D2, err := h.Servo.HasC2D2(ctx); err != nil {
+		return errors.Wrap(err, "failed check c2d2")
+	} else if hasC2D2 {
+		if err := h.Servo.RequireCCD(ctx); err != nil {
+			return errors.Wrap(err, "failed enable CCD")
+		}
+	}
+	if out, err := h.ServoProxy.OutputCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
+		"--mode=recovery", "--wp=1", "--host_only", "-i", backupOnServoProxy); err != nil {
+		return errors.Wrapf(err, "failed restoring firmware via servo: %s", string(out))
+	}
+	// In b/314059450 it was discovered that some devices don't come back on after futility update.
+	if hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
+		testing.ContextLog(ctx, "Error checking for chrome ec: ", err)
+	} else if hasEC {
+		testing.ContextLog(ctx, "Waiting for DUT to power on")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S0"); err != nil {
+			return errors.Wrap(err, "failed to get power state after restoring firmware")
+		}
+		powerState, err := h.Servo.GetECSystemPowerState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get power state")
+		}
+		if powerState == "G3" {
+			testing.ContextLog(ctx, "DUT is in G3, pressing power key to wake")
+			press := servo.DurPress
+			if h.Config != nil && h.Config.HoldPwrButtonPowerOn > 0 {
+				press = servo.Dur(h.Config.HoldPwrButtonPowerOn)
+			}
+			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, press); err != nil {
+				return errors.Wrap(err, "failed to press power")
+			}
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+				return errors.Wrap(err, "failed to wait for S0 after power button")
+			}
+		}
+	}
+	waitTimeout := 2 * time.Minute
+	if h.Config != nil && h.Config.DelayRebootToPing > waitTimeout {
+		waitTimeout = h.Config.DelayRebootToPing
+	}
+	waitCtx, cancelWait := context.WithTimeout(ctx, waitTimeout)
+	defer cancelWait()
+	if err := h.WaitConnect(waitCtx, firmware.ResetEthernetDongle, firmware.SkipPDRoleSnk); err != nil {
+		return errors.Wrap(err, "failed to WaitConnect after reset")
 	}
 	return nil
 }
