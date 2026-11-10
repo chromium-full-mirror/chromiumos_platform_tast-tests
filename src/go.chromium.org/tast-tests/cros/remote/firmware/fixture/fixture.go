@@ -793,8 +793,45 @@ func checkAndLogWatchdogInfo(ctx context.Context, s *testing.FixtTestState, i *i
 }
 
 // PostTest is called by the framework after each test to tear down changes PreTest made.
+// If a child fixture could not bring the DUT back, it restores the AP RW firmware backup
+// over servo so a test that corrupted the firmware does not leave the DUT unbootable.
 func (i *firmwareBackupAPImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// TODO(czapiga): Check if dut has correct firmware and if it requires restoration.
+	h, b := i.value.Helper, i.value.BackupManager
+	if i.disallowSSH || h == nil || h.DUT == nil || b == nil || !b.IsBackupAvailable(FirmwareAP) {
+		return
+	}
+	restore := func(ctx context.Context) error {
+		// Reserve budget for the trailing boot() attempt if servo flashing stalls.
+		restoreCtx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
+		defer cancel()
+		return b.RestoreAPRWViaServo(restoreCtx, h)
+	}
+	// Bound each boot attempt so a bricked DUT leaves enough of PostTestTimeout to flash.
+	boot := func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+		defer cancel()
+		return h.EnsureDUTBooted(ctx)
+	}
+	if err := restoreAPIfOffline(ctx, h.DUT.Connected, restore, boot); err != nil {
+		s.Error("DUT is offline after restoring AP RW firmware backup: ", err)
+	}
+}
+
+// restoreAPIfOffline restores the AP RW firmware if the DUT is not connected and cannot be
+// booted, then boots it. A boot attempt comes first since the SSH connection may just be stale.
+func restoreAPIfOffline(ctx context.Context, connected func(context.Context) bool, restore, boot func(context.Context) error) error {
+	if connected(ctx) {
+		return nil
+	}
+	err := boot(ctx)
+	if err == nil {
+		return nil
+	}
+	testing.ContextLog(ctx, "DUT is offline after test, restoring AP RW firmware backup: ", err)
+	if err := restore(ctx); err != nil {
+		return errors.Wrap(err, "failed to restore AP RW firmware")
+	}
+	return boot(ctx)
 }
 
 // PostTest is called by the framework after each test to tear down changes PreTest made.
