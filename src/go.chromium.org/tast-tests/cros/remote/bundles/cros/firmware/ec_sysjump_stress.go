@@ -108,7 +108,7 @@ func ecSysjumpStressConsecutive(ctx context.Context, h *firmware.Helper, sysjump
 
 // sysjumpAndVerify performs one sysjump and full state verification.
 func sysjumpAndVerify(ctx context.Context, h *firmware.Helper, sysjumpDest string, iteration int) error {
-	isChargerAttachedBefore, err := h.Servo.GetChargerAttached(ctx)
+	isChargerAttachedBefore, err := getChargerAttached(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to get if battery charger is attached before jump")
 	}
@@ -148,7 +148,7 @@ func executeSysjump(ctx context.Context, h *firmware.Helper, sysjumpDest string,
 }
 
 // verifyPostJumpState verifies the state of the device after a sysjump to expectedSysjumpDest.
-func verifyPostJumpState(ctx context.Context, h *firmware.Helper, expectedSysjumpDest string, isChargerAttachedBefore bool, iteration int) error {
+func verifyPostJumpState(ctx context.Context, h *firmware.Helper, expectedSysjumpDest string, isChargerAttachedBefore *bool, iteration int) error {
 	testing.ContextLogf(ctx, "Iteration %d: Verifying post-sysjump state after sysjumping to %s", iteration, expectedSysjumpDest)
 
 	if err := verifyECResponsive(ctx, h); err != nil {
@@ -236,14 +236,19 @@ func verifySysjumpResetFlags(ctx context.Context, h *firmware.Helper) error {
 }
 
 // verifyBatteryChargerAttached verifies whether the battery charger is attached
-// before the sysjump and is in the same state after the sysjump.
-func verifyBatteryChargerAttached(ctx context.Context, h *firmware.Helper, isChargerAttachedBefore bool) error {
-	isChargerAttachedAfter, err := h.Servo.GetChargerAttached(ctx)
+// before the sysjump and is in the same state after the sysjump. This check is
+// skipped if the DUT doesn't have EC battery capability.
+func verifyBatteryChargerAttached(ctx context.Context, h *firmware.Helper, isChargerAttachedBefore *bool) error {
+	isChargerAttachedAfter, err := getChargerAttached(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to get if battery charger is attached after sysjump")
 	}
-	if isChargerAttachedAfter != isChargerAttachedBefore {
-		return errors.Errorf("whether the battery charger was attached unexpectedly changed across sysjump: was %v, now %v", isChargerAttachedBefore, isChargerAttachedAfter)
+	if isChargerAttachedBefore == nil || isChargerAttachedAfter == nil {
+		testing.ContextLog(ctx, "DUT does not have EC battery capability, skipping battery charging check")
+		return nil
+	}
+	if *isChargerAttachedAfter != *isChargerAttachedBefore {
+		return errors.Errorf("whether the battery charger was attached unexpectedly changed across sysjump: was %v, now %v", *isChargerAttachedBefore, *isChargerAttachedAfter)
 	}
 	return nil
 }
@@ -289,6 +294,20 @@ func getSysjumpDest(activeCopy string) string {
 	return "RW"
 }
 
+// getChargerAttached returns &true when the battery charger is attached,
+// &false when it is not, and nil when it does not have EC battery charging
+// capability (e.g. Chromeboxes).
+func getChargerAttached(ctx context.Context, h *firmware.Helper) (*bool, error) {
+	if !h.Config.HasECCapability(firmware.ECBattery) {
+		return nil, nil
+	}
+	isChargerAttached, err := h.Servo.GetChargerAttached(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &isChargerAttached, nil
+}
+
 // recoverDUT resets the DUT power state via Servo and waits for the DUT to
 // reconnect to prepare the DUT for subsequent iterations.
 func recoverDUT(ctx context.Context, h *firmware.Helper) error {
@@ -318,6 +337,9 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to RequireServo: ", err)
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to RequireConfig: ", err)
+	}
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
@@ -346,7 +368,7 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 	}
 
 	// Get device state during test setup.
-	isChargerAttachedBefore, err := h.Servo.GetChargerAttached(ctx)
+	isChargerAttachedBefore, err := getChargerAttached(ctx, h)
 	if err != nil {
 		s.Errorf("Failed to get if battery charger is attached before running test: %v", err)
 	}
