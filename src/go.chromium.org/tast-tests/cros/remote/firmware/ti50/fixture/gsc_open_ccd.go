@@ -165,12 +165,6 @@ func WipeTpmAndOpenCcd(ctx context.Context, s TestingState, b *remoteTi50.DUTCon
 }
 
 func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
-		// TODO(b/283151960): Enabling Testlab mode not yet supported on host emulation
-		// (no SPI).
-		return
-	}
-
 	b := c.v.devboard
 
 	// We can keep the same session that the parent created, but the UART connection must be
