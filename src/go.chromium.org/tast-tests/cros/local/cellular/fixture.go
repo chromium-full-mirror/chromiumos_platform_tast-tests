@@ -762,6 +762,15 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		helper.SetDUTInfo(dutInfo)
 	}
 
+	// A leftover MODB override makes shill program the test attach APN into
+	// the modem on every start, and it survives reboots. Reset shill so it
+	// reloads the regular MODB.
+	if removeLeftoverServiceProvidersOverride(ctx) {
+		if errs := helper.ResetShill(ctx); errs != nil {
+			s.Log("Failed to reset shill after removing the leftover service providers override: ", errs)
+		}
+	}
+
 	if f.clearSIMLock {
 		// Clear the SIM lock in SetUp and TearDown to attempt to recover any
 		// DUT left in a SIM locked state. Since not all tests run on a SIM that
@@ -885,6 +894,23 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.fixtureFailure = false
 	return &FixtData{helper, fdms, a, cr}
+}
+
+// removeLeftoverServiceProvidersOverride removes the shill MODB override file
+// if a previous test left it behind, and returns true if it did. Tests remove
+// the file in a defer, so it is only left behind when a test did not return
+// (e.g. it hung past its timeout, or the DUT rebooted). PostTest is skipped in
+// that case too, so SetUp is the first place that can clean it up.
+func removeLeftoverServiceProvidersOverride(ctx context.Context) bool {
+	err := os.Remove(shillconst.ServiceProviderOverridePath)
+	if err == nil {
+		testing.ContextLog(ctx, "Removed leftover service providers override: ", shillconst.ServiceProviderOverridePath)
+		return true
+	}
+	if !os.IsNotExist(err) {
+		testing.ContextLogf(ctx, "Failed to remove %s: %v", shillconst.ServiceProviderOverridePath, err)
+	}
+	return false
 }
 
 func (f *cellularFixture) Reset(ctx context.Context) error {
