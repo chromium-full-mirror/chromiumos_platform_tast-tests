@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -449,7 +450,7 @@ func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interfac
 // Reset is called by the framework after each test (except for the last one) to do a
 // light-weight reset of the environment to the original state.
 func (i *impl) Reset(ctx context.Context) error {
-	// Close the servo to reset pd role, watchdogs, etc.
+	// Close the servo connection. This does not restore the pd role; see ensureServoCharging.
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
@@ -462,7 +463,7 @@ func (i *impl) Reset(ctx context.Context) error {
 // Reset is called by the framework after each test (except for the last one) to do a
 // light-weight reset of the environment to the original state.
 func (i *firmwareBackupAPImpl) Reset(ctx context.Context) error {
-	// Close the servo to reset pd role, watchdogs, etc.
+	// Close the servo connection. This does not restore the pd role; see ensureServoCharging.
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
@@ -472,7 +473,7 @@ func (i *firmwareBackupAPImpl) Reset(ctx context.Context) error {
 // Reset is called by the framework after each test (except for the last one) to do a
 // light-weight reset of the environment to the original state.
 func (i *bootModeImpl) Reset(ctx context.Context) error {
-	// Close the servo to reset pd role, watchdogs, etc.
+	// Close the servo connection. This does not restore the pd role; see ensureServoCharging.
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
@@ -809,6 +810,22 @@ func (i *bootModeImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
+// ensureServoCharging puts a servo that a test left in sink mode back to charging the DUT.
+// mode is the boot mode the DUT is in: when booted from USB, changing the pd role reboots it.
+// DUTs without a battery are skipped, matching PreTest. Failures are only logged:
+// EnsureDUTBooted still restores power if the DUT is unreachable.
+func ensureServoCharging(ctx context.Context, v *Value, mode common.BootMode) {
+	if mode == common.BootModeRecovery || mode == common.BootModeUSBDev {
+		return
+	}
+	if v.Helper.Config != nil && !v.Helper.Config.HasECCapability(firmware.ECBattery) {
+		return
+	}
+	if err := v.Helper.RestoreServoPower(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to restore servo charging: ", err)
+	}
+}
+
 // TearDown is called by the framework to tear down the environment SetUp set up.
 func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 	i.closeHelper(ctx, s)
@@ -826,8 +843,32 @@ func (i *bootModeImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 		i.origBootMode = nil
 		i.origGBBFlags = nil
 	}(ctx)
+	// Tests, recovery/USB-dev fixtures (RebootToMode's DFP fallback) and WaitConnect can leave
+	// servo in snk. Restore charging last, even if TearDown fails, based on the boot mode the
+	// DUT is actually in. If that is unknown, restore anyway: the DUT is likely unreachable.
+	// Reserve time for it, since EnsureDUTBooted can use up ctx on an offline DUT.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		mode := i.value.BootMode
+		if !i.disallowSSH {
+			if i.value.Helper.DUT != nil && i.value.Helper.DUT.Connected(ctx) {
+				modeCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+				defer cancel()
+				var err error
+				if mode, err = i.value.Helper.Reporter.CurrentBootMode(modeCtx); err != nil {
+					testing.ContextLog(ctx, "Failed to get boot mode to restore servo charging: ", err)
+					mode = common.BootModeUnspecified
+				}
+			} else {
+				mode = common.BootModeUnspecified
+			}
+		}
+		ensureServoCharging(ctx, i.value, mode)
+	}(cleanupCtx)
 
-	// Close the servo to reset pd role, watchdogs, etc. unless we are booted from USB as resetting the pd role will make the dut reboot.
+	// Close the servo connection, unless we are booted from USB, to reset watchdogs, etc.
 	if i.value.BootMode != common.BootModeRecovery && i.value.BootMode != common.BootModeUSBDev {
 		i.value.Helper.CloseServo(ctx)
 	}

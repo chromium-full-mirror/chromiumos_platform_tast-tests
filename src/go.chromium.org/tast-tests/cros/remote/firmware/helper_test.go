@@ -174,17 +174,73 @@ func TestRestoreServoPower(t *gotesting.T) {
 	fs.controls[string(servo.DTSMode)] = string(servo.Off)
 	fs.mu.Unlock()
 
-	// Stranded snk/dts:off path: must restore dts:on and pd_role:src.
+	// Stranded snk/dts:off path: must restore dts:on, pd_role:src, and best-effort DFP data role.
 	if err := h.RestoreServoPower(t.Context()); err != nil {
 		t.Fatalf("RestoreServoPower failed from snk: %v", err)
 	}
 	fs.mu.Lock()
 	gotDTS := fs.controls[string(servo.DTSMode)]
 	gotRole := fs.controls[string(servo.PDRole)]
+	gotDFP := fs.controls[string(servo.DUTPDDataRole)]
 	fs.mu.Unlock()
 	if gotDTS != string(servo.On) || gotRole != string(servo.PDRoleSrc) {
 		t.Fatalf("after RestoreServoPower: dts=%q role=%q; want on, src", gotDTS, gotRole)
 	}
+	if gotDFP != string(servo.DFP) {
+		t.Fatalf("after RestoreServoPower: dut_pd_data_role=%q; want %q", gotDFP, servo.DFP)
+	}
+
+	// Best-effort DFP data role failure (e.g. DUT off) must not fail RestoreServoPower.
+	fs.mu.Lock()
+	fs.controls[string(servo.PDRole)] = string(servo.PDRoleSnk)
+	fs.faultOn[string(servo.DUTPDDataRole)+":"+string(servo.DFP)] = true
+	fs.mu.Unlock()
+	if err := h.RestoreServoPower(t.Context()); err != nil {
+		t.Fatalf("RestoreServoPower failed when SetDUTPDDataRole faulted: %v", err)
+	}
+	fs.mu.Lock()
+	gotRoleAfterDFPFault := fs.controls[string(servo.PDRole)]
+	delete(fs.faultOn, string(servo.DUTPDDataRole)+":"+string(servo.DFP))
+	fs.mu.Unlock()
+	if gotRoleAfterDFPFault != string(servo.PDRoleSrc) {
+		t.Fatalf("after RestoreServoPower with DFP fault: role=%q; want src", gotRoleAfterDFPFault)
+	}
+
+	// Non-v4 servo (c2d2) reporting type-c returns PDRoleNA and must be left alone.
+	c2d2 := newFakeServod(map[string]string{
+		"version":                       "c2d2",
+		string(servo.DUTConnectionType): string(servo.DUTConnTypeC),
+		string(servo.DTSMode):           string(servo.Off),
+		string(servo.PDRole):            string(servo.PDRoleSnk),
+	})
+	defer c2d2.close()
+	hC2D2 := NewHelperWithoutDUT("", c2d2.spec(), "", "")
+	defer hC2D2.CloseServo(context.Background())
+	if err := hC2D2.RestoreServoPower(t.Context()); err != nil {
+		t.Fatalf("RestoreServoPower failed on c2d2: %v", err)
+	}
+	c2d2.mu.Lock()
+	if len(c2d2.setLog) != 0 {
+		t.Fatalf("expected zero set calls on c2d2 (PDRoleNA), got %v", c2d2.setLog)
+	}
+	c2d2.mu.Unlock()
+
+	// Type-A servo must be left alone without touching pd_role or dts_mode.
+	typeA := newFakeServod(map[string]string{
+		string(servo.DUTConnectionType): string(servo.DUTConnTypeA),
+		string(servo.PDRole):            string(servo.PDRoleSnk),
+	})
+	defer typeA.close()
+	hTypeA := NewHelperWithoutDUT("", typeA.spec(), "", "")
+	defer hTypeA.CloseServo(context.Background())
+	if err := hTypeA.RestoreServoPower(t.Context()); err != nil {
+		t.Fatalf("RestoreServoPower failed on type-a servo: %v", err)
+	}
+	typeA.mu.Lock()
+	if len(typeA.setLog) != 0 {
+		t.Fatalf("expected zero set calls on type-a servo, got %v", typeA.setLog)
+	}
+	typeA.mu.Unlock()
 }
 
 func TestEnsureDUTBootedWakesFromResetErrorViaPowerKey(t *gotesting.T) {

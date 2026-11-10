@@ -246,12 +246,24 @@ func (h *Helper) restoreServoPower(ctx context.Context) (bool, error) {
 		return false, errors.Wrap(err, "checking servo connection type")
 	}
 	if isServoTypeC {
-		dtsOn, dtsErr := h.Servo.GetOnOff(ctx, servo.DTSMode)
 		role, roleErr := h.Servo.GetPDRole(ctx)
+		if roleErr == nil && role == servo.PDRoleNA {
+			return false, nil
+		}
+		dtsOn, dtsErr := h.Servo.GetOnOff(ctx, servo.DTSMode)
 		if dtsErr == nil && dtsOn && roleErr == nil && role == servo.PDRoleSrc {
 			return false, nil
 		}
-		return true, h.SetDUTPower(ctx, true)
+		testing.ContextLogf(ctx, "Servo left with %s=%q (err=%v) and %s=%t (err=%v); restoring power", servo.PDRole, role, roleErr, servo.DTSMode, dtsOn, dtsErr)
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			return true, err
+		}
+		// Servo is often left in snk because the DFP data role swap failed (see WaitConnect),
+		// so retry it to keep servo Ethernet working. This is best effort, e.g. the DUT may be unpowered.
+		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
+			testing.ContextLog(ctx, "Failed to set DUT data role to DFP: ", err)
+		}
+		return true, nil
 	}
 	if h.RPM != nil {
 		return true, h.SetDUTPower(ctx, true)
@@ -261,7 +273,8 @@ func (h *Helper) restoreServoPower(ctx context.Context) (bool, error) {
 
 // RestoreServoPower ensures Servo Type-C DTS mode and source PD role (or an
 // active RPM client) are restored to power on without bouncing Type-C CC when
-// Servo is already in servo_dts_mode:on and servo_pd_role:src.
+// Servo is already in servo_dts_mode:on and servo_pd_role:src, then retries
+// the DFP data role best-effort to keep servo Ethernet working.
 func (h *Helper) RestoreServoPower(ctx context.Context) error {
 	_, err := h.restoreServoPower(ctx)
 	return err
