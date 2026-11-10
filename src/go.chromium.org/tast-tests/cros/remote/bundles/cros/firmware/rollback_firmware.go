@@ -13,7 +13,6 @@ import (
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -92,11 +91,11 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 					"--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/backup.bin", servoTempDir)); err != nil {
 					s.Error("Failed restoring firmware via servo: ", err)
 				}
-				if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-					s.Error("Hard reset failed: ", err)
+				if err := h.DisconnectDUT(ctx); err != nil {
+					s.Log("Error closing connections to DUT: ", err)
 				}
-				if err := h.WaitConnect(ctx); err != nil {
-					s.Error("Failed to connect to DUT: ", err)
+				if err := h.EnsureDUTBooted(ctx); err != nil {
+					s.Error("Failed to boot DUT after restoring firmware: ", err)
 				}
 			}
 			s.Logf("Deleting backups on servohost at %q", servoTempDir)
