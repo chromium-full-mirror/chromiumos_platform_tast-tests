@@ -237,19 +237,95 @@ func (h *Helper) Close(ctx context.Context) error {
 	return nil
 }
 
+func (h *Helper) restoreServoPower(ctx context.Context) (bool, error) {
+	if err := h.RequireServo(ctx); err != nil {
+		return false, errors.Wrap(err, "requiring servo")
+	}
+	isServoTypeC, err := h.Servo.IsServoTypeC(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "checking servo connection type")
+	}
+	if isServoTypeC {
+		dtsOn, dtsErr := h.Servo.GetOnOff(ctx, servo.DTSMode)
+		role, roleErr := h.Servo.GetPDRole(ctx)
+		if dtsErr == nil && dtsOn && roleErr == nil && role == servo.PDRoleSrc {
+			return false, nil
+		}
+		return true, h.SetDUTPower(ctx, true)
+	}
+	if h.RPM != nil {
+		return true, h.SetDUTPower(ctx, true)
+	}
+	return false, nil
+}
+
+// RestoreServoPower ensures Servo Type-C DTS mode and source PD role (or an
+// active RPM client) are restored to power on without bouncing Type-C CC when
+// Servo is already in servo_dts_mode:on and servo_pd_role:src.
+func (h *Helper) RestoreServoPower(ctx context.Context) error {
+	_, err := h.restoreServoPower(ctx)
+	return err
+}
+
+func (h *Helper) ensureConnectedServoPower(ctx context.Context) bool {
+	if h.Reporter != nil {
+		if fromRemovable, err := h.Reporter.BootedFromRemovableDevice(ctx); err == nil && fromRemovable {
+			return true
+		}
+	}
+	changed, err := h.restoreServoPower(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to restore servo power: ", err)
+	}
+	if !changed {
+		return true
+	}
+	waitBootCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	return h.WaitConnect(waitBootCtx, ResetEthernetDongle) == nil
+}
+
+func (h *Helper) powerOnDUT(ctx context.Context, hasEC bool) {
+	testing.ContextLog(ctx, "Powering on DUT via power_state:on")
+	err := h.Servo.SetPowerState(ctx, servo.PowerStateOn)
+	if err == nil {
+		if !hasEC {
+			return
+		}
+		if h.WaitForPowerStates(ctx, PowerStateInterval, 5*time.Second, "S0") == nil {
+			return
+		}
+		if state, sErr := h.Servo.GetECSystemPowerState(ctx); sErr == nil && !comparePowerStates(state, "G3", "S5", "AP_POWER_STATE_G3", "AP_POWER_STATE_S5") {
+			return
+		}
+	} else {
+		testing.ContextLog(ctx, "Failed to set power_state:on, falling back to power key: ", err)
+	}
+	dur := servo.DurPress
+	if h.Config != nil && h.Config.HoldPwrButtonPowerOn > 0 {
+		dur = servo.Dur(h.Config.HoldPwrButtonPowerOn)
+	}
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, dur); err != nil {
+		testing.ContextLog(ctx, "Failed to press power key: ", err)
+	}
+}
+
 // EnsureDUTBooted checks the power state, and attempts to boot the DUT if it is off.
 func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 	if h.DUT != nil {
 		testing.ContextLog(ctx, "Connecting to DUT")
 		if err := h.DUT.Connect(ctx); err == nil {
 			h.CloseRPCConnection(ctx)
-			return nil
+			if h.ensureConnectedServoPower(ctx) {
+				return nil
+			}
 		}
 	}
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "could not connect to servo")
 	}
-	if hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState)); err != nil {
+	hasEC, err := h.Servo.HasControl(ctx, string(servo.ECSystemPowerState))
+	if err != nil {
 		testing.ContextLog(ctx, "Error checking for chrome ec: ", err)
 	} else if hasEC {
 		state, err := h.Servo.GetECSystemPowerState(ctx)
@@ -263,7 +339,15 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 			waitBootCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
 			if err = h.WaitConnect(waitBootCtx, ResetEthernetDongle); err == nil {
-				return nil
+				if h.DUT == nil {
+					if err := h.RestoreServoPower(ctx); err != nil {
+						testing.ContextLog(ctx, "Failed to restore servo power: ", err)
+					}
+					return nil
+				}
+				if h.ensureConnectedServoPower(ctx) {
+					return nil
+				}
 			}
 			// If WaitConnect didn't work, let it reset.
 		}
@@ -284,13 +368,49 @@ func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 	}
 
 	testing.ContextLog(ctx, "Resetting DUT")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		testing.ContextLog(ctx, "Failed to reset DUT: ", err)
+	resetErr := h.Servo.SetPowerState(ctx, servo.PowerStateReset)
+	if resetErr != nil {
+		testing.ContextLog(ctx, "Failed to reset DUT: ", resetErr)
 	}
 	if err := h.DisconnectDUT(ctx); err != nil {
 		testing.ContextLog(ctx, "Error closing connections to DUT: ", err)
 	}
 	h.CloseRPCConnection(ctx)
+
+	wokeFromOff := false
+	if resetErr != nil {
+		h.powerOnDUT(ctx, hasEC)
+		wokeFromOff = true
+	} else if hasEC {
+		if err := h.WaitForPowerStates(ctx, PowerStateInterval, 10*time.Second, "S0"); err != nil {
+			if state, sErr := h.Servo.GetECSystemPowerState(ctx); sErr != nil || comparePowerStates(state, "G3", "S5", "AP_POWER_STATE_G3", "AP_POWER_STATE_S5") {
+				testing.ContextLogf(ctx, "DUT remained in %q after reset; powering on", state)
+				h.powerOnDUT(ctx, hasEC)
+				wokeFromOff = true
+			}
+		}
+	}
+
+	if !wokeFromOff {
+		firstTimeout := time.Minute
+		if deadline, ok := ctx.Deadline(); ok {
+			if half := time.Until(deadline) / 2; half < firstTimeout {
+				firstTimeout = half
+			}
+		}
+		if firstTimeout >= 5*time.Second {
+			firstCtx, cancel := context.WithTimeout(ctx, firstTimeout)
+			err := h.WaitConnect(firstCtx, ResetEthernetDongle)
+			cancel()
+			if err == nil {
+				return nil
+			}
+			if ctx.Err() == nil {
+				testing.ContextLog(ctx, "DUT failed to connect after reset; attempting power_state:on: ", err)
+				h.powerOnDUT(ctx, hasEC)
+			}
+		}
+	}
 	return h.WaitConnect(ctx, ResetEthernetDongle)
 }
 
