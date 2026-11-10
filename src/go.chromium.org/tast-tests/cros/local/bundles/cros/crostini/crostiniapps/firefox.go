@@ -76,20 +76,69 @@ func configureFirefoxForTestPage(ctx context.Context, cont *vm.Container) error 
 	return nil
 }
 
-// CleanupFirefoxTestPageFiles removes the temporary test page and Firefox
-// enterprise policy files from the container. Callers should pass a reserved
-// cleanup context (created via ctxutil.Shorten) so cleanup still succeeds if
-// the main test context times out.
-func CleanupFirefoxTestPageFiles(ctx context.Context, cont *vm.Container) error {
-	var firstErr error
-	// Container.RemoveAll executes "sudo rm -rf", so it removes root-owned /etc
-	// files and ignores paths that were already moved or never created.
-	for _, path := range []string{testPageName, firefoxPoliciesName, firefoxPoliciesPath} {
-		if err := cont.RemoveAll(ctx, path); err != nil && firstErr == nil {
-			firstErr = errors.Wrapf(err, "failed to remove file %s", path)
+// CleanupFirefoxTestPage terminates any remaining Firefox processes, closes
+// open Firefox windows, and cleans up temporary test page, enterprise policy,
+// and CSD preference (titlebar.js) files so deferred Terminal cleanup does not
+// type "exit" into Firefox or hang waiting on a foreground firefox-esr process.
+// Callers should pass a reserved cleanup context (created via ctxutil.Shorten)
+// so cleanup still succeeds if the main test context times out.
+func CleanupFirefoxTestPage(ctx context.Context, tconn *chrome.TestConn, cont *vm.Container) {
+	// Terminate foreground firefox-esr / crashreporter processes in the container
+	// so the Firefox window closes and Terminal's shell returns to its prompt
+	// before deferred terminalApp.Exit types "exit". Bound the command timeout
+	// so an unresponsive container cannot exhaust cleanupCtx.
+	pkillCtx, pkillCancel := context.WithTimeout(ctx, 15*time.Second)
+	defer pkillCancel()
+	if err := cont.Command(pkillCtx, "pkill", "-9", "-f", "firefox-esr|crashreporter").Run(); err != nil {
+		// pkill exits with status 1 when no processes matched (e.g. Firefox
+		// was already closed normally by CloseFirefoxTestPage).
+		if ws, ok := testexec.GetWaitStatus(err); !ok || ws.ExitStatus() != 1 {
+			testing.ContextLog(ctx, "Failed to pkill Firefox processes during cleanup: ", err)
 		}
 	}
-	return firstErr
+
+	// Match "Firefox" rather than "Mozilla Firefox" so "Firefox Crash Reporter"
+	// windows are closed too if firefox-esr crashed during startup.
+	isFirefoxWindow := func(w *ash.Window) bool {
+		return w.WindowType == ash.WindowTypeCrostini && strings.Contains(w.Title, "Firefox")
+	}
+	waitCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	// Wait briefly for pkill to tear down Wayland windows before explicitly
+	// closing any remaining windows.
+	if err := ash.WaitForAllWindowCondition(waitCtx, tconn, func(w *ash.Window) bool {
+		return !isFirefoxWindow(w)
+	}); err != nil {
+		findCtx, findCancel := context.WithTimeout(ctx, 5*time.Second)
+		defer findCancel()
+		ws, findErr := ash.FindAllWindows(findCtx, tconn, isFirefoxWindow)
+		if findErr != nil {
+			testing.ContextLog(ctx, "Failed to find Firefox windows during cleanup: ", findErr)
+		}
+		for _, w := range ws {
+			closeCtx, closeCancel := context.WithTimeout(ctx, 5*time.Second)
+			if closeErr := w.CloseWindow(closeCtx, tconn); closeErr != nil {
+				testing.ContextLogf(ctx, "Failed to close Firefox window %d during cleanup: %v", w.ID, closeErr)
+			}
+			closeCancel()
+		}
+	}
+
+	// Remove temporary files (including /etc/firefox-esr/titlebar.js installed
+	// by DisableFirefoxCSD to set browser.tabs.inTitlebar=0) in a single
+	// bounded command so an unresponsive container cannot exhaust cleanupCtx.
+	rmCtx, rmCancel := context.WithTimeout(ctx, 15*time.Second)
+	defer rmCancel()
+	if err := cont.Command(
+		rmCtx, "sudo", "rm", "-rf",
+		testPageName,
+		firefoxPoliciesName,
+		firefoxPoliciesPath,
+		"titlebar.js",
+		"/etc/firefox-esr/titlebar.js",
+	).Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to remove temporary Firefox files during cleanup: ", err)
+	}
 }
 
 // LaunchFirefoxWithTestPage creates a test webpage and launches it with the Firefox app.

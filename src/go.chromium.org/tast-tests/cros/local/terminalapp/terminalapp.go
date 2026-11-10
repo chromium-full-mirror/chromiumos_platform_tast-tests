@@ -384,9 +384,44 @@ func (ta *TerminalApp) ShutdownCrostini(cont *vm.Container) uiauto.Action {
 	}
 }
 
+// focusWindow activates the Terminal Ash window and waits until it is active.
+// Terminal's background xterm-helper-textarea retains Blink DOM focus even when
+// occluded by a foreground guest app window (e.g. Firefox), so without Ash
+// window activation LeftClick(ta.tab) and TypeAction(cmd) can land in the
+// foreground app window instead of Terminal.
+func (ta *TerminalApp) focusWindow(ctx context.Context) error {
+	ws, err := ash.FindAllWindows(ctx, ta.tconn, func(w *ash.Window) bool {
+		return w.AppID == apps.Terminal.ID
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to get Terminal windows")
+	}
+	if len(ws) == 0 {
+		return errors.Wrap(ash.ErrWindowNotFound, "no Terminal window found")
+	}
+	for _, w := range ws {
+		if w.IsActive && !w.IsAnimating {
+			return nil
+		}
+	}
+	target := ws[0]
+	if err := target.ActivateWindow(ctx, ta.tconn); err != nil {
+		return errors.Wrap(err, "failed to activate Terminal window")
+	}
+	if err := ash.WaitForCondition(ctx, ta.tconn, func(win *ash.Window) bool {
+		return win.ID == target.ID && win.IsActive && !win.IsAnimating
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed waiting for Terminal window to become active")
+	}
+	return nil
+}
+
 // RunCommand runs command in Terminal windows.
 func (ta *TerminalApp) RunCommand(keyboard *input.KeyboardEventWriter, cmd string) uiauto.Action {
 	return uiauto.Combine("run command "+cmd,
+		// Activate the Ash window first so clicks and typed commands (such as
+		// "exit" during cleanup) do not go to a foreground guest window.
+		ta.focusWindow,
 		// Focus on the Terminal window.
 		ta.ui.LeftClick(ta.tab),
 		ta.ui.WaitUntilExists(terminalTextField.Focused().Editable()),
@@ -396,12 +431,22 @@ func (ta *TerminalApp) RunCommand(keyboard *input.KeyboardEventWriter, cmd strin
 		keyboard.AccelAction("Enter"))
 }
 
-// Exit closes the Terminal App through entering exit in the Terminal window.
+// Exit closes the Terminal App through entering exit in the Terminal window,
+// falling back to closing the window if the shell does not exit (for example,
+// if a foreground process is still running).
 func (ta *TerminalApp) Exit(keyboard *input.KeyboardEventWriter) uiauto.Action {
-	return uiauto.Combine("exit Terminal window",
-		ta.RunCommand(keyboard, "exit"),
-		ta.ui.WithTimeout(time.Minute).WaitUntilGone(ta.tab),
-		ta.Kb.AccelAction("Ctrl+Shift+W"))
+	return func(ctx context.Context) error {
+		err := uiauto.Combine("exit Terminal window",
+			ta.RunCommand(keyboard, "exit"),
+			ta.ui.WithTimeout(time.Minute).WaitUntilGone(ta.tab),
+			ta.Kb.AccelAction("Ctrl+Shift+W"),
+		)(ctx)
+		if err == nil || errors.Is(err, ash.ErrWindowNotFound) {
+			return err
+		}
+		testing.ContextLog(ctx, "Failed to exit Terminal via shell command, falling back to closing the window: ", err)
+		return ta.Close()(ctx)
+	}
 }
 
 // Close closes the Terminal App through clicking Close on shelf context menu.

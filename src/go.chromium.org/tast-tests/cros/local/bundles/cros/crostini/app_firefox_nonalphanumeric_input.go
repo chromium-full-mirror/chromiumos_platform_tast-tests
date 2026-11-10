@@ -46,7 +46,7 @@ func AppFirefoxNonalphanumericInput(ctx context.Context, s *testing.State) {
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 	defer cancel()
 
 	// Open Terminal app.
@@ -55,11 +55,10 @@ func AppFirefoxNonalphanumericInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
-	defer func(ctx context.Context) {
-		if err := crostiniapps.CleanupFirefoxTestPageFiles(ctx, cont); err != nil {
-			s.Log("Failed to clean up Firefox test page files: ", err)
-		}
-	}(cleanupCtx)
+	// Register Firefox cleanup after terminalApp.Exit so LIFO defer order closes
+	// Firefox and unblocks the foreground shell command before typing "exit",
+	// while s.AttachErrorHandlers still captures ui_tree prior to any defers.
+	defer crostiniapps.CleanupFirefoxTestPage(cleanupCtx, tconn, cont)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
