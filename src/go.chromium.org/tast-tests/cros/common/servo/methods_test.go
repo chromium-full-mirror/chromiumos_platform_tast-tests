@@ -5,7 +5,17 @@
 package servo
 
 import (
+	"context"
+	"encoding/xml"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -128,5 +138,70 @@ func TestPropertyToString(t *testing.T) {
 		} else if !cmp.Equal(tc.expected, res) {
 			t.Errorf("PropertyToString(%q, %q) %s", tc.propertyParam, tc.nameParam, cmp.Diff(tc.expected, res))
 		}
+	}
+}
+
+func TestToggleOffOnRestoresOnContextTimeout_b584002432(t *testing.T) {
+	type xmlCall struct {
+		MethodName string   `xml:"methodName"`
+		Params     []string `xml:"params>param>value>string"`
+	}
+	var mu sync.Mutex
+	controls := map[string]string{string(DutEthPwrEn): string(On)}
+	var setLog []string
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		var call xmlCall
+		_ = xml.Unmarshal(body, &call)
+		w.Header().Set("Content-Type", "text/xml")
+		mu.Lock()
+		defer mu.Unlock()
+		switch call.MethodName {
+		case "echo":
+			fmt.Fprintf(w, "<methodResponse><params><param><value><string>ECH0ING: %s</string></value></param></params></methodResponse>", call.Params[0])
+		case "get":
+			fmt.Fprintf(w, "<methodResponse><params><param><value><string>%s</string></value></param></params></methodResponse>", controls[call.Params[0]])
+		case "set":
+			controls[call.Params[0]] = call.Params[1]
+			setLog = append(setLog, call.Params[0]+":"+call.Params[1])
+			fmt.Fprint(w, "<methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>")
+		}
+	}))
+	defer srv.Close()
+
+	host, portStr, err := net.SplitHostPort(srv.Listener.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	svo, err := New(t.Context(), host, port)
+	if err != nil {
+		t.Fatalf("servo.New failed: %v", err)
+	}
+	defer svo.Close(context.Background())
+
+	// Expire mid-sleep (30ms < ServoKeypressDelay=100ms) to reproduce b/584002432.
+	shortCtx, cancel := context.WithTimeout(t.Context(), 30*time.Millisecond)
+	defer cancel()
+	if err := svo.ToggleOffOn(shortCtx, DutEthPwrEn); err == nil {
+		t.Fatal("ToggleOffOn unexpectedly succeeded on expired context")
+	}
+
+	mu.Lock()
+	gotState := controls[string(DutEthPwrEn)]
+	gotLog := append([]string(nil), setLog...)
+	mu.Unlock()
+
+	if gotState != string(On) {
+		t.Fatalf("dut_eth_pwr_en stranded %q after context timeout (sets: %v); want %q", gotState, gotLog, On)
+	}
+	wantLog := []string{"dut_eth_pwr_en:off", "dut_eth_pwr_en:on"}
+	if !cmp.Equal(wantLog, gotLog) {
+		t.Fatalf("unexpected set sequence (-want +got):\n%s", cmp.Diff(wantLog, gotLog))
 	}
 }

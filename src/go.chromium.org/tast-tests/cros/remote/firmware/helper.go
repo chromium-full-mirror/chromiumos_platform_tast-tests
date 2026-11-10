@@ -1701,17 +1701,23 @@ func (h *Helper) CheckChgFrmPwrSuppInfo(ctx context.Context, connectAC bool) err
 	return nil
 }
 
+const ethDongleResetTimeout = 10 * time.Second
+
 // ResetServoEthernetDongle resets the ethernet adapter if it supports.
+// Uses a bounded detached context so a short caller connect timeout cannot
+// abort mid-toggle and strand dut_eth_pwr_en off.
 func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
-	ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))
+	resetCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), ethDongleResetTimeout)
+	defer cancel()
+	ok, err := h.Servo.HasControl(resetCtx, string(servo.DutEthPwrEn))
 	if err != nil {
 		return errors.Wrapf(err, "failed to check control %v", servo.DutEthPwrEn)
 	}
 	if !ok {
 		return nil
 	}
-	testing.ContextLog(ctx, "Resetting the ethernet adapter")
-	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
+	testing.ContextLog(resetCtx, "Resetting the ethernet adapter")
+	return h.Servo.ToggleOffOn(resetCtx, servo.DutEthPwrEn)
 }
 
 // SaveCBMEMLogs saves the CBMEM logs from last boot-up.

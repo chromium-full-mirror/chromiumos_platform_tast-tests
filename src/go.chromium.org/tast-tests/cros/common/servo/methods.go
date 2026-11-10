@@ -1288,19 +1288,30 @@ func (s *Servo) SetOnOffTimeout(ctx context.Context, ctrl OnOffControl, value On
 	return s.SetStringTimeout(ctx, StringControl(ctrl), string(value), timeout)
 }
 
+const toggleRestoreTimeout = 10 * time.Second
+
 // ToggleOffOn turns a switch off and on again.
-func (s *Servo) ToggleOffOn(ctx context.Context, ctrl OnOffControl) error {
+// Once turned off, a bounded detached context ensures the switch is turned back
+// on even if ctx expires during the sleep.
+func (s *Servo) ToggleOffOn(ctx context.Context, ctrl OnOffControl) (retErr error) {
+	restoreOn := func() error {
+		restoreCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), toggleRestoreTimeout)
+		defer cancel()
+		return s.SetString(restoreCtx, StringControl(ctrl), string(On))
+	}
 	if err := s.SetString(ctx, StringControl(ctrl), string(Off)); err != nil {
+		if ctx.Err() != nil {
+			_ = restoreOn()
+		}
 		return err
 	}
+	defer func() {
+		if err := restoreOn(); err != nil {
+			retErr = errors.Join(retErr, err)
+		}
+	}()
 	// GoBigSleepLint: Simulating a specific speed of keypress
-	if err := testing.Sleep(ctx, ServoKeypressDelay); err != nil {
-		return err
-	}
-	if err := s.SetString(ctx, StringControl(ctrl), string(On)); err != nil {
-		return err
-	}
-	return nil
+	return testing.Sleep(ctx, ServoKeypressDelay)
 }
 
 // ToggleOnOff turns a switch on and off again.
