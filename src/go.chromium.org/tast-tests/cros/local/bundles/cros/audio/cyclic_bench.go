@@ -97,7 +97,7 @@ var cyclicBenchUnstableModels = []string{
 	// taniks(b/346722131),
 	"taniks",
 	// brask(b/358316489),
-	"aurash", "gladios", "kinox", "kuldax", "lisbon", "moli",
+	"aurash", "bujia", "gladios", "kinox", "kuldax", "lisbon", "moli",
 	// elm(b/428662054)
 	"elm",
 	// corsola(b/423801869)
