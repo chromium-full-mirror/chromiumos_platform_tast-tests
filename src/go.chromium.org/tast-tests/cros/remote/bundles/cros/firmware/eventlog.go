@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -262,8 +263,27 @@ func Eventlog(ctx context.Context, s *testing.State) {
 			s.Error("Failed to remove watchdog for ccd: ", err)
 		}
 
+		hasInternalDisplay := s.Features("").GetHardware().GetHardwareFeatures().GetScreen().GetPanelProperties() != nil
+		if !hasInternalDisplay {
+			// Pressing power on a headless Chromebox causes powerd to shut down on wake.
+			cleanupCtx := ctx
+			var cancel context.CancelFunc
+			ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+			testing.ContextLog(ctx, "Enabling USB keyboard")
+			if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.On); err != nil {
+				s.Fatalf("Failed to set %q to %q with servo: %v", servo.USBKeyboard, servo.On, err)
+			}
+			defer func(ctx context.Context) {
+				testing.ContextLog(ctx, "Disabling USB keyboard")
+				if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+					s.Errorf("Failed to set %q to %q with servo: %v", servo.USBKeyboard, servo.Off, err)
+				}
+			}(cleanupCtx)
+		}
+
 		testing.ContextLog(ctx, "Suspending DUT")
-		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=5")
 		if err := cmd.Start(); err != nil {
 			s.Fatal("Failed to suspend DUT: ", err)
 		}
@@ -273,8 +293,14 @@ func Eventlog(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get S0ix or S3 powerstate: ", err)
 		}
 
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-			s.Fatal("Failed to press power key on DUT: ", err)
+		if hasInternalDisplay {
+			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+				s.Fatal("Failed to press power key on DUT: ", err)
+			}
+		} else {
+			if err := h.Servo.KeypressWithDuration(ctx, servo.USBEnter, servo.DurTab); err != nil {
+				s.Fatal("Failed to press USB enter key on DUT: ", err)
+			}
 		}
 
 		testing.ContextLog(ctx, "Waiting for S0 powerstate")
