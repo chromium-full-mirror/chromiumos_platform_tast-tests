@@ -808,6 +808,15 @@ func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 			return err
 		}
 
+		// tconn.Call returns once ctx is done, so do not let the JS poll outlive
+		// ctx. Otherwise it keeps observing tree changes until its own timeout.
+		timeout := ac.pollOpts.Timeout
+		if deadline, ok := ctx.Deadline(); ok {
+			if remaining := time.Until(deadline); remaining < timeout {
+				timeout = remaining
+			}
+		}
+
 		expr := fmt.Sprintf(`async function() {
 			let desktop = await tast.automation.getDesktop();
 			async function runQuery() {
@@ -817,38 +826,52 @@ func (ac *Context) WaitUntilExists(finder *nodewith.Finder) Action {
 				await runQuery();
 			} catch (error) {
 				let lastError = error;
-				var retryQuery;
+				// done, pending and timeoutId live outside retryQuery so that a finished
+				// poll cancels its timers and never re-adds the tree change observer.
+				// Otherwise a retry pending at timeout keeps scanning the UI tree until
+				// Chrome restarts.
+				let done = false;
+				let pending = null;
+				let timeoutId = null;
+				let retryQuery;
 				await new Promise((resolve, reject) => {
-					setTimeout(reject, %d);
-					retryQuery = async function () {
-						chrome.automation.removeTreeChangeObserver(retryQuery);
-						var pending;
-						async function exectureQuery() {
-							try {
-								await runQuery();
-								resolve();
-							} catch (error) {
-								lastError = error;
+					timeoutId = setTimeout(reject, %d);
+					async function executeQuery() {
+						pending = null;
+						try {
+							await runQuery();
+							resolve();
+						} catch (error) {
+							lastError = error;
+							if (!done) {
+								chrome.automation.addTreeChangeObserver('allTreeChanges', retryQuery);
 							}
-							pending = null;
-							chrome.automation.addTreeChangeObserver('allTreeChanges',retryQuery);
 						}
+					}
+					retryQuery = function () {
+						if (done) {
+							return;
+						}
+						chrome.automation.removeTreeChangeObserver(retryQuery);
 						if (pending) {
 							return;
 						}
-						pending = setTimeout(exectureQuery, 200);
+						pending = setTimeout(executeQuery, 200);
 					};
-					chrome.automation.addTreeChangeObserver('allTreeChanges',retryQuery);
+					chrome.automation.addTreeChangeObserver('allTreeChanges', retryQuery);
 				}).then(() => {
 				}, () => {
 					throw "context deadline exceeded during a poll with timeout %.fs; " + lastError;
 				}).finally(() => {
+					done = true;
+					clearTimeout(timeoutId);
+					clearTimeout(pending);
 					chrome.automation.removeTreeChangeObserver(retryQuery);
 				});
 			} finally {
 				tast.automation.releaseDesktop();
 			}
-		}`, q, ac.pollOpts.Timeout.Milliseconds(), ac.pollOpts.Timeout.Seconds())
+		}`, q, timeout.Milliseconds(), timeout.Seconds())
 
 		return ac.tconn.Call(ctx, nil, expr)
 	}
