@@ -161,7 +161,7 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			s.Fatal("Failed to perform a warm reset: ", err)
 		}
-		if err := h.WaitConnect(ctx); err != nil {
+		if err := h.WaitConnect(ctx, firmware.ResetEthernetDongle); err != nil {
 			s.Fatal("Failed to reconnect to DUT after warm reset: ", err)
 		}
 	}
