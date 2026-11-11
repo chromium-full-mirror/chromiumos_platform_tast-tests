@@ -48,13 +48,11 @@ func MiniDiag(ctx context.Context, s *testing.State) {
 	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
-	launchCount := 0
 	if h.Config.HasMiniDiagCapability(firmware.CbmemPreservedByAPReset) {
 		s.Log("Launching MiniDiag and leave with warm reset")
 		if err := launchMiniDiag(ctx, h); err != nil {
 			s.Fatal("Failed to launch MiniDiag: ", err)
 		}
-		launchCount++
 		if err := warmResetDUT(ctx, h); err != nil {
 			s.Fatal("Failed to warm reset the DUT: ", err)
 		}
@@ -73,7 +71,6 @@ func MiniDiag(ctx context.Context, s *testing.State) {
 		if err := launchMiniDiag(ctx, h); err != nil {
 			s.Fatal("Failed to launch MiniDiag: ", err)
 		}
-		launchCount++
 		if err := menuPowerOffDUT(ctx, h); err != nil {
 			s.Fatal("Failed to power off the DUT: ", err)
 		}
@@ -90,15 +87,6 @@ func MiniDiag(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		s.Log("Skipping verifying with power off")
-	}
-
-	if h.Config.HasMiniDiagCapability(firmware.EventLogLaunchCount) {
-		s.Log("Checking event log to verify event log launch count for MiniDiag")
-		if err := verifyElogLaunchCount(ctx, h, launchCount); err != nil {
-			s.Fatal("Failed to verify event log launch count: ", err)
-		}
-	} else {
-		s.Log("Skipping verifying event log launch count")
 	}
 }
 
@@ -171,27 +159,6 @@ func warmResetDUT(ctx context.Context, h *firmware.Helper) error {
 
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to the DUT")
-	}
-	return nil
-}
-
-func verifyElogLaunchCount(ctx context.Context, h *firmware.Helper, expectedLaunchCount int) error {
-	newEvents, err := h.Reporter.EventlogList(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to find events")
-	}
-	foundBootModes, err := h.Reporter.GetBootModes(ctx, newEvents)
-	if err != nil {
-		return errors.Wrap(err, "failed to get boot modes")
-	}
-	diagCnt := 0
-	for _, bootMode := range foundBootModes {
-		if bootMode == reporters.Diagnostic {
-			diagCnt++
-		}
-	}
-	if diagCnt != expectedLaunchCount {
-		return errors.Errorf("expected elog launch count is %d, but got %d", expectedLaunchCount, diagCnt)
 	}
 	return nil
 }

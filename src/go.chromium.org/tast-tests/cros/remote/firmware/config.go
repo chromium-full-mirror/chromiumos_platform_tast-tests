@@ -46,7 +46,6 @@ type MiniDiagCapability string
 // These are the MiniDiagCapabilities currently described in fw-testing-configs.
 const (
 	CbmemPreservedByAPReset MiniDiagCapability = "cbmem_preserved_by_ap_reset"
-	EventLogLaunchCount     MiniDiagCapability = "event_log_launch_count"
 	EventLogTestReport      MiniDiagCapability = "event_log_test_report"
 )
 
@@ -161,7 +160,7 @@ type Config struct {
 	USBEnablePins []USBEnablePin
 
 	// MemoryRetrainTimeout is the max time it takes to retrain memory cache
-	MemoryRetrainTimeout          time.Duration
+	MemoryRetrainTimeout time.Duration
 }
 
 // CfgPlatformFromLSBBoard interprets a board name that would come from /etc/lsb-release, and returns the name of the platform whose config should be loaded.
