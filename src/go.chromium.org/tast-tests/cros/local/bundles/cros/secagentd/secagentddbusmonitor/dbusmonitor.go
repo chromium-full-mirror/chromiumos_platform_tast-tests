@@ -129,13 +129,17 @@ func SetupAddMatchDbusWatcherWithTimeout(ctx context.Context, timeout time.Durat
 
 // WaitForAddMatchSignal monitors the event watcher for the UserDataAuth add match signal.
 func WaitForAddMatchSignal(addMatchWatcher *dbusutil.EventWatcher) error {
+	const (
+		legacyMatchRule     = "type='signal', sender='org.chromium.UserDataAuth', interface='org.chromium.UserDataAuthInterface', path='/org/chromium/UserDataAuth'"
+		authFactorMatchRule = "type='signal', sender='org.chromium.UserDataAuth', interface='org.chromium.UserDataAuthInterface', member='AuthenticateAuthFactorCompleted', path='/org/chromium/UserDataAuth'"
+	)
 	for {
 		event, ok := <-addMatchWatcher.Events()
 		if !ok {
 			return errors.New("failed to find AddMatch signal for UserDataAuth")
 		}
 		// Verify that it is UserDataAuth which is the relevant cryptohome dbus interface.
-		if event.Arguments[0] != nil && event.Arguments[0] == "type='signal', sender='org.chromium.UserDataAuth', interface='org.chromium.UserDataAuthInterface', path='/org/chromium/UserDataAuth'" {
+		if len(event.Arguments) > 0 && (event.Arguments[0] == authFactorMatchRule || event.Arguments[0] == legacyMatchRule) {
 			return nil
 		}
 	}
