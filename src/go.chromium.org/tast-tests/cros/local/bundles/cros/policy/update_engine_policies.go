@@ -108,7 +108,7 @@ func init() {
 					&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal},
 					&policy.DeviceRollbackToTargetVersion{Val: rollbackAndRestoreIfPossible},
 					// Metrics reporting must be enabled to ensure rollback metrics file is created with the rollback policy.
-					&policy.DeviceMetricsReportingEnabled{Stat: policy.StatusSetRecommended, Val: true},
+					&policy.DeviceMetricsReportingEnabled{Val: true},
 				},
 				verifyRollbackMetricsFile: true,
 				expectedUpdateRequestSubstrings: []string{
