@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path"
@@ -778,9 +779,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			s.Error("Failed saving perf data: ", err)
 		}
 	}()
-	baselineSpeedMetric, err := runSpeedTest(ctx, h)
-	if err != nil {
-		s.Error("Failed to get baseline speed metric: ", err)
+	baselineSpeedMetric, baselineErr := runSpeedTest(ctx, h)
+	if baselineErr != nil {
+		s.Error("Failed to get baseline speed metric: ", baselineErr)
 	} else {
 		pv.Set(perf.Metric{
 			Name:      "baseline_speedometer_metric",
@@ -867,9 +868,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		s.Errorf("Expected EC RW updated, got %q want %q", updatedECRW, expectedVersions[fwTargets.FirmwareManifestKey].EC.Versions.RW)
 	}
 
-	speedMetric, err := runSpeedTest(ctx, h)
-	if err != nil {
-		s.Error("Failed to get speed metric: ", err)
+	speedMetric, speedErr := runSpeedTest(ctx, h)
+	if speedErr != nil {
+		s.Error("Failed to get speed metric: ", speedErr)
 	} else {
 		pv.Set(perf.Metric{
 			Name:      "speedometer_metric",
@@ -878,10 +879,14 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 			Multiple:  false,
 		}, speedMetric)
 	}
-	if speedMetric < baselineSpeedMetric*0.95 {
-		s.Errorf("Speedometer metric has degraded by >5%% - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
+	if comparable, degraded := checkSpeedometerDegradation(baselineSpeedMetric, baselineErr, speedMetric, speedErr, speedometerMinRatio); comparable {
+		if degraded {
+			s.Errorf("Speedometer metric has degraded by >5%% - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
+		} else {
+			s.Logf("Speedometer metric is acceptable - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
+		}
 	} else {
-		s.Logf("Speedometer metric is acceptable - Latest: %f Baseline: %f", speedMetric, baselineSpeedMetric)
+		s.Logf("Skipping Speedometer comparison due to invalid metric (baselineErr=%v baseline=%f latestErr=%v latest=%f)", baselineErr, baselineSpeedMetric, speedErr, speedMetric)
 	}
 
 	shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
@@ -970,36 +975,79 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 }
 
 const (
-	// speedometerTime sets the timeout for Speedometer test.
+	// maxSpeedometerTime sets the timeout for PerformSpeedometerTest itself.
 	maxSpeedometerTime = 10 * time.Minute
+	// chromeSetupTimeout exceeds chrome.MinLoginTimeout (4m10s) plus gRPC overhead.
+	chromeSetupTimeout  = 5 * time.Minute
+	chromeCloseTimeout  = 1 * time.Minute
+	speedTestCooldown   = 120 * time.Second
+	speedometerMinRatio = 0.95
 )
+
+type speedTestConfig struct {
+	chromeSetup time.Duration
+	chromeClose time.Duration
+	cooldown    time.Duration
+	benchmark   time.Duration
+	sleep       func(context.Context, time.Duration) error
+}
+
+// checkSpeedometerDegradation checks whether both Speedometer scores are finite and
+// positive and reports whether latest dropped below minRatio * baseline.
+func checkSpeedometerDegradation(baseline float64, baselineErr error, latest float64, latestErr error, minRatio float64) (comparable, degraded bool) {
+	if baselineErr != nil || latestErr != nil || !(baseline > 0) || !(latest > 0) || math.IsInf(baseline, 0) || math.IsInf(latest, 0) {
+		return false, false
+	}
+	return true, latest < baseline*minRatio
+}
 
 // runSpeedTest performs the speedometer2 test.
 func runSpeedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
-	speedometerCtx, cancelSpeedometerCtx := context.WithTimeout(ctx, maxSpeedometerTime)
-	defer cancelSpeedometerCtx()
-
 	if err := h.RequireRPCClient(ctx); err != nil {
 		return 0.0, errors.Wrap(err, "failed to start rpc client")
 	}
 
-	speedometerService := fwpb.NewUtilsServiceClient(h.RPCClient.Conn)
-	if _, err := speedometerService.NewChrome(speedometerCtx, &empty.Empty{}); err != nil {
+	cfg := speedTestConfig{
+		chromeSetup: chromeSetupTimeout,
+		chromeClose: chromeCloseTimeout,
+		cooldown:    speedTestCooldown,
+		benchmark:   maxSpeedometerTime,
+		// GoBigSleepLint: Running speedometer right after boot gets weird results.
+		sleep: testing.Sleep,
+	}
+	return runSpeedTestWithConfig(ctx, fwpb.NewUtilsServiceClient(h.RPCClient.Conn), cfg)
+}
+
+func runSpeedTestWithConfig(ctx context.Context, client fwpb.UtilsServiceClient, cfg speedTestConfig) (float64, error) {
+	setupCtx, cancelSetup := context.WithTimeout(ctx, cfg.chromeSetup)
+	defer cancelSetup()
+	if _, err := client.NewChrome(setupCtx, &empty.Empty{}); err != nil {
 		return 0.0, errors.Wrap(err, "failed to initiate a chrome sesion")
 	}
-	defer func() error {
-		if _, err := speedometerService.CloseChrome(speedometerCtx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to close the chrome sesion")
+	defer func() {
+		closeCtx, cancelClose := context.WithTimeout(ctx, cfg.chromeClose)
+		defer cancelClose()
+		if _, err := client.CloseChrome(closeCtx, &empty.Empty{}); err != nil {
+			testing.ContextLog(ctx, "Failed to close the chrome session: ", err)
 		}
-		return nil
 	}()
 
-	testing.ContextLog(speedometerCtx, "Sleep 120 seconds before running Speedometer")
-	// GoBigSleepLint: Running speedometer right after boot gets weird results.
-	testing.Sleep(speedometerCtx, 120*time.Second)
+	if cfg.cooldown > 0 {
+		sleepFn := cfg.sleep
+		if sleepFn == nil {
+			// GoBigSleepLint: Running speedometer right after boot gets weird results.
+			sleepFn = testing.Sleep
+		}
+		testing.ContextLogf(ctx, "Sleep %.0f seconds before running Speedometer", cfg.cooldown.Seconds())
+		if err := sleepFn(ctx, cfg.cooldown); err != nil {
+			return 0.0, errors.Wrap(err, "interrupted during speedometer cooldown")
+		}
+	}
 
+	speedometerCtx, cancelSpeedometerCtx := context.WithTimeout(ctx, cfg.benchmark)
+	defer cancelSpeedometerCtx()
 	testing.ContextLog(speedometerCtx, "Running speedometer test")
-	sptest, err := speedometerService.PerformSpeedometerTest(speedometerCtx, &empty.Empty{})
+	sptest, err := client.PerformSpeedometerTest(speedometerCtx, &empty.Empty{})
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed while performing the Speedometer benchmark")
 	}
