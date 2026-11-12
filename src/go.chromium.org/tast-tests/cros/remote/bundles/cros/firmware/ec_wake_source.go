@@ -57,9 +57,8 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:              "power_btn",
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				Val:               wakeByPowerBtn,
+				Name: "power_btn",
+				Val:  wakeByPowerBtn,
 			},
 			{
 				Name:              "keypress",
@@ -133,10 +132,9 @@ func ECWakeSource(ctx context.Context, s *testing.State) {
 
 	switch testType {
 	case wakeByPowerBtn:
-		// If the DUT has no internal display, pressing the power button in a suspended state
-		// would cause it to shut down instead of wake.
+		hasInternalDisplay := s.Features("").GetHardware().GetHardwareFeatures().GetScreen().GetPanelProperties() != nil
 		s.Log("Suspend DUT and wake using power key")
-		if err := testWakeWithPowerKey(ctx, h); err != nil {
+		if err := testWakeWithPowerKey(ctx, h, hasInternalDisplay); err != nil {
 			s.Fatal("Failed to suspend and wake with power key: ", err)
 		}
 	case wakeByKeyboard:
@@ -365,15 +363,29 @@ func testWakeWithKeyboard(ctx context.Context, h *firmware.Helper, shouldWake bo
 	return nil
 }
 
-func testWakeWithPowerKey(ctx context.Context, h *firmware.Helper) error {
+func testWakeWithPowerKey(ctx context.Context, h *firmware.Helper, hasInternalDisplay bool) error {
 	bootID, err := h.Reporter.BootID(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get boot id")
 	}
 
+	if !hasInternalDisplay {
+		// Prevent headless Chromeboxes from shutting down on the wake power button press.
+		ignoreTimeoutArg := "int64:" + strconv.FormatInt((firmware.PowerStateTimeout+30*time.Second).Microseconds(), 10)
+		if err := h.DUT.Conn().CommandContext(ctx, "dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.chromium.PowerManager", "/org/chromium/PowerManager", "org.chromium.PowerManager.IgnoreNextPowerButtonPress", ignoreTimeoutArg).Run(); err != nil {
+			return errors.Wrap(err, "failed to ignore next power button press")
+		}
+	}
+
 	// Power button should always wake DUT.
 	if err := suspendDUTAndWakeWithKey(ctx, h, servo.PowerKey, true); err != nil {
 		return errors.Wrap(err, "failed to suspend and wake dut with power key")
+	}
+
+	if !hasInternalDisplay {
+		if err := h.DUT.Conn().CommandContext(ctx, "dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.chromium.PowerManager", "/org/chromium/PowerManager", "org.chromium.PowerManager.IgnoreNextPowerButtonPress", "int64:0").Run(); err != nil {
+			testing.ContextLog(ctx, "Failed to reset IgnoreNextPowerButtonPress: ", err)
+		}
 	}
 
 	testing.ContextLog(ctx, "Getting new boot ID")
