@@ -135,7 +135,8 @@ func init() {
 		Timeout: 20 * time.Minute,
 		Attr:    []string{"group:crosbolt", "crosbolt_perbuild"},
 		Params: []testing.Param{{
-			Name: "system",
+			Name:              "system",
+			ExtraHardwareDeps: arc.ArcBootHwDeps,
 			Val: fioTestParams{
 				readTestFilePath: "/system/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCoreArcRelease.apk",
 				// /system is read-only, and neither Squashfs or EROFS supports
@@ -149,7 +150,8 @@ func init() {
 				needsFreeSpaceCheck: false,
 			},
 		}, {
-			Name: "data",
+			Name:              "data",
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val: fioTestParams{
 				directory:           "/data/local/tmp",
 				readJobs:            defaultFioReadJobs,
@@ -157,7 +159,8 @@ func init() {
 				needsFreeSpaceCheck: true,
 			},
 		}, {
-			Name: "data_media_download",
+			Name:              "data_media_download",
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val: fioTestParams{
 				directory:           "/data/media/0/Download",
 				readJobs:            defaultFioReadJobs,
@@ -165,7 +168,8 @@ func init() {
 				needsFreeSpaceCheck: true,
 			},
 		}, {
-			Name: "download",
+			Name:              "download",
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val: fioTestParams{
 				directory:              "/storage/emulated/0/Download",
 				readJobs:               defaultFioReadJobs,
@@ -174,7 +178,8 @@ func init() {
 				needsFreeSpaceCheck:    true,
 			},
 		}, {
-			Name: "emulated",
+			Name:              "emulated",
+			ExtraHardwareDeps: arc.ArcAppHwDeps,
 			Val: fioTestParams{
 				directory:              "/storage/emulated/0/Documents",
 				readJobs:               defaultFioReadJobs,
