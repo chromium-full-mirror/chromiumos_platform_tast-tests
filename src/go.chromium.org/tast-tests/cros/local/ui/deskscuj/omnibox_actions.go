@@ -147,8 +147,10 @@ func (e *omniboxEnv) openWindowsViaOmnibox(ctx context.Context) (string, error) 
 		if err := e.kw.Accel(ctx, "Ctrl+N"); err != nil {
 			return "", errors.Wrap(err, "failed to open a new window")
 		}
+		// With the full WebUI popup, the popup widget is the active window right
+		// after Ctrl+N, so don't require the browser window to be active.
 		if err := ash.WaitForCondition(ctx, e.tconn, func(w *ash.Window) bool {
-			return !known[w.ID] && w.IsVisible && w.IsActive
+			return !known[w.ID] && w.IsVisible && w.OnActiveDesk
 		}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 10 * time.Millisecond}); err != nil {
 			return "", errors.Wrap(err, "failed to wait for the new window")
 		}
