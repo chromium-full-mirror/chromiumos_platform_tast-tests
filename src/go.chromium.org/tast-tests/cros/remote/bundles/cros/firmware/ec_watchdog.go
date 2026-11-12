@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -36,18 +35,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
-}
-
-func isPanicOnWatchdogWarningEnabled(dutFeatures *protocol.DUTFeatures) (bool, error) {
-	satisfied, _, err := hwdep.ECBuildConfigOptions("PANIC_ON_WATCHDOG_WARNING", "PLATFORM_EC_PANIC_ON_WATCHDOG_WARNING").Satisfied(dutFeatures.GetHardware())
-	if err != nil {
-		return false, errors.Wrap(err, "failed to check PANIC_ON_WATCHDOG_WARNING")
-	}
-	if !satisfied {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 // getPanicInfo attempts to get panicinfo upto 3 times before giving up,
@@ -95,11 +82,6 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 
 	// Skip checking for EC crashes in this test because it crashes intentionally.
 	h.CheckECCrash = false
-
-	panicOnWatchdogWarning, err := isPanicOnWatchdogWarningEnabled(s.Features(""))
-	if err != nil {
-		s.Log("Unable to determine if panic on watchdog warning is enabled")
-	}
 
 	// If panicInfo already contains a watchdog or is corrupt, force a divide zero panic to clear it
 	panicInfo, err = getPanicInfo(ctx, s, h)
@@ -193,11 +175,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Invalid watchdogWarnDelay")
 	}
 	cmd = fmt.Sprintf("waitms %d", watchdogWarnDelay.Milliseconds())
-	if panicOnWatchdogWarning {
-		s.Logf("Watchdog warning delay %q, expect panic and reboot", cmd)
-	} else {
-		s.Logf("Watchdog warning delay %q, expect warning, but no panic or reboot", cmd)
-	}
+	s.Logf("Watchdog warning delay %q, expect warning, but no panic or reboot", cmd)
 	err = h.Servo.RunECCommand(ctx, cmd)
 	if err != nil {
 		s.Fatal("Failed to send watchdog timer command to EC: ", err)
@@ -223,25 +201,16 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
 
-	if panicOnWatchdogWarning {
-		if newBootID == oldBootID {
-			s.Fatal("Watchdog warning failed to trigger expected reboot, old boot ID is the same as new boot ID")
-		}
-		if !watchdogPanicReason.MatchString(panicInfo) {
-			s.Fatal("Watchdog panic reason missing in panicinfo")
-		}
+	if newBootID != oldBootID {
+		s.Fatal("Watchdog warning caused unexpected reboot, old boot ID is not the same as new boot ID")
+	}
+	if watchdogPanicReason.MatchString(panicInfo) {
+		s.Fatal("Unexpected watchdog panic caused by watchdog warning")
+	}
+	if watchdogWarnPanicReason.MatchString(panicInfo) {
+		s.Log("Watchdog warning found in panicinfo (expected)")
 	} else {
-		if newBootID != oldBootID {
-			s.Fatal("Watchdog warning caused unexpected reboot, old boot ID is not the same as new boot ID")
-		}
-		if watchdogPanicReason.MatchString(panicInfo) {
-			s.Fatal("Unexpected watchdog panic caused by watchdog warning")
-		}
-		if watchdogWarnPanicReason.MatchString(panicInfo) {
-			s.Log("Watchdog warning found in panicinfo (expected)")
-		} else {
-			s.Log("Watchdog warning not found in panicinfo (unexpected, but not a failure)")
-		}
+		s.Log("Watchdog warning not found in panicinfo (unexpected, but not a failure)")
 	}
 	if err := checkProgramCounter(ctx, panicInfo); err != nil {
 		s.Log("Unexpected program counter value: ", err)
