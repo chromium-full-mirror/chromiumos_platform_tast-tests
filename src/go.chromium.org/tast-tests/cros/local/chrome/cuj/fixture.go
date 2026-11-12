@@ -1821,8 +1821,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			chrome.EnableFeatures(
 				"AlwaysUsePreloadedSodaModelEnUsForTesting",
 			),
-			// TODO(b/512784860): Remove after Chrome uprev.
-			chrome.DisableFeatures("CrosSodaConchLanguages"),
 			// TODO(b/472157982): Remove if the metric issue for TPS.Display.Smoothness is resolved.
 			chrome.DisableFeatures("PauseMutedBackgroundAudio"),
 		}

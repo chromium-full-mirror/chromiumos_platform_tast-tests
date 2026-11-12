@@ -77,8 +77,6 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 			"AlwaysUsePreloadedSodaModelEnUsForTesting",
 		),
 		chrome.FieldTrialConfig(params.fieldTrialConfig),
-		// TODO(b/512784860): Remove after Chrome uprev.
-		chrome.DisableFeatures("CrosSodaConchLanguages"),
 	)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)

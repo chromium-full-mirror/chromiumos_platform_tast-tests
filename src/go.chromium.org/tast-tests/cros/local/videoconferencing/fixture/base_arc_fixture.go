@@ -27,9 +27,7 @@ func init() {
 				"SpeakOnMuteEnabled",
 				"AlwaysUsePreloadedSodaModelEnUsForTesting",
 			),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...),
-			// TODO(b/512784860): Remove after Chrome uprev.
-			chrome.DisableFeatures("CrosSodaConchLanguages")}
+			chrome.ExtraArgs(arc.DisableSyncFlags()...)}
 
 		opts = append(opts, vcOpts...)
 		return opts, nil
