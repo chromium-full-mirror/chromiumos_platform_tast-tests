@@ -164,7 +164,7 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 			return
 		}
 		if err := server.StopServer(cleanupCtx); err != nil {
-			s.Fatal("Failed to stop VPN server: ", err)
+			s.Error("Failed to stop VPN server: ", err)
 		}
 	}()
 	service, err := vpn.ConfigureService(ctx, server, nil /*secondServer*/)
@@ -173,7 +173,7 @@ func VPNPhysicalNetworkReconnect(ctx context.Context, s *testing.State) {
 	}
 	defer func() {
 		if err := service.Remove(cleanupCtx); err != nil {
-			s.Fatal("Failed to remove VPN service: ", err)
+			s.Error("Failed to remove VPN service: ", err)
 		}
 	}()
 

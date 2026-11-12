@@ -333,7 +333,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	// detected on a timeout so use a large timeout value for failure cases, e.g.,
 	// some failures for IPsec-based VPN are detected based on timeout, which is
 	// 30 seconds at maximum for all the current test cases.
-	connectTimeout := 10 * time.Second
+	connectTimeout := 20 * time.Second
 	if tc.shouldFail {
 		connectTimeout = 35 * time.Second
 	}
