@@ -1816,7 +1816,13 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		opts := []chrome.Option{
 			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
 			chrome.DisableFeatures("PeripheralNotification"),
-			chrome.DisableFeatures("CrosSodaConchLanguages"), // b:370423420 use small SODA models to avoid downloading large models on cbx duts.
+			// Use preloaded medium en-US SODA model on CBX DUTs,
+			// as Conch is too large to preload in test images.
+			chrome.EnableFeatures(
+				"AlwaysUsePreloadedSodaModelEnUsForTesting",
+			),
+			// TODO(b/512784860): Remove after Chrome uprev.
+			chrome.DisableFeatures("CrosSodaConchLanguages"),
 			// TODO(b/472157982): Remove if the metric issue for TPS.Display.Smoothness is resolved.
 			chrome.DisableFeatures("PauseMutedBackgroundAudio"),
 		}

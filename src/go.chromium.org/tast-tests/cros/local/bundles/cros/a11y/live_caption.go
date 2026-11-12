@@ -70,8 +70,14 @@ func LiveCaption(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(ctx,
 		chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
-		chrome.EnableFeatures("OnDeviceSpeechRecognition", "LayoutMediaNGContainer", "LiveTranslate"),
+		chrome.EnableFeatures(
+			"OnDeviceSpeechRecognition",
+			"LayoutMediaNGContainer",
+			"LiveTranslate",
+			"AlwaysUsePreloadedSodaModelEnUsForTesting",
+		),
 		chrome.FieldTrialConfig(params.fieldTrialConfig),
+		// TODO(b/512784860): Remove after Chrome uprev.
 		chrome.DisableFeatures("CrosSodaConchLanguages"),
 	)
 	if err != nil {

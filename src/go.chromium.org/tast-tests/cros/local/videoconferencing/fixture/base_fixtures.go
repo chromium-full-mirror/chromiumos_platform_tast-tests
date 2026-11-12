@@ -159,6 +159,9 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		opts = append(opts, chrome.DisableFeatures(strings.Split(disabledFeatures, ",")...))
 	}
 
+	opts = append(opts, chrome.EnableFeatures(
+		"AlwaysUsePreloadedSodaModelEnUsForTesting"))
+	// TODO(b/512784860): Remove after Chrome uprev.
 	opts = append(opts, chrome.DisableFeatures("CrosSodaConchLanguages"))
 
 	cr, err := chrome.New(ctx, opts...)

@@ -23,8 +23,12 @@ func init() {
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		opts := []chrome.Option{
-			chrome.EnableFeatures("SpeakOnMuteEnabled"),
+			chrome.EnableFeatures(
+				"SpeakOnMuteEnabled",
+				"AlwaysUsePreloadedSodaModelEnUsForTesting",
+			),
 			chrome.ExtraArgs(arc.DisableSyncFlags()...),
+			// TODO(b/512784860): Remove after Chrome uprev.
 			chrome.DisableFeatures("CrosSodaConchLanguages")}
 
 		opts = append(opts, vcOpts...)
