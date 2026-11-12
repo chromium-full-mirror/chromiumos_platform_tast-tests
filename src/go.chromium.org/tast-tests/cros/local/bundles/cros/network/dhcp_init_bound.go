@@ -19,11 +19,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type initBoundTestParam struct {
-	port          int
-	dhcpcdVersion testhooks.DhcpcdVersion
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DHCPInitBound,
@@ -35,28 +30,10 @@ func init() {
 		SoftwareDeps: []string{"wifi"},
 		Fixture:      "shillSimulatedWiFi",
 		Params: []testing.Param{{
-			Val: initBoundTestParam{
-				port:          dhcp.ServerPort,
-				dhcpcdVersion: testhooks.Dhcpcd7,
-			},
+			Val: dhcp.ServerPort,
 		}, {
 			Name: "non_std_port",
-			Val: initBoundTestParam{
-				port:          54321, // random port value
-				dhcpcdVersion: testhooks.Dhcpcd7,
-			},
-		}, {
-			Name: "dhcpcd10",
-			Val: initBoundTestParam{
-				port:          dhcp.ServerPort,
-				dhcpcdVersion: testhooks.Dhcpcd10,
-			},
-		}, {
-			Name: "non_std_port_dhcpcd10",
-			Val: initBoundTestParam{
-				port:          54321, // random port value
-				dhcpcdVersion: testhooks.Dhcpcd10,
-			},
+			Val:  54321, // random port value
 		}},
 	})
 }
@@ -76,12 +53,10 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	param := s.Param().(initBoundTestParam)
 	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
 		testhooks.NewSaveNetLogHook(),
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
-		testhooks.NewSetDhcpcdVersionHook(param.dhcpcdVersion),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)
@@ -89,7 +64,7 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(hookEnv.OnErrorHandler, hookEnv.OnFatalHandler)
 	defer hookEnv.TearDownWithLogFailures(cleanupCtx, s.HasError)
 
-	dhcpTestServerOpt := dhcp.WithSendPort(param.port)
+	dhcpTestServerOpt := dhcp.WithSendPort(s.Param().(int))
 
 	m, err := shill.NewManager(ctx)
 	if err != nil {

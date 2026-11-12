@@ -15,9 +15,6 @@ type AllowedEntry struct {
 // InitializeAllowedEntries returns the allowed log entries with Counter = 0.
 func InitializeAllowedEntries() []AllowedEntry {
 	return []AllowedEntry{
-		{"dhcpcd7", "", ".*eth.*: checksum failure from.*", 0},
-		{"dhcpcd7", "", ".*eth.*: DHCP lease expired.*", 0},
-		{"dhcpcd7", "", ".*eth.*: truncated packet.*", 0},
 		// The "refusing chroot" error comes from the setup failure of PRIVSEP in
 		// dhcpcd. This does not affect the dhcpcd use. We may switch to disable
 		// PRIVSEP in the future but for now just allow this error.

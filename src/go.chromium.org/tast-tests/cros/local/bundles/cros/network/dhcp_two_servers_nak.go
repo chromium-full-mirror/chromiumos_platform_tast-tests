@@ -18,11 +18,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type twoServersNAKTestParam struct {
-	nakFirst      bool
-	dhcpcdVersion testhooks.DhcpcdVersion
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     DHCPTwoServersNAK,
@@ -34,28 +29,10 @@ func init() {
 		// The param value represents whether NAK comes first.
 		Params: []testing.Param{{
 			Name: "nak_first",
-			Val: twoServersNAKTestParam{
-				nakFirst:      true,
-				dhcpcdVersion: testhooks.Dhcpcd7,
-			},
+			Val:  true,
 		}, {
 			Name: "ack_first",
-			Val: twoServersNAKTestParam{
-				nakFirst:      false,
-				dhcpcdVersion: testhooks.Dhcpcd7,
-			},
-		}, {
-			Name: "nak_first_dhcpcd10",
-			Val: twoServersNAKTestParam{
-				nakFirst:      true,
-				dhcpcdVersion: testhooks.Dhcpcd10,
-			},
-		}, {
-			Name: "ack_first_dhcpcd10",
-			Val: twoServersNAKTestParam{
-				nakFirst:      false,
-				dhcpcdVersion: testhooks.Dhcpcd10,
-			},
+			Val:  false,
 		}},
 	})
 }
@@ -70,12 +47,10 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	param := s.Param().(twoServersNAKTestParam)
 	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
 		testhooks.NewSaveNetLogHook(),
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
-		testhooks.NewSetDhcpcdVersionHook(param.dhcpcdVersion),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)
@@ -117,7 +92,7 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 	discoverRule := dhcp.NewRespondToDiscovery(intendedIP.String(), gatewayIP.String(),
 		dhcpOpts, dhcp.FieldMap{}, true /*shouldRespond*/)
 	requestRule := dhcp.NewRejectAndRespondToRequest(intendedIP.String(), gatewayIP.String(),
-		dhcpOpts, dhcp.FieldMap{}, param.nakFirst)
+		dhcpOpts, dhcp.FieldMap{}, s.Param().(bool))
 	requestRule.SetIsFinalHandler(true)
 
 	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {

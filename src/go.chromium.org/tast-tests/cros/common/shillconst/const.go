@@ -128,7 +128,6 @@ const (
 	ManagerPropertyP2PCapabilities                    = "P2PCapabilities"
 	ManagerPropertyP2PGroupInfos                      = "P2PGroupInfos"
 	ManagerPropertyP2PClientInfos                     = "P2PClientInfos"
-	ManagerPropertyUseLegacyDHCPCD                    = "UseLegacyDHCPCD"
 )
 
 // Service property names defined in dbus-constants.h .

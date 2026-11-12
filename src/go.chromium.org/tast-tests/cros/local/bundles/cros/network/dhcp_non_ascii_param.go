@@ -25,15 +25,6 @@ func init() {
 		// ChromeOS > Platform > baseOS > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:release-health", "release-health_network"},
-		Params: []testing.Param{
-			{
-				Val: testhooks.Dhcpcd7,
-			},
-			{
-				Name: "dhcpcd10",
-				Val:  testhooks.Dhcpcd10,
-			},
-		},
 	})
 }
 
@@ -43,12 +34,10 @@ func DHCPNonASCIIParam(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dhcpcdVersion := s.Param().(testhooks.DhcpcdVersion)
 	hookEnv, err := testhooks.RunNetworkTestHooks(ctx,
 		testhooks.NewSaveNetLogHook(),
 		testhooks.NewTcpdumpHook(),
 		testhooks.NewDumpHostOnFailureHook(),
-		testhooks.NewSetDhcpcdVersionHook(dhcpcdVersion),
 	)
 	if err != nil {
 		s.Fatal("Failed to run network test hooks: ", err)

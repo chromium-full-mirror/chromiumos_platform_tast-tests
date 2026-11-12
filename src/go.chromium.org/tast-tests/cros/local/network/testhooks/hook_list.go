@@ -104,9 +104,3 @@ func NewDisablePortalDetectionHook() hook {
 func NewEnablePortalDetectionHook() hook {
 	return &togglePortalDetectionHook{enable: true}
 }
-
-// NewSetDhcpcdVersionHook creates a hook which enables a certain dhcpcd version in
-// setup, and restores the config in teardown. The version can be dhcpcd 7 or 10.
-func NewSetDhcpcdVersionHook(version DhcpcdVersion) hook {
-	return &setDhcpcdVersionHook{version: version}
-}
