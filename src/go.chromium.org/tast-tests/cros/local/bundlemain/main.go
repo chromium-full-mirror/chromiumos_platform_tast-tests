@@ -14,6 +14,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"go.chromium.org/tast/core/bundle"
@@ -90,13 +91,44 @@ func hwsecGetTPMStatus(ctx context.Context) (*hwsec.NonsensitiveStatusInfo, erro
 	return status, nil
 }
 
+type mainfwTypeCache struct {
+	mu     sync.Mutex
+	cached bool
+	value  string
+}
+
+// get returns the output of "crossystem mainfw_type".
+func (c *mainfwTypeCache) get(ctx context.Context, runner hwsec.CmdRunner) (string, error) {
+	// The firmware type does not change until the DUT reboots, which this
+	// process does not survive, so cache the first successful result.
+	// Failed calls are not cached so subsequent calls can retry after
+	// transient errors (such as a canceled context).
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.cached {
+		out, err := runner.Run(ctx, "crossystem", "mainfw_type")
+		if err != nil {
+			return "", err
+		}
+		c.value = string(out)
+		c.cached = true
+	}
+	return c.value, nil
+}
+
+var cachedMainfwType mainfwTypeCache
+
+// mainfwType returns the output of "crossystem mainfw_type".
+func mainfwType(ctx context.Context) (string, error) {
+	return cachedMainfwType.get(ctx, hwseclocal.NewLoglessCmdRunner())
+}
+
 func hwsecCheckTPMState(ctx context.Context, origStatus *hwsec.NonsensitiveStatusInfo, origCounter uint) error {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	fwType, err := cmdRunner.Run(ctx, "crossystem", "mainfw_type")
+	fwType, err := mainfwType(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get the firmware type")
 	}
-	if string(fwType) == "recovery" {
+	if fwType == "recovery" {
 		// Skipping this check when the device is in recovery mode.
 		return nil
 	}
