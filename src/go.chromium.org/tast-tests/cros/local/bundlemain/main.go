@@ -43,28 +43,51 @@ const (
 	spaceUsageThreshold = 10 * mib
 )
 
-func ensureDiskSpace(ctx context.Context, purgeable []string) (uint64, error) {
+// ensureDiskSpace deletes core dumps and, if free space is still below the low
+// space threshold, calls purgeable and deletes the returned files until free
+// space reaches at least the threshold. It returns the resulting free space.
+func ensureDiskSpace(ctx context.Context, purgeable func() []string) (uint64, error) {
+	return ensureDiskSpaceWith(
+		ctx,
+		crash.DeleteCoreDumps,
+		func() (uint64, error) { return disk.FreeSpace(statefulPartition) },
+		bundleutil.LowSpaceThreshold(),
+		purgeable,
+	)
+}
+
+func ensureDiskSpaceWith(ctx context.Context, deleteCoreDumps func(context.Context) error, freeSpace func() (uint64, error), threshold uint64, purgeable func() []string) (uint64, error) {
 	// Unconditionally delete core dumps.
-	if err := crash.DeleteCoreDumps(ctx); err != nil {
+	if err := deleteCoreDumps(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to delete core dumps: ", err)
 	}
 
-	// Delete purgeable files until the free space gets more than lowSpaceThreshold.
-	for _, path := range purgeable {
-		free, err := disk.FreeSpace(statefulPartition)
+	free, err := freeSpace()
+	if err != nil {
+		return 0, err
+	}
+	// Listing purgeable files stats every external data file, which takes
+	// hundreds of milliseconds on low-end DUTs, so do it only when needed.
+	if free >= threshold {
+		return free, nil
+	}
+
+	// Delete purgeable files until free space reaches at least threshold.
+	for _, path := range purgeable() {
+		if err := os.Remove(path); err != nil {
+			testing.ContextLog(ctx, "Failed to remove a purgeable file: ", err)
+			continue
+		}
+		testing.ContextLog(ctx, "Deleted ", path)
+		free, err = freeSpace()
 		if err != nil {
 			return 0, err
 		}
-		if free >= bundleutil.LowSpaceThreshold() {
+		if free >= threshold {
 			return free, nil
 		}
-		if err := os.Remove(path); err != nil {
-			testing.ContextLog(ctx, "Failed to remove a purgeable file: ", err)
-		} else {
-			testing.ContextLog(ctx, "Deleted ", path)
-		}
 	}
-	return disk.FreeSpace(statefulPartition)
+	return free, nil
 }
 
 func hwsecGetDACounter(ctx context.Context) (uint, error) {
@@ -192,7 +215,7 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 
 	// Ensure disk space and record the current free space.
 	checkFreeSpace := false
-	freeSpaceBefore, err := ensureDiskSpace(ctx, s.Purgeable())
+	freeSpaceBefore, err := ensureDiskSpace(ctx, s.Purgeable)
 	if err != nil {
 		s.Log("Failed to ensure disk space: ", err)
 	} else {
