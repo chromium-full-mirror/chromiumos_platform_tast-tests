@@ -333,6 +333,7 @@ func (ms *Ms365) inputPassword(password string, setupCompleteDialogFinder, abort
 		}
 
 		return uiauto.Combine("MS SignIn Password",
+			ms.disablePasswordSavingPrompt,
 			ms.ui.WaitUntilExists(visiblePasswordInput),
 			ms.ui.LeftClickUntilFocused(passwordInput),
 			ms.kb.TypeAction(password),
@@ -342,10 +343,20 @@ func (ms *Ms365) inputPassword(password string, setupCompleteDialogFinder, abort
 	}
 }
 
+// disablePasswordSavingPrompt disables Chrome's "Offer to save passwords" preference
+// so the "Save password?" bubble does not appear and occlude Microsoft OAuth buttons
+// (such as "Yes" on "Stay signed in?") on small-screen devices.
+func (ms *Ms365) disablePasswordSavingPrompt(ctx context.Context) error {
+	if err := ms.tconn.Call(ctx, nil, "tast.promisify(tast.bind(chrome.settingsPrivate, 'setPref'))", "credentials_enable_service", false); err != nil {
+		testing.ContextLog(ctx, "Warning: failed to disable Chrome password saving prompt: ", err)
+	}
+	return nil
+}
+
 // DoNotSavePassword proceeds through optional "Save password?" Chrome popup shown after entering password.
 func (ms *Ms365) DoNotSavePassword() uiauto.Action {
-	chromeSavePasswordWindow := nodewith.Role(role.Window).Name("Save password?")
-	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never")
+	chromeSavePasswordWindow := nodewith.Name("Save password?").First()
+	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never").First()
 
 	return func(ctx context.Context) error {
 		if err := ms.ui.EnsureGoneFor(chromeSavePasswordWindow, 5*time.Second)(ctx); err != nil {
@@ -353,6 +364,45 @@ func (ms *Ms365) DoNotSavePassword() uiauto.Action {
 		}
 		return nil
 	}
+}
+
+// clickPostPasswordButton clicks button until it is gone, dismissing any
+// Chrome "Save password?" bubble that may appear and occlude button, and waiting
+// up to 10s after each click for the OAuth navigation/popup close to complete
+// so rapid re-clicks do not click through the closing popup onto the dialog underneath.
+func (ms *Ms365) clickPostPasswordButton(button, chromeNeverSaveButton *nodewith.Finder) uiauto.Action {
+	dismissSavePasswordIfPresent := func(ctx context.Context) {
+		if ms.ui.Exists(chromeNeverSaveButton)(ctx) == nil {
+			testing.ContextLog(ctx, "Dismissing overlapping Chrome 'Save password?' prompt before clicking post-password button")
+			_ = ms.ui.WithTimeout(5*time.Second).LeftClickUntil(chromeNeverSaveButton, ms.ui.Gone(chromeNeverSaveButton))(ctx)
+		}
+	}
+	return ms.ui.Retry(6, func(ctx context.Context) error {
+		dismissSavePasswordIfPresent(ctx)
+		if err := ms.ui.Gone(button)(ctx); err == nil {
+			return nil
+		}
+		if err := ms.ui.LeftClick(button)(ctx); err != nil {
+			if ms.ui.Gone(button)(ctx) == nil {
+				return nil
+			}
+			return errors.Wrap(err, "failed to click post-password button")
+		}
+		// Wait up to 10s for the OAuth POST/redirect to close the page before re-clicking,
+		// unless a late-arriving "Save password?" bubble appears and intercepted the click.
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := ms.ui.Gone(button)(ctx); err == nil {
+				return nil
+			}
+			if ms.ui.Exists(chromeNeverSaveButton)(ctx) == nil {
+				dismissSavePasswordIfPresent(ctx)
+				if clickErr := ms.ui.LeftClick(button)(ctx); clickErr != nil && ms.ui.Gone(button)(ctx) != nil {
+					return clickErr
+				}
+			}
+			return errors.New("post-password button still exists")
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond})
+	})
 }
 
 // ConfirmSignIn proceeds through optional Microsoft security information dialog shown after entering login.
@@ -372,8 +422,8 @@ func (ms *Ms365) ConfirmSignIn() uiauto.Action {
 // "We're updating our terms", "Is your security info still accurate?", and "Stay signed in?")
 // until Microsoft consent or the ChromeOS setup/connected dialog is reached.
 func (ms *Ms365) handlePostPasswordFlow(setupCompleteDialogFinder, abortFinder *nodewith.Finder) uiauto.Action {
-	chromeSavePasswordWindow := nodewith.Role(role.Window).Name("Save password?")
-	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never")
+	chromeSavePasswordWindow := nodewith.Name("Save password?").First()
+	chromeNeverSaveButton := nodewith.Ancestor(chromeSavePasswordWindow).Role(role.Button).Name("Never").First()
 
 	msUpdateTermsWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i).*updating our terms.*")).First()
 	msUpdateTermsNextButton := nodewith.Ancestor(msUpdateTermsWindow).Role(role.Button).Name("Next").First()
@@ -431,7 +481,7 @@ func (ms *Ms365) handlePostPasswordFlow(setupCompleteDialogFinder, abortFinder *
 				testing.ContextLog(ctx, "Accepting Microsoft 'We're updating our terms' interstitial")
 				if err := uiauto.Combine("Accept MS updated terms",
 					ms.ui.ScrollToVisible(msUpdateTermsNextButton),
-					ms.ui.LeftClickUntil(msUpdateTermsNextButton, ms.ui.Gone(msUpdateTermsNextButton)),
+					ms.clickPostPasswordButton(msUpdateTermsNextButton, chromeNeverSaveButton),
 					ms.ui.WaitUntilGone(msUpdateTermsWindow),
 				)(ctx); err != nil {
 					return errors.Wrap(err, "failed to accept 'We're updating our terms'")
@@ -440,7 +490,7 @@ func (ms *Ms365) handlePostPasswordFlow(setupCompleteDialogFinder, abortFinder *
 				testing.ContextLog(ctx, "Confirming Microsoft security info dialog")
 				if err := uiauto.Combine("Confirm MS security info",
 					ms.ui.ScrollToVisible(msConfirmSignInButton),
-					ms.ui.LeftClickUntil(msConfirmSignInButton, ms.ui.Gone(msConfirmSignInButton)),
+					ms.clickPostPasswordButton(msConfirmSignInButton, chromeNeverSaveButton),
 					ms.ui.WaitUntilGone(msConfirmSignInWindow),
 				)(ctx); err != nil {
 					return errors.Wrap(err, "failed to confirm Microsoft security info")
@@ -449,7 +499,7 @@ func (ms *Ms365) handlePostPasswordFlow(setupCompleteDialogFinder, abortFinder *
 				testing.ContextLog(ctx, "Clicking Yes on Microsoft 'Stay signed in?' prompt")
 				if err := uiauto.Combine("MS Stay Signed In",
 					ms.ui.ScrollToVisible(found),
-					ms.ui.LeftClickUntil(found, ms.ui.Gone(found)),
+					ms.clickPostPasswordButton(found, chromeNeverSaveButton),
 				)(ctx); err != nil {
 					return errors.Wrap(err, "failed to click Yes on 'Stay signed in?'")
 				}
@@ -725,6 +775,7 @@ func ClearBrowserCookiesForOffice(ctx context.Context, cr *chrome.Chrome) error 
 	}
 
 	const clearExpr = `(async () => {
+		await tast.promisify(tast.bind(chrome.settingsPrivate, 'setPref'))('credentials_enable_service', false);
 		await tast.promisify(tast.bind(chrome.contentSettings.popups, 'set'))({
 			primaryPattern: '<all_urls>',
 			setting: 'allow',
