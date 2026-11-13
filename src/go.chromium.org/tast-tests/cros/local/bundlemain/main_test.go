@@ -7,6 +7,7 @@ package bundlemain
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -468,5 +469,19 @@ func TestEnsureDiskSpaceExhaustsPurgeable(t *testing.T) {
 		if _, err := os.Stat(p); !errors.Is(err, os.ErrNotExist) {
 			t.Errorf("os.Stat(%q) err = %v, want %v", p, err, os.ErrNotExist)
 		}
+	}
+}
+
+func TestMissingTPMManagerClient(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+
+	if got, err := hwsecGetTPMStatus(t.Context()); !errors.Is(err, exec.ErrNotFound) || got != nil {
+		t.Errorf("hwsecGetTPMStatus() = (%+v, %v), want (nil, %v)", got, err, exec.ErrNotFound)
+	}
+	if got, err := hwsecGetDACounter(t.Context()); !errors.Is(err, exec.ErrNotFound) || got != 0 {
+		t.Errorf("hwsecGetDACounter() = (%d, %v), want (0, %v)", got, err, exec.ErrNotFound)
+	}
+	if err := hwsecCheckTPMState(t.Context(), nil, 0); !errors.Is(err, exec.ErrNotFound) {
+		t.Errorf("hwsecCheckTPMState() = %v, want %v", err, exec.ErrNotFound)
 	}
 }

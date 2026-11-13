@@ -12,8 +12,8 @@ package bundlemain
 import (
 	"context"
 	"os"
+	"os/exec"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -90,9 +90,23 @@ func ensureDiskSpaceWith(ctx context.Context, deleteCoreDumps func(context.Conte
 	return free, nil
 }
 
+// newTPMManager returns a client of tpm_managerd. It uses D-Bus because test
+// hooks call it up to four times per test, and running tpm_manager_client
+// takes ~50 ms each time on low-end DUTs.
+func newTPMManager() (*hwseclocal.TPMManagerDBus, error) {
+	// testHookLocal ignores TPM errors on devices without tpm_manager_client
+	// by matching exec.ErrNotFound, so check PATH before opening D-Bus.
+	if _, err := exec.LookPath("tpm_manager_client"); err != nil {
+		return nil, err
+	}
+	return hwseclocal.NewTPMManagerDBus()
+}
+
 func hwsecGetDACounter(ctx context.Context) (uint, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
+	tpmManager, err := newTPMManager()
+	if err != nil {
+		return 0, err
+	}
 
 	// Get the TPM dictionary attack info
 	daInfo, err := tpmManager.GetDAInfo(ctx)
@@ -103,8 +117,10 @@ func hwsecGetDACounter(ctx context.Context) (uint, error) {
 }
 
 func hwsecGetTPMStatus(ctx context.Context) (*hwsec.NonsensitiveStatusInfo, error) {
-	cmdRunner := hwseclocal.NewLoglessCmdRunner()
-	tpmManager := hwsec.NewTPMManagerClient(cmdRunner)
+	tpmManager, err := newTPMManager()
+	if err != nil {
+		return nil, err
+	}
 
 	// Get the TPM nonsensitive status info
 	status, err := tpmManager.GetNonsensitiveStatusIgnoreCache(ctx)
@@ -258,7 +274,7 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 	return func(ctx context.Context, s *testing.TestHookState) {
 		// Ensure the TPM is in the expect state after tast finish.
 		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
-			if strings.Contains(err.Error(), `exec: "tpm_manager_client": executable file not found`) {
+			if errors.Is(err, exec.ErrNotFound) {
 				s.Log("Ignoring TPM error: ", err)
 			} else {
 				s.Error("Failed to check TPM state: ", err)
