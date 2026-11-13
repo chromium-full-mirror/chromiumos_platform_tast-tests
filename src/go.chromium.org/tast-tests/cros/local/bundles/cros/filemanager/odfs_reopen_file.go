@@ -96,7 +96,12 @@ func OdfsReopenFile(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to upload and open on MS365: %q - %v", fileName, err)
 		}
 
-		// Open the file again from OneDrive.
+		// Open the file again from OneDrive. Ensure Files app is open in case its
+		// window was closed when closing the MS365 window in the previous step.
+		files, err = filesapp.ExistingOrNew(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to ensure Files app is open before reopening from OneDrive: ", err)
+		}
 		if _, err := files.OpenOfficeFile(ctx, filesapp.OneDrive, fileName, filesconsts.OneDrive); err != nil {
 			s.Fatal("Failed to open OneDrive: ", err)
 		}

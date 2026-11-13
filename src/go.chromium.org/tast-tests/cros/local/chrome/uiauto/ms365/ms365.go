@@ -622,7 +622,22 @@ func closeMicrosoft365Window(ctx context.Context, tconn *chrome.TestConn, fileNa
 	if err := ui.WithTimeout(defaultUITimeout).WaitUntilExists(webAppToolbar)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find MS365 PWA window for %q", fileName)
 	}
-	if err := ui.WithTimeout(defaultUITimeout).LeftClickUntil(closeButton, ui.Gone(Microsoft365WindowFinder(fileName)))(ctx); err != nil {
+	// Click Close once and wait up to 5s for BrowserRootView to disappear before
+	// retrying, rather than using LeftClickUntil's 300ms interval which can fire a
+	// second click at the top-right Close coordinate while the M365 window is
+	// unloading and accidentally close the Files app window underneath.
+	for attempt := 0; attempt < 3; attempt++ {
+		if ui.Exists(browserRootView)(ctx) != nil {
+			break
+		}
+		if err := ui.LeftClick(closeButton)(ctx); err != nil && ui.Exists(browserRootView)(ctx) == nil {
+			return errors.Wrapf(err, "failed to click Close on MS365 PWA window for %q", fileName)
+		}
+		if err := ui.WithTimeout(5 * time.Second).WaitUntilGone(browserRootView)(ctx); err == nil {
+			break
+		}
+	}
+	if err := ui.WithTimeout(defaultUITimeout).WaitUntilGone(Microsoft365WindowFinder(fileName))(ctx); err != nil {
 		return errors.Wrapf(err, "failed to close MS365 PWA window for %q", fileName)
 	}
 	if err := ui.WithTimeout(defaultUITimeout).WaitUntilGone(browserRootView)(ctx); err != nil {
