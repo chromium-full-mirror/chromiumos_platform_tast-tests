@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"path"
@@ -89,9 +88,14 @@ var logger *ActionLogger
 
 const tempLoggerFile = "/tmp/action_logger.gob"
 
+// ShouldRun reports whether the action logger is enabled.
+func ShouldRun() bool {
+	return alcommon.ShouldRun.Value() == "true"
+}
+
 func newActionLogger() *ActionLogger {
 	return &ActionLogger{
-		ShouldRun:     alcommon.ShouldRun.Value() == "true",
+		ShouldRun:     ShouldRun(),
 		ActionItems:   []ActionItem{},
 		TestCodePaths: map[string]bool{},
 	}
@@ -306,8 +310,7 @@ func Save(ctx context.Context) error {
 // RecordClickAction is for mouse click or touchscreen tap actions.
 // Assume the bounding box and point are in DPI.
 func RecordClickAction(ctx context.Context, tconn *chrome.TestConn, actionName ActionName, uiTarget string, boundingBox coords.Rect, point coords.Point, button mouse.Button) {
-
-	if alcommon.ShouldRun.Value() != "true" {
+	if !ShouldRun() {
 		return
 	}
 	dsf := displayScaleFactor(ctx, tconn)
@@ -334,12 +337,7 @@ func RecordClickAction(ctx context.Context, tconn *chrome.TestConn, actionName A
 }
 
 func recordAction(ctx context.Context, tconn *chrome.TestConn, actionName ActionName, uiTarget string, boundingBox *BoundingBox, clickInput *ClickInput) {
-	// Don't run in unit tests as the global var shouldRun is not initialized
-	// there.
-	if flag.Lookup("test.v") != nil {
-		return
-	}
-	if alcommon.ShouldRun.Value() != "true" {
+	if !ShouldRun() {
 		return
 	}
 	if err := readLogger(ctx); err != nil {
@@ -363,7 +361,7 @@ func recordAction(ctx context.Context, tconn *chrome.TestConn, actionName Action
 // RecordClickAtLocationAction is for mouse click or touchscreen tap actions, without rectangle info.
 // Assume the bounding box and point are in DPI.
 func RecordClickAtLocationAction(ctx context.Context, tconn *chrome.TestConn, actionName ActionName, uiTarget string, point coords.Point, button mouse.Button) {
-	if alcommon.ShouldRun.Value() != "true" {
+	if !ShouldRun() {
 		return
 	}
 	dsf := displayScaleFactor(ctx, tconn)

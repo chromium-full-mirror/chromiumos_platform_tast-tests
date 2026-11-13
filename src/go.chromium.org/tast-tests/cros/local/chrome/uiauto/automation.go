@@ -1530,11 +1530,17 @@ func (ac *Context) CheckRestriction(finder *nodewith.Finder, restriction restric
 // of a node thus mouse.LeftClick() fails consequently.
 func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		loc, err := ac.Location(ctx, finder)
-		if err != nil {
-			return err
+		// Only query node location when action logging is enabled; DoDefault
+		// invokes doDefault() regardless of location, and polling Location adds
+		// redundant chrome.automation round-trips that can time out under CPU
+		// contention or unstable node bounds.
+		if actionlogger.ShouldRun() {
+			loc, err := ac.Location(ctx, finder)
+			if err != nil {
+				return err
+			}
+			actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), mouse.LeftButton)
 		}
-		actionlogger.RecordClickAction(ctx, ac.tconn, actionlogger.MouseClick, finder.Pretty(), *loc, loc.CenterPoint(), mouse.LeftButton)
 		cleanupCtx := ctx
 		deadline, ok := ctx.Deadline()
 		var cancel context.CancelFunc

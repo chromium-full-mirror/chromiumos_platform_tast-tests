@@ -20,9 +20,19 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast/core/errors"
-
+	tasttesting "go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testutil"
 )
+
+func TestMain(m *testing.M) {
+	// KeyboardEventWriter methods call actionlogger, which reads Tast's
+	// registered global runtime variables.
+	if err := tasttesting.InitializeVarsForUnitTest(nil); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize Tast vars: %v\n", err)
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 // testBuffer implements io.WriteCloser.
 type testBuffer struct {
