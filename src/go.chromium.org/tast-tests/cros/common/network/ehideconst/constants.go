@@ -20,4 +20,8 @@ const (
 	// ResolvConfPath is the path to the resolv.conf file for the physical
 	// network.
 	ResolvConfPath = "/run/dhclient/etc/resolv.conf"
+
+	// StateFilePath is the path to the file where ehide records its state.
+	// See ehide_daemon.py in platform2/ethernet-hide.
+	StateFilePath = "/run/ehide/ehide_state"
 )
