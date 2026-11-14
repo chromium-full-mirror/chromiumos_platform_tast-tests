@@ -1220,16 +1220,22 @@ func (s *Servo) SetFWWPState(ctx context.Context, value FWWPStateValue) error {
 	if err := s.SetString(ctx, FWWPState, string(value)); err != nil {
 		return err
 	}
-	// For devices with Ti50-based GSCs, we also need to set the `atboot` WP
-	// value since we expect the GSC to reboot itself. Note it is important that
-	// we first set the normal FWWPState otherwise we can get into a mismatch
-	// between servo_micro asserting WP externally and what Ti50 things WP should
-	// be.
-	if ti50HasWPRebootFeature {
+	// When WP is controlled via GSC (any non-servo_micro setup with a GSC, such
+	// as CCD or C2D2) or on Ti50 devices that reboot on WP changes, also set the
+	// `atboot` WP value so WP persists across GSC power loss or reboots (for
+	// example, USB-C PD hard resets on battery-less devices during EC reset).
+	// Set the normal FWWPState first to avoid a mismatch between servo_micro
+	// asserting WP externally and what Ti50 thinks WP should be.
+	hasServoMicro, err := s.HasServoMicro(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check for servo_micro")
+	}
+	if ti50HasWPRebootFeature || (!hasServoMicro && s.HasGSC(ctx)) {
 		if err := s.setGSCFWWPAtBootState(ctx, value); err != nil {
 			return errors.Wrapf(err, "failed to %q at boot firmware write protect", value)
 		}
-
+	}
+	if ti50HasWPRebootFeature {
 		if err := s.Ti50CheckPendingWPEvent(ctx, value); err != nil {
 			return errors.Wrap(err, "failed to check Ti50 WP event")
 		}
