@@ -624,6 +624,14 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		if err := testexec.CommandContext(ctx, "trace-cmd", "start", "-e", "all", "-R", "stacktrace", "-b", "1500", "-C", "local").Run(testexec.DumpLogOnError); err != nil {
 			s.Error("Cannot run trace-cmd start: ", err)
 		}
+		defer func() {
+			if err := testexec.CommandContext(cleanupCtx, "trace-cmd", "stop").Run(testexec.DumpLogOnError); err != nil {
+				testing.ContextLog(cleanupCtx, "Failed to stop trace-cmd in cleanup: ", err)
+			}
+			if err := testexec.CommandContext(cleanupCtx, "trace-cmd", "reset", "-b", "1408").Run(testexec.DumpLogOnError); err != nil {
+				testing.ContextLog(cleanupCtx, "Failed to reset trace-cmd in cleanup: ", err)
+			}
+		}()
 	}
 
 	testing.ContextLog(ctx, "Start to execute cyclic_bench.py")
@@ -633,16 +641,16 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	}
 
 	if param.Tracer {
+		testing.ContextLog(ctx, "Stop trace-cmd")
+		if err := testexec.CommandContext(ctx, "trace-cmd", "stop").Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Cannot run trace-cmd stop: ", err)
+		}
 		filepath := filepath.Join(s.OutDir(), fmt.Sprintf("trace-cyclic-%d.dat", time.Now().Unix()))
 		testing.ContextLog(ctx, "Start trace-cmd extract")
 		traceExtractCmd := testexec.CommandContext(ctx, "trace-cmd", "extract", "-o", filepath)
 		traceExtractCmd.Dir = "/tmp"
 		if err := traceExtractCmd.Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to execute trace-cmd extract: ", err)
-		}
-		testing.ContextLog(ctx, "Stop trace-cmd")
-		if err := testexec.CommandContext(ctx, "trace-cmd", "stop").Run(testexec.DumpLogOnError); err != nil {
-			s.Error("Cannot run trace-cmd stop: ", err)
 		}
 	}
 
