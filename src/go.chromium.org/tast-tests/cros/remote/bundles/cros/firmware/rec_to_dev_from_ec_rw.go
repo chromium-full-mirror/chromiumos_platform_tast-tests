@@ -12,10 +12,10 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
@@ -54,9 +54,29 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
 
-	backupState, err := firmware.BackupECFirmware(ctx, h)
+	oldGBBFlags, err := fwCommon.GetGBBFlags(ctx, h.DUT)
 	if err != nil {
-		s.Fatal("Failed to backup: ", err)
+		s.Fatal("Failed to get initial GBB flags: ", err)
+	}
+	if fwCommon.GBBFlagsContains(oldGBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+		backupState, err := firmware.BackupECFirmware(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to backup EC firmware: ", err)
+		}
+		backupState.ShouldRestoreFirmware = true
+		defer func() {
+			if _, err := fwCommon.ClearAndSetGBBFlags(cleanupContext, h.DUT, oldGBBFlags); err != nil {
+				s.Error("Failed to restore GBB flags: ", err)
+			}
+			if err := backupState.Close(cleanupContext, h); err != nil {
+				s.Fatal("Failed to cleanup EC backup: ", err)
+			}
+		}()
+		s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
+		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
+			s.Fatal("Failed to clear DISABLE_EC_SOFTWARE_SYNC GBB flag: ", err)
+		}
 	}
 
 	// Sync before reboot to make sure everything is written to disk.
@@ -66,17 +86,9 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		if err := h.EnsureDUTBooted(cleanupContext); err != nil {
-			s.Fatal("Can't restore firmware, DUT is off: ", err)
-		}
-		if err := backupState.Close(cleanupContext, h); err != nil {
-			s.Fatal("Failed to cleanup EC backup: ", err)
+			s.Fatal("Can't reconnect to DUT at cleanup: ", err)
 		}
 	}()
-
-	backupState.ShouldRestoreFirmware = true
-	if err := utils.EnableSoftwareSync(ctx, h); err != nil {
-		s.Fatal("Failed to clear disable software sync flag: ", err)
-	}
 
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
