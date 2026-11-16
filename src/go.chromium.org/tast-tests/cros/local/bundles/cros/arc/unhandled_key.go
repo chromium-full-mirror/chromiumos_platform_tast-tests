@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -38,8 +39,9 @@ func init() {
 
 func UnhandledKey(ctx context.Context, s *testing.State) {
 	const (
-		apk = "ArcKeyboardTest.apk"
-		pkg = "org.chromium.arc.testapp.keyboard"
+		apk     = "ArcKeyboardTest.apk"
+		pkg     = "org.chromium.arc.testapp.keyboard"
+		fieldID = pkg + ":id/text"
 	)
 
 	cr := s.FixtValue().(*arc.PreData).Chrome
@@ -67,13 +69,38 @@ func UnhandledKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start app: ", err)
 	}
 
-	// Wait for the activity to have focus.
+	// StartWithDefaultOptions returns once the Ash task window is visible, while
+	// Android may still be showing the splash screen and rendering MainActivity's
+	// initial frame. Wait for the activity's text field to appear, ensure it
+	// holds Android focus (clicking if Android started in touch mode), and wait
+	// for UI events to settle so key acks are not delayed past Exo's
+	// pending-key-ack timeout.
+	d := s.FixtValue().(*arc.PreData).UIDevice
+	field := d.Object(androidui.ID(fieldID))
+	if err := field.WaitForExists(ctx, 15*time.Second); err != nil {
+		s.Fatal("Failed to wait for the text field to appear: ", err)
+	}
+	focusedField := d.Object(androidui.ID(fieldID), androidui.Focused(true))
+	if err := focusedField.Exists(ctx); err != nil {
+		if err := field.Click(ctx); err != nil {
+			s.Fatal("Failed to click the text field: ", err)
+		}
+		if err := focusedField.WaitForExists(ctx, 10*time.Second); err != nil {
+			s.Fatal("Failed to wait for the text field to be focused: ", err)
+		}
+	}
+	if err := d.WaitForIdle(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to wait for Android UI to become idle: ", err)
+	}
+
+	// Verify the Ash task window holds focus right before sending Ctrl+N.
 	if err := ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool {
 		return window.ARCPackageName == pkg &&
 			window.IsVisible && window.HasFocus && window.IsActive
 	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 		s.Fatal("Failed to wait for the app to be ready: ", err)
 	}
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
