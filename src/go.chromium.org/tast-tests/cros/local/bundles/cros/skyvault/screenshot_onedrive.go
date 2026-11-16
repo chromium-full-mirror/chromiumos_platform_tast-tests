@@ -90,6 +90,7 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 	if err := onedrive.DeleteFilesInRootByPrefix(ctx, "Screenshot"); err != nil {
 		s.Fatal("Failed to remove old screenshots in OneDrive: ", err)
 	}
+	onedrive.DeleteDirsInRootByPrefixes(ctx, "Camera_", "ChromeOS device")
 
 	// Set OneDrive and SkyVault policies.
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
@@ -116,6 +117,11 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 	if err := keyboard.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
 		s.Fatal("Failed to type screenshot hotkey: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := onedrive.DeleteFilesInRootByPrefix(ctx, "Screenshot"); err != nil {
+			testing.ContextLog(ctx, "Failed to clean up screenshots in OneDrive: ", err)
+		}
+	}(cleanupCtx)
 
 	// Verify that screenshot is successfully taken.
 	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitIDContains("capture_mode_notification"), ash.WaitTitle("Screenshot taken")); err != nil {
@@ -127,21 +133,12 @@ func ScreenshotOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
-	if err := files.OpenOneDrive()(ctx); err != nil {
+	if err := onedrive.OpenOneDrive(files)(ctx); err != nil {
 		s.Fatal("Failed to open OneDrive: ", err)
 	}
 
 	// Verify that the screenshot is saved to OneDrive.
-	filename, err := files.WaitForFileByPattern(ctx, regexp.MustCompile(`^Screenshot.*\.png$`))
-	if err != nil {
+	if err := onedrive.WaitForFileByPattern(ctx, files, regexp.MustCompile(`^Screenshot.*\.png$`)); err != nil {
 		s.Fatal("Screenshot not found on OneDrive: ", err)
-	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Keyboard: ", err)
-	}
-	if err := files.DeleteFileOrFolder(kb, filename)(ctx); err != nil {
-		s.Fatal("Failed to delete the file: ", err)
 	}
 }

@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/office"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -96,6 +95,7 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 	if err := onedrive.DeleteFilesInRootByPrefix(ctx, "data.txt"); err != nil {
 		s.Fatal("Failed to remove old downloads in OneDrive: ", err)
 	}
+	onedrive.DeleteDirsInRootByPrefixes(ctx, "Camera_", "ChromeOS device")
 
 	// Set OneDrive and SkyVault policies.
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{
@@ -124,9 +124,14 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 	if err := conn.Eval(ctx, `document.getElementById('data.txt').click()`, nil); err != nil {
 		s.Fatal("Failed to execute JS expression: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := onedrive.DeleteFilesInRootByPrefix(ctx, "data.txt"); err != nil {
+			testing.ContextLog(ctx, "Failed to clean up downloaded file in OneDrive: ", err)
+		}
+	}(cleanupCtx)
 
 	// Verify that file is successfully downloaded.
-	if _, err := ash.WaitForNotification(ctx, tconn, 15*time.Second, ash.WaitTitle("Download complete")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitle("Download complete")); err != nil {
 		s.Errorf("Failed to wait for notification with title \"%q\": %v", "Download complete", err)
 	}
 
@@ -135,24 +140,16 @@ func DownloadOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to relaunch Files app: ", err)
 	}
 
-	if err := files.OpenOneDrive()(ctx); err != nil {
+	if err := onedrive.OpenOneDrive(files)(ctx); err != nil {
 		s.Fatal("Failed to open OneDrive: ", err)
 	}
 
 	// Verify that the downloaded file is saved to OneDrive.
-	filename, err := files.WaitForFileByPattern(ctx, regexp.MustCompile("^data.txt$"))
-	if err != nil {
+	if err := onedrive.WaitForFileByPattern(ctx, files, regexp.MustCompile("^data.txt$")); err != nil {
 		s.Fatal("Downloaded file not found on OneDrive: ", err)
 	}
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Keyboard: ", err)
-	}
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
-	}
-	if err := files.DeleteFileOrFolder(kb, filename)(ctx); err != nil {
-		s.Fatal("Failed to delete the file: ", err)
 	}
 }

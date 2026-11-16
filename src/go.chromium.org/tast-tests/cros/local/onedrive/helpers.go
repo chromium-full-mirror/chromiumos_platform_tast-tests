@@ -10,11 +10,15 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -145,4 +149,83 @@ func DeleteFilesInRootByPrefix(ctx context.Context, prefix string) error {
 		}
 	}
 	return nil
+}
+
+// DeleteDirsInRootByPrefixes deletes directories in the root OneDrive folder
+// whose names start with any of the given prefixes.
+func DeleteDirsInRootByPrefixes(ctx context.Context, prefixes ...string) {
+	matches, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*")
+	if err != nil {
+		return
+	}
+	for _, fspDir := range matches {
+		entries, err := os.ReadDir(fspDir)
+		if err != nil {
+			continue
+		}
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(entry.Name(), prefix) {
+					dirPath := filepath.Join(fspDir, entry.Name())
+					testing.ContextLog(ctx, "Deleting stale OneDrive directory: ", dirPath)
+					if err := os.RemoveAll(dirPath); err != nil {
+						testing.ContextLogf(ctx, "Failed to delete directory %s: %v", dirPath, err)
+					}
+					break
+				}
+			}
+		}
+	}
+}
+
+// OpenOneDrive opens the Microsoft OneDrive root directory in the Files app by
+// scrolling the StaticText label (rather than the outer TreeItem container)
+// into view before clicking.
+func OpenOneDrive(files *filesapp.FilesApp) uiauto.Action {
+	dir := nodewith.Name(filesapp.OneDrive).Role(role.TreeItem).First()
+	label := nodewith.Name(filesapp.OneDrive).Role(role.StaticText).Ancestor(dir).First()
+	expectedTitle := filesapp.FilesTitlePrefix + filesapp.OneDrive
+	return uiauto.Combine("open Microsoft OneDrive",
+		files.ScrollToVisible(label),
+		files.RetryUntil(
+			uiauto.Combine("scroll and click Microsoft OneDrive",
+				files.ScrollToVisible(label),
+				files.LeftClick(label),
+			),
+			files.Exists(nodewith.Name(expectedTitle).Role(role.Window).First()),
+		),
+	)
+}
+
+// WaitForFileByPattern waits for a file or folder matching pattern to appear in
+// the Files app listBox, scrolling through the virtualized list if needed, and
+// scrolls the matched row into view.
+func WaitForFileByPattern(ctx context.Context, files *filesapp.FilesApp, pattern *regexp.Regexp) error {
+	filesBox := nodewith.Role(role.ListBox)
+	fileRow := nodewith.NameRegex(pattern).Role(role.StaticText).Ancestor(filesBox).First()
+	optionFinder := nodewith.Role(role.ListBoxOption).Ancestor(filesBox)
+	lastBottomName := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := files.Exists(fileRow)(ctx); err == nil {
+			return nil
+		}
+		if options, err := files.NodesInfo(ctx, optionFinder); err == nil && len(options) > 0 {
+			bottomName := options[len(options)-1].Name
+			if bottomName == lastBottomName {
+				// Reached the bottom of the virtualized list; scroll back to the top.
+				_ = files.ScrollToVisible(optionFinder.First())(ctx)
+				lastBottomName = ""
+			} else {
+				_ = files.ScrollToVisible(optionFinder.Nth(len(options) - 1))(ctx)
+				lastBottomName = bottomName
+			}
+		}
+		return errors.Errorf("entry matching %q not found in listBox yet", pattern.String())
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 2 * time.Second}); err != nil {
+		return err
+	}
+	return files.ScrollToVisible(fileRow)(ctx)
 }

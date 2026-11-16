@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -22,9 +23,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -77,12 +78,6 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "camera_onedrive")
 	s.AttachErrorHandlers(handler, handler)
 
-	kb, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get keyboard: ", err)
-	}
-	defer kb.Close(cleanupCtx)
-
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch Files app: ", err)
@@ -97,6 +92,7 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	if err := office.ConnectToOneDrive(cr, tconn, files, ms365App)(ctx); err != nil {
 		s.Fatal("Failed to connect to OneDrive: ", err)
 	}
+	onedrive.DeleteDirsInRootByPrefixes(ctx, "Camera_", "ChromeOS device")
 
 	outDir := s.OutDir()
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
@@ -115,6 +111,17 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to accept cloud save warning: ", err)
 	}
 
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
+		testing.ContextLog(ctx, "Failed to close existing notifications before taking photo: ", err)
+	}
+
+	defer func(ctx context.Context) {
+		if err := ash.CloseNotifications(ctx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to close notifications: ", err)
+		}
+		onedrive.DeleteDirsInRootByPrefixes(ctx, cameraFolder)
+	}(cleanupCtx)
+
 	if err := app.ClickShutter(ctx); err != nil {
 		s.Fatal("Failed to click shutter: ", err)
 	}
@@ -125,20 +132,13 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Click edit button, check if Gallery app opens up.
-	editButton := nodewith.Name("Edit").Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(editButton)(ctx); err != nil {
-		s.Fatal("Failed to click edit button: ", err)
+	if err := clickCameraNotificationEditAndWaitForGallery(ctx, tconn); err != nil {
+		s.Fatal("Failed to open photo in Gallery from notification: ", err)
 	}
-
-	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
-		s.Error("Failed to wait for Gallery app to open: ", err)
-	} else {
-		if err := apps.Close(ctx, tconn, apps.Gallery.ID); err != nil {
-			testing.ContextLog(ctx, "Failed to close Gallery app: ", err)
-		} else if err := ash.WaitForAppClosed(ctx, tconn, apps.Gallery.ID); err != nil {
-			testing.ContextLog(ctx, "Failed to wait for Gallery app to close: ", err)
-		}
+	if err := apps.Close(ctx, tconn, apps.Gallery.ID); err != nil {
+		testing.ContextLog(ctx, "Failed to close Gallery app: ", err)
+	} else if err := ash.WaitForAppClosed(ctx, tconn, apps.Gallery.ID); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for Gallery app to close: ", err)
 	}
 
 	files, err = filesapp.Relaunch(ctx, tconn, files)
@@ -146,25 +146,14 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Files app: ", err)
 	}
 
-	if err := files.OpenOneDrive()(ctx); err != nil {
+	if err := onedrive.OpenOneDrive(files)(ctx); err != nil {
 		s.Fatal("Failed to open OneDrive: ", err)
 	}
 
 	// Verify that the Camera folder exists.
-	if err := files.WaitForFile(cameraFolder)(ctx); err != nil {
+	if err := onedrive.WaitForFileByPattern(ctx, files, regexp.MustCompile("^"+regexp.QuoteMeta(cameraFolder)+"$")); err != nil {
 		s.Fatal("Camera folder not found on OneDrive: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := ash.CloseNotifications(ctx, tconn); err != nil {
-			testing.ContextLog(ctx, "Failed to close notifications: ", err)
-		}
-		if err := files.OpenOneDrive()(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to open OneDrive: ", err)
-		}
-		if err := files.DeleteFileOrFolder(kb, cameraFolder)(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to remove Camera folder: ", err)
-		}
-	}(cleanupCtx)
 
 	// Open Camera folder.
 	if err := files.OpenFile(cameraFolder)(ctx); err != nil {
@@ -172,8 +161,43 @@ func CameraOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the photo is saved to OneDrive.
-	_, err = files.WaitForFileByPattern(ctx, regexp.MustCompile(`^IMG_.*\.jpg$`))
-	if err != nil {
+	if _, err := files.WaitForFileByPattern(ctx, regexp.MustCompile(`^IMG_.*\.jpg$`)); err != nil {
 		s.Fatal("Image not found on OneDrive: ", err)
 	}
+}
+
+func clickCameraNotificationEditAndWaitForGallery(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	editButton := nodewith.NameRegex(regexp.MustCompile("(?i)^edit$")).Role(role.Button).First()
+	notificationTray := nodewith.HasClass("NotificationCenterTray").Role(role.Button).First()
+	expandButton := nodewith.HasClass("AshNotificationExpandButton").First()
+
+	clickEdit := func(ctx context.Context) error {
+		if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(editButton)(ctx); err != nil {
+			if err := ui.Exists(notificationTray)(ctx); err == nil {
+				if err := ui.LeftClick(notificationTray)(ctx); err != nil {
+					return errors.Wrap(err, "failed to click notification center tray")
+				}
+			}
+			if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(editButton)(ctx); err != nil {
+				if err := ui.Exists(expandButton)(ctx); err == nil {
+					_ = ui.LeftClick(expandButton)(ctx)
+				}
+			}
+		}
+		return ui.WithTimeout(5 * time.Second).LeftClick(editButton)(ctx)
+	}
+
+	if err := clickEdit(ctx); err != nil {
+		return errors.Wrap(err, "failed to click edit button")
+	}
+
+	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, 15*time.Second); err != nil {
+		testing.ContextLog(ctx, "Gallery app not open after 15s; retrying Edit button from Notification Center: ", err)
+		_ = clickEdit(ctx)
+		if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, 45*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for Gallery app to open")
+		}
+	}
+	return nil
 }
