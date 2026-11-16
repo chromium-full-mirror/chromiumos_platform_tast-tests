@@ -50,6 +50,7 @@ var (
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
 	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
 	passwordDialog      = nodewith.NameRegex(regexp.MustCompile(`^\(chronos@(localhost|::1)\) Password:$`)).Role(role.TextField)
+	vmshellFailedMsg    = AsRow(nodewith.NameStartingWith("Launching vmshell failed:"))
 
 	// Prompt is the input prefix.
 	Prompt = AsRow(nodewith.NameRegex(regexp.MustCompile(`\$\s*$`)))
@@ -111,6 +112,12 @@ func find(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finde
 			}
 		}
 		if err := ui.Exists(tab)(ctx); err != nil {
+			// Fail fast if vmshell has already exited with a launch error (e.g. when
+			// crosvm exits early during initial VM startup with VmStartCheckerStatus=5),
+			// as the window title will never transition to the guest prompt.
+			if ui.Exists(vmshellFailedMsg)(ctx) == nil {
+				return testing.PollBreak(errors.Wrap(err, "launching vmshell failed in Terminal App"))
+			}
 			return err
 		}
 		return nil
@@ -130,6 +137,9 @@ func find(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finde
 
 	terminalApp := &TerminalApp{tconn: tconn, ui: ui, Kb: kb, tab: tab}
 	if err := terminalApp.WaitForPrompt()(ctx); err != nil {
+		if closeErr := kb.Close(ctx); closeErr != nil {
+			testing.ContextLog(ctx, "Failed to close keyboard after prompt timeout: ", closeErr)
+		}
 		return nil, errors.Wrap(err, "failed to wait for terminal prompt")
 	}
 

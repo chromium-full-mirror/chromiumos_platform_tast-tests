@@ -355,16 +355,50 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		if err := f.concierge.WaitForVMStop(ctx, f.vm); err != nil {
 			s.Fatal("Failed to wait for VM to finish installing: ", err)
 		}
-		// Now use the terminal app to boot the VM.
-		s.Log("Starting installed VM")
-		if ta, err = terminalapp.FindBruschetta(ctx, f.tconn); err != nil {
-			s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
+	}
+
+	// TODO(b/582144275): Investigate and fix the root cause of the L2
+	// nested-KVM guest early-boot crash on betty.
+	// On nested KVM (e.g. betty), the initial Bruschetta VM boot—which Chrome's
+	// BruschettaInstallerImpl::CloseInstaller triggers automatically before
+	// installBruschetta returns—occasionally crashes during early guest kernel
+	// boot in crosvm (VmStartCheckerStatus=5), leaving Terminal App on
+	// "Launching vmshell failed". Because Chrome initiates this first boot and
+	// the crash is a transient nested-KVM guest boot failure rather than an
+	// observable host precondition, detect the failure and retry launching
+	// Bruschetta with a shorter per-attempt timeout.
+	const (
+		maxStartAttempts = 3
+		startAttemptWait = 3 * time.Minute
+	)
+	var startErr error
+	for attempt := 1; attempt <= maxStartAttempts; attempt++ {
+		attemptCtx, cancelAttempt := context.WithTimeout(ctx, startAttemptWait)
+		if attempt == 1 {
+			if installerRunning {
+				s.Log("Starting installed VM")
+				ta, startErr = terminalapp.FindBruschetta(attemptCtx, f.tconn)
+			} else {
+				s.Log("Installer VM is already closed, waiting for VM to start")
+				ta, startErr = terminalapp.WaitForBruschettaPrompt(attemptCtx, f.tconn)
+			}
+		} else {
+			s.Logf("Retrying Bruschetta VM start via Terminal App (attempt %d/%d)", attempt, maxStartAttempts)
+			ta, startErr = terminalapp.LaunchBruschetta(attemptCtx, f.tconn)
 		}
-	} else {
-		s.Log("Installer VM is already closed, waiting for VM to start")
-		if ta, err = terminalapp.WaitForBruschettaPrompt(ctx, f.tconn); err != nil {
-			s.Fatal("Failed to wait for bruschetta VM to start: ", err)
+		cancelAttempt()
+		if startErr == nil {
+			break
 		}
+		s.Logf("Bruschetta VM start attempt %d/%d failed: %v", attempt, maxStartAttempts, startErr)
+		if attempt < maxStartAttempts {
+			if err := apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
+				s.Log("Failed to close Terminal App before retry: ", err)
+			}
+		}
+	}
+	if startErr != nil {
+		s.Fatal("Failed to wait for bruschetta VM to start: ", startErr)
 	}
 	closeTerminalKeyboard(ctx, ta)
 
