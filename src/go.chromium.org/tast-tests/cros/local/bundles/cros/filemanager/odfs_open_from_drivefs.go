@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -135,9 +136,19 @@ func OdfsOpenFromDrivefs(ctx context.Context, s *testing.State) {
 			s.Fatal("ODFS upload didn't match: ", err)
 		}
 
+		// Closing the Microsoft 365 PWA window can inadvertently close the
+		// underlying Files app window if the extra click lands after the MS365
+		// window finishes unloading. Relaunch Files to the Drive folder if needed.
+		if err := uiauto.New(tconn).Exists(filesapp.WindowFinder(apps.FilesSWA.ID))(ctx); err != nil {
+			filesApp, err = filesapp.LaunchSWAToPath(ctx, tconn, driveFsClient.MyDrivePath(uniqueDriveFolderName))
+			if err != nil {
+				s.Fatal("Failed to relaunch files app to the test folder in My Drive: ", err)
+			}
+		}
+
 		// Ensure the file is copied rather than moved.
 		if err := uiauto.Combine("check the file still exists in Drive",
-			filesApp.FileExists(testFile.FileName),
+			filesApp.WaitForFile(testFile.FileName),
 			drivefs.VerifySourceDestinationMD5SumMatch(
 				driveFsClient, testFile.SrcFile, filepath.Join(uniqueDriveFolderName, testFile.FileName)),
 		)(ctx); err != nil {

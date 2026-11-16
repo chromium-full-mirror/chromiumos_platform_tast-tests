@@ -246,15 +246,25 @@ func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 	label := nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir)
 
 	if f.appID == FolderSelectPseudoAppID {
-		return f.LeftClickUntil(label,
-			f.Exists(nodewith.Name(expectedTitle).Role(role.Button).First()))
+		return uiauto.Combine(fmt.Sprintf("OpenDir(%s)", dirName),
+			f.ScrollToVisible(label),
+			f.LeftClickUntil(label,
+				f.Exists(nodewith.Name(expectedTitle).Role(role.Button).First())),
+		)
 	}
 
-	return uiauto.Combine(fmt.Sprintf("OpenDir(%s)", dirName),
-		// Directory tree can contain a lot of items, we need to scroll the item
-		// into view first before clicking it.
-		f.ScrollToVisible(dir),
-		f.LeftClickUntil(label, f.Exists(f.windowFinderWithTitle(expectedTitle))),
+	// Directory tree can contain a lot of items, we need to scroll the item
+	// label into view first before clicking it. Scrolling the outer TreeItem
+	// (dir) when expanded centers the entire subtree and can push the top
+	// StaticText label offscreen.
+	return uiauto.NamedAction(fmt.Sprintf("OpenDir(%s)", dirName),
+		f.RetryUntil(
+			uiauto.Combine(fmt.Sprintf("scroll and click %s", dirName),
+				f.ScrollToVisible(label),
+				f.LeftClick(label),
+			),
+			f.Exists(f.windowFinderWithTitle(expectedTitle)),
+		),
 	)
 }
 
@@ -533,8 +543,9 @@ func (f *FilesApp) ClickContextMenuItemRegex(fileName string, menuItems ...strin
 func (f *FilesApp) ClickDirectoryContextMenuItem(dirName string, menuItems ...string) uiauto.Action {
 	var steps []uiauto.Action
 	// Open Context menu.
-	dir := nodewith.Name(dirName).Role(role.TreeItem)
-	steps = append(steps, f.RightClick(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir)))
+	dir := nodewith.Name(dirName).Role(role.TreeItem).First()
+	label := nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir)
+	steps = append(steps, f.ScrollToVisible(label), f.RightClick(label))
 	// Iterate over the menu items and click them.
 	for _, menuItem := range menuItems {
 		steps = append(steps, f.LeftClick(nodewith.Name(menuItem).Role(role.MenuItem)))
@@ -822,8 +833,7 @@ func (f *FilesApp) ExpandOpenDropdown() uiauto.Action {
 	dropdownMenu := nodewith.Role(role.Menu).Name(OpenWith)
 	return uiauto.Combine("ExpandOpenDropdown",
 		f.WaitUntilExists(openButton),
-		f.LeftClick(openButton),
-		f.WaitUntilExists(dropdownMenu),
+		f.LeftClickUntil(openButton, f.Exists(dropdownMenu)),
 	)
 }
 

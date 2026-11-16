@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -102,6 +103,12 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to upload and open the first file on MS365: ", fileName1, err)
 	}
+	// In tablet mode, the PWA window's top caption Close button is offscreen, so
+	// WaitForMicrosoft365EditorWindowAndCloseIgnoreError can leave the full-screen
+	// Microsoft 365 window open on top of the Files app and keep the file locked.
+	_ = apps.Close(ctx, tconn, apps.Microsoft365.ID)
+	_ = uiauto.New(tconn).WithTimeout(30 * time.Second).WaitUntilGone(ms365.Microsoft365WindowFinder(fileName1))(ctx)
+
 	if err := onedrive.CheckODFSContent(ctx, srcFile1, fileName1); err != nil {
 		s.Fatal("ODFS upload for the first file didn't match: ", err)
 	}
@@ -118,16 +125,25 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable 'Ask before moving' for OneDrive in Settings: ", err)
 	}
 
+	// Ensure the Files app window is open and focused in the target folder.
+	files, err = filesapp.ExistingOrNew(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to ensure Files app is open: ", err)
+	}
+
 	// Open another file.
 	fileName2 := data.GeneratedFiles[1].FileName
 	srcFile2 := data.GeneratedFiles[1].SrcFile
 
-	if _, err := files.OpenOfficeFile(ctx, "", fileName2, filesconsts.OneDrive); err != nil {
+	if _, err := files.OpenOfficeFile(ctx, targetBaseName, fileName2, filesconsts.OneDrive); err != nil {
 		s.Fatal("Failed to open the second office file: ", err)
 	}
 	if err := ms365App.WaitForMicrosoft365EditorWindowAndCloseIgnoreError(tconn, fileName2)(ctx); err != nil {
 		s.Fatal("Failed to upload and open the second file on MS365: ", fileName2, err)
 	}
+	_ = apps.Close(ctx, tconn, apps.Microsoft365.ID)
+	_ = uiauto.New(tconn).WithTimeout(30 * time.Second).WaitUntilGone(ms365.Microsoft365WindowFinder(fileName2))(ctx)
+
 	if err := onedrive.CheckODFSContent(ctx, srcFile2, fileName2); err != nil {
 		s.Fatal("ODFS upload for the second file didn't match: ", err)
 	}
