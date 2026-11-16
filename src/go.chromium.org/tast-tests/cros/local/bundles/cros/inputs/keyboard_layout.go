@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +46,12 @@ var hardwareLayoutTypeArg = testing.RegisterVarString(
 	"inputs.hardwareLayoutType",
 	"ISO",
 	"Target hardware layout type: ISO (default), ISO_NO_ALTGR, ANSI, ABNT, or JIS.",
+)
+
+var skipSequencesArg = testing.RegisterVarString(
+	"inputs.skipSequences",
+	"false",
+	"Skip 2-keystroke sequences audit (e.g. dead-key compositions): false (default) or true.",
 )
 
 type keystroke struct {
@@ -98,6 +105,11 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unknown hardwareLayoutType: %s", hardwareLayoutType)
 	}
 
+	skipSequences, err := strconv.ParseBool(skipSequencesArg.Value())
+	if err != nil {
+		s.Fatalf("Invalid skipSequences value %q: %v", skipSequencesArg.Value(), err)
+	}
+
 	// Check if the target ime info exists or not.
 	var inputMethod *ime.InputMethod
 
@@ -109,7 +121,11 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set input method: ", err)
 	}
 
-	filename := fmt.Sprintf("%s__%s.csv", url.QueryEscape(inputMethod.ID), hardwareLayoutType)
+	suffix := ""
+	if skipSequences {
+		suffix = "__skip_sequences"
+	}
+	filename := fmt.Sprintf("%s__%s%s.csv", url.QueryEscape(inputMethod.ID), hardwareLayoutType, suffix)
 	path := filepath.Join(s.OutDir(), filename)
 	file, err := os.Create(path)
 	if err != nil {
@@ -118,6 +134,7 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 	defer file.Close()
 
 	w := csv.NewWriter(file)
+	defer w.Flush()
 	w.Write([]string{"shift_1", "altgr_1", "caps_1", "location_1", "shift_2", "altgr_2", "caps_2", "location_2", "string", "unicode"})
 	noOpKeystrokes := make([]keystroke, 0)
 
@@ -186,6 +203,10 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if skipSequences {
+		return
+	}
+
 	for _, keystroke1 := range noOpKeystrokes {
 		for _, modifiers2 := range util.ModifiersStatusCombo {
 			if !modifiersEligibleForHardwareLayout(modifiers2, hardwareLayoutType) {
@@ -229,8 +250,6 @@ func KeyboardLayout(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-
-	w.Flush()
 }
 
 func modifiersEligibleForHardwareLayout(modifiers util.ModifiersStatus, hardwareLayoutType string) bool {
