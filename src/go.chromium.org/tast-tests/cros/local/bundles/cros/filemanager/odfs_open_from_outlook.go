@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -91,6 +92,58 @@ var (
 	oneDriveHomeRegex         = regexp.MustCompile(`(?i)^(.*- )?OneDrive($| - .*)`)
 )
 
+// closeAllM365Windows closes all open Microsoft 365 PWA windows via the Ash
+// window manager API rather than mouse-clicking the top-right FrameCaptionButton
+// (which can double-click and close the Outlook window underneath).
+func closeAllM365Windows(ctx context.Context, tconn *chrome.TestConn) error {
+	ws, err := ash.GetAllWindows(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get windows")
+	}
+	for _, w := range ws {
+		if w.AppID == apps.Microsoft365.ID {
+			if err := w.CloseWindow(ctx, tconn); err != nil {
+				return errors.Wrapf(err, "failed to close Microsoft 365 window %q (id=%d)", w.Title, w.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// waitForM365EditorAndClose waits for the Microsoft 365 editor window for
+// fileName to finish rendering its document content and closes it via the Ash
+// window manager API so no stray mouse click hits the Outlook window underneath.
+func waitForM365EditorAndClose(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms365.Ms365, fileName string) uiauto.Action {
+	editorRootView := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileName).First()
+	editorContainer := nodewith.Attribute("htmlId", "EditorContainer").Ancestor(editorRootView).First()
+	documentContents := nodewith.Role(role.GenericContainer).Name("Document Contents").Ancestor(editorRootView).First()
+	ribbon := nodewith.Role(role.Toolbar).Name("Ribbon").Ancestor(editorRootView).First()
+	headerToolbar := nodewith.Role(role.Toolbar).Name("Header").Ancestor(editorRootView).First()
+	wacPageImg := nodewith.Role(role.Image).HasClass("WACPageImg").Ancestor(editorRootView).First()
+
+	return func(ctx context.Context) error {
+		if err := ui.WithTimeout(time.Minute).WaitUntilExists(ms365.Microsoft365WindowFinder(fileName))(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for the MS365 window")
+		}
+		if _, err := ui.WithTimeout(30*time.Second).FindAnyExists(ctx,
+			editorContainer,
+			documentContents,
+			ribbon,
+			headerToolbar,
+			wacPageImg,
+		); err != nil {
+			return errors.Wrap(err, "failed to find MS365 editor content")
+		}
+		if err := closeAllM365Windows(ctx, tconn); err != nil {
+			return ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx)
+		}
+		if err := ui.WithTimeout(15 * time.Second).WaitUntilGone(ms365.Microsoft365WindowFinder(fileName))(ctx); err != nil {
+			return ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx)
+		}
+		return nil
+	}
+}
+
 // completeM365SignIn advances through Microsoft account chooser, credential,
 // and post-password prompts until the M365 editor finishes loading fileName.
 func completeM365SignIn(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms365.Ms365, fileName string) uiauto.Action {
@@ -105,8 +158,6 @@ func completeM365SignIn(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms
 	headerToolbar := nodewith.Role(role.Toolbar).Name("Header").Ancestor(editorWindow).First()
 	wacPageImg := nodewith.Role(role.Image).HasClass("WACPageImg").Ancestor(editorWindow).First()
 	oneDriveRoot := nodewith.Role(role.RootWebArea).NameRegex(oneDriveHomeRegex).First()
-	oneDriveWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameRegex(oneDriveHomeRegex).First()
-	oneDriveCloseButton := nodewith.Role(role.Button).Name("Close").HasClass("FrameCaptionButton").Ancestor(oneDriveWindow)
 
 	msSignInWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("(?i)(Sign in.*)|(Pick an account)")).First()
 	accountTile := nodewith.Ancestor(msSignInWindow).Role(role.Button).NameContaining(ms365App.UserName).First()
@@ -180,7 +231,7 @@ func completeM365SignIn(ui *uiauto.Context, tconn *chrome.TestConn, ms365App *ms
 				found = signInButton
 			case oneDriveRoot:
 				testing.ContextLog(ctx, "M365 sign-in landed on OneDrive home; closing window to reopen attachment")
-				if err := uiauto.New(tconn).WithTimeout(15*time.Second).LeftClickUntil(oneDriveCloseButton, ui.Gone(oneDriveWindow))(ctx); err != nil {
+				if err := closeAllM365Windows(ctx, tconn); err != nil {
 					return errors.Wrap(err, "failed to close OneDrive home window after sign-in")
 				}
 				if err := ui.WaitUntilGone(oneDriveRoot)(ctx); err != nil {
@@ -341,13 +392,16 @@ func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
 	var tabsToClose []int
 	for _, tab := range allTabs {
 		lowerURL := strings.ToLower(tab.URL)
+		lowerTitle := strings.ToLower(tab.Title)
 		if strings.HasPrefix(lowerURL, "chrome://") {
 			continue
 		}
 		if !strings.Contains(lowerURL, "safelink") &&
 			(strings.Contains(lowerURL, "outlook.office.com") ||
+				strings.Contains(lowerURL, "outlook.office365.com") ||
 				strings.Contains(lowerURL, "outlook.cloud.microsoft") ||
-				strings.Contains(lowerURL, "outlook.live.com")) {
+				strings.Contains(lowerURL, "outlook.live.com") ||
+				strings.Contains(lowerTitle, "outlook")) {
 			continue
 		}
 		tabsToClose = append(tabsToClose, tab.ID)
@@ -356,6 +410,54 @@ func closeAllOtherTabs(ctx context.Context, tconn *chrome.TestConn) error {
 		return nil
 	}
 	return browser.CloseTabsByID(ctx, tconn, tabsToClose)
+}
+
+// openEmailInOutlook ensures the Outlook window/tab is open and clicks
+// emailOption in the message list until emailBodyText renders in the Reading
+// Pane.
+func openEmailInOutlook(cr *chrome.Chrome, tconn *chrome.TestConn, ui *uiauto.Context, outlookAsPWA bool, outlookContext, emailOption, emailBodyText *nodewith.Finder) uiauto.Action {
+	return func(ctx context.Context) error {
+		if ui.WithTimeout(20*time.Second).WaitUntilExists(outlookContext)(ctx) != nil {
+			hasOutlookWindow := false
+			if outlookAsPWA {
+				if ws, err := ash.GetAllWindows(ctx, tconn); err == nil {
+					for _, w := range ws {
+						if w.AppID == apps.Outlook.ID {
+							hasOutlookWindow = true
+							break
+						}
+					}
+				}
+			}
+			if !hasOutlookWindow {
+				testing.ContextLog(ctx, "Outlook context not found; re-opening Outlook")
+				if outlookAsPWA {
+					if err := apps.Launch(ctx, tconn, apps.Outlook.ID); err != nil {
+						return errors.Wrap(err, "failed to re-launch Outlook PWA")
+					}
+				} else {
+					conn, err := cr.NewConn(ctx, outlookURL)
+					if err != nil {
+						return errors.Wrap(err, "failed to re-open Outlook website")
+					}
+					_ = conn.Close()
+				}
+			}
+			if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(outlookContext)(ctx); err != nil {
+				return errors.Wrap(err, "failed waiting for Outlook context")
+			}
+		}
+		if ui.WithTimeout(2*time.Second).Exists(emailBodyText)(ctx) == nil {
+			return nil
+		}
+		if err := ui.WaitUntilExists(emailOption)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find email in Outlook message list")
+		}
+		return ui.WithInterval(3*time.Second).RetryUntil(
+			ui.DoDefault(emailOption),
+			ui.WithTimeout(2*time.Second).WaitUntilExists(emailBodyText),
+		)(ctx)
+	}
 }
 
 // OdfsOpenFromOutlook verifies that links to Microsoft Office files which are
@@ -462,16 +564,12 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	// Open the most recent Mail from the Inbox which should contain 3 links to Office files.
 	outlookContext := nodewith.Role(role.RootWebArea).NameContaining("Outlook").First()
 	messageList := nodewith.Role(role.ListBox).NameContaining("Message").Ancestor(outlookContext)
+	readingPane := nodewith.Role(role.Main).Name("Reading Pane").Ancestor(outlookContext)
 	linkEmail := nodewith.Role(role.ListBoxOption).NameContaining("Tast Test Outlook Links").Ancestor(messageList)
-	linkEmailText := nodewith.Role(role.StaticText).Name("Tast Test Outlook Links:").Ancestor(outlookContext)
+	linkEmailText := nodewith.Role(role.StaticText).Name("Tast Test Outlook Links:").Ancestor(readingPane)
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-	if err := uiauto.Combine("Open the link email in Outlook",
-		ui.WaitUntilExists(outlookContext),
-		ui.WaitUntilExists(linkEmail),
-		ui.DoDefault(linkEmail),
-		ui.WaitUntilExists(linkEmailText),
-	)(ctx); err != nil {
+	if err := openEmailInOutlook(cr, tconn, ui, param.outlookAsPWA, outlookContext, linkEmail, linkEmailText)(ctx); err != nil {
 		s.Fatal("Failed to open the link email in Outlook: ", err)
 	}
 
@@ -480,17 +578,19 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 	safelinkError := nodewith.Role(role.StaticText).NameContaining("We can't check the safety of this website").First()
 	for _, fileName := range fileNames {
 		fileStem := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-		emailLink := nodewith.Role(role.Link).Name(fileName).Ancestor(outlookContext)
+		emailLink := nodewith.Role(role.Link).Name(fileName).Ancestor(readingPane)
 		m365FileWindow := nodewith.Role(role.Window).HasClass("BrowserRootView").NameContaining(fileStem).First()
 		m365FilePWAToolbar := nodewith.Role(role.Pane).HasClass("WebAppFrameToolbarView").Ancestor(m365FileWindow)
 
-		interval := 1 * time.Second
-		if err := action.Retry(3, func(ctx context.Context) error {
+		interval := 3 * time.Second
+		if err := action.Retry(5, func(ctx context.Context) error {
 			// Opening the link with a left click to make sure that we test exactly the same behavior, a user would experience.
 			if err := uiauto.Combine("Open the link in the mail",
+				openEmailInOutlook(cr, tconn, ui, param.outlookAsPWA, outlookContext, linkEmail, linkEmailText),
 				ui.WaitUntilExists(emailLink),
 				ui.LeftClick(emailLink),
 			)(ctx); err != nil {
+				_ = closeAllM365Windows(ctx, tconn)
 				if closeErr := closeAllOtherTabs(ctx, tconn); closeErr != nil {
 					s.Log("Failed to close all other tabs: ", closeErr)
 				}
@@ -502,18 +602,21 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 				if err == nil {
 					err = errors.New("Outlook Safe Links returned an error interstitial")
 				}
+				_ = closeAllM365Windows(ctx, tconn)
 				// Close all other tabs besides Outlook.
 				if closeErr := closeAllOtherTabs(ctx, tconn); closeErr != nil {
 					s.Log("Failed to close all other tabs: ", closeErr)
 				}
+				_ = ui.WithTimeout(5 * time.Second).WaitUntilGone(safelinkError)(ctx)
 
 				return errors.Wrap(err, "failed to open the link in the mail")
 			}
 
 			if err := uiauto.Combine("Sign in if needed and close M365 window",
 				signinInsideM365(ui, tconn, ms365App, fileName),
-				ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName),
+				waitForM365EditorAndClose(ui, tconn, ms365App, fileName),
 			)(ctx); err != nil {
+				_ = closeAllM365Windows(ctx, tconn)
 				return errors.Wrap(err, "failed to close M365 window")
 			}
 
@@ -525,43 +628,42 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 
 			return nil
 		}, interval)(ctx); err != nil {
-			s.Fatal("Failed to click the link after 3 retries: ", err)
+			s.Fatal("Failed to click the link after 5 retries: ", err)
 		}
 	}
 
 	// Open another mail from the Inbox which should contain 3 attachments with Office files.
 	attachmentEmail := nodewith.Role(role.ListBoxOption).NameContaining("Tast Test Outlook Files").Ancestor(messageList)
-	attachmentEmailText := nodewith.Role(role.StaticText).Name("Tast Test Outlook Files:").Ancestor(outlookContext)
+	attachmentEmailText := nodewith.Role(role.StaticText).Name("Tast Test Outlook Files:").Ancestor(readingPane)
 
-	if err := uiauto.Combine("Open the attachment email in Outlooks",
-		ui.WaitUntilExists(outlookContext),
-		ui.WaitUntilExists(attachmentEmail),
-		ui.DoDefault(attachmentEmail),
-		ui.WaitUntilExists(attachmentEmailText),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open theattachment email in Outlook: ", err)
+	if err := openEmailInOutlook(cr, tconn, ui, param.outlookAsPWA, outlookContext, attachmentEmail, attachmentEmailText)(ctx); err != nil {
+		s.Fatal("Failed to open the attachment email in Outlook: ", err)
 	}
 
 	// Expand the attachments if they exist and are not expanded.
-	attachmentExpandButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, false)
-	attachmentExpandButtonExpanded := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, true)
-
-	if err := ui.Exists(attachmentExpandButton)(ctx); err == nil {
-		if err := ui.DoDefaultUntil(attachmentExpandButton, ui.Exists(attachmentExpandButtonExpanded))(ctx); err != nil {
-			s.Log("Failed to expand attachments: ", err)
-		}
-	}
+	attachmentExpandButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("Show all.*attachments")).State(state.Expanded, false).Ancestor(readingPane)
 
 	// Open the attachments in the Mail and wait for M365 to show the file.
 	for _, fileName := range fileNames {
-		attachmentBox := nodewith.Role(role.ListBox).Name("file attachments")
+		if err := openEmailInOutlook(cr, tconn, ui, param.outlookAsPWA, outlookContext, attachmentEmail, attachmentEmailText)(ctx); err != nil {
+			s.Fatal("Failed to ensure the attachment email is open in Outlook: ", err)
+		}
+		if err := ui.WithTimeout(2 * time.Second).Exists(attachmentExpandButton)(ctx); err == nil {
+			if err := ui.WithTimeout(5*time.Second).DoDefaultUntil(attachmentExpandButton, ui.Gone(attachmentExpandButton))(ctx); err != nil {
+				s.Log("Failed to expand attachments: ", err)
+			}
+		}
+
+		attachmentBox := nodewith.Role(role.ListBox).Name("file attachments").Ancestor(readingPane)
 		attachment := nodewith.Role(role.ListBoxOption).NameContaining(fileName).Ancestor(attachmentBox)
 		openInApplicationButton := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("^Open in (Word|Excel|PowerPoint)$"))
 
 		if err = uiauto.Combine("Open the attachment in the mail",
 			ui.WaitUntilExists(attachment),
-			ui.DoDefault(attachment),
-			ui.WaitUntilExists(openInApplicationButton),
+			ui.WithInterval(2*time.Second).RetryUntil(
+				ui.DoDefault(attachment),
+				ui.WithTimeout(2*time.Second).WaitUntilExists(openInApplicationButton),
+			),
 			ui.DoDefault(openInApplicationButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to open the attachment in the mail: ", err)
@@ -569,6 +671,19 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 
 		signInErr := signinInsideM365(ui, tconn, ms365App, fileName)(ctx)
 		if errors.Is(signInErr, errAttachmentReopenNeeded) {
+			if ui.WithTimeout(3*time.Second).Exists(openInApplicationButton)(ctx) != nil {
+				_ = openEmailInOutlook(cr, tconn, ui, param.outlookAsPWA, outlookContext, attachmentEmail, attachmentEmailText)(ctx)
+				if ui.WithTimeout(2*time.Second).Exists(attachmentExpandButton)(ctx) == nil {
+					_ = ui.WithTimeout(5*time.Second).DoDefaultUntil(attachmentExpandButton, ui.Gone(attachmentExpandButton))(ctx)
+				}
+				_ = uiauto.Combine("Re-open attachment preview dialog",
+					ui.WaitUntilExists(attachment),
+					ui.WithInterval(2*time.Second).RetryUntil(
+						ui.DoDefault(attachment),
+						ui.WithTimeout(2*time.Second).WaitUntilExists(openInApplicationButton),
+					),
+				)(ctx)
+			}
 			if err := uiauto.Combine("Re-open the attachment after M365 sign-in",
 				ui.WaitUntilExists(openInApplicationButton),
 				ui.DoDefault(openInApplicationButton),
@@ -580,7 +695,7 @@ func OdfsOpenFromOutlook(ctx context.Context, s *testing.State) {
 		if signInErr != nil {
 			s.Fatal("Failed to sign in to M365 window: ", signInErr)
 		}
-		if err := ms365App.WaitForMicrosoft365EditorWindowAndClose(tconn, fileName)(ctx); err != nil {
+		if err := waitForM365EditorAndClose(ui, tconn, ms365App, fileName)(ctx); err != nil {
 			s.Fatal("Failed to close M365 window: ", err)
 		}
 
