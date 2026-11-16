@@ -127,7 +127,7 @@ func ManagedPlayAvailableAppUninstall(ctx context.Context, s *testing.State) {
 		s.Log("Changing the policy to make the app available")
 		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+		policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy}, arcent.SkipTermsOfServicePolicies()...)
 
 		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
 			return rl.Exit("update policies", err)

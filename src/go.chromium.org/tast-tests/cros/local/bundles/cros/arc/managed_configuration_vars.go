@@ -91,7 +91,7 @@ func ManagedConfigurationVars(ctx context.Context, s *testing.State) {
 			"exchange_host":     "outlook.office365.com",
 		}
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+		policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy}, arcent.SkipTermsOfServicePolicies()...)
 
 		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 		if err != nil {

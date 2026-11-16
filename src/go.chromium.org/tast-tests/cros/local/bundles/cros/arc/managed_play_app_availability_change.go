@@ -138,7 +138,7 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 
 		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+		policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy}, arcent.SkipTermsOfServicePolicies()...)
 
 		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
 			return rl.Exit("update policies", err)

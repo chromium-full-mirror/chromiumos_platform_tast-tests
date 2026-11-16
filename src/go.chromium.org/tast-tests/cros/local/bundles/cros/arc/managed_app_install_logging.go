@@ -296,7 +296,7 @@ func setupPolicyServerWithArcAppsAndEnableLogging(ctx context.Context, outDir, p
 	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	arcInstallLoggingEnabledPolicy := &policy.ArcAppInstallEventLoggingEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy, arcInstallLoggingEnabledPolicy}
+	policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy, arcInstallLoggingEnabledPolicy}, arcent.SkipTermsOfServicePolicies()...)
 
 	return policyutil.SetUpFakePolicyServer(ctx, outDir, policyUser, policies)
 }

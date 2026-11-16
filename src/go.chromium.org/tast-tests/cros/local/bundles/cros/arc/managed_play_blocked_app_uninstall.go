@@ -124,7 +124,7 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		s.Log("Changing the policy to block the installed app")
 		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+		policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy}, arcent.SkipTermsOfServicePolicies()...)
 
 		if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
 			return rl.Exit("update policies", err)

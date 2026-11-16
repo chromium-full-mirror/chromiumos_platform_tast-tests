@@ -46,6 +46,20 @@ const PlayStoreModeAllowList = "WHITELIST"
 // UIAutomatorPackages is a list of packages installed by UIAutomator.
 var UIAutomatorPackages = []string{"com.github.uiautomator.test", "com.github.uiautomator"}
 
+// SkipTermsOfServicePolicies returns policies that set backup & restore and
+// location services, so that ARC starts without asking the user to accept its
+// Terms of Service. Otherwise ARC needs that during sign-in, which tests skip,
+// so Chrome disables ARC. The policies have to be served together with the
+// other policies of the test, since serving a policy blob replaces the previous
+// one.
+func SkipTermsOfServicePolicies() []policy.Policy {
+	return []policy.Policy{
+		&policy.ArcBackupRestoreServiceEnabled{Val: 0},
+		&policy.ArcGoogleLocationServicesEnabled{Val: 0},
+		&policy.GoogleLocationServicesEnabled{Val: 0},
+	}
+}
+
 // SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type.
 func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string) (fdms *fakedms.FakeDMS, retErr error) {
 	return SetupPolicyServerWithArcAppsAffiliated(ctx, outDir, policyUser, packages, installType, playStoreMode, false /*affiliated*/)
@@ -55,7 +69,7 @@ func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string
 func SetupPolicyServerWithArcAppsAffiliated(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string, affiliated bool) (fdms *fakedms.FakeDMS, retErr error) {
 	arcPolicy := CreateArcPolicyWithApps(packages, installType, playStoreMode)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+	policies := append([]policy.Policy{arcEnabledPolicy, arcPolicy}, SkipTermsOfServicePolicies()...)
 
 	return SetUpFakePolicyServer(ctx, outDir, policyUser, policies, affiliated)
 }
