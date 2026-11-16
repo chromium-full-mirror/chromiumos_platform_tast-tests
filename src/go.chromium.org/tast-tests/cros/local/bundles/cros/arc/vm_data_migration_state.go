@@ -7,6 +7,7 @@ package arc
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -98,11 +100,16 @@ func signInPreMigrationData(ctx context.Context, s *testing.State) (chrome.Creds
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	// Disable ARC sync so ArcPackageSyncableService::MergeDataAndStartSyncing
+	// does not hit DCHECK(prefs_->package_list_initial_refreshed()) when the
+	// ui job is restarted right after opt-in (b/576223429).
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(dma.CredsFromPool(ui.GaiaPoolDefaultVarName)),
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
 		chrome.DisableFeatures("ArcVmDataMigration"),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
@@ -145,7 +152,57 @@ func signInPreMigrationData(ctx context.Context, s *testing.State) (chrome.Creds
 		s.Fatal("Failed to verify image file content after initial push: ", err)
 	}
 
+	// Chrome's ImportantFileWriter flushes user Preferences on a 10-second
+	// timer, and MarkAsCleanShutdown() only calls CommitPendingWrite() for
+	// profiles with an open browser window (--no-startup-window opens none).
+	// Wait until arc.signedin is persisted on disk before restarting ui so
+	// ArcSessionManager::Initialize() on re-login sees the provisioned state.
+	if err := waitForARCSignedInPrefPersisted(ctx, cr.NormalizedUser()); err != nil {
+		s.Fatal("Failed to wait for arc.signedin pref to be persisted: ", err)
+	}
+
 	return cr.Creds(), cr.NormalizedUser()
+}
+
+func isARCSignedInPrefPersisted(prefsPath string) (bool, error) {
+	b, err := os.ReadFile(prefsPath)
+	if err != nil {
+		return false, err
+	}
+	var prefs struct {
+		ARC struct {
+			SignedIn bool `json:"signedin"`
+		} `json:"arc"`
+	}
+	if err := json.Unmarshal(b, &prefs); err != nil {
+		return false, err
+	}
+	return prefs.ARC.SignedIn, nil
+}
+
+func waitForARCSignedInPrefPersisted(ctx context.Context, normalizedUser string) error {
+	userPath, err := cryptohome.UserPath(ctx, normalizedUser)
+	if err != nil {
+		return errors.Wrap(err, "failed to get user cryptohome path")
+	}
+	prefsPath := filepath.Join(userPath, "Preferences")
+	return waitForARCSignedInPrefPersistedAtPath(ctx, prefsPath, &testing.PollOptions{
+		Interval: time.Second,
+		Timeout:  15 * time.Second,
+	})
+}
+
+func waitForARCSignedInPrefPersistedAtPath(ctx context.Context, prefsPath string, opts *testing.PollOptions) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		persisted, err := isARCSignedInPrefPersisted(prefsPath)
+		if err != nil {
+			return err
+		}
+		if !persisted {
+			return errors.New("arc.signedin is not true on disk yet")
+		}
+		return nil
+	}, opts)
 }
 
 func reSignInAndVerifyPreMigrationData(ctx context.Context, s *testing.State, creds chrome.Creds, normalizedUser string) {
