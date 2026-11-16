@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/flashrom"
 	remote_dut "go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -164,8 +165,20 @@ func BackupECFirmware(ctx context.Context, h *Helper) (*BackupState, error) {
 
 	testing.ContextLog(ctx, "Backup EC firmware")
 	backupState.backupPath = fmt.Sprintf("%s/ec_backup.bin", backupState.remoteTempDir)
-	if err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", backupState.backupPath).Run(ssh.DumpLogOnError); err != nil {
-		return nil, errors.Join(errors.Wrap(err, "failed taking ec backup"), backupState.Close(ctx, h))
+	var flashromCfg flashrom.Config
+	flashromInst, probeCtx, shutdown, _, err := flashromCfg.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerEc, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	if err != nil {
+		return nil, errors.Join(errors.Wrap(err, "probing EC flashrom"), shutdown(), backupState.Close(ctx, h))
+	}
+	if _, err := flashromInst.Read(probeCtx, backupState.backupPath, nil); err != nil {
+		return nil, errors.Join(errors.Wrap(err, "failed taking ec backup"), shutdown(), backupState.Close(ctx, h))
+	}
+	if err := shutdown(); err != nil {
+		return nil, errors.Join(errors.Wrap(err, "shutting down EC flashrom"), backupState.Close(ctx, h))
 	}
 	return &backupState, nil
 }
