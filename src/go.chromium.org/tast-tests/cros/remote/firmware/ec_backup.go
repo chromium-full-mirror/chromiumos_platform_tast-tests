@@ -7,6 +7,8 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -65,9 +67,10 @@ func (bs *BackupState) RemoteTempDir() string {
 	return bs.remoteTempDir
 }
 
-func waitForReboot(ctx context.Context, bootID string, h *Helper) error {
+func waitForReboot(ctx context.Context, bootID string, h *Helper, opts ...WaitConnectOption) error {
+	wcOpts := append([]WaitConnectOption{ResetEthernetDongle}, opts...)
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := h.WaitConnect(ctx, ResetEthernetDongle); err != nil {
+		if err := h.WaitConnect(ctx, wcOpts...); err != nil {
 			return errors.Wrap(err, "failed to connect")
 		}
 
@@ -85,6 +88,112 @@ func waitForReboot(ctx context.Context, bootID string, h *Helper) error {
 		Timeout:  2 * time.Minute,
 		Interval: 2 * time.Second,
 	})
+}
+
+var ecConsoleDigestRe = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+func readECRWHashOnDUT(ctx context.Context, d *dut.DUT) ([]byte, error) {
+	ec := NewECTool(d, ECToolNameMain)
+	if err := ec.Command(ctx, "echash", "start", "rw").Run(ssh.DumpLogOnError); err != nil {
+		return nil, errors.Wrap(err, "starting EC RW hash")
+	}
+	var digest []byte
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, err := ec.Hash(ctx)
+		if err != nil {
+			return err
+		}
+		if info.Status != "done" {
+			return errors.Errorf("echash status is %q, want done", info.Status)
+		}
+		digest = []byte(info.Hash)
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+		return nil, errors.Wrap(err, "waiting for EC RW hash")
+	}
+	return digest, nil
+}
+
+// FlashECViaServo copies dutImagePath from the DUT to the Servo host, flashes
+// it with flash_ec while keeping the AP off in G3 (--try_apshutdown) so early
+// AP software sync cannot overwrite EC RW, and returns the post-flash EC RW
+// SHA-256 hex digest read from the EC console.
+func FlashECViaServo(ctx context.Context, h *Helper, dutImagePath string) (hashAfter []byte, retErr error) {
+	if err := h.RequireServo(ctx); err != nil {
+		return nil, errors.Wrap(err, "requiring servo")
+	}
+	localTmpDir, err := os.MkdirTemp("", "ecflash-*")
+	if err != nil {
+		return nil, errors.Wrap(err, "creating local temp dir")
+	}
+	defer func() {
+		retErr = errors.Join(retErr, os.RemoveAll(localTmpDir))
+	}()
+	localImagePath := filepath.Join(localTmpDir, "ec.bin")
+	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), dutImagePath, localImagePath, linuxssh.DereferenceSymlinks); err != nil {
+		return nil, errors.Wrap(err, "copying EC image from DUT")
+	}
+
+	servoTmpOut, err := h.ServoProxy.OutputCommand(ctx, true, "mktemp", "-d", "/tmp/ecflash.XXXXXX")
+	if err != nil {
+		return nil, errors.Wrap(err, "creating servo temp dir")
+	}
+	servoTmpDir := strings.TrimSpace(string(servoTmpOut))
+	defer func() {
+		rmCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 15*time.Second)
+		defer cancel()
+		if err := h.ServoProxy.RunCommand(rmCtx, true, "rm", "-rf", servoTmpDir); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "removing servo temp dir"))
+		}
+	}()
+	servoImagePath := filepath.Join(servoTmpDir, "ec.bin")
+	if err := h.ServoProxy.PutFiles(ctx, true, map[string]string{localImagePath: servoImagePath}); err != nil {
+		return nil, errors.Wrap(err, "copying EC image to servo host")
+	}
+
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to close RPC connection before flash_ec: ", err)
+	}
+
+	args := []string{
+		fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()),
+		fmt.Sprintf("--image=%s", servoImagePath),
+		"--verify",
+		"--try_apshutdown",
+	}
+	var flashErr error
+	for attempt := 1; attempt <= 2; attempt++ {
+		flashErr = h.ServoProxy.RunCommand(ctx, true, "flash_ec", args...)
+		if flashErr == nil {
+			break
+		}
+		testing.ContextLogf(ctx, "flash_ec attempt %d failed: %v", attempt, flashErr)
+	}
+	if flashErr != nil {
+		return nil, errors.Wrap(flashErr, "running flash_ec on servo host")
+	}
+	if err := h.RestoreServoPower(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to restore servo power after flash_ec: ", err)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.RunECCommandGetOutput(ctx, "hash", []string{`Digest:\s+(\([^)]+\)|[0-9a-f]{64})`})
+		if err != nil {
+			return errors.Wrap(err, "reading hash from EC console")
+		}
+		val := strings.TrimSpace(out[0][1])
+		if !ecConsoleDigestRe.MatchString(val) {
+			if val == "(invalid)" || val == "(aborting)" {
+				_ = h.Servo.RunECCommand(ctx, "hash rw")
+			}
+			return errors.Errorf("EC hash not ready: %s", val)
+		}
+		hashAfter = []byte(val)
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		return nil, errors.Wrap(err, "polling post-flash EC hash over servo")
+	}
+	return hashAfter, nil
 }
 
 // Restore flashes the backup of the firmware to the DUT.
@@ -105,6 +214,27 @@ func (bs *BackupState) Flash(ctx context.Context, h *Helper, imagePath string) (
 	bootID, err := remote_dut.ReadBootID(ctx, bs.dut.Conn())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get bootid")
+	}
+
+	losesPower, err := h.LosesPowerOnECReset(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "checking if DUT loses power on EC reset")
+	}
+	if losesPower {
+		hashBefore, err = readECRWHashOnDUT(ctx, bs.dut)
+		if err != nil {
+			return nil, nil, err
+		}
+		hashAfter, err = FlashECViaServo(ctx, h, imagePath)
+		if err != nil {
+			return nil, nil, err
+		}
+		h.PowerOnDUT(ctx)
+		testing.ContextLog(ctx, "Wait for reboot after servo EC flash")
+		if err := waitForReboot(ctx, bootID, h, SkipPDRoleSnk); err != nil {
+			return nil, nil, errors.Wrap(err, "DUT didn't reboot after servo EC flash")
+		}
+		return hashBefore, hashAfter, nil
 	}
 
 	if err := bs.dut.Conn().CommandContext(ctx, "bash", "-c", fmt.Sprintf("stdbuf -oL -eL nohup '%[1]s/ecflash.sh' '%[2]s' &>'%[1]s/ecflash.log' & exit", bs.RemoteTempDir(), imagePath)).Run(ssh.DumpLogOnError); err != nil {

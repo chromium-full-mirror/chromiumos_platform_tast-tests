@@ -288,3 +288,81 @@ func TestEnsureDUTBootedWakesFromResetErrorViaPowerKey(t *gotesting.T) {
 		t.Fatalf("DUT remained in %q; expected EnsureDUTBooted to fall back to PowerStateOn/PowerKey", gotPwr)
 	}
 }
+
+func TestIsBatteryLessUSBCTCPC(t *gotesting.T) {
+	const boxyPSI = `Device: Line Power
+  path:                    /sys/class/power_supply/CROS_USBPD_CHARGER0
+  online:                  yes
+  type:                    USB_PD
+  enum type:               AC
+`
+	const mainsPSI = `Device: Line Power
+  path:                    /sys/class/power_supply/AC
+  online:                  yes
+  type:                    Mains
+  enum type:               AC
+`
+	for _, tc := range []struct {
+		name       string
+		sysfs      string
+		psi        string
+		pdChipInfo string
+		want       bool
+	}{
+		{
+			name:       "boxy_usbc_only_tcpc",
+			sysfs:      "AC\nCROS_USBPD_CHARGER0\nCROS_USBPD_CHARGER1\n",
+			psi:        boxyPSI,
+			pdChipInfo: "vendor_id: 0x48d\nproduct_id: 0x8320\ndriver_name: UNSUPPORTED\n",
+			want:       true,
+		},
+		{
+			name:       "hybrid_chromebox_with_dedicated_barrel_jack",
+			sysfs:      "AC\nCROS_DEDICATED_CHARGER\nCROS_USBPD_CHARGER0\n",
+			psi:        boxyPSI,
+			pdChipInfo: "driver_name: UNSUPPORTED\n",
+			want:       false,
+		},
+		{
+			name:       "pure_barrel_jack_no_usbpd",
+			sysfs:      "AC\n",
+			psi:        mainsPSI,
+			pdChipInfo: "",
+			want:       false,
+		},
+		{
+			name:       "acpi_barrel_jack_mains_type",
+			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
+			psi:        mainsPSI,
+			pdChipInfo: "driver_name: UNSUPPORTED\n",
+			want:       false,
+		},
+		{
+			name:       "usbc_only_with_rts54_pdc",
+			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
+			psi:        boxyPSI,
+			pdChipInfo: "vendor_id: 0x10ec\ndriver_name: 'realtek,rts54-pdc'\n",
+			want:       false,
+		},
+		{
+			name:       "usbc_only_with_tps6699_pdc",
+			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
+			psi:        boxyPSI,
+			pdChipInfo: "vendor_id: 0x0451\ndriver_name: 'ti,tps6699-pdc'\n",
+			want:       false,
+		},
+		{
+			name:       "empty_quoted_driver_name_is_tcpc",
+			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
+			psi:        boxyPSI,
+			pdChipInfo: "driver_name: ''\n",
+			want:       true,
+		},
+	} {
+		t.Run(tc.name, func(t *gotesting.T) {
+			if got := isBatteryLessUSBCTCPC(tc.sysfs, tc.psi, tc.pdChipInfo); got != tc.want {
+				t.Errorf("isBatteryLessUSBCTCPC() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

@@ -323,6 +323,12 @@ func (h *Helper) powerOnDUT(ctx context.Context, hasEC bool) {
 	}
 }
 
+// PowerOnDUT powers on a ChromeEC DUT from G3/S5 via power_state:on, falling
+// back to pressing the power key if needed.
+func (h *Helper) PowerOnDUT(ctx context.Context) {
+	h.powerOnDUT(ctx, true)
+}
+
 // EnsureDUTBooted checks the power state, and attempts to boot the DUT if it is off.
 func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
 	if h.DUT != nil {
@@ -1805,6 +1811,65 @@ func (h *Helper) CheckBatteryAvailable(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+var (
+	linePowerTypeRe = regexp.MustCompile(`(?m)^\s*type:\s*(\S+)`)
+	pdDriverNameRe  = regexp.MustCompile(`(?m)^\s*driver_name:\s*(\S+)`)
+)
+
+func isBatteryLessUSBCTCPC(sysfsEntries, powerSupplyInfo, pdChipInfo string) bool {
+	hasUSBPD := false
+	for _, entry := range strings.Split(sysfsEntries, "\n") {
+		switch strings.TrimSpace(entry) {
+		case "CROS_DEDICATED_CHARGER":
+			return false
+		case "CROS_USBPD_CHARGER0":
+			hasUSBPD = true
+		}
+	}
+	if !hasUSBPD {
+		return false
+	}
+	if m := linePowerTypeRe.FindStringSubmatch(powerSupplyInfo); m != nil && m[1] == "Mains" {
+		return false
+	}
+	if m := pdDriverNameRe.FindStringSubmatch(pdChipInfo); m != nil {
+		driver := strings.Trim(m[1], "'\"")
+		if driver != "" && driver != "UNSUPPORTED" {
+			return false
+		}
+	}
+	return true
+}
+
+// LosesPowerOnECReset reports whether an EC reset or sysjump drops DUT input
+// power: true only on battery-less devices with no barrel jack that use an
+// EC-driven TCPC rather than a standalone PDC.
+func (h *Helper) LosesPowerOnECReset(ctx context.Context) (bool, error) {
+	hasBattery, err := h.CheckBatteryAvailable(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "checking battery availability")
+	}
+	if hasBattery {
+		return false, nil
+	}
+	sysfsOut, err := h.DUT.Conn().CommandContext(ctx, "ls", "-1", "/sys/class/power_supply").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "listing /sys/class/power_supply")
+	}
+	psiOut, err := h.DUT.Conn().CommandContext(ctx, "power_supply_info").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "running power_supply_info")
+	}
+	if !isBatteryLessUSBCTCPC(string(sysfsOut), string(psiOut), "") {
+		return false, nil
+	}
+	pdOut, err := NewECTool(h.DUT, ECToolNameMain).Command(ctx, "pdchipinfo", "0").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "running ectool pdchipinfo 0")
+	}
+	return isBatteryLessUSBCTCPC(string(sysfsOut), string(psiOut), string(pdOut)), nil
 }
 
 // CheckChgFrmPwrSuppInfo compares the ac status from the remote
