@@ -675,8 +675,15 @@ func (ms *Ms365) InstallPWA(ctx context.Context, cr *chrome.Chrome) error {
 	defer installCancel()
 	var installed bool
 	const installExpr = `(async () => {
-		const {CloudUploadBrowserProxy} = await import('chrome://cloud-upload/cloud_upload_browser_proxy.js');
-		const res = await CloudUploadBrowserProxy.getInstance().handler.installOfficeWebApp();
+		const mojom = await import('chrome://cloud-upload/cloud_upload.mojom-webui.js');
+		let handler;
+		if (mojom.browserProxyFactory) {
+			handler = mojom.browserProxyFactory.getInstance().handler;
+		} else {
+			const {CloudUploadBrowserProxy} = await import('chrome://cloud-upload/cloud_upload_browser_proxy.js');
+			handler = CloudUploadBrowserProxy.getInstance().handler;
+		}
+		const res = await handler.installOfficeWebApp();
 		return res.installed;
 	})()`
 	if err := conn.Eval(installCtx, installExpr, &installed); err != nil {
