@@ -138,10 +138,23 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
 		s.Fatal("Failed to verify EC active copy: ", err)
 	}
+	if !fwCommon.GBBFlagsContains(oldGBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+		backupState.ShouldRestoreFirmware = false
+	}
 
 	if features, err := h.DUT.Conn().CommandContext(ctx, "ectool", "inventory").Output(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to get features: ", err)
 	} else if bytes.Contains(features, []byte("\n38 ")) { // EC_FEATURE_EFS2 == 38
+		losesPower, err := h.LosesPowerOnECReset(ctx)
+		if err != nil {
+			s.Fatal("Failed to check if DUT loses power on EC reset: ", err)
+		}
+		if losesPower {
+			// On VBUS loss during reboot ap-off, Cr50 loses its RAM-only
+			// ec_comm corrupt change and EC cold-reset clears ap-off.
+			s.Log("Skipping ec_comm corrupt check: EC reset drops VBUS")
+			return
+		}
 		s.Log("Checking for NORMAL boot mode")
 		if err := h.Servo.CheckGSCBootMode(ctx, []string{"NORMAL", "Verified"}); err != nil {
 			s.Fatal("Incorrect boot mode: ", err)
