@@ -378,6 +378,26 @@ func flashCorruptEC(ctx context.Context, h *firmware.Helper, imagePath, shellPat
 	}
 	testing.ContextLogf(ctx, "hashBefore: %q", hashBefore)
 
+	losesPower, err := h.LosesPowerOnECReset(ctx)
+	if err != nil {
+		return errors.Wrap(err, "checking if DUT loses power on EC reset")
+	}
+	if losesPower {
+		hashAfter, err := firmware.FlashECViaServo(ctx, h, imagePath)
+		if err != nil {
+			return errors.Wrap(err, "flashing corrupt EC via servo")
+		}
+		if bytes.Equal(hashAfter, hashBefore) {
+			return errors.Errorf("the EC hash remained unchanged: %s", string(hashAfter))
+		}
+		testing.ContextLogf(ctx, "Corrupt hash: %s, Original hash: %s", string(hashAfter), string(hashBefore))
+		h.PowerOnDUT(ctx)
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+			return errors.Wrap(err, "DUT failed to reach S0 after flashing corrupt EC via servo")
+		}
+		return nil
+	}
+
 	defer func() {
 		testing.ContextLog(ctx, "Rebooting the DUT with EC reboot command")
 		if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
