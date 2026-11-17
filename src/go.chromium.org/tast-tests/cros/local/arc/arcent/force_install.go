@@ -279,6 +279,10 @@ func IsAnyAppInCatalog(ctx context.Context, d *ui.Device) bool {
 		ui.ResourceID("com.android.vending:id/mini_blurb"),
 		ui.ResourceID("com.android.vending:id/play_card"),
 		ui.DescriptionContains("Install"),
+		// App cards in the current Play Store UI have multi-line descriptions like
+		// "Google Keep - Notes and lists\nStar rating: 4.3\n". DescriptionContains
+		// doesn't match across lines, so use a regex with the (?s) flag.
+		ui.DescriptionMatches(`(?s).*Star rating: .*`),
 		ui.Text("Install"),
 		ui.Text("Apps"),
 	}

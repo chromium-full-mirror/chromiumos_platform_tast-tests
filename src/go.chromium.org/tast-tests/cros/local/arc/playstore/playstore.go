@@ -124,6 +124,7 @@ func FindAndDismissPrompts(ctx context.Context, d *ui.Device) error {
 		trialOfPlayPassText       = "Get a 1-month trial of Google Play Pass"
 		tryGooglePlayText         = "Try Google Play.*"
 		stayInLoopText            = "Want to stay in the loop.*"
+		playPointsText            = "Introducing Google Play Points"
 
 		acceptButtonText       = "accept"
 		gotItButtonText        = "got it"
@@ -170,6 +171,8 @@ func FindAndDismissPrompts(ctx context.Context, d *ui.Device) error {
 		{stayInLoopText, notNowButtonText},
 		// Press "Not now" to dismiss if the dialog of "Play more and spend less with Play Pass" pops up.
 		{playMoreText, notNowButtonText},
+		// Press "Not now" to dismiss if the dialog of "Introducing Google Play Points" pops up.
+		{playPointsText, notNowButtonText},
 	}
 
 	dialogObjects := make([]*ui.Object, 0, len(prompts))
