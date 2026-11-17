@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Attr:         []string{"group:intel-flashing"},
-		Fixture:      fixture.DevModeGBB,
+		Fixture:      fixture.DevMode,
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{{
 			Name: "type_c",
