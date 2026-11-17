@@ -11,9 +11,11 @@ package bundlemain
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -221,98 +223,166 @@ func (g *interTestGC) beforeTest(gc func()) {
 
 var bundleGC interTestGC
 
+func runParallel(fns ...func()) {
+	var (
+		wg       sync.WaitGroup
+		once     sync.Once
+		panicked bool
+		panicMsg string
+	)
+	wg.Add(len(fns))
+	for _, fn := range fns {
+		go func(f func()) {
+			defer wg.Done()
+			defer func() {
+				// usercode.SafeCall only recovers panics on the TestHook
+				// goroutine, so capture the first worker panic with its stack
+				// and re-panic on the caller goroutine after wg.Wait().
+				if r := recover(); r != nil {
+					once.Do(func() {
+						panicked = true
+						panicMsg = fmt.Sprintf("%v\n%s", r, debug.Stack())
+					})
+				}
+			}()
+			f()
+		}(fn)
+	}
+	wg.Wait()
+	if panicked {
+		panic(panicMsg)
+	}
+}
+
 func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx context.Context, s *testing.TestHookState) {
 	bundleGC.beforeTest(runtime.GC)
 
-	endLogFn, err := syslog.CollectSyslog()
-	if err != nil {
-		s.Log("Saving log position: ", err)
-	}
+	var (
+		endLogFn        func(context.Context, string) error
+		checkFreeSpace  bool
+		freeSpaceBefore uint64
+		hwsecDACounter  uint
+		hwsecTPMStatus  *hwsec.NonsensitiveStatusInfo
+	)
 
-	// Ensure disk space and record the current free space.
-	checkFreeSpace := false
-	freeSpaceBefore, err := ensureDiskSpace(ctx, s.Purgeable)
-	if err != nil {
-		s.Log("Failed to ensure disk space: ", err)
-	} else {
-		checkFreeSpace = true
-		if freeSpaceBefore < bundleutil.LowSpaceThreshold() {
-			s.Logf("Low disk space before starting test: %d MiB available", freeSpaceBefore/mib)
-		}
-	}
-
-	if err := crash.MarkTestInProgress(ctx, s.TestName()); err != nil {
-		s.Log("Failed to mark crash test in progress: ", err)
-	}
-
-	// Wait for Internet connectivity, unless the ehide tool is on.
-	ehideIsOn, err := ehide.IsOn(ctx)
-	if err != nil {
-		s.Log("Failed to check ehide state: ", err)
-	}
-	if !ehideIsOn {
-		if err := shill.WaitForOnline(ctx); err != nil {
-			s.Log("Failed to wait for Internet connectivity: ", err)
-		}
-	}
-
-	// Store current DA value before running the tast.
-	hwsecDACounter, err := hwsecGetDACounter(ctx)
-	if err != nil {
-		s.Log("Failed to get TPM DA counter: ", err)
-		// Assume the counter value is zero when we failed to get the DA counter.
-		hwsecDACounter = uint(0)
-	}
-
-	// Store current TPM status before running the tast.
-	hwsecTpmStatus, err := hwsecGetTPMStatus(ctx)
-	if err != nil {
-		s.Log("Failed to get TPM status: ", err)
-		hwsecTpmStatus = nil
-	}
+	// TestHookState methods are goroutine-safe (backed by EntityStream's mutex),
+	// so independent hook steps can run and log concurrently.
+	runParallel(
+		func() {
+			var err error
+			endLogFn, err = syslog.CollectSyslog()
+			if err != nil {
+				s.Log("Saving log position: ", err)
+			}
+		},
+		func() {
+			// Ensure disk space and record the current free space.
+			var err error
+			freeSpaceBefore, err = ensureDiskSpace(ctx, s.Purgeable)
+			if err != nil {
+				s.Log("Failed to ensure disk space: ", err)
+			} else {
+				checkFreeSpace = true
+				if freeSpaceBefore < bundleutil.LowSpaceThreshold() {
+					s.Logf("Low disk space before starting test: %d MiB available", freeSpaceBefore/mib)
+				}
+			}
+		},
+		func() {
+			if err := crash.MarkTestInProgress(ctx, s.TestName()); err != nil {
+				s.Log("Failed to mark crash test in progress: ", err)
+			}
+		},
+		func() {
+			// Wait for Internet connectivity, unless the ehide tool is on.
+			ehideIsOn, err := ehide.IsOn(ctx)
+			if err != nil {
+				s.Log("Failed to check ehide state: ", err)
+			}
+			if !ehideIsOn {
+				if err := shill.WaitForOnline(ctx); err != nil {
+					s.Log("Failed to wait for Internet connectivity: ", err)
+				}
+			}
+		},
+		func() {
+			// Store current DA value before running the tast.
+			var err error
+			hwsecDACounter, err = hwsecGetDACounter(ctx)
+			if err != nil {
+				s.Log("Failed to get TPM DA counter: ", err)
+				// Assume the counter value is zero when we failed to get the DA counter.
+				hwsecDACounter = uint(0)
+			}
+		},
+		func() {
+			// Store current TPM status before running the tast.
+			var err error
+			hwsecTPMStatus, err = hwsecGetTPMStatus(ctx)
+			if err != nil {
+				s.Log("Failed to get TPM status: ", err)
+				hwsecTPMStatus = nil
+			}
+		},
+	)
 
 	return func(ctx context.Context, s *testing.TestHookState) {
-		// Ensure the TPM is in the expect state after tast finish.
-		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
-			if errors.Is(err, exec.ErrNotFound) {
-				s.Log("Ignoring TPM error: ", err)
-			} else {
-				s.Error("Failed to check TPM state: ", err)
-			}
-		}
+		hadError := s.HasError()
+		runParallel(
+			func() {
+				// Ensure the TPM is in the expect state after tast finish.
+				if err := hwsecCheckTPMState(ctx, hwsecTPMStatus, hwsecDACounter); err != nil {
+					if errors.Is(err, exec.ErrNotFound) {
+						s.Log("Ignoring TPM error: ", err)
+					} else {
+						s.Error("Failed to check TPM state: ", err)
+						// Collect faillog when the TPM check itself fails a passing test,
+						// since only pre-existing failures run faillog.Save in parallel.
+						if !hadError {
+							faillog.Save(ctx)
+						}
+					}
+				}
+			},
+			func() {
+				if hadError {
+					faillog.Save(ctx)
+				}
+			},
+			func() {
+				if endLogFn != nil {
+					if err := endLogFn(ctx, s.OutDir()); err != nil {
+						s.Log("Failed to copy logs: ", err)
+					}
+				}
+			},
+			func() {
+				if err := crash.MarkTestDone(ctx, s.TestName()); err != nil {
+					s.Log("Failed to unmark crash test in progress file: ", err)
+				}
+			},
+			func() {
+				if !checkFreeSpace {
+					return
+				}
+				freeSpaceAfter, err := disk.FreeSpace(statefulPartition)
+				if err != nil {
+					s.Log("Failed to read the amount of free disk space: ", err)
+					freeSpaceAfter = freeSpaceBefore
+				}
 
-		if s.HasError() {
-			faillog.Save(ctx)
-		}
+				var spaceUsage uint64
+				if freeSpaceBefore < freeSpaceAfter {
+					spaceUsage = 0
+				} else {
+					spaceUsage = freeSpaceBefore - freeSpaceAfter
+				}
 
-		if endLogFn != nil {
-			if err := endLogFn(ctx, s.OutDir()); err != nil {
-				s.Log("Failed to copy logs: ", err)
-			}
-		}
-
-		if err := crash.MarkTestDone(ctx, s.TestName()); err != nil {
-			s.Log("Failed to unmark crash test in progress file: ", err)
-		}
-
-		if checkFreeSpace {
-			freeSpaceAfter, err := disk.FreeSpace(statefulPartition)
-			if err != nil {
-				s.Log("Failed to read the amount of free disk space: ", err)
-				freeSpaceAfter = freeSpaceBefore
-			}
-
-			var spaceUsage uint64
-			if freeSpaceBefore < freeSpaceAfter {
-				spaceUsage = 0
-			} else {
-				spaceUsage = freeSpaceBefore - freeSpaceAfter
-			}
-
-			if spaceUsage > spaceUsageThreshold {
-				s.Logf("Stateful partition usage: %d MiB (%d MiB free -> %d MiB free)", spaceUsage/mib, freeSpaceBefore/mib, freeSpaceAfter/mib)
-			}
-		}
+				if spaceUsage > spaceUsageThreshold {
+					s.Logf("Stateful partition usage: %d MiB (%d MiB free -> %d MiB free)", spaceUsage/mib, freeSpaceBefore/mib, freeSpaceAfter/mib)
+				}
+			},
+		)
 	}
 }
 

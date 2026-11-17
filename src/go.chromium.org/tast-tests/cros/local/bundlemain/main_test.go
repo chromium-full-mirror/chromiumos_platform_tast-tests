@@ -9,9 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
 
@@ -483,5 +486,88 @@ func TestMissingTPMManagerClient(t *testing.T) {
 	}
 	if err := hwsecCheckTPMState(t.Context(), nil, 0); !errors.Is(err, exec.ErrNotFound) {
 		t.Errorf("hwsecCheckTPMState() = %v, want %v", err, exec.ErrNotFound)
+	}
+}
+
+func TestRunParallel(t *testing.T) {
+	runParallel()
+
+	const workers = 6
+	var arrived atomic.Int32
+	var ran [workers]atomic.Int32
+	allStarted := make(chan struct{})
+
+	fns := make([]func(), workers)
+	for i := 0; i < workers; i++ {
+		i := i
+		fns[i] = func() {
+			if arrived.Add(1) == workers {
+				close(allStarted)
+			}
+			select {
+			case <-allStarted:
+			case <-time.After(5 * time.Second):
+				t.Errorf("runParallel() concurrent goroutines = %d, want %d (timed out)", arrived.Load(), workers)
+			}
+			ran[i].Add(1)
+		}
+	}
+
+	runParallel(fns...)
+	for i := range ran {
+		if got := ran[i].Load(); got != 1 {
+			t.Errorf("runParallel(): worker %d ran %d times, want 1", i, got)
+		}
+	}
+}
+
+func TestRunParallelPanic(t *testing.T) {
+	var siblingDone atomic.Bool
+	var gotPanic any
+
+	func() {
+		defer func() {
+			gotPanic = recover()
+		}()
+		runParallel(
+			func() {
+				panic("first boom")
+			},
+			func() {
+				panic("second boom")
+			},
+			func() {
+				siblingDone.Store(true)
+			},
+		)
+	}()
+
+	if !siblingDone.Load() {
+		t.Error("runParallel() returned before sibling worker finished")
+	}
+	msg, ok := gotPanic.(string)
+	if !ok {
+		t.Fatalf("recovered panic = %#v (%T), want string", gotPanic, gotPanic)
+	}
+	if !strings.Contains(msg, "first boom") && !strings.Contains(msg, "second boom") {
+		t.Errorf("recovered panic = %q, want worker panic message", msg)
+	}
+	if !strings.Contains(msg, "TestRunParallelPanic") {
+		t.Errorf("recovered panic = %q, want worker stack trace containing TestRunParallelPanic", msg)
+	}
+}
+
+func TestRunParallelGoexit(t *testing.T) {
+	var siblingDone atomic.Bool
+	runParallel(
+		func() {
+			runtime.Goexit()
+		},
+		func() {
+			siblingDone.Store(true)
+		},
+	)
+	if !siblingDone.Load() {
+		t.Error("runParallel() did not wait for sibling worker when another called runtime.Goexit")
 	}
 }
