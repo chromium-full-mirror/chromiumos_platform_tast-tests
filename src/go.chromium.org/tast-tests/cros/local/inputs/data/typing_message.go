@@ -137,6 +137,11 @@ var TypingMessageHello = typingMessage{
 		LocationKeySeq:  strings.Split("wmp", ""),
 		ExpectedText:    "ไทย",
 	},
+	ime.ThaiWithKedmaneeKeyboard: {
+		CharacterKeySeq: []string{"ไ", "ท", "ย"},
+		LocationKeySeq:  strings.Split("wmp", ""),
+		ExpectedText:    "ไทย",
+	},
 	ime.VietnameseTelex: {
 		CharacterKeySeq: strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvxz w 0123456789-=[]\\;',./", ""),
 		LocationKeySeq:  strings.Split("tranaf ajs aeiouy bcdfghjklmnpqrstvxz w 0123456789-=[]\\;',./", ""),

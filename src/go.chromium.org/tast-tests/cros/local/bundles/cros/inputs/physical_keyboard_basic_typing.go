@@ -45,6 +45,7 @@ var pkTypingTestIMEs = []ime.InputMethod{
 	ime.SpanishSpain,
 	ime.Swedish,
 	ime.ThaiTis,
+	ime.ThaiWithKedmaneeKeyboard,
 }
 
 var pkTypingTestMessages = []data.Message{data.TypingMessageHello}

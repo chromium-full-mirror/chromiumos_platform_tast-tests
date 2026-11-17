@@ -44,6 +44,7 @@ var vkTypingTestIMEs = []ime.InputMethod{
 	ime.Myanmar,
 	ime.Sinhala,
 	ime.ThaiTis,
+	ime.ThaiWithKedmaneeKeyboard,
 }
 
 var vkTypingTestMessages = []data.Message{data.TypingMessageHello}
