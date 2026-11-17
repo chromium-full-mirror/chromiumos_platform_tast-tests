@@ -545,8 +545,8 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		configFile := strings.Replace(ecRWFile, ".bin", ".config", 1)
 		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
 		defer cancel()
-		err := h.DUT.Conn().CommandContext(shortCtx, "test", "-f", configFile).Run(ssh.DumpLogOnError)
-		if err != nil {
+		err := h.DUT.Conn().CommandContext(shortCtx, "test", "-f", configFile).Run()
+		if err == nil {
 			args = append(args, "--ec_config", configFile)
 		}
 		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
