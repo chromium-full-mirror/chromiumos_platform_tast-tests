@@ -541,7 +541,7 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 	}
 	// Pack EC-RW into merged.bin
 	if ecRWFile != "" {
-		args := []string{"-i", mergedAPFile, "-e", ecRWFile}
+		args := []string{"swap_cbfs_file", "-i", mergedAPFile, "-e", ecRWFile}
 		configFile := strings.Replace(ecRWFile, ".bin", ".config", 1)
 		shortCtx, cancel := context.WithTimeout(ctx, execTimeout)
 		defer cancel()
@@ -551,9 +551,9 @@ func FWAutoupdate(ctx context.Context, s *testing.State) {
 		}
 		shortCtx, cancel = context.WithTimeout(ctx, execTimeout)
 		defer cancel()
-		err = h.DUT.Conn().CommandContext(shortCtx, "/usr/share/vboot/bin/swap_ec_rw", args...).Run(ssh.DumpLogOnError)
+		err = h.DUT.Conn().CommandContext(shortCtx, "futility", args...).Run(ssh.DumpLogOnError)
 		if err != nil {
-			s.Fatalf("Failed to swap_ec_rw: %+v", err)
+			s.Fatalf("Failed to futility swap_cbfs_file: %+v", err)
 		}
 	}
 	// Pack EC-RW into ec.bin
