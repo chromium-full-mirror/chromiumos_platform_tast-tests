@@ -92,13 +92,10 @@ func (e *omniboxEnv) disableAim(ctx context.Context, reason string) {
 // does. The omnibox is left unfocused. If the omnibox can't be focused,
 // nothing is typed and it returns an error wrapping errOmniboxNotFocused.
 func (e *omniboxEnv) revertOmnibox(ctx context.Context) error {
-	if _, err := e.focusOmnibox(ctx); err != nil {
-		return err
-	}
-	if err := e.kw.TypeSequence(ctx, []string{"Backspace", "Esc", "Esc"}); err != nil {
-		return errors.Wrap(err, "failed to revert the omnibox")
-	}
-	return nil
+	return uiauto.Combine("revert the Omnibox",
+		e.focusOmnibox(),
+		e.kw.TypeSequenceAction([]string{"Backspace", "Esc", "Esc"}),
+	)(ctx)
 }
 
 // aimSequence runs the desk-3 omnibox input in the active window: a short
@@ -109,10 +106,8 @@ func (e *omniboxEnv) revertOmnibox(ctx context.Context) error {
 // focused again, the visit just ends.
 func (e *omniboxEnv) aimSequence(ctx context.Context) error {
 	// Classic step. Ctrl+L also shows the on-focus suggestions.
-	if _, err := e.focusOmnibox(ctx); err != nil {
-		return err
-	}
 	if err := uiauto.Combine("type in the omnibox and dismiss the popup",
+		e.focusOmnibox(),
 		e.typeAtCadence("omnit"),
 		e.kw.AccelAction("Esc"),
 	)(ctx); err != nil {
@@ -142,7 +137,7 @@ func (e *omniboxEnv) aimStep(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	text, err := e.focusOmnibox(ctx)
+	text, err := e.focusOmniboxAndGetText(ctx)
 	if err != nil {
 		return err
 	}

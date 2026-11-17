@@ -94,13 +94,21 @@ func (e *omniboxEnv) typeAtCadence(s string) action.Action {
 	}
 }
 
-// focusOmnibox presses Ctrl+L, waits until the omnibox of the active
+// focusOmnibox returns an action that focuses the omnibox in the active window.
+func (e *omniboxEnv) focusOmnibox() action.Action {
+	return func(ctx context.Context) error {
+		_, err := e.focusOmniboxAndGetText(ctx)
+		return err
+	}
+}
+
+// focusOmniboxAndGetText presses Ctrl+L, waits until the omnibox of the active
 // window is focused, and returns its text. Under heavy memory pressure,
 // the omnibox sometimes isn't focused after Ctrl+L, so it tries
 // omniboxFocusAttempts times. It returns an error wrapping
 // errOmniboxNotFocused if the omnibox still isn't focused; the caller
 // must not type then, since the keys would go to the web page.
-func (e *omniboxEnv) focusOmnibox(ctx context.Context) (string, error) {
+func (e *omniboxEnv) focusOmniboxAndGetText(ctx context.Context) (string, error) {
 	var lastErr error
 	for attempt := 1; attempt <= omniboxFocusAttempts; attempt++ {
 		if err := e.kw.Accel(ctx, "Ctrl+L"); err != nil {
@@ -179,6 +187,45 @@ func (e *omniboxEnv) activateNextWindowOnDesk(idx *int) action.Action {
 		return ash.WaitForCondition(ctx, e.tconn, func(win *ash.Window) bool {
 			return win.ID == w.ID && win.IsActive
 		}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}
+}
+
+// ensureActiveWindow activates the topmost visible window on the active desk
+// if no window is currently active.
+func (e *omniboxEnv) ensureActiveWindow() action.Action {
+	return func(ctx context.Context) error {
+		ws, err := ash.FindAllWindows(ctx, e.tconn, func(w *ash.Window) bool {
+			return w.OnActiveDesk
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to get the windows on the active desk")
+		}
+		if len(ws) == 0 {
+			return errors.New("no windows on the active desk")
+		}
+		var topWindow *ash.Window
+		for _, w := range ws {
+			if w.IsActive {
+				return nil
+			}
+			// A lower non-negative StackingOrder indicates a window closer to the top.
+			if w.StackingOrder >= 0 &&
+				(topWindow == nil || w.StackingOrder < topWindow.StackingOrder) {
+				topWindow = w
+			}
+		}
+		if topWindow == nil {
+			return errors.New("no window with a valid stacking order")
+		}
+		if err := topWindow.ActivateWindow(ctx, e.tconn); err != nil {
+			return errors.Wrapf(err, "failed to activate window %d", topWindow.ID)
+		}
+		if err := ash.WaitForCondition(ctx, e.tconn, func(w *ash.Window) bool {
+			return w.ID == topWindow.ID && w.IsActive
+		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+			return errors.Wrapf(err, "failed to wait for window %d to become active", topWindow.ID)
+		}
+		return nil
 	}
 }
 

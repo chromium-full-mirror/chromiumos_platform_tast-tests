@@ -34,10 +34,8 @@ const (
 // classicSequence runs the desk-1 sequence: Ctrl+L; type a corpus string;
 // Down, Down; Esc, Esc.
 func (e *omniboxEnv) classicSequence(ctx context.Context) error {
-	if _, err := e.focusOmnibox(ctx); err != nil {
-		return err
-	}
 	return uiauto.Combine("type in the omnibox and dismiss the popup",
+		e.focusOmnibox(),
 		e.typeAtCadence(e.nextCorpus()),
 		e.kw.TypeSequenceAction([]string{"Down", "Down", "Esc", "Esc"}),
 	)(ctx)
@@ -61,7 +59,10 @@ func (e *omniboxEnv) navigateViaOmnibox(ctx context.Context, n int) error {
 // desk1Action returns the desk-1 action: the classic popup sequence in
 // the active window.
 func (e *omniboxEnv) desk1Action() action.Action {
-	return e.visitAction(e.classicSequence)
+	return e.visitAction(uiauto.Combine("classic popup sequence in the active window",
+		e.ensureActiveWindow(),
+		e.classicSequence,
+	))
 }
 
 // desk2Action returns the desk-2 action: activate the next window on the
@@ -98,7 +99,9 @@ func (e *omniboxEnv) desk4Action() action.Action {
 	return e.visitAction(func(ctx context.Context) error {
 		n := omniboxPagesNav[e.navIdx%len(omniboxPagesNav)]
 		e.navIdx++
-
+		if err := e.ensureActiveWindow()(ctx); err != nil {
+			return err
+		}
 		if err := e.kw.Accel(ctx, "Ctrl+T"); err != nil {
 			return errors.Wrap(err, "failed to open a new tab")
 		}
@@ -110,7 +113,7 @@ func (e *omniboxEnv) desk4Action() action.Action {
 		if err := e.waitForWindowTitleOnActiveDesk(ctx, omniboxNewTabTitle, omniboxNewTabTimeout); err != nil {
 			return errors.Wrap(errOmniboxNotFocused, "the new tab wasn't opened: "+err.Error())
 		}
-		_, inputErr := e.focusOmnibox(ctx)
+		inputErr := e.focusOmnibox()(ctx)
 		if inputErr == nil {
 			inputErr = e.navigateViaOmnibox(ctx, n)
 		}
@@ -157,7 +160,7 @@ func (e *omniboxEnv) openWindowsViaOmnibox(ctx context.Context) (string, error) 
 		e.newWindowLatencies = append(e.newWindowLatencies, time.Since(start))
 
 		// Navigate away from the NTP immediately.
-		if _, err := e.focusOmnibox(ctx); err != nil {
+		if err := e.focusOmnibox()(ctx); err != nil {
 			return "", err
 		}
 		if err := e.navigateViaOmnibox(ctx, n); err != nil {
