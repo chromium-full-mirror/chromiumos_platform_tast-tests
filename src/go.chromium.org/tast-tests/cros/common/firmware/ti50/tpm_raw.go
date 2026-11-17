@@ -381,6 +381,32 @@ func splitFirstAuthResponse(b []byte) (authResp, rest []byte, err error) {
 	return b[:consumed], rem2, nil
 }
 
+// ParseSingleSessionResponse splits a raw TPM_ST_SESSIONS response body (after
+// the 10-byte response header) into its parameter slice and unmarshaled single
+// TPMSAuthResponse entry.
+func ParseSingleSessionResponse(body []byte) (rspParams []byte, authResp *tpm2.TPMSAuthResponse, err error) {
+	if len(body) < 4 {
+		return nil, nil, errors.Errorf("malformed session response: %d body bytes, want at least 4", len(body))
+	}
+	paramSize := binary.BigEndian.Uint32(body[0:4])
+	if uint64(paramSize)+4 > uint64(len(body)) {
+		return nil, nil, errors.Errorf("malformed session response: parameterSize %d exceeds body (%d bytes)", paramSize, len(body))
+	}
+	rspParams = body[4 : 4+paramSize]
+	arBytes, rem, err := splitFirstAuthResponse(body[4+paramSize:])
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "malformed session response auth area")
+	}
+	if len(rem) != 0 {
+		return nil, nil, errors.Errorf("malformed session response: %d trailing bytes after auth area", len(rem))
+	}
+	ar, err := tpm2.Unmarshal[tpm2.TPMSAuthResponse](arBytes)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to unmarshal TPMSAuthResponse")
+	}
+	return rspParams, ar, nil
+}
+
 // ClearControl enables or disables TPM2_Clear execution using auth
 // (TPM_RH_LOCKOUT or TPM_RH_PLATFORM).
 func (t *TpmHandle) ClearControl(auth tpm2.AuthHandle, disable bool) error {

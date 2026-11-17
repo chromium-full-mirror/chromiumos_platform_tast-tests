@@ -229,6 +229,7 @@ func RunTCGSubtest[S TCGTestState](ctx context.Context, s S) {
 	if err := th.InitTestConfig(); err != nil {
 		s.Fatal("Failed to initialize TPM test config: ", err)
 	}
+	th.Config.Chip = b.GscProperties().ChipType()
 	th.ResetCallback = func(ctx context.Context, startup bool) {
 		if err := th.TpmvCommitNvmem(); err != nil {
 			s.Log("TpmvCommitNvmem before reset failed: ", err)

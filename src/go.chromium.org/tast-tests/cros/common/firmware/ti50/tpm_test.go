@@ -309,3 +309,80 @@ func TestTamperedUniqueAndSeedOverride(t *testing.T) {
 		t.Fatal("tamperedUnique(empty RSA Unique) succeeded, want error")
 	}
 }
+
+func TestTpmConfigChipAndKeyGenCurves(t *testing.T) {
+	var nilCfg *TpmConfig
+	if nilCfg.IsChip(GscOT) {
+		t.Fatal("nilCfg.IsChip(GscOT) = true, want false")
+	}
+	if nilCfg.IsKeyGenCurveSupported(tpm2.TPMECCNistP256) {
+		t.Fatal("nilCfg.IsKeyGenCurveSupported(P256) = true, want false")
+	}
+
+	unprobed := &TpmConfig{
+		Chip:         GscOT,
+		ECCCurveList: []tpm2.TPMECCCurve{tpm2.TPMECCNistP256, tpm2.TPMECCNistP384},
+	}
+	if !unprobed.IsChip(GscOT) || unprobed.IsChip(GscH1) {
+		t.Fatalf("unexpected IsChip result for %+v", unprobed)
+	}
+	if !unprobed.IsKeyGenCurveSupported(tpm2.TPMECCNistP384) {
+		t.Fatal("unprobed config should fall back to ECCCurveList")
+	}
+
+	probed := &TpmConfig{
+		Chip:            GscH1,
+		ECCCurveList:    []tpm2.TPMECCCurve{tpm2.TPMECCBNP256, tpm2.TPMECCNistP256, tpm2.TPMECCNistP384},
+		ECCKeyGenCurves: []tpm2.TPMECCCurve{tpm2.TPMECCNistP256},
+		eccProbed:       true,
+	}
+	if !probed.IsCurveSupported(tpm2.TPMECCNistP384) {
+		t.Fatal("IsCurveSupported(P384) = false, want true for advertised curve")
+	}
+	if probed.IsKeyGenCurveSupported(tpm2.TPMECCNistP384) || probed.IsKeyGenCurveSupported(tpm2.TPMECCBNP256) {
+		t.Fatal("IsKeyGenCurveSupported returned true for unimplemented Cr50 curve")
+	}
+	if !probed.IsKeyGenCurveSupported(tpm2.TPMECCNistP256) {
+		t.Fatal("IsKeyGenCurveSupported(P256) = false, want true")
+	}
+}
+
+func TestSoftwareChildPrivateAndParseSingleSessionResponse(t *testing.T) {
+	h := NewTpmHandle(context.Background(), &fakeTPMDevBoard{}, TpmBusSpi)
+	parentPub := ECCStorageParentTemplate(tpm2.TPMAlgSHA256, tpm2.TPMECCNistP256)
+	childTmpl := HMACTemplate(tpm2.TPMAlgSHA256, tpm2.TPMAlgSHA256)
+	childPub, childSens, err := SoftwareSymmetricObject(childTmpl, []byte("auth"), make([]byte, 32), make([]byte, 32))
+	if err != nil {
+		t.Fatalf("SoftwareSymmetricObject failed: %v", err)
+	}
+	priv, err := h.SoftwareChildPrivate(childSens, childPub, parentPub, make([]byte, 32))
+	if err != nil || len(priv.Buffer) == 0 {
+		t.Fatalf("SoftwareChildPrivate failed: len=%d err=%v", len(priv.Buffer), err)
+	}
+
+	// Non-storage parent without AES-CFB must fail.
+	badParent := ECDSAP256Template(tpm2.TPMAlgSHA256, tpm2.TPMAlgSHA256)
+	if _, err := h.SoftwareChildPrivate(childSens, childPub, badParent, make([]byte, 32)); err == nil {
+		t.Fatal("SoftwareChildPrivate with non-storage parent succeeded, want error")
+	}
+
+	ar := tpm2.TPMSAuthResponse{
+		Nonce:         tpm2.TPM2BNonce{Buffer: []byte{1, 2, 3, 4}},
+		Attributes:    tpm2.TPMASession{ContinueSession: true},
+		Authorization: tpm2.TPM2BData{Buffer: []byte{5, 6, 7, 8}},
+	}
+	body := make([]byte, 4)
+	binary.BigEndian.PutUint32(body[0:4], 2)
+	body = append(body, 0xAA, 0xBB)
+	body = append(body, tpm2.Marshal(ar)...)
+	params, parsedAR, err := ParseSingleSessionResponse(body)
+	if err != nil {
+		t.Fatalf("ParseSingleSessionResponse failed: %v", err)
+	}
+	if !bytes.Equal(params, []byte{0xAA, 0xBB}) {
+		t.Fatalf("params = %x, want aabb", params)
+	}
+	if !bytes.Equal(parsedAR.Authorization.Buffer, []byte{5, 6, 7, 8}) {
+		t.Fatalf("Authorization = %x, want 05060708", parsedAR.Authorization.Buffer)
+	}
+}

@@ -93,6 +93,9 @@ func (r *TestRand) ModifyBytes(src []byte) []byte {
 // TpmConfig holds capabilities, supported commands, algorithms, ECC curves,
 // and properties discovered from the TPM under test.
 type TpmConfig struct {
+	// Chip identifies the GSC chip type of the device under test (populated by
+	// the testbed runner when available).
+	Chip ChipType
 	// Commands maps supported TPM command codes to true.
 	Commands map[tpm2.TPMCC]bool
 	// Algs maps supported TPM algorithm IDs to true.
@@ -102,15 +105,20 @@ type TpmConfig struct {
 	// HashAlgs lists all pure hash algorithms supported by both the TPM and Go crypto.
 	HashAlgs []tpm2.TPMAlgID
 	// OaepHashAlgs lists supported hash algorithms whose digest size is at most
-	// 32 bytes. On GSC firmware, sizeof(TPMT_HA) is 34 bytes (2-byte hashAlg +
-	// 32-byte digest), which caps RSA-OAEP and salt-encryption hash digests at
-	// 32 bytes even when SHA-384/SHA-512 are enabled for standalone hashing.
+	// 32 bytes. On GSC firmware, RSA-OAEP and session-salt secret buffers cap
+	// digests at 32 bytes even when SHA-384/SHA-512 are enabled for standalone
+	// hashing.
 	OaepHashAlgs []tpm2.TPMAlgID
 	// Properties maps fixed TPM property tags (PT_FIXED TPM_PT_*) to their
 	// 32-bit values.
 	Properties map[tpm2.TPMPT]uint32
-	// ECCCurveList lists all supported ECC curve IDs in reported order.
+	// ECCCurveList lists all ECC curve IDs advertised in TPM_CAP_ECC_CURVES in
+	// reported order.
 	ECCCurveList []tpm2.TPMECCCurve
+	// ECCKeyGenCurves lists ECC curve IDs from ECCCurveList on which key
+	// generation succeeds (probed via TPM2_CreatePrimary when supported).
+	ECCKeyGenCurves []tpm2.TPMECCCurve
+	eccProbed       bool
 	// RsaKeySizes lists supported RSA key sizes (in bits) discovered via TPM2_TestParms.
 	RsaKeySizes []tpm2.TPMKeyBits
 	// SymDefs lists supported symmetric cipher algorithm/keyBits/mode combinations
@@ -129,7 +137,12 @@ func (t *TpmHandle) logDiscoveryError(format string, args ...any) {
 // InitTestConfig discovers the target TPM configuration via TPM2_GetCapability
 // and ensures the pseudo-random generator on t is initialized and logged.
 func (t *TpmHandle) InitTestConfig() error {
+	var prevChip ChipType
+	if t.Config != nil {
+		prevChip = t.Config.Chip
+	}
 	cfg := &TpmConfig{
+		Chip:          prevChip,
 		Commands:      make(map[tpm2.TPMCC]bool),
 		Algs:          make(map[tpm2.TPMAlgID]bool),
 		AlgProperties: make(map[tpm2.TPMAlgID]tpm2.TPMAAlgorithm),
@@ -199,9 +212,8 @@ func (t *TpmHandle) InitTestConfig() error {
 			cfg.AlgProperties[ap.Alg] = ap.AlgProperties
 			if isPureHashAttribute(ap.AlgProperties) && HashSize(ap.Alg) > 0 {
 				cfg.HashAlgs = append(cfg.HashAlgs, ap.Alg)
-				// GSC firmware builds ms-tpm-20-ref with MAX_DIGEST_SIZE == 32
-				// (sizeof(TPMT_HA) == 34), so RSA-OAEP and salt-encryption hashes
-				// cannot exceed 32-byte digests.
+				// GSC firmware RSA-OAEP and session-salt secret buffers cap digests at
+				// 32 bytes even when SHA-384/SHA-512 are enabled for standalone hashing.
 				if HashSize(ap.Alg) <= 32 {
 					cfg.OaepHashAlgs = append(cfg.OaepHashAlgs, ap.Alg)
 				}
@@ -258,7 +270,10 @@ propLoop:
 		return errors.New("TPM did not report a non-zero TPM_PT_MAX_DIGEST property")
 	}
 
-	// 4. Discover supported ECC curves (if ECC is supported).
+	// 4. Discover supported ECC curves (if ECC is supported), then probe actual
+	// key generation support via TPM2_CreatePrimary in TPM_RH_NULL (some chips
+	// advertise curves in TPM_CAP_ECC_CURVES whose hardware backend rejects key
+	// generation with TPM_RC_RANGE/TPM_RC_VALUE).
 	if cfg.Algs[tpm2.TPMAlgECC] {
 		nextCurve := uint32(0)
 		for {
@@ -294,6 +309,32 @@ propLoop:
 				break
 			}
 			nextCurve = lastCurve + 1
+		}
+		if cfg.Commands[tpm2.TPMCCCreatePrimary] && len(cfg.ECCCurveList) > 1 {
+			cfg.eccProbed = true
+			probeHash := cfg.DefaultHashAlg()
+			for _, c := range cfg.ECCCurveList {
+				probePub := ECDHTemplate(probeHash, c)
+				probePub.ObjectAttributes.FixedTPM = false
+				probePub.ObjectAttributes.FixedParent = false
+				probeCmd := tpm2.CreatePrimary{
+					PrimaryHandle: tpm2.TPMRHNull,
+					InPublic:      tpm2.New2B(probePub),
+				}
+				probeResp, probeErr := probeCmd.Execute(t)
+				if probeErr == nil {
+					t.FlushHandle(probeResp.ObjectHandle)
+					cfg.ECCKeyGenCurves = append(cfg.ECCKeyGenCurves, c)
+					continue
+				}
+				if IsRC(probeErr, tpm2.TPMRCAsymmetric, tpm2.TPMRCValue, tpm2.TPMRCRange, tpm2.TPMRCCurve) {
+					continue
+				}
+				t.logDiscoveryError("TPM2_CreatePrimary curve probe failed on 0x%x: %v", uint16(c), probeErr)
+				return errors.Wrapf(probeErr, "failed to probe ECC curve 0x%x", uint16(c))
+			}
+		} else {
+			cfg.ECCKeyGenCurves = slices.Clone(cfg.ECCCurveList)
 		}
 	}
 
@@ -434,9 +475,28 @@ func (c *TpmConfig) IsHashAlg(alg tpm2.TPMAlgID) bool {
 	return false
 }
 
-// IsCurveSupported reports whether the TPM supports the given ECC curve.
+// IsChip reports whether the TPM under test runs on the specified GSC chip type.
+func (c *TpmConfig) IsChip(chip ChipType) bool {
+	return c != nil && c.Chip == chip
+}
+
+// IsCurveSupported reports whether the TPM advertises the given ECC curve in
+// TPM_CAP_ECC_CURVES.
 func (c *TpmConfig) IsCurveSupported(curve tpm2.TPMECCCurve) bool {
 	return c != nil && slices.Contains(c.ECCCurveList, curve)
+}
+
+// IsKeyGenCurveSupported reports whether key generation is supported on curve.
+// If InitTestConfig probed curves via TPM2_CreatePrimary, it checks
+// ECCKeyGenCurves; otherwise it falls back to ECCCurveList.
+func (c *TpmConfig) IsKeyGenCurveSupported(curve tpm2.TPMECCCurve) bool {
+	if c == nil {
+		return false
+	}
+	if c.eccProbed {
+		return slices.Contains(c.ECCKeyGenCurves, curve)
+	}
+	return slices.Contains(c.ECCCurveList, curve)
 }
 
 // Property returns the value of the requested fixed TPM property (or 0 if not

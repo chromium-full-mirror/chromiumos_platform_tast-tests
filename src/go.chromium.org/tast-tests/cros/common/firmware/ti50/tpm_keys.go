@@ -569,7 +569,7 @@ func (t *TpmHandle) CreateStorageParent(hierarchy tpm2.TPMHandle) (tpm2.AuthHand
 		tmpl = RSAStorageParentTemplate(nameAlg, bits)
 	case t.Config.IsAlgSupported(tpm2.TPMAlgECC):
 		// GSC firmware only supports NIST P-256 for restricted ECC storage parents.
-		if !t.Config.IsCurveSupported(tpm2.TPMECCNistP256) {
+		if !t.Config.IsKeyGenCurveSupported(tpm2.TPMECCNistP256) {
 			return tpm2.AuthHandle{}, nil, errors.New("ECC storage parent requires TPM_ECC_NIST_P256, which is not supported")
 		}
 		tmpl = ECCStorageParentTemplate(nameAlg, tpm2.TPMECCNistP256)
@@ -1094,6 +1094,61 @@ func (t *TpmHandle) ExportPlaintextSensitive(obj tpm2.AuthHandle, policyAlg tpm2
 		return nil, errors.Wrap(err, "failed to unmarshal exported TPM2BSensitive")
 	}
 	return sens2B.Contents()
+}
+
+// SoftwareChildPrivate wraps childSens as a TPM2BPrivate structure directly
+// under a software-known storage parent (parentPub + parentSeed) so the
+// resulting private area can be loaded via TPM2_Load without TPM2_Import.
+func (t *TpmHandle) SoftwareChildPrivate(childSens tpm2.TPMTSensitive, childPub, parentPub tpm2.TPMTPublic, parentSeed []byte) (tpm2.TPM2BPrivate, error) {
+	name, err := ComputeEntityName(childPub)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, err
+	}
+	digestSize := HashSize(childPub.NameAlg)
+	if len(childSens.AuthValue.Buffer) < digestSize {
+		padded := make([]byte, digestSize)
+		copy(padded, childSens.AuthValue.Buffer)
+		childSens.AuthValue.Buffer = padded
+	}
+	sens2B := tpm2.Marshal(tpm2.TPM2BDigest{Buffer: tpm2.Marshal(childSens)})
+
+	var parentSym tpm2.TPMTSymDefObject
+	if rsaDetail, err := parentPub.Parameters.RSADetail(); err == nil {
+		parentSym = rsaDetail.Symmetric
+	} else if eccDetail, err := parentPub.Parameters.ECCDetail(); err == nil {
+		parentSym = eccDetail.Symmetric
+	} else {
+		return tpm2.TPM2BPrivate{}, errors.New("unsupported parent key type for software child wrapping")
+	}
+	aesBits, err := validateAESCFBSymDef(parentSym)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, errors.Wrap(err, "invalid parent symmetric definition")
+	}
+
+	storageKey, err := KDFa(parentPub.NameAlg, parentSeed, "STORAGE", name.Buffer, nil, aesBits)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, err
+	}
+	block, err := aes.NewCipher(storageKey)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, errors.Wrap(err, "failed to create AES cipher")
+	}
+	iv := t.Rand.RandomBytes(block.BlockSize())
+	iv2B := tpm2.Marshal(tpm2.TPM2BIV{Buffer: iv})
+	encSens := make([]byte, len(sens2B))
+	cipher.NewCFBEncrypter(block, iv).XORKeyStream(encSens, sens2B)
+
+	ivAndSens := append(iv2B, encSens...)
+	integrityKey, err := KDFa(parentPub.NameAlg, parentSeed, "INTEGRITY", nil, nil, HashSize(parentPub.NameAlg)*8)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, err
+	}
+	outerHMAC, err := ComputeHMAC(parentPub.NameAlg, integrityKey, ivAndSens, name.Buffer)
+	if err != nil {
+		return tpm2.TPM2BPrivate{}, err
+	}
+	privBuf := append(tpm2.Marshal(tpm2.TPM2BDigest{Buffer: outerHMAC}), ivAndSens...)
+	return tpm2.TPM2BPrivate{Buffer: privBuf}, nil
 }
 
 // CreateAndVerifyTamperedOutPublic creates an object under parent using tmpl and
