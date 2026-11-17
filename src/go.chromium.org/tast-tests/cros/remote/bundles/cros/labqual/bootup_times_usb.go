@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -93,6 +94,10 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("USBKey not working: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Minute)
+	defer cancel()
+
 	switch bootToMode {
 	case fwCommon.BootModeUSBDev:
 		// Set GBB flags for dev boot from USB
@@ -103,6 +108,37 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
 			s.Fatal("ClearAndSetGBBFlags for USB dev boot failed: ", err)
 		}
+
+		// Cleanup.
+		defer func(ctx context.Context) {
+			s.Log("Performing clean up")
+
+			clearFlags := fwpb.GBBFlagsState{
+				Clear: []fwpb.GBBFlag{fwpb.GBBFlag_FORCE_DEV_BOOT_USB, fwpb.GBBFlag_FORCE_DEV_SWITCH_ON},
+			}
+			if err := h.DUT.Connect(ctx); err == nil {
+				if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &clearFlags); err != nil {
+					s.Error("Failed to clear GBB flags during cleanup: ", err)
+				}
+				if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+					s.Error("Failed to set USB mux to off: ", err)
+				}
+			} else {
+				if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
+					s.Error("Failed to set USB mux to off: ", err)
+				}
+				bootCtx, cancelBoot := ctxutil.Shorten(ctx, 30*time.Second)
+				defer cancelBoot()
+				if err := h.EnsureDUTBooted(bootCtx); err != nil {
+					s.Error("Failed to ensure DUT is booted: ", err)
+				} else if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &clearFlags); err != nil {
+					s.Error("Failed to clear GBB flags during cleanup: ", err)
+				}
+			}
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+				s.Error("Failed to reset dut by servo power reset: ", err)
+			}
+		}(cleanupCtx)
 
 		// Make USB visible to DUT and reset DUT
 		s.Log("Enabling USB connection to DUT")
@@ -117,18 +153,6 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			s.Fatal("Failed to reset dut by servo power reset: ", err)
 		}
-
-		// Cleanup.
-		defer func(ctx context.Context) {
-			s.Log("Performing clean up")
-
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-				s.Error("Failed to reset dut by servo power reset: ", err)
-			}
-			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-				s.Fatal("Failed to set USB mux to off: ", err)
-			}
-		}(ctx)
 
 		s.Logf("Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
 		// GoBigSleepLint: Wait for firmware screen.
@@ -208,7 +232,7 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to power on: ", err)
 			}
 			s.Log("Boot in recovery mode: servo states recovered")
-		}(ctx)
+		}(cleanupCtx)
 
 		// Perform reboot into recovery
 		s.Log("Boot in Recovery Mode: starting")
