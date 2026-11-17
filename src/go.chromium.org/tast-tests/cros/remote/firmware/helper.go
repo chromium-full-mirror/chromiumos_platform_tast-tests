@@ -1818,7 +1818,7 @@ var (
 	pdDriverNameRe  = regexp.MustCompile(`(?m)^\s*driver_name:\s*(\S+)`)
 )
 
-func isBatteryLessUSBCTCPC(sysfsEntries, powerSupplyInfo, pdChipInfo string) bool {
+func isBatteryLessUSBCPD(sysfsEntries, powerSupplyInfo string) bool {
 	hasUSBPD := false
 	for _, entry := range strings.Split(sysfsEntries, "\n") {
 		switch strings.TrimSpace(entry) {
@@ -1834,6 +1834,10 @@ func isBatteryLessUSBCTCPC(sysfsEntries, powerSupplyInfo, pdChipInfo string) boo
 	if m := linePowerTypeRe.FindStringSubmatch(powerSupplyInfo); m != nil && m[1] == "Mains" {
 		return false
 	}
+	return true
+}
+
+func isECDrivenTCPC(pdChipInfo string) bool {
 	if m := pdDriverNameRe.FindStringSubmatch(pdChipInfo); m != nil {
 		driver := strings.Trim(m[1], "'\"")
 		if driver != "" && driver != "UNSUPPORTED" {
@@ -1843,10 +1847,14 @@ func isBatteryLessUSBCTCPC(sysfsEntries, powerSupplyInfo, pdChipInfo string) boo
 	return true
 }
 
-// LosesPowerOnECReset reports whether an EC reset or sysjump drops DUT input
-// power: true only on battery-less devices with no barrel jack that use an
-// EC-driven TCPC rather than a standalone PDC.
-func (h *Helper) LosesPowerOnECReset(ctx context.Context) (bool, error) {
+func isBatteryLessUSBCTCPC(sysfsEntries, powerSupplyInfo, pdChipInfo string) bool {
+	return isBatteryLessUSBCPD(sysfsEntries, powerSupplyInfo) && isECDrivenTCPC(pdChipInfo)
+}
+
+// LosesPowerOnServoPDDisconnect reports whether disconnecting Servo Type-C PD
+// (such as servo_pd_role:snk or fakedisconnect) drops DUT input power: true on
+// battery-less devices with no barrel jack that draw line power via USB-PD.
+func (h *Helper) LosesPowerOnServoPDDisconnect(ctx context.Context) (bool, error) {
 	hasBattery, err := h.CheckBatteryAvailable(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "checking battery availability")
@@ -1862,14 +1870,22 @@ func (h *Helper) LosesPowerOnECReset(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, errors.Wrap(err, "running power_supply_info")
 	}
-	if !isBatteryLessUSBCTCPC(string(sysfsOut), string(psiOut), "") {
-		return false, nil
+	return isBatteryLessUSBCPD(string(sysfsOut), string(psiOut)), nil
+}
+
+// LosesPowerOnECReset reports whether an EC reset or sysjump drops DUT input
+// power: true only on battery-less devices with no barrel jack that use an
+// EC-driven TCPC rather than a standalone PDC.
+func (h *Helper) LosesPowerOnECReset(ctx context.Context) (bool, error) {
+	losesPower, err := h.LosesPowerOnServoPDDisconnect(ctx)
+	if err != nil || !losesPower {
+		return false, err
 	}
 	pdOut, err := NewECTool(h.DUT, ECToolNameMain).Command(ctx, "pdchipinfo", "0").Output(ssh.DumpLogOnError)
 	if err != nil {
 		return false, errors.Wrap(err, "running ectool pdchipinfo 0")
 	}
-	return isBatteryLessUSBCTCPC(string(sysfsOut), string(psiOut), string(pdOut)), nil
+	return isECDrivenTCPC(string(pdOut)), nil
 }
 
 // CheckChgFrmPwrSuppInfo compares the ac status from the remote

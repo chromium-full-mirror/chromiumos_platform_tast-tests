@@ -307,61 +307,72 @@ func TestIsBatteryLessUSBCTCPC(t *gotesting.T) {
 		sysfs      string
 		psi        string
 		pdChipInfo string
-		want       bool
+		wantPD     bool
+		wantTCPC   bool
 	}{
 		{
 			name:       "boxy_usbc_only_tcpc",
 			sysfs:      "AC\nCROS_USBPD_CHARGER0\nCROS_USBPD_CHARGER1\n",
 			psi:        boxyPSI,
 			pdChipInfo: "vendor_id: 0x48d\nproduct_id: 0x8320\ndriver_name: UNSUPPORTED\n",
-			want:       true,
+			wantPD:     true,
+			wantTCPC:   true,
 		},
 		{
 			name:       "hybrid_chromebox_with_dedicated_barrel_jack",
 			sysfs:      "AC\nCROS_DEDICATED_CHARGER\nCROS_USBPD_CHARGER0\n",
 			psi:        boxyPSI,
 			pdChipInfo: "driver_name: UNSUPPORTED\n",
-			want:       false,
+			wantPD:     false,
+			wantTCPC:   false,
 		},
 		{
 			name:       "pure_barrel_jack_no_usbpd",
 			sysfs:      "AC\n",
 			psi:        mainsPSI,
 			pdChipInfo: "",
-			want:       false,
+			wantPD:     false,
+			wantTCPC:   false,
 		},
 		{
 			name:       "acpi_barrel_jack_mains_type",
 			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
 			psi:        mainsPSI,
 			pdChipInfo: "driver_name: UNSUPPORTED\n",
-			want:       false,
+			wantPD:     false,
+			wantTCPC:   false,
 		},
 		{
 			name:       "usbc_only_with_rts54_pdc",
 			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
 			psi:        boxyPSI,
 			pdChipInfo: "vendor_id: 0x10ec\ndriver_name: 'realtek,rts54-pdc'\n",
-			want:       false,
+			wantPD:     true,
+			wantTCPC:   false,
 		},
 		{
 			name:       "usbc_only_with_tps6699_pdc",
 			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
 			psi:        boxyPSI,
 			pdChipInfo: "vendor_id: 0x0451\ndriver_name: 'ti,tps6699-pdc'\n",
-			want:       false,
+			wantPD:     true,
+			wantTCPC:   false,
 		},
 		{
 			name:       "empty_quoted_driver_name_is_tcpc",
 			sysfs:      "AC\nCROS_USBPD_CHARGER0\n",
 			psi:        boxyPSI,
 			pdChipInfo: "driver_name: ''\n",
-			want:       true,
+			wantPD:     true,
+			wantTCPC:   true,
 		},
 	} {
 		t.Run(tc.name, func(t *gotesting.T) {
-			if got := isBatteryLessUSBCTCPC(tc.sysfs, tc.psi, tc.pdChipInfo); got != tc.want {
-				t.Errorf("isBatteryLessUSBCTCPC() = %v, want %v", got, tc.want)
+			if got := isBatteryLessUSBCPD(tc.sysfs, tc.psi); got != tc.wantPD {
+				t.Errorf("isBatteryLessUSBCPD() = %v, want %v", got, tc.wantPD)
+			}
+			if got := isBatteryLessUSBCTCPC(tc.sysfs, tc.psi, tc.pdChipInfo); got != tc.wantTCPC {
+				t.Errorf("isBatteryLessUSBCTCPC() = %v, want %v", got, tc.wantTCPC)
 			}
 		})
 	}
