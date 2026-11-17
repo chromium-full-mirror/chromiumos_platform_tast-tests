@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/exp/slices"
 )
@@ -64,7 +65,7 @@ type cyclicTestParameters struct {
 	ShouldFail             bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
 	UI                     bool          // Test with UI running or not.
 	Tracer                 bool          // Test with ftrace running or not.
-	ThreadedNAPI           bool          // Test with Threaded NAPI or not.
+	RPS                    bool          // Test with Receive Packet Steering (RPS) enabled across all CPUs.
 }
 
 const (
@@ -450,7 +451,7 @@ func init() {
 				},
 			},
 			{
-				Name:      "rr12_1thread_10ms_threaded_napi",
+				Name:      "rr12_1thread_10ms_rps",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
@@ -458,14 +459,15 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-					UI:                  true,
-					ThreadedNAPI:        true,
+					Threads:                1,
+					Interval:               defaultInterval,
+					Loops:                  defaultLoops,
+					Affinity:               defaultAff,
+					MaxLatencyThreshold:    defaultMaxLatencyThreshold,
+					MaxLatencyThresholdCBX: defaultMaxLatencyThresholdCBX,
+					StressConfig:           nil,
+					UI:                     true,
+					RPS:                    true,
 				},
 			},
 		},
@@ -482,61 +484,80 @@ type cpuConfigEntry struct {
 	value string
 }
 
-// enableThreadedNAPI enables threaded NAPI, which uses dedicated kernel threads
-// instead of software IRQ context to handle NAPI processing.
-func enableThreadedNAPI(ctx context.Context) (func(ctx context.Context) error, error) {
-	configPatterns := []cpuConfigEntry{
-		{"/sys/class/net/eth[0-9]*/threaded", "1"},
+// enableRPS enables Receive Packet Steering (RPS) across all CPUs on eth*
+// interfaces using /proc/irq/default_smp_affinity and returns a cleanup
+// function that restores original values.
+func enableRPS(ctx context.Context) (func() error, error) {
+	// Read /proc/irq/default_smp_affinity for a kernel-formatted all-CPU hex
+	// bitmap compatible with rps_cpus (ChromeOS does not set irqaffinity=).
+	maskBytes, err := os.ReadFile("/proc/irq/default_smp_affinity")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read /proc/irq/default_smp_affinity")
+	}
+	mask := strings.TrimSpace(string(maskBytes))
+	if mask == "" {
+		return nil, errors.New("empty /proc/irq/default_smp_affinity")
 	}
 
-	var optimizedConfig []cpuConfigEntry
-	// Expands patterns in configPatterns and pack actual configs into
-	// optimizedConfig.
-	for _, config := range configPatterns {
-		paths, err := filepath.Glob(config.path)
-		if err != nil {
-			return nil, err
-		}
-		for _, path := range paths {
-			optimizedConfig = append(optimizedConfig, cpuConfigEntry{
-				path,
-				config.value,
-			})
-		}
+	paths, err := filepath.Glob("/sys/class/net/eth[0-9]*/queues/rx-*/rps_cpus")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to glob eth* rps_cpus paths")
+	}
+	if len(paths) == 0 {
+		testing.ContextLog(ctx, "No eth* RX queues found; skipping RPS configuration")
+		return func() error { return nil }, nil
+	}
+
+	optimizedConfig := make([]cpuConfigEntry, 0, len(paths))
+	for _, path := range paths {
+		optimizedConfig = append(optimizedConfig, cpuConfigEntry{
+			path:  path,
+			value: mask,
+		})
 	}
 
 	origConfig, err := applyConfig(ctx, optimizedConfig)
-	undo := func(ctx context.Context) error {
-		_, err := applyConfig(ctx, origConfig)
-		return err
+	undo := func() error {
+		return restoreConfig(origConfig)
 	}
 	if err != nil {
-		undo(ctx)
+		_ = undo()
 		return nil, err
 	}
 	return undo, nil
 }
 
-// applyConfig applies the specified frequency scaling configuration. A slice of
-// cpuConfigEntry needs to be provided and will be processed in order. A slice
-// of the original cpuConfigEntry values that were successfully processed is
-// returned in reverse order so the caller can restore the original config by
-// passing the slice to this function as is.
-func applyConfig(ctx context.Context, cpuConfig []cpuConfigEntry) ([]cpuConfigEntry, error) {
+// applyConfig writes each sysfs entry in order and returns the prior values in
+// reverse order so restoreConfig can roll them back.
+func applyConfig(ctx context.Context, configs []cpuConfigEntry) ([]cpuConfigEntry, error) {
 	var origConfig []cpuConfigEntry
-	for _, config := range cpuConfig {
+	for _, config := range configs {
 		origValue, err := os.ReadFile(config.path)
 		if err != nil {
-			return origConfig, err
+			return origConfig, errors.Wrapf(err, "failed to read %s", config.path)
 		}
 		if err = os.WriteFile(config.path, []byte(config.value), 0644); err != nil {
-			return origConfig, err
+			return origConfig, errors.Wrapf(err, "failed to write %s", config.path)
 		}
-		// Inserts a new entry at the front of origConfig.
+		testing.ContextLogf(ctx, "Set %s to %q (was %q)", config.path, config.value, strings.TrimSpace(string(origValue)))
 		e := cpuConfigEntry{config.path, string(origValue)}
 		origConfig = append([]cpuConfigEntry{e}, origConfig...)
 	}
 	return origConfig, nil
+}
+
+// restoreConfig best-effort writes back all saved sysfs entries, ignoring
+// disappeared sysfs paths (e.g. unplugged USB NIC) and returning the first
+// remaining error encountered.
+func restoreConfig(origConfig []cpuConfigEntry) error {
+	var firstErr error
+	for _, config := range origConfig {
+		err := os.WriteFile(config.path, []byte(config.value), 0644)
+		if err != nil && !errors.Is(err, os.ErrNotExist) && firstErr == nil {
+			firstErr = errors.Wrapf(err, "failed to restore %s", config.path)
+		}
+	}
+	return firstErr
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
@@ -598,18 +619,14 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			"--stress_priority="+strconv.Itoa(param.StressConfig.Priority),
 			"--workers="+strconv.Itoa(defaultStressWorker))
 	}
-	if param.ThreadedNAPI {
-		var err error
-		var restoreThreadedNAPI func(ctx context.Context) error
-		// CPU frequency scaling and thermal throttling might influence our test results.
-		if restoreThreadedNAPI, err = enableThreadedNAPI(ctx); err != nil {
-			s.Error("Failed to enable threaded NAPI: ", err)
+	if param.RPS {
+		restoreRPS, err := enableRPS(ctx)
+		if err != nil {
+			s.Fatal("Failed to enable RPS: ", err)
 		}
 		defer func() {
-			if restoreThreadedNAPI != nil {
-				if err = restoreThreadedNAPI(ctx); err != nil {
-					testing.ContextLog(ctx, "Failed to restore threaded NAPI to original values: ", err)
-				}
+			if err := restoreRPS(); err != nil {
+				s.Error("Failed to restore RPS to original values: ", err)
 			}
 		}()
 	}
