@@ -131,6 +131,14 @@ const (
 	WaitMemoryRetrain ModeSwitchOption = iota
 )
 
+// clearDevScreenShortDelay ensures GBBFlag_DEV_SCREEN_SHORT_DELAY is cleared before resetting to a developer screen.
+func clearDevScreenShortDelay(ctx context.Context, h *Helper) error {
+	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &fwpb.GBBFlagsState{Clear: []fwpb.GBBFlag{fwpb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
+		return errors.Wrap(err, "clearing GBBFlag_DEV_SCREEN_SHORT_DELAY")
+	}
+	return nil
+}
+
 // msOptsContain determines whether a slice of ModeSwitchOptions contains a specific Option.
 func msOptsContain(opts []ModeSwitchOption, want ModeSwitchOption) bool {
 	for _, o := range opts {
@@ -584,6 +592,12 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	// Perform sync prior to reboot, then close the RPC connection.
 	if err := h.DUT.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError); err != nil {
 		testing.ContextLogf(ctx, "Failed to sync DUT: %s", err)
+	}
+
+	if (fromMode == fwCommon.BootModeDev || fromMode == fwCommon.BootModeUSBDev) && !msOptsContain(opts, AllowGBBForce) && !msOptsContain(opts, SkipWaitConnect) && !msOptsContain(opts, AssumeGBBFlagsCorrect) {
+		if err := clearDevScreenShortDelay(ctx, h); err != nil {
+			return err
+		}
 	}
 
 	h.CloseRPCConnection(ctx)
@@ -1156,6 +1170,8 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 			if err := ms.RebootToMode(ctx, fwCommon.BootModeDev, ExpectDevModeAfterReboot); err != nil {
 				return errors.Wrap(err, "failed to reboot to developer mode")
 			}
+		} else if err := clearDevScreenShortDelay(ctx, h); err != nil {
+			return err
 		}
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 			return errors.Wrap(err, "failed to warm reset the DUT")

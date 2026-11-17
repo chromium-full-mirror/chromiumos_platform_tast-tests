@@ -1072,7 +1072,7 @@ func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode,
 		return powerState
 	}
 	if mode == common.BootModeUnspecified {
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, opts...); err != nil {
 			powerState := checkPowerState()
 			return errors.Wrapf(err, "failed to warm reboot, got power state %s", powerState)
 		}

@@ -2327,6 +2327,9 @@ func (h *Helper) ReadTPMC(ctx context.Context, tpmReadArgs ...string) (out strin
 
 // DeveloperUSBBoot checks if removing servo charger is required and performs a developer usb boot.
 func (h *Helper) DeveloperUSBBoot(ctx context.Context, state *CheckAndSetServoCharger) (retErr error) {
+	if err := clearDevScreenShortDelay(ctx, h); err != nil {
+		return err
+	}
 	if err := h.CloseRPCConnection(ctx); err != nil {
 		return errors.Wrap(err, "failed to close rpc connection")
 	}

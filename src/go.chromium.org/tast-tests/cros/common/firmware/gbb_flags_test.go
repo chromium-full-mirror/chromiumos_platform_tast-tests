@@ -160,3 +160,24 @@ func TestCalcGBB(t *testing.T) {
 		t.Fatalf("unexpected flags for 2 bits: %v", f)
 	}
 }
+
+func TestRebootRequiredGBBFlags(t *testing.T) {
+	got := RebootRequiredGBBFlags()
+	for _, want := range []pb.GBBFlag{
+		pb.GBBFlag_FORCE_DEV_SWITCH_ON,
+		pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC,
+		pb.GBBFlag_FORCE_DEV_BOOT_USB,
+		pb.GBBFlag_DEV_SCREEN_SHORT_DELAY,
+	} {
+		found := false
+		for _, f := range got {
+			if f == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("RebootRequiredGBBFlags() = %v, missing %v", got, want)
+		}
+	}
+}
