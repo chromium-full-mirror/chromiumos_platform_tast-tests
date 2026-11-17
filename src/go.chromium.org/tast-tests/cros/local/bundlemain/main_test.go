@@ -116,3 +116,51 @@ func TestMainfwTypeCacheConcurrentCalls(t *testing.T) {
 		t.Errorf("runner calls = %d, want 1", got)
 	}
 }
+
+func TestInterTestGC(t *testing.T) {
+	var gc interTestGC
+	calls := 0
+	fn := func() {
+		calls++
+	}
+
+	gc.beforeTest(fn)
+	if calls != 0 {
+		t.Fatalf("beforeTest() call 1: gc calls = %d, want 0", calls)
+	}
+
+	gc.beforeTest(fn)
+	if calls != 1 {
+		t.Fatalf("beforeTest() call 2: gc calls = %d, want 1", calls)
+	}
+
+	gc.beforeTest(fn)
+	if calls != 2 {
+		t.Fatalf("beforeTest() call 3: gc calls = %d, want 2", calls)
+	}
+}
+
+func TestInterTestGCConcurrent(t *testing.T) {
+	var gc interTestGC
+	var calls atomic.Int32
+
+	const workers = 16
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
+		go func() {
+			defer wg.Done()
+			<-start
+			gc.beforeTest(func() {
+				calls.Add(1)
+			})
+		}()
+	}
+	close(start)
+	wg.Wait()
+
+	if got, want := int(calls.Load()), workers-1; got != want {
+		t.Fatalf("concurrent beforeTest gc calls = %d, want %d", got, want)
+	}
+}

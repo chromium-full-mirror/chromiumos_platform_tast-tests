@@ -161,7 +161,30 @@ func hwsecCheckTPMState(ctx context.Context, origStatus *hwsec.NonsensitiveStatu
 	return nil
 }
 
+type interTestGC struct {
+	mu       sync.Mutex
+	ranFirst bool
+}
+
+// beforeTest runs gc before the second and subsequent tests.
+func (g *interTestGC) beforeTest(gc func()) {
+	// Run GC between tests so finalizers release leaked os.Process pidfds
+	// before open FDs accumulate across tests (b/401592311), without running
+	// a redundant GC after the final or only test right before process exit.
+	g.mu.Lock()
+	shouldGC := g.ranFirst
+	g.ranFirst = true
+	g.mu.Unlock()
+	if shouldGC {
+		gc()
+	}
+}
+
+var bundleGC interTestGC
+
 func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx context.Context, s *testing.TestHookState) {
+	bundleGC.beforeTest(runtime.GC)
+
 	endLogFn, err := syslog.CollectSyslog()
 	if err != nil {
 		s.Log("Saving log position: ", err)
@@ -210,9 +233,6 @@ func testHookLocal(ctx context.Context, s *testing.TestHookState) func(ctx conte
 	}
 
 	return func(ctx context.Context, s *testing.TestHookState) {
-		// Do garbage collection after running each tests.
-		runtime.GC()
-
 		// Ensure the TPM is in the expect state after tast finish.
 		if err := hwsecCheckTPMState(ctx, hwsecTpmStatus, hwsecDACounter); err != nil {
 			if strings.Contains(err.Error(), `exec: "tpm_manager_client": executable file not found`) {
