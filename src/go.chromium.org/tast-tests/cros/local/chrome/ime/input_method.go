@@ -937,14 +937,14 @@ var TamilWithTypewriterKeyboard = InputMethod{
 	ID:   "vkd_ta_typewriter",
 }
 
-// TamilWithKedmaneeKeyboard represents the input method of Tamil with Kedmanee keyboard.
-var TamilWithKedmaneeKeyboard = InputMethod{
+// ThaiWithKedmaneeKeyboard represents the input method of Thai with Kedmanee keyboard.
+var ThaiWithKedmaneeKeyboard = InputMethod{
 	Name: "Thai with Kedmanee keyboard",
 	ID:   "vkd_th",
 }
 
-// TamilWithPattachoteKeyboard represents the input method of Tamil with Pattachote keyboard.
-var TamilWithPattachoteKeyboard = InputMethod{
+// ThaiWithPattachoteKeyboard represents the input method of Thai with Pattachote keyboard.
+var ThaiWithPattachoteKeyboard = InputMethod{
 	Name: "Thai with Pattachote keyboard",
 	ID:   "vkd_th_pattajoti",
 }
@@ -1245,13 +1245,13 @@ var inputMethods = []InputMethod{
 	TamilITRANS,
 	TamilPhonetic,
 	TamilWithInScriptKeyboard,
-	TamilWithKedmaneeKeyboard,
-	TamilWithPattachoteKeyboard,
 	TamilWithTamil99Keyboard,
 	TamilWithTypewriterKeyboard,
 	Telugu,
 	TeluguPhonetic,
 	ThaiTis,
+	ThaiWithKedmaneeKeyboard,
+	ThaiWithPattachoteKeyboard,
 	Tigrinya,
 	Turkish,
 	TurkishWithFKeyboard,
