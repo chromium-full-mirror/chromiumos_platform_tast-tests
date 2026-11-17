@@ -104,6 +104,15 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 
+	losesPowerOnPDDisconnect, err := h.LosesPowerOnServoPDDisconnect(ctx)
+	if err != nil {
+		s.Fatal("Failed to check whether servo PD disconnect drops DUT power: ", err)
+	}
+	reconnectOpts := []firmware.WaitConnectOption{firmware.ResetEthernetDongle}
+	if losesPowerOnPDDisconnect {
+		reconnectOpts = append(reconnectOpts, firmware.SkipPDRoleSnk)
+	}
+
 	suspendStressCrashDir = filepath.Join(s.OutDir(), suspendStressCrashDir)
 
 	// Number of iterations to run stress test for.
@@ -199,23 +208,36 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 		func() {
 			var retErr error
+			var ecLogBuf strings.Builder
+			readECUART := func() string {
+				chunk, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+				if err == nil {
+					ecLogBuf.WriteString(chunk)
+				}
+				return ecLogBuf.String()
+			}
 			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
 			if err != nil {
 				s.Log("Failed to start ec uart capture: ", err)
+			} else {
+				// Drain buffered EC UART output from prior iterations.
+				_, _ = h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
 			}
 			defer func() {
 				if retErr != nil {
-					ecLogs, _ := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+					ecLogs := readECUART()
 					tail, numLines := getLogsTail(ecLogs, numECLogsToPrint)
 					saveLogsForFailedIter(ctx, h, ecLogs, i)
 					testing.ContextLogf(ctx, "Last %d EC Logs from failure: %v", numLines, tail)
 				}
-				if err := closeUART(ctx); err != nil {
-					s.Log("Failed to close ec uart capture: ", err)
+				if closeUART != nil {
+					if err := closeUART(ctx); err != nil {
+						s.Log("Failed to close ec uart capture: ", err)
+					}
 				}
 			}()
 
-			if err := timeSuspendWakeCycle(ctx, h, suspendSeconds); err != nil {
+			if err := timeSuspendWakeCycle(ctx, h, suspendSeconds, readECUART); err != nil {
 				logFailure("Failed waiting for suspend and wake", err, i)
 				retErr = err
 			}
@@ -227,13 +249,20 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("RETRIABLE: Failed to reconnect to DUT after suspend: ", err)
-			s.Log("Disconnecting servo for 1s")
-			// Try resetting servo usb-c connection and try again.
-			h.Servo.RunServoCommand(ctx, "fakedisconnect 100 1000")
+			if losesPowerOnPDDisconnect {
+				// fakedisconnect drops Type-C VBUS, cold-rebooting battery-less USB-PD Chromeboxes and rotating powerd.LATEST.
+				s.Log("Skipping servo fakedisconnect on USB-PD powered DUT; retrying with ethernet dongle reset")
+			} else {
+				s.Log("Disconnecting servo for 1s")
+				// Try resetting servo usb-c connection and try again.
+				h.Servo.RunServoCommand(ctx, "fakedisconnect 100 1000")
+			}
 
 			waitConnectCtx, cancelWaitConnect = context.WithTimeout(ctx, 30*time.Second)
 			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
+			if err := testing.Poll(waitConnectCtx, func(ctx context.Context) error {
+				return h.WaitConnect(ctx, reconnectOpts...)
+			}, &testing.PollOptions{Interval: time.Second}); err != nil {
 				logFailure("Failed to reconnnect to DUT after waking and resetting servo usb", err, i)
 				retErr = err
 			}
@@ -274,7 +303,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			func() {
 				waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, time.Minute)
 				defer cancelWaitConnect()
-				if err := h.WaitConnect(waitConnectCtx); err != nil {
+				if err := testing.Poll(waitConnectCtx, func(ctx context.Context) error {
+					return h.WaitConnect(ctx, reconnectOpts...)
+				}, &testing.PollOptions{Interval: time.Second}); err != nil {
 					s.Fatalf("Failed to reconnect to DUT after reset at iteration %d: %v", i+1, err)
 				}
 			}()
@@ -375,22 +406,144 @@ func getLogsTail(logs string, n int) (string, int) {
 	return strings.Join(lastNLines, "\n"), len(lastNLines)
 }
 
-func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSeconds int) error {
+var ecUARTPowerStateRe = regexp.MustCompile(`(?:power state \d+ = ([A-Za-z0-9>-]+)|Power state: [A-Za-z0-9_]+ --> ([A-Za-z0-9_]+))`)
+
+func isSuspendPowerState(st string) bool {
+	return strings.Contains(st, "S0i") || st == "S3"
+}
+
+func isTransitionalECPowerState(st string) bool {
+	return strings.Contains(st, "->") || st == "S0S0ix" || st == "S0ixS0" || st == "S0S3" || st == "S3S0"
+}
+
+// checkECUARTPowerCycle inspects captured EC UART output for a completed
+// S0ix/S3 -> S0 cycle or an unexpected steady power state (such as G3/S5).
+func checkECUARTPowerCycle(ecLog string) (bool, error) {
+	matches := ecUARTPowerStateRe.FindAllStringSubmatch(ecLog, -1)
+	var states []string
+	for _, m := range matches {
+		st := m[1]
+		if st == "" {
+			st = strings.TrimPrefix(m[2], "SYS_POWER_STATE_")
+			st = strings.TrimPrefix(st, "AP_POWER_STATE_")
+		}
+		if isTransitionalECPowerState(st) {
+			continue
+		}
+		if len(states) == 0 || states[len(states)-1] != st {
+			states = append(states, st)
+		}
+	}
+	suspendIdx := -1
+	for idx, st := range states {
+		if !isSuspendPowerState(st) && st != "S0" {
+			return false, errors.Errorf("dut in unexpected powerstate %s in EC UART (%v)", st, states)
+		}
+		if suspendIdx == -1 && isSuspendPowerState(st) {
+			suspendIdx = idx
+		}
+	}
+	if suspendIdx != -1 && suspendIdx < len(states)-1 && states[len(states)-1] == "S0" {
+		return true, nil
+	}
+	return false, nil
+}
+
+type suspendSnapshot struct {
+	swSuccess    int64
+	hasHWCounter bool
+	hwCounter    int64
+}
+
+const readSuspendSnapshotScript = `cat /sys/power/suspend_stats/success && ` +
+	`if check_powerd_config --suspend_to_idle >/dev/null 2>&1; then ` +
+	`if [ -r /sys/kernel/debug/pmc_core/slp_s0_residency_usec ]; then cat /sys/kernel/debug/pmc_core/slp_s0_residency_usec; ` +
+	`elif [ -r /sys/kernel/debug/telemetry/s0ix_residency_usec ]; then cat /sys/kernel/debug/telemetry/s0ix_residency_usec; ` +
+	`elif [ -r /sys/kernel/debug/amd_pmc/s0ix_stats ]; then awk '/^S0ix Exit Time:/ {print $4}' /sys/kernel/debug/amd_pmc/s0ix_stats; fi; fi`
+
+func parseSuspendSnapshot(out string) (suspendSnapshot, error) {
+	fields := strings.Fields(out)
+	if len(fields) == 0 {
+		return suspendSnapshot{}, errors.New("empty suspend snapshot")
+	}
+	sw, err := strconv.ParseInt(fields[0], 10, 64)
+	if err != nil {
+		return suspendSnapshot{}, errors.Wrap(err, "parsing suspend_stats/success")
+	}
+	snap := suspendSnapshot{swSuccess: sw}
+	if len(fields) >= 2 {
+		hw, err := strconv.ParseInt(fields[1], 10, 64)
+		if err != nil {
+			return suspendSnapshot{}, errors.Wrap(err, "parsing hardware s0ix counter")
+		}
+		snap.hasHWCounter = true
+		snap.hwCounter = hw
+	}
+	return snap, nil
+}
+
+func didDUTSuspend(pre, post suspendSnapshot) bool {
+	if post.swSuccess <= pre.swSuccess {
+		return false
+	}
+	if pre.hasHWCounter || post.hasHWCounter {
+		return pre.hasHWCounter && post.hasHWCounter && post.hwCounter > pre.hwCounter
+	}
+	return true
+}
+
+func readDUTSuspendSnapshot(ctx context.Context, h *firmware.Helper) (suspendSnapshot, error) {
+	out, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", readSuspendSnapshotScript).Output()
+	if err != nil {
+		return suspendSnapshot{}, err
+	}
+	return parseSuspendSnapshot(string(out))
+}
+
+func verifyDUTSuspendedAfterStall(ctx context.Context, h *firmware.Helper, pre suspendSnapshot) (bool, string) {
+	waitCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	if !h.DUT.Connected(waitCtx) {
+		if err := h.WaitConnect(waitCtx, firmware.FromHibernation); err != nil {
+			return false, ""
+		}
+	}
+	post, err := readDUTSuspendSnapshot(waitCtx, h)
+	if err != nil || !didDUTSuspend(pre, post) {
+		return false, ""
+	}
+	if post.hasHWCounter {
+		return true, fmt.Sprintf("suspend_stats %d->%d, hw_s0ix %d->%d", pre.swSuccess, post.swSuccess, pre.hwCounter, post.hwCounter)
+	}
+	return true, fmt.Sprintf("suspend_stats %d->%d", pre.swSuccess, post.swSuccess)
+}
+
+func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSeconds int, readECUART func() string) error {
+	preSnap, preSnapErr := readDUTSuspendSnapshot(ctx, h)
+	if preSnapErr != nil {
+		testing.ContextLog(ctx, "Warning: failed to read pre-suspend snapshot: ", preSnapErr)
+	}
+
 	testing.ContextLogf(ctx, "Suspending dut for %ds with delay of %d seconds", suspendSeconds, powerdDelaySeconds)
 
-	// The --wakup_timeout automatically unsuspends after given time.
-	cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelaySeconds), fmt.Sprintf("--suspend_for_sec=%d", suspendSeconds))
+	// DUT will wake to S0 after suspendSeconds+powerdDelaySeconds, so if S0ix/S3 not detected in that duration + some padding, it failed to suspend.
+	expectedSuspendtime := time.Duration(suspendSeconds+powerdDelaySeconds)*time.Second + powerStatePadding
+	maxWaitTime := expectedSuspendtime + maxWaitPadding
+
+	// The --suspend_for_sec flag automatically wakes the DUT after the given duration.
+	cmdCtx, cancelCmd := context.WithTimeout(ctx, maxWaitTime)
+	cmd := h.DUT.Conn().CommandContext(cmdCtx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelaySeconds), fmt.Sprintf("--suspend_for_sec=%d", suspendSeconds))
 	if err := cmd.Start(); err != nil {
+		cancelCmd()
 		return errors.Wrap(err, "failed to initiate suspend on DUT")
 	}
+	defer func() {
+		cancelCmd()
+		_ = cmd.Wait()
+	}()
 	start := time.Now()
 
 	testing.ContextLog(ctx, "Checking for S0ix or S3 powerstate")
-
-	// DUT will wake to S0 after suspendSeconds+powerdDelaySeconds, so if S0ix/S3 not detected in that duration + some padding, it failed to suspend.
-	// An alternative would be to capture the EC UART and watch for the power state transitions directly.
-	expectedSuspendtime := time.Duration(suspendSeconds+powerdDelaySeconds) + powerStatePadding
-	maxWaitTime := expectedSuspendtime + maxWaitPadding
 
 	collectedPowerStates := make([]string, 0)
 
@@ -399,12 +552,13 @@ func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSecond
 
 	suspendStateIdx := -1
 	wakeStateIdx := -1
+	checkedDUTFallback := false
 
-	timeTaken := time.Now().Sub(start)
+	timeTaken := time.Since(start)
 	var timeToSuspend time.Duration
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		timeTaken = time.Now().Sub(start)
+		timeTaken = time.Since(start)
 		currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
 		if err != nil {
 			// Could be for any reason, continue polling for power state.
@@ -413,12 +567,31 @@ func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSecond
 
 		prevState = collectedPowerStates[len(collectedPowerStates)-1]
 		if currPowerState == prevState {
+			if suspendStateIdx == -1 && currPowerState == "S0" && timeTaken >= expectedSuspendtime {
+				if readECUART != nil {
+					completed, uartErr := checkECUARTPowerCycle(readECUART())
+					if uartErr != nil {
+						return testing.PollBreak(uartErr)
+					}
+					if completed {
+						testing.ContextLogf(ctx, "WARNING: servod polling missed S0ix/S3 window after %s, but EC UART confirmed suspend/wake cycle", timeTaken)
+						return nil
+					}
+				}
+				if preSnapErr == nil && !checkedDUTFallback {
+					checkedDUTFallback = true
+					if verified, detail := verifyDUTSuspendedAfterStall(ctx, h, preSnap); verified {
+						testing.ContextLogf(ctx, "WARNING: servod polling missed S0ix/S3 window after %s, but DUT confirmed suspend/wake (%s)", timeTaken, detail)
+						return nil
+					}
+				}
+			}
 			// No state change, continue polling for power state.
-			return errors.Wrapf(err, "did not exit from power state %s", prevState)
+			return errors.Errorf("did not exit from power state %s", prevState)
 		}
 		collectedPowerStates = append(collectedPowerStates, currPowerState)
 
-		if currPowerState == "S0ix" || currPowerState == "S3" {
+		if isSuspendPowerState(currPowerState) {
 			suspendStateIdx = len(collectedPowerStates) - 1
 			testing.ContextLogf(ctx, "Suspended after %s seconds", timeTaken)
 			timeToSuspend = timeTaken
@@ -426,11 +599,11 @@ func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSecond
 
 		if suspendStateIdx != -1 && currPowerState == "S0" {
 			wakeStateIdx = len(collectedPowerStates) - 1
-			if prevState != "S0ix" && prevState != "S3" {
+			if !isSuspendPowerState(prevState) {
 				unexpStates := collectedPowerStates[suspendStateIdx:]
 				err := errors.Errorf("got unexpected powerstates %v between suspend and wake", unexpStates)
 				// DUT is awake, break poll to stop checking power state, report unexpected power state.
-				testing.PollBreak(err)
+				return testing.PollBreak(err)
 			}
 			// DUT has successfully completed suspend/wake cycle, exit poll.
 			testing.ContextLogf(ctx, "Woke from suspend %s seconds after suspending", timeTaken-timeToSuspend)
@@ -438,10 +611,10 @@ func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSecond
 		}
 
 		// Account for power states like S0i3 that show up on AMD.
-		if !strings.Contains(currPowerState, "S0i") && !strings.Contains(currPowerState, "S3") && !strings.Contains(currPowerState, "S0") {
+		if !isSuspendPowerState(currPowerState) && !strings.Contains(currPowerState, "S0") {
 			// If unexpected power state encountered, exit poll immediately and report error.
 			err := errors.Errorf("dut in unexpected powerstate %s, was expecting only one of S0, S0ix, or S3", currPowerState)
-			testing.PollBreak(err)
+			return testing.PollBreak(err)
 		}
 
 		// Keep running the poll, eventually it will either complete or timeout.
@@ -459,7 +632,7 @@ func timeSuspendWakeCycle(ctx context.Context, h *firmware.Helper, suspendSecond
 
 	if timeToSuspend > expectedSuspendtime {
 		// If it took significantly longer than expected (more than 10 extra seconds from expected suspend time), log a specific warning as it still suspended but took much longer than expected.
-		testing.ContextLogf(ctx, "WARNING: DUT eventually suspended but it took %s (which is %s more than the expected time %d). This is unexpected behavior and should not happen", timeTaken, timeTaken-expectedSuspendtime, expectedSuspendtime)
+		testing.ContextLogf(ctx, "WARNING: DUT eventually suspended but it took %s (which is %s more than the expected time %s). This is unexpected behavior and should not happen", timeTaken, timeTaken-expectedSuspendtime, expectedSuspendtime)
 	}
 
 	return nil
