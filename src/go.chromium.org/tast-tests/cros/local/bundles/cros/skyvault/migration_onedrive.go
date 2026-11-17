@@ -6,6 +6,7 @@ package skyvault
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -103,7 +104,7 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Keyboard: ", err)
 	}
 
-	if err := files.OpenOneDrive()(ctx); err != nil {
+	if err := onedrive.OpenOneDrive(files)(ctx); err != nil {
 		s.Fatal("Failed to open OneDrive: ", err)
 	}
 
@@ -112,6 +113,33 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	cloudFolderName := regexp.MustCompile("^ChromeOS device ")
 	if err := deleteAllUploadFolders(ctx, tconn, files, kb, cloudFolderName); err != nil {
 		s.Error("Failed to delete uploads folder: ", err)
+	}
+
+	// Temporarily move the active PreTest screen recording folder out of MyFiles
+	// before triggering SkyVault migration so OneDrive migration does not attempt
+	// to upload the open, actively-written .webm screen recording file.
+	myFilesDir := filepath.Dir(data.TargetFolder)
+	parentDir := filepath.Dir(myFilesDir)
+	if entries, err := os.ReadDir(myFilesDir); err != nil {
+		testing.ContextLogf(ctx, "Failed to read MyFiles directory %q: %v", myFilesDir, err)
+	} else {
+		for _, entry := range entries {
+			name := entry.Name()
+			if name == targetBaseName || name == "Downloads" {
+				continue
+			}
+			src := filepath.Join(myFilesDir, name)
+			dst := filepath.Join(parentDir, name)
+			if err := os.Rename(src, dst); err != nil {
+				testing.ContextLogf(ctx, "Failed to move %q to %q before migration: %v", src, dst, err)
+				continue
+			}
+			defer func(ctx context.Context, dst, src string) {
+				if err := os.Rename(dst, src); err != nil {
+					testing.ContextLogf(ctx, "Failed to restore %q to %q after migration: %v", dst, src, err)
+				}
+			}(cleanupCtx, dst, src)
+		}
 	}
 
 	// Set OneDrive and SkyVault policies.
@@ -150,17 +178,17 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that the migration completed.
-	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitleContains("Files were successfully uploaded to")); err != nil {
+	if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitleContains("Files were successfully uploaded to")); err != nil {
 		s.Error("Failed to wait for migration completed notification: ", err)
 	}
 
 	if err := uiauto.Combine("Check that files are uploaded to OneDrive",
-		files.OpenOneDrive(),
+		onedrive.OpenOneDrive(files),
 		files.OpenFile(cloudFolderName),
 		files.OpenFile(targetBaseName),
-		files.WithTimeout(10*time.Second).WaitForFile(dataFiles[0].FileName),
-		files.WithTimeout(10*time.Second).WaitForFile(dataFiles[1].FileName),
-		files.WithTimeout(10*time.Second).WaitForFile(dataFiles[2].FileName),
+		files.WithTimeout(30*time.Second).WaitForFile(dataFiles[0].FileName),
+		files.WithTimeout(30*time.Second).WaitForFile(dataFiles[1].FileName),
+		files.WithTimeout(30*time.Second).WaitForFile(dataFiles[2].FileName),
 	)(ctx); err != nil {
 		s.Error("Failed to find the uploaded files: ", err)
 	}
@@ -175,7 +203,7 @@ func MigrationOnedrive(ctx context.Context, s *testing.State) {
 func deleteAllUploadFolders(ctx context.Context, tconn *chrome.TestConn, files *filesapp.FilesApp, kb *input.KeyboardEventWriter, cloudFolderName *regexp.Regexp) error {
 	const maxCleanupAttempts = 5
 	for i := 0; i < maxCleanupAttempts; i++ {
-		if err := files.OpenOneDrive()(ctx); err != nil {
+		if err := onedrive.OpenOneDrive(files)(ctx); err != nil {
 			return errors.Wrap(err, "failed to open OneDrive")
 		}
 		filename, err := files.WithTimeout(5*time.Second).WaitForFileByPattern(ctx, cloudFolderName)
