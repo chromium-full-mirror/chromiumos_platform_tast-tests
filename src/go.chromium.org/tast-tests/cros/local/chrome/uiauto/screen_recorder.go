@@ -511,11 +511,17 @@ func StartRecordFromUI(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 	fullScreenBtn := nodewith.NameRegex(regexp.MustCompile("Record full screen.*")).Role(role.ToggleButton)
 	settingsBtn := nodewith.NameRegex(regexp.MustCompile("Settings.*")).Role(role.ToggleButton)
 	selectBtn := nodewith.NameRegex(regexp.MustCompile("Select folder.*")).Role(role.Button)
-	myfilesBtn := nodewith.NameRegex(regexp.MustCompile("My files.*")).Role(role.Button)
-	newFolderBtn := nodewith.Name("New folder").Role(role.Button)
-	openBtn := nodewith.Name("Open").Role(role.Button)
+	folderDialog := nodewith.Role(role.Window).HasClass("WebDialogView")
+	// In <xf-breadcrumb>, id="first" is the root ("My files") button and
+	// id="second" is the first subdirectory button.
+	myFilesBtn := nodewith.Role(role.Button).Attribute("htmlId", "first").Ancestor(folderDialog)
+	subDirBreadcrumbBtn := nodewith.Role(role.Button).Attribute("htmlId", "second").Ancestor(folderDialog)
+	// #new-folder-button and #ok-button start disabled in main.html; Focusable()
+	// waits until DialogActionController enables them before DoDefault runs.
+	newFolderBtn := nodewith.Role(role.Button).Attribute("htmlId", "new-folder-button").Focusable().Ancestor(folderDialog)
+	openBtn := nodewith.Role(role.Button).Attribute("htmlId", "ok-button").Focusable().Ancestor(folderDialog)
 	desktop := nodewith.Role(role.Window).First()
-	newFolderTextBox := nodewith.NameRegex(regexp.MustCompile("New folder.*")).Role(role.InlineTextBox)
+	renameTextField := nodewith.Role(role.TextField).HasClass("rename").Focused().Ancestor(folderDialog)
 	statusTrayBtm := nodewith.NameRegex(regexp.MustCompile("Status tray.*")).Role(role.Button).First()
 	screenCaptureBtm := nodewith.Name("Screen capture").Role(role.Button)
 
@@ -552,31 +558,43 @@ func StartRecordFromUI(ctx context.Context, tconn *chrome.TestConn, kb *input.Ke
 		expectNumber = 1
 		base := filepath.Base(downloadsPath)
 		testing.ContextLog(ctx, "start recording in temp folder:", base)
-		err = Combine("create new folder and start recording",
-			ui.LeftClick(myfilesBtn),
-			ui.LeftClick(newFolderBtn),
-			ui.WaitUntilExists(newFolderTextBox),
-			// GoBigSleep: wait for a second to make sure it is editable.
-			Sleep(time.Second),
+		renamedFolder := nodewith.Name(base).Role(role.StaticText).Ancestor(nodewith.Role(role.ListBox).Ancestor(folderDialog))
+		err = Combine("create new folder",
+			ui.DoDefault(myFilesBtn),
+			// BreadcrumbContainer updates its path only after DirectoryModel finishes
+			// switching to "My files" (PropStatus.SUCCESS).
+			ui.WaitUntilGone(subDirBreadcrumbBtn),
+			ui.DoDefault(newFolderBtn),
+			ui.WaitUntilExists(renameTextField),
+			// Clear the default folder name and wait for the empty value so
+			// ImeService cannot apply a stale composition range on "folder" from the
+			// initial collapsed-selection focus IPC.
+			kb.AccelAction("Ctrl+A"),
+			kb.AccelAction("Backspace"),
+			ui.WaitUntilExists(renameTextField.Attribute("value", "")),
 			kb.TypeAction(base),
+			ui.WaitUntilExists(renameTextField.Attribute("value", base)),
 			kb.AccelAction("Enter"),
-			ui.LeftClick(openBtn),
-			ui.LeftClick(fullScreenBtn),
-			ui.LeftClick(desktop),
-			checkRecordFile,
+			// commitRename_() updates DirectoryModel asynchronously; wait for the
+			// renamed row before activating ok-button so it selects the renamed entry.
+			ui.WaitUntilExists(renamedFolder),
 		)(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to create new folder")
 		}
-		return nil
+	} else {
+		files, err := os.ReadDir(downloadsPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to read files from Downloads")
+		}
+		expectNumber = len(files) + 1
 	}
-	files, err := os.ReadDir(downloadsPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to read files from Downloads")
-	}
-	expectNumber = len(files) + 1
+
 	err = Combine("select folder and start recording",
-		ui.LeftClick(openBtn),
+		ui.DoDefault(openBtn),
+		// selectFile closes the modal dialog asynchronously; wait until it closes
+		// so FolderSelectionDialogController does not consume clicks outside it.
+		ui.WaitUntilGone(folderDialog),
 		ui.LeftClick(fullScreenBtn),
 		ui.LeftClick(desktop),
 		checkRecordFile,
