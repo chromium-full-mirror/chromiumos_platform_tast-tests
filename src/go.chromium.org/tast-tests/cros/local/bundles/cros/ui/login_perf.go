@@ -284,7 +284,13 @@ func init() {
 				noarc, // arcMode
 				false, // tabletMode
 				true,  // autoSessionRestore
-				append([]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature, cuj.WebUIOmniboxFullPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				append([]string{
+					cuj.WebUIOmniboxPopupFeature,
+					cuj.WebUIOmniboxAimPopupFeature,
+					cuj.WebUIOmniboxFullPopupFeature,
+					cuj.WebUIOmniboxMergeFullAndAimPopupsFeature,
+					cuj.OmniboxWebUIPopupShareAcrossWindowsFeature,
+				}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
 				[]string{}, // enabledFeatures
 			},
 		}, {
@@ -295,8 +301,12 @@ func init() {
 				noarc, // arcMode
 				false, // tabletMode
 				true,  // autoSessionRestore
-				append([]string{cuj.WebUIOmniboxFullPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
-				[]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature},                     // enabledFeatures
+				append([]string{
+					cuj.WebUIOmniboxFullPopupFeature,
+					cuj.WebUIOmniboxMergeFullAndAimPopupsFeature,
+					cuj.OmniboxWebUIPopupShareAcrossWindowsFeature,
+				}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				[]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, // enabledFeatures
 			},
 		}, {
 			Name:      "webui_omnibox_full_popup_enabled",
@@ -306,8 +316,12 @@ func init() {
 				noarc, // arcMode
 				false, // tabletMode
 				true,  // autoSessionRestore
-				append([]string{cuj.WebUIOmniboxPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
-				[]string{cuj.WebUIOmniboxFullPopupFeature, cuj.WebUIOmniboxAimPopupFeature},             // enabledFeatures
+				append([]string{
+					cuj.WebUIOmniboxPopupFeature,
+					cuj.WebUIOmniboxMergeFullAndAimPopupsFeature,
+					cuj.OmniboxWebUIPopupShareAcrossWindowsFeature,
+				}, cuj.WebUIOmniboxOptimizationFeatures...), // disabledFeatures
+				[]string{cuj.WebUIOmniboxFullPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, // enabledFeatures
 			},
 		}, {
 			Name:      "webui_omnibox_popup_optimized",
@@ -317,18 +331,26 @@ func init() {
 				noarc, // arcMode
 				false, // tabletMode
 				true,  // autoSessionRestore
-				[]string{cuj.WebUIOmniboxFullPopupFeature}, // disabledFeatures
+				[]string{
+					cuj.WebUIOmniboxFullPopupFeature,
+					cuj.WebUIOmniboxMergeFullAndAimPopupsFeature,
+					cuj.OmniboxWebUIPopupShareAcrossWindowsFeature,
+				}, // disabledFeatures
 				append([]string{cuj.WebUIOmniboxPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // enabledFeatures
 			},
 		}, {
 			Name:      "webui_omnibox_full_popup_optimized",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
 			Val: loginPerfTestParam{
-				2,                                      // windows
-				noarc,                                  // arcMode
-				false,                                  // tabletMode
-				true,                                   // autoSessionRestore
-				[]string{cuj.WebUIOmniboxPopupFeature}, // disabledFeatures
+				2,     // windows
+				noarc, // arcMode
+				false, // tabletMode
+				true,  // autoSessionRestore
+				[]string{
+					cuj.WebUIOmniboxPopupFeature,
+					cuj.WebUIOmniboxMergeFullAndAimPopupsFeature,
+					cuj.OmniboxWebUIPopupShareAcrossWindowsFeature,
+				}, // disabledFeatures
 				append([]string{cuj.WebUIOmniboxFullPopupFeature, cuj.WebUIOmniboxAimPopupFeature}, cuj.WebUIOmniboxOptimizationFeatures...), // enabledFeatures
 			},
 		}},
