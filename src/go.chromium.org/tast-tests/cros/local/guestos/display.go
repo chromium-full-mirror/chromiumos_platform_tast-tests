@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -174,6 +176,89 @@ func saveStderrToFile(ctx context.Context, windowName, stderrStr string) string 
 	return fileName
 }
 
+const (
+	x11LaunchTimeout   = 25 * time.Second
+	guestStopGraceTime = 2 * time.Second
+)
+
+// terminateGuestCommand sends SIGTERM before canceling cmdCtx because host vsh
+// only forwards caught signals (not SIGKILL) to vshd to kill the guest process.
+// It reports whether the command exited before guestStopGraceTime elapsed.
+func terminateGuestCommand(ctx context.Context, cmd *testexec.Cmd, cmdCancel context.CancelFunc, cmdline []string) bool {
+	if cmd.ProcessState != nil {
+		cmdCancel()
+		return true
+	}
+	_ = cmd.Signal(unix.SIGTERM)
+	killTimer := time.AfterFunc(guestStopGraceTime, cmdCancel)
+	waitErr := cmd.Wait(testexec.DumpLogOnError)
+	cleanStop := killTimer.Stop()
+	cmdCancel()
+	if waitErr != nil {
+		testing.ContextLogf(ctx, "Command %v exited after termination: %v", cmdline, waitErr)
+	}
+	return cleanStop
+}
+
+// launchWindowedApp starts cmdline in guest and waits for windowName to map,
+// relaunching X11 apps once if needed. On success, the caller must clean up
+// the returned command and cancel function with terminateGuestCommand.
+func launchWindowedApp(ctx context.Context, guest vm.Guest, timeout time.Duration, windowName string, cmdline []string, stdoutBuf, stderrBuf *bytes.Buffer, pollWindow func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error)) (*testexec.Cmd, context.CancelFunc, coords.Size, error) {
+	// TODO(b/576091588): Fix the X11 window pairing and configure-ack bug in
+	// Sommelier and remove this relaunch workaround.
+	// On X11/Sommelier, a race between Xwayland window creation, WL_SURFACE_ID
+	// pairing, and xdg_surface.configure acks can leave a newly launched window
+	// unmapped in Ash while the guest process sits idle in its event loop. Cap
+	// each X11 window-discovery attempt to 25s and relaunch once when timeout
+	// leaves enough budget for a second attempt.
+	maxLaunchAttempts := 1
+	perLaunchTimeout := timeout
+	if isX11Command(cmdline) && timeout >= 2*x11LaunchTimeout {
+		maxLaunchAttempts = 2
+		perLaunchTimeout = x11LaunchTimeout
+	}
+
+	var launchErr error
+	for attempt := 1; attempt <= maxLaunchAttempts; attempt++ {
+		cmdCtx, cmdCancel := context.WithCancel(ctx)
+		testing.ContextLogf(ctx, "Starting %v application (attempt %d/%d)", windowName, attempt, maxLaunchAttempts)
+		cmd := guest.Command(cmdCtx, cmdline...)
+		stdoutBuf.Reset()
+		stderrBuf.Reset()
+		cmd.Stdout = stdoutBuf
+		cmd.Stderr = stderrBuf
+
+		if err := cmd.Start(); err != nil {
+			cmdCancel()
+			return nil, nil, coords.Size{}, errors.Wrapf(err, "failed to start command %v", cmdline)
+		}
+
+		var size coords.Size
+		size, launchErr = pollWindow(ctx, perLaunchTimeout)
+		if launchErr == nil {
+			return cmd, cmdCancel, size, nil
+		}
+
+		cleanStop := terminateGuestCommand(ctx, cmd, cmdCancel, cmdline)
+		if !cleanStop || ctx.Err() != nil {
+			break
+		}
+		if attempt < maxLaunchAttempts {
+			testing.ContextLogf(ctx, "Window %q poll failed on attempt %d/%d: %v", windowName, attempt, maxLaunchAttempts, launchErr)
+			if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
+				testing.ContextLogf(ctx, "Command %v stderr on attempt %d/%d: %s", cmdline, attempt, maxLaunchAttempts, stderrStr)
+			}
+		}
+	}
+
+	if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
+		if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
+			return nil, nil, coords.Size{}, errors.Wrapf(launchErr, "failed to find window %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)
+		}
+	}
+	return nil, nil, coords.Size{}, errors.Wrapf(launchErr, "failed to find window %q while running %v", windowName, cmdline)
+}
+
 // RunWindowedApp Runs the command cmdline in the guest, waits for the window
 // windowName to open, sends it a key press event, runs condition, and then
 // closes all open windows. Note that this will close windows other then the
@@ -186,30 +271,15 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	testing.ContextLogf(ctx, "Starting %v application", windowName)
-	cmd := guest.Command(ctx, cmdline...)
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
-
-	if err := cmd.Start(); err != nil {
-		return "", errors.Wrapf(err, "failed to start command %v", cmdline)
-	}
-	defer cmd.Wait(testexec.DumpLogOnError)
-
-	size, err := PollWindowSize(ctx, tconn, windowName, timeout)
+	cmd, cmdCancel, size, err := launchWindowedApp(ctx, guest, timeout, windowName, cmdline, &stdoutBuf, &stderrBuf, func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		return PollWindowSize(ctx, tconn, windowName, pollTimeout)
+	})
 	if err != nil {
-		cancel()
-		if waitErr := cmd.Wait(testexec.DumpLogOnError); waitErr != nil {
-			testing.ContextLogf(ctx, "Command %v exited after window poll failure: %v", cmdline, waitErr)
-		}
-		if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
-			if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
-				return "", errors.Wrapf(err, "failed to find window %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)
-			}
-		}
-		return "", errors.Wrapf(err, "failed to find window %q while running %v", windowName, cmdline)
+		return "", err
 	}
+	defer terminateGuestCommand(ctx, cmd, cmdCancel, cmdline)
+
 	testing.ContextLogf(ctx, "Window %q is visible with size %v", windowName, size)
 	// Under X11/Sommelier, Ash marks the ExoShellSurface focused before Sommelier
 	// processes xdg_toplevel.configure(ACTIVATED) / wl_keyboard.enter and sends
@@ -217,10 +287,7 @@ func RunWindowedApp(ctx context.Context, tconn *chrome.TestConn, guest vm.Guest,
 	// windowName so the single keypress is not dropped.
 	if isX11Command(cmdline) {
 		if err := waitForX11WindowFocus(ctx, guest, windowName); err != nil {
-			cancel()
-			if waitErr := cmd.Wait(testexec.DumpLogOnError); waitErr != nil {
-				testing.ContextLogf(ctx, "Command %v exited after X11 focus failure: %v", cmdline, waitErr)
-			}
+			terminateGuestCommand(ctx, cmd, cmdCancel, cmdline)
 			if stderrStr := strings.TrimSpace(stderrBuf.String()); stderrStr != "" {
 				if fileName := saveStderrToFile(ctx, windowName, stderrStr); fileName != "" {
 					return "", errors.Wrapf(err, "failed waiting for X11 focus on %q while running %v (stderr saved to %s)", windowName, cmdline, fileName)

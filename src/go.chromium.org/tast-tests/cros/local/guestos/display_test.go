@@ -5,15 +5,22 @@
 package guestos
 
 import (
+	"bytes"
 	"context"
+	"os"
+	"os/signal"
 	"slices"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"golang.org/x/sys/unix"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/errors"
 )
 
 type fakeGuest struct {
@@ -175,5 +182,310 @@ func TestWaitForX11WindowFocusScript(t *testing.T) {
 				t.Fatalf("x11_focus_wait_test.py (%s) failed: %v (output: %s)", mode, err, strings.TrimSpace(string(out)))
 			}
 		})
+	}
+}
+
+func newTestPipe(t *testing.T) (*os.File, *os.File) {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe() failed: %v", err)
+	}
+	t.Cleanup(func() {
+		r.Close()
+		w.Close()
+	})
+	return r, w
+}
+
+func waitForPipeByte(t *testing.T, r, w *os.File) {
+	t.Helper()
+	w.Close()
+	var b [1]byte
+	if _, err := r.Read(b[:]); err != nil {
+		t.Fatalf("failed waiting for guest command readiness: %v", err)
+	}
+}
+
+// fakeGuestProcessCmd spawns TestFakeGuestHelperProcess in a child test binary
+// so SIGTERM delivery uses Go's signal runtime without shell trap/read races.
+func fakeGuestProcessCmd(ctx context.Context, mode, stdoutText, stderrText string, readyW *os.File) *testexec.Cmd {
+	cmd := testexec.CommandContext(ctx, os.Args[0], "-test.run=^TestFakeGuestHelperProcess$", "--", mode, stdoutText, stderrText)
+	cmd.Env = append(os.Environ(), "GO_WANT_FAKE_GUEST_HELPER=1")
+	cmd.ExtraFiles = []*os.File{readyW}
+	return cmd
+}
+
+func TestFakeGuestHelperProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_FAKE_GUEST_HELPER") != "1" {
+		return
+	}
+	idx := slices.Index(os.Args, "--")
+	if idx < 0 || len(os.Args[idx+1:]) != 3 {
+		os.Exit(2)
+	}
+	args := os.Args[idx+1:]
+	mode, stdoutText, stderrText := args[0], args[1], args[2]
+
+	var sigCh chan os.Signal
+	switch mode {
+	case "exit-on-term":
+		sigCh = make(chan os.Signal, 1)
+		signal.Notify(sigCh, unix.SIGTERM)
+	case "ignore-term":
+		signal.Ignore(unix.SIGTERM)
+	case "block":
+	default:
+		os.Exit(2)
+	}
+	if stdoutText != "" {
+		_, _ = os.Stdout.WriteString(stdoutText)
+	}
+	if stderrText != "" {
+		_, _ = os.Stderr.WriteString(stderrText)
+	}
+	readyW := os.NewFile(3, "ready")
+	_, _ = readyW.Write([]byte("r"))
+	_ = readyW.Close()
+
+	if sigCh != nil {
+		<-sigCh
+		os.Exit(0)
+	}
+	blockR, blockW, err := os.Pipe()
+	if err != nil {
+		os.Exit(2)
+	}
+	defer blockW.Close()
+	_, _ = blockR.Read(make([]byte, 1))
+}
+
+func TestLaunchWindowedAppSingleAttempt(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		cmdline []string
+		timeout time.Duration
+	}{
+		{
+			name:    "WaylandLongTimeout",
+			cmdline: WaylandCopyConfig.cmdArgs,
+			timeout: 120 * time.Second,
+		},
+		{
+			name:    "X11ShortTimeoutBoundary",
+			cmdline: X11CopyConfig.cmdArgs,
+			timeout: 30 * time.Second,
+		},
+		{
+			name:    "X11BelowTwoAttemptThreshold",
+			cmdline: X11CopyConfig.cmdArgs,
+			timeout: 45 * time.Second,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			attempts := 0
+			var pollTimeouts []time.Duration
+			guest := &fakeGuest{
+				cmdFunc: func(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+					attempts++
+					return testexec.CommandContext(ctx, "sh", "-c", "echo guest-err >&2; exit 1")
+				},
+			}
+			var stdoutBuf, stderrBuf bytes.Buffer
+			_, _, _, err := launchWindowedApp(t.Context(), guest, tc.timeout, copyAppletTitle, tc.cmdline, &stdoutBuf, &stderrBuf, func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+				pollTimeouts = append(pollTimeouts, pollTimeout)
+				return coords.Size{}, errors.New("window missing")
+			})
+			if err == nil || !strings.Contains(err.Error(), "failed to find window") {
+				t.Fatalf("launchWindowedApp(..., %v, %v) error = %v, want substring 'failed to find window'", tc.timeout, tc.cmdline, err)
+			}
+			if attempts != 1 {
+				t.Errorf("launchWindowedApp(..., %v, %v) attempts = %d, want 1", tc.timeout, tc.cmdline, attempts)
+			}
+			if !slices.Equal(pollTimeouts, []time.Duration{tc.timeout}) {
+				t.Errorf("launchWindowedApp(..., %v, %v) pollTimeouts = %v, want [%v]", tc.timeout, tc.cmdline, pollTimeouts, tc.timeout)
+			}
+		})
+	}
+}
+
+func TestLaunchWindowedAppX11RelaunchRecovery(t *testing.T) {
+	ready1R, ready1W := newTestPipe(t)
+	ready2R, ready2W := newTestPipe(t)
+
+	attempts := 0
+	var attempt1Cmd *testexec.Cmd
+	var pollTimeouts []time.Duration
+	guest := &fakeGuest{
+		cmdFunc: func(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+			attempts++
+			if attempts == 1 {
+				cmd := fakeGuestProcessCmd(ctx, "exit-on-term", "stale-out", "stale-err", ready1W)
+				attempt1Cmd = cmd
+				return cmd
+			}
+			if attempt1Cmd == nil || attempt1Cmd.ProcessState == nil || attempt1Cmd.ProcessState.ExitCode() != 0 {
+				t.Errorf("launchWindowedApp(..., 120s, %v) attempt 1 ProcessState before attempt 2 = %v, want reaped after SIGTERM (exit 0)", X11CopyConfig.cmdArgs, attempt1Cmd.ProcessState)
+			}
+			return fakeGuestProcessCmd(ctx, "exit-on-term", "recovered-out", "", ready2W)
+		},
+	}
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+	wantSize := coords.NewSize(200, 200)
+	cmd, cmdCancel, gotSize, err := launchWindowedApp(t.Context(), guest, 120*time.Second, copyAppletTitle, X11CopyConfig.cmdArgs, &stdoutBuf, &stderrBuf, func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		pollTimeouts = append(pollTimeouts, pollTimeout)
+		if len(pollTimeouts) == 1 {
+			waitForPipeByte(t, ready1R, ready1W)
+			return coords.Size{}, errors.New("attempt 1 unmapped")
+		}
+		waitForPipeByte(t, ready2R, ready2W)
+		return wantSize, nil
+	})
+	if err != nil {
+		t.Fatalf("launchWindowedApp(..., 120s, %v) = %v, want nil", X11CopyConfig.cmdArgs, err)
+	}
+	if cmd.ProcessState != nil {
+		t.Errorf("launchWindowedApp(..., 120s, %v) attempt 2 exited prematurely before cleanup", X11CopyConfig.cmdArgs)
+	}
+	if !terminateGuestCommand(t.Context(), cmd, cmdCancel, X11CopyConfig.cmdArgs) {
+		t.Errorf("terminateGuestCommand() = false, want true")
+	}
+	if attempts != 2 {
+		t.Errorf("launchWindowedApp(..., 120s, %v) attempts = %d, want 2", X11CopyConfig.cmdArgs, attempts)
+	}
+	wantPolls := []time.Duration{25 * time.Second, 25 * time.Second}
+	if !slices.Equal(pollTimeouts, wantPolls) {
+		t.Errorf("launchWindowedApp(..., 120s, %v) pollTimeouts = %v, want %v", X11CopyConfig.cmdArgs, pollTimeouts, wantPolls)
+	}
+	if gotSize != wantSize {
+		t.Errorf("launchWindowedApp(..., 120s, %v) size = %v, want %v", X11CopyConfig.cmdArgs, gotSize, wantSize)
+	}
+	if got := stdoutBuf.String(); got != "recovered-out" {
+		t.Errorf("launchWindowedApp(..., 120s, %v) stdout = %q, want %q", X11CopyConfig.cmdArgs, got, "recovered-out")
+	}
+	if got := stderrBuf.String(); got != "" {
+		t.Errorf("launchWindowedApp(..., 120s, %v) stderr = %q, want empty", X11CopyConfig.cmdArgs, got)
+	}
+}
+
+func TestLaunchWindowedAppUncleanStop(t *testing.T) {
+	readyReader, readyWriter := newTestPipe(t)
+
+	attempts := 0
+	var attempt1Cmd *testexec.Cmd
+	guest := &fakeGuest{
+		cmdFunc: func(cmdCtx context.Context, vshArgs ...string) *testexec.Cmd {
+			attempts++
+			cmd := fakeGuestProcessCmd(cmdCtx, "ignore-term", "", "unclean-stderr", readyWriter)
+			attempt1Cmd = cmd
+			return cmd
+		},
+	}
+	var stdoutBuf, stderrBuf bytes.Buffer
+	_, _, _, err := launchWindowedApp(t.Context(), guest, 120*time.Second, copyAppletTitle, X11CopyConfig.cmdArgs, &stdoutBuf, &stderrBuf, func(pollCtx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		waitForPipeByte(t, readyReader, readyWriter)
+		return coords.Size{}, errors.New("attempt 1 unmapped")
+	})
+	if err == nil || !strings.Contains(err.Error(), "failed to find window") {
+		t.Fatalf("launchWindowedApp(..., 120s, %v) error = %v, want substring 'failed to find window'", X11CopyConfig.cmdArgs, err)
+	}
+	if attempts != 1 {
+		t.Errorf("launchWindowedApp(..., 120s, %v) attempts = %d, want 1 when SIGTERM is ignored", X11CopyConfig.cmdArgs, attempts)
+	}
+	if attempt1Cmd == nil || attempt1Cmd.ProcessState == nil {
+		t.Fatalf("launchWindowedApp(..., 120s, %v) did not reap attempt 1 process", X11CopyConfig.cmdArgs)
+	}
+	if attempt1Cmd.ProcessState.ExitCode() == 0 {
+		t.Errorf("launchWindowedApp(..., 120s, %v) attempt 1 ExitCode() = 0, want non-zero after SIGKILL fallback", X11CopyConfig.cmdArgs)
+	}
+	if got := stderrBuf.String(); got != "unclean-stderr" {
+		t.Errorf("launchWindowedApp(..., 120s, %v) stderr = %q, want %q", X11CopyConfig.cmdArgs, got, "unclean-stderr")
+	}
+}
+
+func TestLaunchWindowedAppExpiredContext(t *testing.T) {
+	readyReader, readyWriter := newTestPipe(t)
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	attempts := 0
+	var attempt1Cmd *testexec.Cmd
+	guest := &fakeGuest{
+		cmdFunc: func(cmdCtx context.Context, vshArgs ...string) *testexec.Cmd {
+			attempts++
+			cmd := fakeGuestProcessCmd(cmdCtx, "block", "", "attempt1-stderr", readyWriter)
+			attempt1Cmd = cmd
+			return cmd
+		},
+	}
+	var stdoutBuf, stderrBuf bytes.Buffer
+	_, _, _, err := launchWindowedApp(ctx, guest, 60*time.Second, copyAppletTitle, X11CopyConfig.cmdArgs, &stdoutBuf, &stderrBuf, func(pollCtx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		waitForPipeByte(t, readyReader, readyWriter)
+		cancel()
+		return coords.Size{}, pollCtx.Err()
+	})
+	if err == nil || !strings.Contains(err.Error(), "failed to find window") {
+		t.Fatalf("launchWindowedApp(canceledCtx, ..., 60s, %v) error = %v, want substring 'failed to find window'", X11CopyConfig.cmdArgs, err)
+	}
+	if attempts != 1 {
+		t.Errorf("launchWindowedApp(canceledCtx, ..., 60s, %v) attempts = %d, want 1", X11CopyConfig.cmdArgs, attempts)
+	}
+	if attempt1Cmd == nil || attempt1Cmd.ProcessState == nil {
+		t.Errorf("launchWindowedApp(canceledCtx, ..., 60s, %v) did not reap attempt 1 process", X11CopyConfig.cmdArgs)
+	}
+	if got := stderrBuf.String(); got != "attempt1-stderr" {
+		t.Errorf("launchWindowedApp(canceledCtx, ..., 60s, %v) stderr = %q, want %q", X11CopyConfig.cmdArgs, got, "attempt1-stderr")
+	}
+}
+
+func TestLaunchWindowedAppExhaustedRetriesAndStartFailure(t *testing.T) {
+	var readyR, readyW [2]*os.File
+	for i := range 2 {
+		readyR[i], readyW[i] = newTestPipe(t)
+	}
+
+	attempts := 0
+	guest := &fakeGuest{
+		cmdFunc: func(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+			idx := attempts
+			attempts++
+			cmd := testexec.CommandContext(ctx, "sh", "-c", "printf 'err-%s' \"$1\" >&2; printf 'r' >&3; exit 0", "--", strconv.Itoa(attempts))
+			cmd.ExtraFiles = []*os.File{readyW[idx]}
+			return cmd
+		},
+	}
+	var stdoutBuf, stderrBuf bytes.Buffer
+	pollIdx := 0
+	_, _, _, err := launchWindowedApp(t.Context(), guest, 60*time.Second, copyAppletTitle, X11CopyConfig.cmdArgs, &stdoutBuf, &stderrBuf, func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		waitForPipeByte(t, readyR[pollIdx], readyW[pollIdx])
+		pollIdx++
+		return coords.Size{}, errors.New("still unmapped")
+	})
+	if err == nil || !strings.Contains(err.Error(), "failed to find window") {
+		t.Fatalf("launchWindowedApp(..., 60s, %v) error = %v, want substring 'failed to find window'", X11CopyConfig.cmdArgs, err)
+	}
+	if attempts != 2 {
+		t.Errorf("launchWindowedApp(..., 60s, %v) attempts = %d, want 2", X11CopyConfig.cmdArgs, attempts)
+	}
+	if got := stderrBuf.String(); got != "err-2" {
+		t.Errorf("launchWindowedApp(..., 60s, %v) stderr = %q, want %q", X11CopyConfig.cmdArgs, got, "err-2")
+	}
+
+	// Start failure should return immediately without polling or retrying.
+	badCmdline := append([]string(nil), X11CopyConfig.cmdArgs...)
+	pollCalls := 0
+	guest.cmdFunc = func(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+		return testexec.CommandContext(ctx, "/nonexistent-binary-for-unit-test")
+	}
+	_, _, _, err = launchWindowedApp(t.Context(), guest, 60*time.Second, copyAppletTitle, badCmdline, &stdoutBuf, &stderrBuf, func(ctx context.Context, pollTimeout time.Duration) (coords.Size, error) {
+		pollCalls++
+		return coords.Size{}, nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "failed to start command") {
+		t.Fatalf("launchWindowedApp(..., 60s, %v) start error = %v, want substring 'failed to start command'", badCmdline, err)
+	}
+	if pollCalls != 0 {
+		t.Errorf("launchWindowedApp(..., 60s, %v) pollCalls = %d, want 0 on Start() failure", badCmdline, pollCalls)
 	}
 }
