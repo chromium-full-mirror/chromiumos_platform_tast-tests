@@ -10,12 +10,10 @@ import (
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -50,65 +48,47 @@ func init() {
 
 // DisableEnableECSWSync flashes EC using flashrom and enable disable EC SW sync.
 func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+
 	h := s.FixtValue().(*fixture.Value).Helper
-
 	pathToEC := ecPathVar.Value()
-
 	d := s.DUT()
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
+	oldGBBFlags, err := fwCommon.GetGBBFlags(ctx, d)
+	if err != nil {
+		s.Fatal("Failed to get initial GBB flags: ", err)
 	}
 
-	s.Log("Backing up current EC_RW region for safety")
-	ecPath, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{
-		Programmer: fwpb.Programmer_ECProgrammer,
-		Section:    fwpb.ImageSection_ECROImageSection,
-	})
+	backupState, err := firmware.BackupECFirmware(ctx, h)
 	if err != nil {
-		s.Fatal("Failed to backup current EC_RW region: ", err)
+		s.Fatal("Failed to backup current EC firmware: ", err)
 	}
-	s.Log("EC_RW region backup is stored at: ", ecPath.Path)
 
 	ecPathLocal := filepath.Join("/usr/local", filepath.Base(pathToEC))
 	s.Log("ecPathLocal: ", ecPathLocal)
 
 	defer func(ctx context.Context) {
-		h.CloseRPCConnection(ctx)
-
-		s.Log("Restoring EC image")
-		if err := d.Reboot(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted: ", err)
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Error("Failed to ensure DUT is booted during cleanup: ", err)
 		}
-
-		s.Log("Reconnecting to RPC services on DUT")
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to the RPC service on DUT: ", err)
+		_, _ = h.DUT.Conn().CommandContext(ctx, "rm", "-f", ecPathLocal).Output(ssh.DumpLogOnError)
+		clearSync := fwpb.GBBFlagsState{Clear: []fwpb.GBBFlag{fwpb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, d, &clearSync); err != nil {
+			s.Error("Failed to clear DISABLE_EC_SOFTWARE_SYNC before EC restore: ", err)
 		}
-
-		s.Log("Reconnecting to BiosService on DUT")
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
+		if err := backupState.Close(ctx, h); err != nil {
+			s.Error("Failed to restore EC backup: ", err)
 		}
-
-		// DANGER THIS WILL CORRUPT YOUR FLASH IF THE SECTION DOESN'T PERFECTLY ALIGN WITH THE FLASH BLOCK SIZE
-		// DO NOT USE THIS FUNCTION
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecPath); err != nil {
-			s.Error("Failed to restore EC image: ", err)
+		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, d, oldGBBFlags); err != nil {
+			s.Error("Failed to restore initial GBB flags: ", err)
 		}
-		s.Log("Removing EC image backup from DUT")
-		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", ecPath.Path).Output(ssh.DumpLogOnError); err != nil {
-			s.Fatal("Failed to delete EC image from DUT: ", err)
-		}
-
-		if err := d.Reboot(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted")
-		}
-	}(ctx)
+	}(cleanupCtx)
 
 	ecKeyPath := map[string]string{pathToEC: ecPathLocal}
 	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), ecKeyPath, linuxssh.DereferenceSymlinks); err != nil {
@@ -142,7 +122,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to verify EC versions, versions should be the same, got %s=%s (RO), %s=%s (RW)", ro1, ro2, rw1, rw2)
 	}
 
-	if err := flashEC(ctx, h.DUT, ecPathLocal); err != nil {
+	if _, _, err := backupState.Flash(ctx, h, ecPathLocal); err != nil {
 		s.Fatal("Failed to flash EC: ", err)
 	}
 
@@ -181,34 +161,4 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	if ro4 == rw4 && ro4 != ro3 {
 		s.Fatalf("Failed to verify EC version, RW and RO regions of EC should not be the same version got %s=%s (RO, RW), RO version of EC should be version of EC flashed got %s=%s (RO, RO)", ro4, rw4, ro3, ro4)
 	}
-}
-
-// flashEC flashes DUT using flashrom.
-func flashEC(ctx context.Context, dut *dut.DUT, imagePath string) (retErr error) {
-	testing.ContextLogf(ctx, "Writing image from file %s", imagePath)
-
-	var flashromConfig flashrom.Config
-	flashromInstance, ctx, shutdown, _, err := flashromConfig.
-		FlashromInit(flashrom.VerbosityInfo).
-		ProgrammerInit(flashrom.ProgrammerEc, "").
-		SetDut(dut).
-		Probe(ctx)
-	defer func() {
-		if err := shutdown(); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
-			} else {
-				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
-			}
-		}
-	}()
-	if err != nil {
-		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
-	}
-
-	if out, err := flashromInstance.Write(ctx, imagePath, false, false, "", []string{}); err != nil {
-		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
-	}
-
-	return nil
 }

@@ -13,8 +13,11 @@ import (
 	"strings"
 	"time"
 
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	remote_dut "go.chromium.org/tast-tests/cros/remote/dut"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -196,8 +199,101 @@ func FlashECViaServo(ctx context.Context, h *Helper, dutImagePath string) (hashA
 	return hashAfter, nil
 }
 
-// Restore flashes the backup of the firmware to the DUT.
+func ecSectionMatches(ctx context.Context, d *dut.DUT, currPath, backupPath, workDir, section string) (bool, error) {
+	currSec := filepath.Join(workDir, fmt.Sprintf("curr_%s.bin", section))
+	backupSec := filepath.Join(workDir, fmt.Sprintf("backup_%s.bin", section))
+	defer func() {
+		_ = d.Conn().CommandContext(ctx, "rm", "-f", currSec, backupSec).Run()
+	}()
+	if err := d.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", currPath, fmt.Sprintf("%s:%s", section, currSec)).Run(ssh.DumpLogOnError); err != nil {
+		return false, errors.Wrapf(err, "extracting %s from current EC image", section)
+	}
+	if err := d.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", backupPath, fmt.Sprintf("%s:%s", section, backupSec)).Run(ssh.DumpLogOnError); err != nil {
+		return false, errors.Wrapf(err, "extracting %s from backup EC image", section)
+	}
+	if err := d.Conn().CommandContext(ctx, "cmp", "-s", currSec, backupSec).Run(); err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+// Restore restores the backed-up EC firmware to the DUT. When EC software sync
+// is enabled in GBB flags, Restore avoids writing EC_RW directly and instead
+// only restores WP_RO in-place (if WP_RO changed) and cold-reboots so AP EC
+// software sync restores EC_RW.
 func (bs *BackupState) Restore(ctx context.Context, h *Helper) error {
+	if !bs.dut.Connected(ctx) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			return errors.Wrap(err, "ensuring DUT booted before EC restore")
+		}
+	}
+
+	gbbFlags, gbbErr := fwCommon.GetGBBFlags(ctx, bs.dut)
+	if gbbErr == nil && !fwCommon.GBBFlagsContains(gbbFlags, fwpb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+		ms, err := NewModeSwitcher(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "creating mode switcher for EC restore")
+		}
+		if err := h.RequireServo(ctx); err == nil {
+			if activeCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy); err == nil && !strings.HasPrefix(activeCopy, "RW") {
+				testing.ContextLogf(ctx, "EC active copy is %q with software sync enabled; cold-rebooting into RW before checking WP_RO", activeCopy)
+				if err := ms.ModeAwareReboot(ctx, ColdReset); err != nil {
+					return errors.Wrap(err, "cold-rebooting EC into RW")
+				}
+			}
+		}
+
+		var flashromCfg flashrom.Config
+		flashromInst, probeCtx, shutdown, _, err := flashromCfg.
+			FlashromInit(flashrom.VerbosityInfo).
+			ProgrammerInit(flashrom.ProgrammerEc, "").
+			SetDut(bs.dut).
+			Probe(ctx)
+		if err != nil {
+			return errors.Join(errors.Wrap(err, "probing EC flashrom for restore"), shutdown())
+		}
+
+		currPath := filepath.Join(bs.remoteTempDir, "ec_current.bin")
+		if _, err := flashromInst.Read(probeCtx, currPath, nil); err != nil {
+			return errors.Join(errors.Wrap(err, "reading current EC firmware"), shutdown())
+		}
+		defer func() {
+			_ = bs.dut.Conn().CommandContext(ctx, "rm", "-f", currPath).Run()
+		}()
+
+		wpROMatches, err := ecSectionMatches(probeCtx, bs.dut, currPath, bs.backupPath, bs.remoteTempDir, "WP_RO")
+		if err != nil {
+			return errors.Join(err, shutdown())
+		}
+		ecRWMatches, err := ecSectionMatches(probeCtx, bs.dut, currPath, bs.backupPath, bs.remoteTempDir, "EC_RW")
+		if err != nil {
+			return errors.Join(err, shutdown())
+		}
+
+		needReboot := !ecRWMatches
+		if !wpROMatches {
+			testing.ContextLog(probeCtx, "EC software sync is enabled; restoring only WP_RO via flashrom")
+			if err := h.SetECWriteProtect(probeCtx, false); err != nil {
+				return errors.Join(errors.Wrap(err, "disabling EC write protect before WP_RO restore"), shutdown())
+			}
+			if _, err := flashromInst.Write(probeCtx, bs.backupPath, true, false, "", []string{"WP_RO"}); err != nil {
+				return errors.Join(errors.Wrap(err, "restoring EC WP_RO via flashrom"), shutdown())
+			}
+			needReboot = true
+		}
+		if err := shutdown(); err != nil {
+			return errors.Wrap(err, "shutting down EC flashrom after restore")
+		}
+		if needReboot {
+			testing.ContextLog(ctx, "Cold-rebooting DUT so AP EC software sync restores EC_RW")
+			if err := ms.ModeAwareReboot(ctx, ColdReset); err != nil {
+				return errors.Wrap(err, "cold-rebooting DUT to sync EC_RW")
+			}
+		}
+		bs.ShouldRestoreFirmware = false
+		return nil
+	}
+
 	_, _, err := bs.Flash(ctx, h, bs.backupPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to restore ec")
@@ -220,7 +316,14 @@ func (bs *BackupState) Flash(ctx context.Context, h *Helper, imagePath string) (
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "checking if DUT loses power on EC reset")
 	}
-	if losesPower {
+	hasExecInRAM := false
+	if !losesPower {
+		hasExecInRAM, err = NewECTool(bs.dut, ECToolNameMain).HasExecInRAM(ctx)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "checking EC_FEATURE_EXEC_IN_RAM")
+		}
+	}
+	if losesPower || !hasExecInRAM {
 		hashBefore, err = readECRWHashOnDUT(ctx, bs.dut)
 		if err != nil {
 			return nil, nil, err

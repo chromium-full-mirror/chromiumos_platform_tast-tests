@@ -210,6 +210,10 @@ func CorruptBothFWSigABAndEC(ctx context.Context, s *testing.State) {
 		// To prevent this issue, send the 'reboot' command in VT2.
 		if err := rebootAfterFlash(ctx, h, pv.BootMode); err != nil {
 			s.Error("Failed to reboot after flashing DUT: ", err)
+		} else if !fwCommon.GBBFlagsContains(oldGBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+			if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err == nil {
+				backupState.ShouldRestoreFirmware = false
+			}
 		}
 	}(ctx)
 
@@ -382,7 +386,14 @@ func flashCorruptEC(ctx context.Context, h *firmware.Helper, imagePath, shellPat
 	if err != nil {
 		return errors.Wrap(err, "checking if DUT loses power on EC reset")
 	}
-	if losesPower {
+	hasExecInRAM := false
+	if !losesPower {
+		hasExecInRAM, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).HasExecInRAM(ctx)
+		if err != nil {
+			return errors.Wrap(err, "checking EC_FEATURE_EXEC_IN_RAM")
+		}
+	}
+	if losesPower || !hasExecInRAM {
 		hashAfter, err := firmware.FlashECViaServo(ctx, h, imagePath)
 		if err != nil {
 			return errors.Wrap(err, "flashing corrupt EC via servo")

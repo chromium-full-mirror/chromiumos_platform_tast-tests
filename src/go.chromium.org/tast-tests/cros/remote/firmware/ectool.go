@@ -66,6 +66,7 @@ var (
 	reWatchdogCount       = regexp.MustCompile(`Watchdog Reload Count:\s*(\d+)`)
 	reWatchdogMax         = regexp.MustCompile(`Watchdog Reload Period Max:\s*(\d+)\s*ms\s*@\s*(\d+\.\d+)\s*s`)
 	reWatchdogAvg         = regexp.MustCompile(`Watchdog Reload Period Average:\s*(\d+)\s*ms`)
+	reFeatureExecInRAM    = regexp.MustCompile(`(?m)^\s*34\b`)
 )
 
 // Command return the prebuilt ssh Command with options and args applied.
@@ -760,4 +761,15 @@ func (ec *ECTool) WatchdogInfo(ctx context.Context, resetStats bool) (*WatchdogI
 	}
 
 	return info, nil
+}
+
+// HasExecInRAM reports whether the EC sets EC_FEATURE_EXEC_IN_RAM (bit 34) in
+// `ectool inventory`, indicating that flashrom can overwrite EC_RW while
+// executing from RAM without jumping to RO.
+func (ec *ECTool) HasExecInRAM(ctx context.Context) (bool, error) {
+	out, err := ec.Command(ctx, "inventory").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "running 'ectool inventory' on DUT")
+	}
+	return reFeatureExecInRAM.Match(out), nil
 }
