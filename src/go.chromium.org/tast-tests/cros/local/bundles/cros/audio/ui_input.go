@@ -40,7 +40,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UIInput,
 		Desc:         "Tests that the input is controllable by UI API",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "johnylin@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "johnylin@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),

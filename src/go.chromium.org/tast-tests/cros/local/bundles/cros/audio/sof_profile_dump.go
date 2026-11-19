@@ -44,7 +44,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SofProfileDump,
 		Desc:         "Dump SOF profile information from kernel debugfs",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "johnylin@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "johnylin@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

@@ -46,7 +46,7 @@ func init() {
 		Desc:         "Verifies sound_card_init finishes successfully at boot time",
 		SoftwareDeps: []string{"reboot"},
 		HardwareDeps: hwdep.D(audio.SoundCardInitConditions()...),
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Fixture:      "rebootForAudioDSPFixture",

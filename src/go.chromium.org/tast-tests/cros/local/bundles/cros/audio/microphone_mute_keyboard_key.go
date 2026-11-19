@@ -23,7 +23,7 @@ func init() {
 		Func: MicrophoneMuteKeyboardKey,
 		Desc: "Tests to ensure that the dedicated keyboard key for microphone mute toggle properly mutes/unmutes the microphone",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"chromeos-sw-engprod@google.com",
 			"whalechang@google.com",
 		},

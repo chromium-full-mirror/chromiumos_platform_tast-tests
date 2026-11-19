@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Verifies sound_card_init boot time calibration logic",
 		HardwareDeps: hwdep.D(commonaudio.SoundCardInitConditions()...),
 		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,

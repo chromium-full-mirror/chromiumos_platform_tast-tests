@@ -25,7 +25,7 @@ func init() {
 		Func:         ServicesOnBoot,
 		Desc:         "Check services are started successfully on boot",
 		SoftwareDeps: []string{"reboot"},
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Fixture:      fixture.ServicesOnBoot,
 		Timeout:      1 * time.Minute,

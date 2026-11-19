@@ -113,7 +113,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CyclicBench,
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "eddyhsu@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Data:         []string{"perfetto_trace.txtpb"},
 		SoftwareDeps: []string{"cras", "chrome"},

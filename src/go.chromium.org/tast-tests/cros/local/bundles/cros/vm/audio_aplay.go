@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioAplay,
 		Desc:         "Check that playback devices are listed correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "pteerapong@google.com"},
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAudioAplay},

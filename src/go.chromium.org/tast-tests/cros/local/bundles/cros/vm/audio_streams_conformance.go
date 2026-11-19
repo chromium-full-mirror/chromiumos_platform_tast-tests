@@ -73,7 +73,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioStreamsConformance,
 		Desc:         "Test AudioStream implementation correctness",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "judyhsiao@chromium.org"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(skippedModels...)),
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",

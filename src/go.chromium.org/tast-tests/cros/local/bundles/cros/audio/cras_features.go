@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasFeatures,
 		Desc:         "CRAS can talk to feature_library correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      crasFeaturesIterations * (crasFeaturesTimeoutPerIteration + chrome.ResetTimeout),

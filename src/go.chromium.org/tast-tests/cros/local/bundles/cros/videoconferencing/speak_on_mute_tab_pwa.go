@@ -34,7 +34,7 @@ func init() {
 		Func: SpeakOnMuteTabPwa,
 		Desc: "Checks Speak-On-Mute is functional in Google Meet",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"hunghsienchen@google.com",
 		},
 		Attr: []string{

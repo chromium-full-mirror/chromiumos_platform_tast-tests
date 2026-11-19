@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:            USBVolumeGranularity,
 		Desc:            "Check for USB device volume changes depending on the volume range reported by the USB device",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "whalechang@chromium.org"},
+		Contacts:        []string{"lt-audio-tests@google.com", "whalechang@chromium.org"},
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational", "group:release-health"},
 		VariantCategory: `{"name": "Audio_Board"}`,

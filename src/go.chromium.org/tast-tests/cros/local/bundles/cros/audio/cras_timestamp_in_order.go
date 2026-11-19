@@ -36,7 +36,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasTimestampInOrder,
 		Desc:         "Verifies CRAS client receives timestamps that are in order",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		Fixture:      "rebootForAudioDSPFixture",
 		Params: []testing.Param{{

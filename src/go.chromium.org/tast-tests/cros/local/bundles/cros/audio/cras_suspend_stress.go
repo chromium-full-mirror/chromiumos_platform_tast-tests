@@ -43,7 +43,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:            CrasSuspendStress,
 		Desc:            "Verifies CRAS function abilities over suspended multiple times",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "johnylin@chromium.org"},
+		Contacts:        []string{"lt-audio-tests@google.com", "johnylin@chromium.org"},
 		BugComponent:    "b:776546",
 		SoftwareDeps:    []string{"chrome"},
 		Attr:            []string{"group:mainline"},

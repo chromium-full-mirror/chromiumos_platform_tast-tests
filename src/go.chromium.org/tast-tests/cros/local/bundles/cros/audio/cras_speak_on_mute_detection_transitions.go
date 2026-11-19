@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasSpeakOnMuteDetectionTransitions,
 		Desc:         "Test CRAS detection of speaking while on mute with system state changes",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test > Tast
 		Attr: []string{
 			"group:mainline",

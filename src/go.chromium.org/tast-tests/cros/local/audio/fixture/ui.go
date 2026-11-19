@@ -29,7 +29,7 @@ func (pf UIStopped) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:            maybeWithParentName("uiStopped", pf.Parent),
 		Desc:            "Stops the UI",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:        []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
 		BugComponent:    "b:776546",
 		Parent:          pf.Parent,
@@ -75,7 +75,7 @@ func (pf parameterizedChrome) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:         fmt.Sprintf("parameterizedChromeStarted%d", parameterizedChromeStartedID),
 		Desc:         "Starts Chrome with the given config",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return pf.opts, nil
@@ -155,7 +155,7 @@ func (pf ChromeForCras) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:         name.String(),
 		Desc:         "Starts Chrome with the given config",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return opts, nil

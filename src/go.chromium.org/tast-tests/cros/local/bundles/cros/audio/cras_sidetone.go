@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasSidetone,
 		Desc:         "Check sidetone functionality is working",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

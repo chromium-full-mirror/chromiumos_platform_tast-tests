@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         OfflinePipelineGoldenData,
 		Desc:         "Verify audio_processor modules using offline-pipeline and golden data",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "hunghsienchen@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "hunghsienchen@google.com"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      2 * time.Minute,

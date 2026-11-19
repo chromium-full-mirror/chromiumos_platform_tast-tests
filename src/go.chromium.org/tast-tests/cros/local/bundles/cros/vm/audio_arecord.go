@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioArecord,
 		Desc:         "Check that capture devices are listed correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@google.com"},
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAudioArecord},

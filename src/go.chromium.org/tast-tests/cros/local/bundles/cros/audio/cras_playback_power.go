@@ -23,16 +23,16 @@ func init() {
 		Func:         CrasPlaybackPower,
 		Desc:         "Collect power metrics of audio playback with various configs in CRAS",
 		BugComponent: "b:776546",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "johnylin@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "johnylin@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
-		Attr:         []string{
+		Attr: []string{
 			"group:crosbolt",
 			"crosbolt_perbuild",
 			"group:release-health",
 			"release-health_audio",
 		},
-		Timeout:      25*time.Minute + power.RecorderTimeout,
+		Timeout: 25*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
 				Name:    "baseline",

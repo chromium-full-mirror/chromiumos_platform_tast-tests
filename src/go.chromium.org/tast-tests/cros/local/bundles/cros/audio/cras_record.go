@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasRecord,
 		Desc:         "Verifies CRAS record function works correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),

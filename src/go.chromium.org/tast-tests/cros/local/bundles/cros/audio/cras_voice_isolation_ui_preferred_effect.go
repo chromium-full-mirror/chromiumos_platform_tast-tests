@@ -19,7 +19,7 @@ func init() {
 		Func: CrasVoiceIsolationUIPreferredEffect,
 		Desc: "Checks that sound devices for recording are recognized",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"aaronyu@google.com",
 		},
 		BugComponent:    "b:776546",

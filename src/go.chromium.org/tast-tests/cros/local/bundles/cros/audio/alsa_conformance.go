@@ -43,7 +43,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ALSAConformance,
 		Desc:         "Runs alsa_conformance_test to test basic functions of ALSA",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),

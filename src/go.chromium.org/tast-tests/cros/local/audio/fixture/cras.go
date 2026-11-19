@@ -80,7 +80,7 @@ func (pf CrasSetUp) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:         fmt.Sprintf("crasSetUp%d", crasSetUpID),
 		Desc:         fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Impl: &crasSetUpFixtureImpl{
 			config: &pf,

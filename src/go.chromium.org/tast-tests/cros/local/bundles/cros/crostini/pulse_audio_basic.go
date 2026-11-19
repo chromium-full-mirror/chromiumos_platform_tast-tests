@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PulseAudioBasic,
 		Desc:         "Runs a basic test on the container's pulseaudio service using a pre-built crostini image",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "clumptini@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:776546",

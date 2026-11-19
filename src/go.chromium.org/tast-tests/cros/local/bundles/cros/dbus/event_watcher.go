@@ -17,7 +17,7 @@ func init() {
 		Func: EventWatcher,
 		Desc: "Check dbusutil.EventWatcher",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"aaronyu@google.com",
 		},
 		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test

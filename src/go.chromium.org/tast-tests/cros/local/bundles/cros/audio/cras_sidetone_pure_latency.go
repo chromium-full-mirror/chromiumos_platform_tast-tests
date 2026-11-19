@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasSidetonePureLatency,
 		Desc:         "Measures the pure latency of the sidetone",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

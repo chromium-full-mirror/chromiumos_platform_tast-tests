@@ -20,7 +20,7 @@ func init() {
 		Func: DBusStreamCounts,
 		Desc: "Checks D-Bus methods for stream counts",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"aaronyu@google.com",
 		},
 		BugComponent: "b:776546",

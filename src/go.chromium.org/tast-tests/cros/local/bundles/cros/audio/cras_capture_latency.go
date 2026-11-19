@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasCaptureLatency,
 		Desc:         "Measure the noise cancellation processing latency in CRAS using aloop with loopback_latency",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline", "informational",

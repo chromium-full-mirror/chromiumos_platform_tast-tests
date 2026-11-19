@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:            CrasMultiChannelCapture,
 		Desc:            "Verifies recorded samples from CRAS are correct",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:        []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational"},
 		VariantCategory: `{"name": "Audio_Board"}`,

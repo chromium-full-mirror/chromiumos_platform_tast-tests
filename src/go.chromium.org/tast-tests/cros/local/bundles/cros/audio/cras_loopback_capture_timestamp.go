@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     CrasLoopbackCaptureTimestamp,
 		Desc:     "Flexible loopback should provide samples in correct timestamp order",
-		Contacts: []string{"htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Contacts: []string{"htcheong@google.com", "lt-audio-tests@google.com"},
 		Fixture: audiofixture.AloopLoaded{
 			Channels: 2,
 			Parent:   audiofixture.UIStopped{}.Instance(),

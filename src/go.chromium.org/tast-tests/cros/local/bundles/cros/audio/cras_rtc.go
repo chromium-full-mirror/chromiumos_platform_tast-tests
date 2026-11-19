@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:            CrasRTC,
 		Desc:            "Check checks RTC status reporting",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:        []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent:    "b:776546",
 		Attr:            []string{"group:mainline", "informational"},
 		Timeout:         1 * time.Minute,

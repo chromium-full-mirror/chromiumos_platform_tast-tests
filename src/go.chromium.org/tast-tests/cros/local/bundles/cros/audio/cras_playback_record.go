@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasPlaybackRecord,
 		Desc:         "Verifies the device can record and playback at the same time correctly with CRAS",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Attr: []string{

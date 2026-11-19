@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromeAECDump,
 		Desc:         "Verifies AEC dump works",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Fixture:      fixture.Chrome(),
 		HardwareDeps: hwdep.D(hwdep.Speaker()),

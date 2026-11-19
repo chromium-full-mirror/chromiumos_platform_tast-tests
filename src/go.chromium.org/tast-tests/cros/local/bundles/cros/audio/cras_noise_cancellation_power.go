@@ -27,7 +27,7 @@ func init() {
 		Func:         CrasNoiseCancellationPower,
 		Desc:         "Collect power metrics of using noise cancellation in CRAS",
 		BugComponent: "b:776546",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Timeout:      10*time.Minute + power.RecorderTimeout,

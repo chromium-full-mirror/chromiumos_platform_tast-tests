@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CheckingAudioFormats,
 		Desc:         "Verifies supported audio file formats",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
@@ -45,7 +45,7 @@ func init() {
 				"group:release-health",
 				"release-health_audio",
 			},
-			Val:       false,
+			Val: false,
 		}, {
 			Name: "usb_pendrive",
 			Val:  true,

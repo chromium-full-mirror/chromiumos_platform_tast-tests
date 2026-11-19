@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     AudioResumeAfterCrasRestarted,
 		Desc:     "Check that aplay resumes playing after cras is restarted during the playback",
-		Contacts: []string{"chromeos-audio-bugs@google.com", "pteerapong@chromium.org"},
+		Contacts: []string{"lt-audio-tests@google.com", "pteerapong@chromium.org"},
 		// ChromeOS > Platform > Technologies > Audio > VM
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "group:sw_gates_virt", "sw_gates_virt_enabled"},

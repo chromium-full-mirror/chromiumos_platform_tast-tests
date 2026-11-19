@@ -32,7 +32,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DevicePlaybackRecord,
 		Desc:         "Verifies the device can record and playback at the same time correctly with ALSA commands",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "htcheong@chromium.org"},
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Attr: []string{

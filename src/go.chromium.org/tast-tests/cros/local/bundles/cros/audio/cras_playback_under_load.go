@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasPlaybackUnderLoad,
 		Desc:         "Verifies CRAS playback function works correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "htcheong@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "htcheong@chromium.org"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

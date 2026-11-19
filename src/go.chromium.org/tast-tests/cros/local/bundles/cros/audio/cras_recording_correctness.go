@@ -26,7 +26,7 @@ func init() {
 		Func:         CrasRecordingCorrectness,
 		Attr:         []string{"group:mainline", "group:audio", "informational"},
 		Desc:         "Play audio to loopback by aplay and verifies that CRAS records audio correctly",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		// b/291180821: Remove no_qemu after making the test pass on betty.
 		SoftwareDeps:    []string{"chrome", "no_qemu"},

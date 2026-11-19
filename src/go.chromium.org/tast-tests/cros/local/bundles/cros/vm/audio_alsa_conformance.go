@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioAlsaConformance,
 		Desc:         "Tests different audio devices in crosvm with alsa conformance test",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@chromium.org"},
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runAlsaConformanceTest},

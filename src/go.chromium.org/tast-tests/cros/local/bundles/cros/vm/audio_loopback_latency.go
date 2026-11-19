@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioLoopbackLatency,
 		Desc:         "Measures loopback latency of different audio devices in crosvm",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "normanbt@chromium.org"},
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:audio", "group:sw_gates_virt", "sw_gates_virt_enabled"},
 		Data:         []string{runLoopbackLatency},

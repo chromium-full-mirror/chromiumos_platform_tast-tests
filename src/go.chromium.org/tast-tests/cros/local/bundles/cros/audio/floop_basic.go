@@ -21,7 +21,7 @@ func init() {
 		Func: FloopBasic,
 		Desc: "Chcek cras_test_client --request_floop_mask works",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"aaronyu@google.com",
 			"htcheong@google.com",
 		},

@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         FloopDeviceSwitch,
 		Desc:         "Verifies floop works while switching output devices",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@google.com", "htcheong@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "yuhsuan@google.com", "htcheong@google.com"},
 		BugComponent: "b:776546",
 		Fixture: fixture.AloopLoaded{
 			Channels:    2,

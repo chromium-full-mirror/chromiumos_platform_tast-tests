@@ -51,7 +51,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasEffects,
 		Desc:         "Check effects are executed on the right component",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Attr:         []string{},
 		Timeout:      30 * time.Second,

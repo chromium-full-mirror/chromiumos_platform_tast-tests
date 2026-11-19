@@ -26,7 +26,7 @@ func init() {
 		Func:         CrasSpatialAudioPower,
 		Desc:         "Collect power metrics of using spatial audio in CRAS",
 		BugComponent: "b:776546",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "eddyhsu@google.com"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Timeout:      10*time.Minute + power.RecorderTimeout,

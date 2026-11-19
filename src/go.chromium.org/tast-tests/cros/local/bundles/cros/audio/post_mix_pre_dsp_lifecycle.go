@@ -25,7 +25,7 @@ func init() {
 		//   - hasn't started yet
 		//   - has ended
 
-		Contacts: []string{"aaronyu@google.com", "htcheong@google.com", "chromeos-audio-bugs@google.com"},
+		Contacts: []string{"aaronyu@google.com", "htcheong@google.com", "lt-audio-tests@google.com"},
 		Fixture: audiofixture.AloopLoaded{
 			Channels: 2,
 			Parent:   audiofixture.UIStopped{}.Instance(),

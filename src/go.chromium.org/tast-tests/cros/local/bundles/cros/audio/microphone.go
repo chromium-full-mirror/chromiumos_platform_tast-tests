@@ -25,7 +25,7 @@ func init() {
 		Func: Microphone,
 		Desc: "Verifies microphone works correctly",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"cychiang@chromium.org",
 		},
 		BugComponent: "b:776546",

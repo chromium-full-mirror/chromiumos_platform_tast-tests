@@ -17,7 +17,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CrasStopped,
 		Desc:            "Ensure CRAS is stopped and audio devices are available for direct access",
-		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:        []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		Impl:            crasStoppedFixture{},
 		BugComponent:    "b:776546",
 		SetUpTimeout:    20 * time.Second,

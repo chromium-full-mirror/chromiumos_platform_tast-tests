@@ -36,7 +36,7 @@ func (pf AloopLoaded) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:           pf.name(false),
 		Desc:           fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
-		Contacts:       []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:       []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent:   "b:776546",
 		Impl:           &restartCrasForAloopFixture{},
 		Parent:         pf.internalInstance(),
@@ -49,7 +49,7 @@ func (pf AloopLoaded) internalInstance() string {
 	return maybeRegisterFixture(&testing.Fixture{
 		Name:         pf.name(true),
 		Desc:         fmt.Sprintf("Configure the ALSA loopback device with %v (internal)", pf),
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "aaronyu@google.com"},
 		BugComponent: "b:776546",
 		Impl: &aloopLoadedFixture{
 			Channels:    pf.Channels,

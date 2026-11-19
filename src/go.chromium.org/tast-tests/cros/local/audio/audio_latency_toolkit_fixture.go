@@ -20,7 +20,7 @@ func init() {
 		Desc: "Example test for using Audio Latency Toolkit to measure latency",
 		Contacts: []string{
 			"crosep-intertech@google.com",
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 		},
 		BugComponent:    "b:776546",
 		Impl:            LatencyToolkitFixture{},

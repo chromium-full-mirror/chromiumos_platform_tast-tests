@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AudioPlaybackConfigurations,
 		Desc:         "Tests different channel number on the container's audio (through alsa) using a pre-built crostini image",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini+oncall@google.com", "judyhsiao@chromium.org"},
+		Contacts:     []string{"lt-audio-tests@google.com", "clumptini+oncall@google.com", "judyhsiao@chromium.org"},
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: hwdep.D(

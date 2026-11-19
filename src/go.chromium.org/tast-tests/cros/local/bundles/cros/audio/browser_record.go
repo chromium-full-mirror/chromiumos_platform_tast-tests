@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BrowserRecord,
 		Desc:         "Tests basic audio recording on ash chrome browser",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",

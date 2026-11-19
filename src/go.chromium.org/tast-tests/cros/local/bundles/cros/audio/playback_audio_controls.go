@@ -35,7 +35,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlaybackAudioControls,
 		Desc:         "Verifies local audio playback through default app and exercises various audio player controls",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
+		Contacts:     []string{"lt-audio-tests@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr: []string{

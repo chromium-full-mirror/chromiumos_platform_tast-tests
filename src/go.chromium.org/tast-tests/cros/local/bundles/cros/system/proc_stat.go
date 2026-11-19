@@ -20,7 +20,7 @@ func init() {
 		Func: ProcStat,
 		Desc: "Check profiler.ProcStat",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com",
+			"lt-audio-tests@google.com",
 			"aaronyu@google.com", // test author
 		},
 		BugComponent: "b:776546",
