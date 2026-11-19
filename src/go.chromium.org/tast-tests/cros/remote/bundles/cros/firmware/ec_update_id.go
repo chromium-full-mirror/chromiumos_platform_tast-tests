@@ -67,9 +67,14 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ec active copy: ", err)
 	} else if initActiveCopy != "RW" {
-		s.Logf("Expected initial active copy to be 'RW', got %q instead. Attempting to sysjump to RW A", initActiveCopy)
-		if err := h.Servo.RunECCommand(ctx, "sysjump A"); err != nil {
-			s.Log("Failed to perform sysjump: ", err)
+		s.Logf("Expected initial active copy to be 'RW', got %q; cold-rebooting into RW A", initActiveCopy)
+		if initActiveCopy == "RW_B" {
+			if err := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain).Command(ctx, "reboot_ec", "cold", "at-shutdown", "switch-slot").Run(ssh.DumpLogOnError); err != nil {
+				s.Fatal("Failed to request EC RW slot switch: ", err)
+			}
+		}
+		if err := coldModeAwareReboot(ctx, h); err != nil {
+			s.Fatal("Failed to cold reboot EC into RW A: ", err)
 		}
 		// Expect EC to be in RW_A now.
 		if initActiveCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy); err != nil {
