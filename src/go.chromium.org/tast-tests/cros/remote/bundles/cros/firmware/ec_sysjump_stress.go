@@ -38,7 +38,7 @@ type ecSysjumpStressParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECSysjumpStress,
-		Desc: "Stress EC sysjumps repeatedly and verify device state",
+		Desc: "Stress EC RO to RW sysjumps repeatedly and verify device state",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cros-ec@google.com",
@@ -70,53 +70,161 @@ func init() {
 	})
 }
 
-// ecSysjumpStress performs a sysjump e.g. RW->RO and verifies the post-jump
-// state. Performs the second jump back e.g. RO->RW and verifies the post-jump
-// state as part of one iteration.
-func ecSysjumpStress(ctx context.Context, h *firmware.Helper, firstSysjumpDest string, iteration int) error {
-	secondSysjumpDest := getSysjumpDest(firstSysjumpDest)
-
-	// First jump.
-	if err := sysjumpAndVerify(ctx, h, firstSysjumpDest, iteration); err != nil {
-		return errors.Wrapf(err, "first jump to %s failed", firstSysjumpDest)
-	}
-
-	// Second jump back.
-	if err := sysjumpAndVerify(ctx, h, secondSysjumpDest, iteration); err != nil {
-		return errors.Wrapf(err, "second jump to %s failed", secondSysjumpDest)
-	}
-
-	return nil
-}
-
-// ecSysjumpStressConsecutive performs a sysjump and only the minimal active
-// copy verification after each jump. This helper should be ran in a loop that
-// performs a large sequence of sysjumps to maximize cycle throughput. This
-// should be followed by the full post-jump state verification at the conclusion
-// of all the jumps.
-func ecSysjumpStressConsecutive(ctx context.Context, h *firmware.Helper, sysjumpDest string, iteration int) error {
-	if err := executeSysjump(ctx, h, sysjumpDest, iteration); err != nil {
-		return errors.Wrapf(err, "jump to %s failed", sysjumpDest)
-	}
-	// Ensure we actually performed a sysjump by verifying that the active copy
-	// jumped to sysjumpDest.
-	if err := h.Servo.CheckECActiveCopyMatch(ctx, sysjumpDest); err != nil {
-		return errors.Wrapf(err, "consecutive sysjump failed on jump %d while jumping to %s", iteration, sysjumpDest)
-	}
-	return nil
-}
-
-// sysjumpAndVerify performs one sysjump and full state verification.
-func sysjumpAndVerify(ctx context.Context, h *firmware.Helper, sysjumpDest string, iteration int) error {
+// ecSysjumpStress resets the EC into RO, performs an RO->RW sysjump (or asserts
+// EFS's automatic RO->RW sysjump on battery-less USB-C EC-TCPC boards), boots
+// the AP back to S0, and verifies the post-jump state.
+func ecSysjumpStress(ctx context.Context, h *firmware.Helper, losesPower bool, iteration int) error {
 	isChargerAttachedBefore, err := getChargerAttached(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to get if battery charger is attached before jump")
 	}
-	if err := executeSysjump(ctx, h, sysjumpDest, iteration); err != nil {
-		return errors.Wrapf(err, "jump to %s failed", sysjumpDest)
+	if losesPower {
+		if err := triggerEFSSysjump(ctx, h, iteration); err != nil {
+			return errors.Wrap(err, "EFS automatic sysjump to RW failed")
+		}
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 10*time.Second, "S0"); err != nil {
+			if err := bootAPFromOff(ctx, h); err != nil {
+				return errors.Wrap(err, "failed to power on AP after EFS sysjump")
+			}
+		}
+	} else {
+		if err := enterECROWithAPOff(ctx, h); err != nil {
+			return errors.Wrap(err, "entering EC RO with AP off failed")
+		}
+		if err := executeSysjumpToRW(ctx, h, iteration); err != nil {
+			return errors.Wrap(err, "jump to RW failed")
+		}
+		if err := bootAPFromOff(ctx, h); err != nil {
+			return errors.Wrap(err, "failed to power on AP after sysjump to RW")
+		}
 	}
-	if err := verifyPostJumpState(ctx, h, sysjumpDest, isChargerAttachedBefore, iteration); err != nil {
-		return errors.Wrapf(err, "state verification failed after jump to %s", sysjumpDest)
+	if err := verifyPostJumpState(ctx, h, "RW", isChargerAttachedBefore, iteration); err != nil {
+		return errors.Wrap(err, "state verification failed after jump to RW")
+	}
+	return nil
+}
+
+// ecSysjumpStressConsecutive resets the EC into RO and performs an RO->RW
+// sysjump with active-copy and reset-flag verification after each jump while
+// keeping the AP off to maximize cycle throughput. On battery-less USB-C
+// EC-TCPC boards, resetting the EC drops Type-C VBUS and exercises EFS's
+// automatic RO->RW sysjump on VBUS restore. Full post-jump state verification
+// runs after all iterations complete.
+func ecSysjumpStressConsecutive(ctx context.Context, h *firmware.Helper, losesPower bool, iteration int) error {
+	if losesPower {
+		if err := triggerEFSSysjump(ctx, h, iteration); err != nil {
+			return errors.Wrapf(err, "consecutive EFS sysjump failed on jump %d", iteration)
+		}
+		return nil
+	}
+	if err := enterECROWithAPOff(ctx, h); err != nil {
+		return errors.Wrapf(err, "entering EC RO failed on jump %d", iteration)
+	}
+	if err := executeSysjumpToRW(ctx, h, iteration); err != nil {
+		return errors.Wrapf(err, "jump to RW failed on jump %d", iteration)
+	}
+	if err := h.Servo.CheckECActiveCopyMatch(ctx, "RW"); err != nil {
+		return errors.Wrapf(err, "consecutive sysjump failed on jump %d while jumping to RW", iteration)
+	}
+	if err := verifySysjumpResetFlags(ctx, h); err != nil {
+		return errors.Wrapf(err, "reset flag check failed on jump %d", iteration)
+	}
+	return nil
+}
+
+func isAPOffState(state string) bool {
+	switch state {
+	case "G3", "S5", "AP_POWER_STATE_G3", "AP_POWER_STATE_S5":
+		return true
+	default:
+		return false
+	}
+}
+
+// enterECROWithAPOff shuts down the AP cleanly if it is running, then cold-resets
+// the EC into RO while keeping the AP off.
+func enterECROWithAPOff(ctx context.Context, h *firmware.Helper) error {
+	powerState, err := h.Servo.GetECSystemPowerState(ctx)
+	if err != nil || !isAPOffState(powerState) {
+		if err := h.CloseRPCConnection(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close RPC connection before shutdown: ", err)
+		}
+		if h.DUT.Connected(ctx) {
+			_ = h.DUT.Conn().CommandContext(ctx, "sync").Run()
+			_ = h.DUT.Conn().CommandContext(ctx, "poweroff").Start()
+		}
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 30*time.Second, "G3", "S5"); err != nil {
+			if offErr := h.Servo.SetPowerState(ctx, servo.PowerStateOff); offErr != nil {
+				testing.ContextLog(ctx, "Failed to set power_state:off: ", offErr)
+			}
+			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 15*time.Second, "G3", "S5"); err != nil {
+				return errors.Wrap(err, "failed to reach G3/S5 before EC reset to RO")
+			}
+		}
+	}
+
+	if err := h.Servo.RunECCommand(ctx, "reboot ap-off-in-ro"); err != nil {
+		return errors.Wrap(err, "failed to run EC command reboot ap-off-in-ro")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return h.Servo.CheckECActiveCopyMatch(ctx, "RO")
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+		// Pre-EFS2 EC firmware built before 2020-03 lacks 'ap-off-in-ro', and
+		// stays in RO on 'reboot ap-off' until AP RW sends EC_REBOOT_JUMP_RW.
+		testing.ContextLog(ctx, "EC did not enter RO via reboot ap-off-in-ro, falling back to reboot ap-off: ", err)
+		if rbErr := h.Servo.RunECCommand(ctx, "reboot ap-off"); rbErr != nil {
+			return errors.Wrap(rbErr, "failed to run EC command reboot ap-off")
+		}
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return h.Servo.CheckECActiveCopyMatch(ctx, "RO")
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+			return errors.Wrap(err, "EC failed to enter RO with AP off")
+		}
+	}
+	return nil
+}
+
+// triggerEFSSysjump triggers an EC reset on battery-less USB-C EC-TCPC boards,
+// where resetting the EC drops Type-C VBUS and causes EFS2 to automatically
+// sysjump RO->RW when VBUS is restored.
+func triggerEFSSysjump(ctx context.Context, h *firmware.Helper, iteration int) error {
+	testing.ContextLogf(ctx, "Iteration %d: Triggering EC reboot to exercise EFS RO->RW sysjump", iteration)
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to close RPC connection before EC reboot: ", err)
+	}
+	if h.DUT.Connected(ctx) {
+		_ = h.DUT.Conn().CommandContext(ctx, "sync").Run()
+	}
+	if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
+		return errors.Wrap(err, "failed to run EC command reboot")
+	}
+	// GoBigSleepLint: Allow Type-C VBUS to drop, re-source, and complete EFS RO->RW sysjump.
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return err
+	}
+	if err := h.RestoreServoPower(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to restore servo power after EC reboot: ", err)
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return h.Servo.CheckECActiveCopyMatch(ctx, "RW")
+	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "EC did not complete EFS sysjump to RW after reboot")
+	}
+	return verifySysjumpResetFlags(ctx, h)
+}
+
+// bootAPFromOff powers on the AP from G3/S5 without resetting the EC so the
+// EC's post-sysjump state and reset flags are preserved.
+func bootAPFromOff(ctx context.Context, h *firmware.Helper) error {
+	// GoBigSleepLint: Allow battery and charger state to settle after sysjump before pressing power key.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return err
+	}
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurShortPress); err != nil {
+		return errors.Wrap(err, "failed to press power key to boot AP")
+	}
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 10*time.Second, "S0"); err != nil {
+		h.PowerOnDUT(ctx)
 	}
 	return nil
 }
@@ -134,16 +242,18 @@ func getECResetFlags(ctx context.Context, h *firmware.Helper) (int64, error) {
 	return resetFlags, err
 }
 
-// executeSysjump executes the sysjump command to sysjumpDest and waits for the EC to settle.
-func executeSysjump(ctx context.Context, h *firmware.Helper, sysjumpDest string, iteration int) error {
-	testing.ContextLogf(ctx, "Iteration %d: Executing sysjump to %s", iteration, sysjumpDest)
+// executeSysjumpToRW executes sysjump RW on the EC console and waits for the EC to settle.
+func executeSysjumpToRW(ctx context.Context, h *firmware.Helper, iteration int) error {
+	testing.ContextLogf(ctx, "Iteration %d: Executing sysjump to RW", iteration)
 
-	if err := h.Servo.RunECCommand(ctx, "sysjump "+sysjumpDest); err != nil {
-		return errors.Wrapf(err, "failed to run EC command sysjump %s", sysjumpDest)
+	if err := h.Servo.RunECCommand(ctx, "sysjump RW"); err != nil {
+		return errors.Wrap(err, "failed to run EC command sysjump RW")
 	}
 
 	// GoBigSleepLint: Wait for the EC to complete the sysjump and re-initialize its console.
-	testing.Sleep(ctx, 3*time.Second)
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -185,11 +295,14 @@ func verifyECResponsive(ctx context.Context, h *firmware.Helper) error {
 	}
 
 	// Wait for the DUT SSH connection before running host commands (like ectool
-	// below or crash checks in the caller), as sysjump can briefly reset USB-C PD
-	// and drop Ethernet on Type-C Servo setups.
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 45*time.Second)
+	// below or crash checks in the caller).
+	connectTimeout := h.Config.DelayRebootToPing
+	if connectTimeout <= 0 {
+		connectTimeout = 2 * time.Minute
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, connectTimeout)
 	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT after sysjump")
 	}
 
@@ -266,7 +379,7 @@ func verifyPDStateFunctioning(ctx context.Context, h *firmware.Helper) error {
 	if err != nil {
 		if strings.Contains(err.Error(), "no active PD ports found") {
 			// Handle boards without USB-C PD ports.
-			testing.ContextLogf(ctx, "Skipping PD state check (no active PD port on this board): %v", err)
+			testing.ContextLog(ctx, "Skipping PD state check (no active PD port on this board): ", err)
 			return nil
 		}
 		return errors.Wrap(err, "failed to get PD state after sysjump")
@@ -282,16 +395,6 @@ func verifyS0PowerState(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to maintain or return to S0 power state after sysjump")
 	}
 	return nil
-}
-
-// getSysjumpDest takes the current active copy, either "RO" or "RW", and
-// outputs the opposite one, "RW" or "RO", representing the location to sysjump
-// to next.
-func getSysjumpDest(activeCopy string) string {
-	if strings.HasPrefix(activeCopy, "RW") {
-		return "RO"
-	}
-	return "RW"
 }
 
 // getChargerAttached returns &true when the battery charger is attached,
@@ -323,14 +426,14 @@ func recoverDUT(ctx context.Context, h *firmware.Helper) error {
 	// Wait for the DUT to come back online so the next iteration can run.
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT after power state reset")
 	}
 	return nil
 }
 
-// ECSysjumpStress repeatedly jumps between EC firmware images (RW -> RO -> RW)
-// and verifies EC console responsiveness, reset cause flags, and system power
+// ECSysjumpStress repeatedly resets the EC into RO and jumps from RO to RW,
+// verifying EC console responsiveness, reset cause flags, and system power
 // stability across repeated sysjumps.
 func ECSysjumpStress(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -343,11 +446,14 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
-	s.Log("Disabling write protect to allow arbitrary sysjumps between RO and RW")
+	s.Log("Disabling write protect to allow manual sysjump to RW")
 	if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOff); err != nil {
 		s.Fatal("Failed to disable firmware write protect: ", err)
 	}
 	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Error("Failed to ensure DUT is booted during cleanup: ", err)
+		}
 		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateForceOn); err != nil {
 			s.Error("Failed to restore firmware write protect: ", err)
 		}
@@ -370,13 +476,15 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 	// Get device state during test setup.
 	isChargerAttachedBefore, err := getChargerAttached(ctx, h)
 	if err != nil {
-		s.Errorf("Failed to get if battery charger is attached before running test: %v", err)
+		s.Error("Failed to get if battery charger is attached before running test: ", err)
 	}
-	activeCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy)
+	losesPower, err := h.LosesPowerOnECReset(ctx)
 	if err != nil {
-		s.Fatalf("Failed to get initial EC active copy: %v", err)
+		s.Fatal("Failed to check whether DUT loses power on EC reset: ", err)
 	}
-	sysjumpDest := getSysjumpDest(activeCopy)
+	if losesPower {
+		s.Log("DUT loses power on EC reset; testing EFS automatic RO->RW sysjumps across EC reboots")
+	}
 
 	failures := make([][]error, numIters)
 	numFails := 0
@@ -393,20 +501,16 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 		// Run selected test.
 		var iterErr error
 		if params.consecutive {
-			// Make rapid consecutive sysjumps.
-			iterErr = ecSysjumpStressConsecutive(ctx, h, sysjumpDest, i+1)
-			if i+1 < numIters {
-				// Don't increase sysjumpDest on the last iteration, keep it the same for final state verification.
-				sysjumpDest = getSysjumpDest(sysjumpDest)
-			}
+			// Make rapid consecutive RO->RW sysjumps.
+			iterErr = ecSysjumpStressConsecutive(ctx, h, losesPower, i+1)
 		} else {
-			// Perform a sysjump, verify state, then perform a sysjump back and verify state again.
-			iterErr = ecSysjumpStress(ctx, h, sysjumpDest, i+1)
+			// Reset EC to RO, sysjump to RW, boot AP, and verify state.
+			iterErr = ecSysjumpStress(ctx, h, losesPower, i+1)
 		}
 
 		// Handle iteration failure and DUT recovery.
 		if iterErr != nil {
-			numFails += 1
+			numFails++
 			failures[i] = append(failures[i], iterErr)
 			s.Logf("Iteration %d failed: %v. Attempting DUT recovery", i+1, iterErr)
 
@@ -414,20 +518,19 @@ func ECSysjumpStress(ctx context.Context, s *testing.State) {
 				// If the DUT cannot be recovered, abort the rest of the test.
 				s.Fatalf("DUT unrecoverable after iteration %d: %v", i+1, err)
 			}
-			// After recovery and reboot, ensure accurate sysjumpDest since active copy could have changed.
-			activeCopy, err := h.Servo.GetString(ctx, servo.ECActiveCopy)
-			if err != nil {
-				s.Fatalf("Failed to get EC active copy after DUT recovery: %v", err)
-			}
-			sysjumpDest = getSysjumpDest(activeCopy)
 		}
 	}
 
 	if params.consecutive {
 		// Perform final full state verification for the consecutive sysjump test.
-		s.Logf("Completed %d consecutive sysjumps. Verifying full post-jump state.", numIters)
-		if err := verifyPostJumpState(ctx, h, sysjumpDest, isChargerAttachedBefore, numIters); err != nil {
-			s.Errorf("Final state verification failed after jump to %s: %v", sysjumpDest, err)
+		s.Logf("Completed %d consecutive sysjumps; powering on AP and verifying full post-jump state", numIters)
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 5*time.Second, "S0"); err != nil {
+			if err := bootAPFromOff(ctx, h); err != nil {
+				s.Error("Failed to power on AP after consecutive sysjumps: ", err)
+			}
+		}
+		if err := verifyPostJumpState(ctx, h, "RW", isChargerAttachedBefore, numIters); err != nil {
+			s.Error("Final state verification failed after jump to RW: ", err)
 		}
 	}
 
