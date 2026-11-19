@@ -485,6 +485,10 @@ type cancelfunc func() error
 const defaultStressPeriod = 60 * time.Second
 const timeoutPadding = 20 * time.Second
 const iioBasePath = "/sys/bus/iio/devices"
+
+// Only x86 i8042 needs wakeup suppression because the EC performs hardware
+// typematic repeat while a key is held, whereas ARM (MKBP) only sends an
+// interrupt when key state changes.
 const keyboardWakeupPath = "/sys/devices/platform/i8042/serio0/power/wakeup"
 
 // errNoDeviceFound is returned by parser function when no device matches.
@@ -919,7 +923,7 @@ func releaseKey(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func wakeWithUsbKeywboard(ctx context.Context, h *firmware.Helper) error {
+func wakeWithUsbKeyboard(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.On); err != nil {
 		return errors.Wrapf(err, "failed to set %q to %q with servo", servo.USBKeyboard, servo.On)
 	}
@@ -1062,7 +1066,7 @@ func getKernelSuspendCount(ctx context.Context, h *firmware.Helper) (int, error)
 	return count, nil
 }
 
-func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod time.Duration) (cancelfunc, error) {
+func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wakePeriod, suspendPeriod, stressPeriod time.Duration) (cancelfunc, error) {
 	testing.ContextLogf(ctx, "Starting Suspend Stress Task with wakePeriod=%v, suspendPeriod=%v", wakePeriod, suspendPeriod)
 
 	suspendTargetCmd, err := getSuspendTargetCmd(ctx, h)
@@ -1076,8 +1080,8 @@ func startSuspendStressTask(ctx context.Context, h *firmware.Helper, timeout, wa
 	}
 
 	// powerd_dbus_suspend is not used because user input from the keyboard prevents suspend
-	cmd := fmt.Sprintf("while true; do sleep %v; echo 0 > /sys/class/rtc/rtc0/wakealarm; echo +%v > /sys/class/rtc/rtc0/wakealarm; %s; done;",
-		wakePeriod.Seconds(), suspendPeriod.Seconds(), suspendTargetCmd)
+	cmd := fmt.Sprintf("declare -i END=$(date +%%s -d \"%v seconds\"); while true; do sleep %v; [ $(date +%%s) -lt $END ] || break; echo 0 > /sys/class/rtc/rtc0/wakealarm; echo +%v > /sys/class/rtc/rtc0/wakealarm; %s; done;",
+		stressPeriod.Seconds(), wakePeriod.Seconds(), suspendPeriod.Seconds(), suspendTargetCmd)
 	remoteSuspendStressCancel, err := startBackgroundProcess(ctx, h, cmd, "/tmp/ec_suspend_stress.out", timeout)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start suspend stress task")
@@ -1250,8 +1254,8 @@ func connectDut(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to get EC power state")
 	}
 	if state != "S0" {
-		testing.ContextLogf(ctx, "DUT is power sate %v, attempting to wake", state)
-		wakeWithUsbKeywboard(ctx, h)
+		testing.ContextLogf(ctx, "DUT is power state %v, attempting to wake", state)
+		wakeWithUsbKeyboard(ctx, h)
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
 			return errors.Wrap(err, "failed to wake DUT")
 		}
@@ -1371,7 +1375,7 @@ func EcStress(ctx context.Context, s *testing.State) {
 		// 12s wake / 4s suspend (75% S0 duty cycle) allows AP-driven stress
 		// tasks (e.g. flash and sensors) enough run time while still
 		// exercising suspend and resume transitions.
-		suspendStressTaskCancel, err = startSuspendStressTask(ctx, h, stressPeriod+timeoutPadding, time.Second*12, time.Second*4)
+		suspendStressTaskCancel, err = startSuspendStressTask(ctx, h, stressPeriod+timeoutPadding, time.Second*12, time.Second*4, stressPeriod)
 		if err != nil {
 			s.Fatal("Failed to start suspend stress task: ", err)
 		}
