@@ -197,13 +197,6 @@ func setUpTestBridge(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, *chr
 		return nil, nil, errors.Wrap(err, "failed to construct bridge page connection")
 	}
 
-	if err := pageConn.Eval(ctx, "location.reload()", nil); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to reload the test extension")
-	}
-	if err := pageConn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to wait for the ready state")
-	}
-
 	const code = `
 	  async function() {
 		const testBridgeUrlPolicy = trustedTypes.createPolicy(
