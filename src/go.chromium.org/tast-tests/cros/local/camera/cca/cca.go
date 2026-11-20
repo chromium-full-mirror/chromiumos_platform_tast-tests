@@ -467,18 +467,17 @@ func (a *App) AcceptCloudSaveWarning(ctx context.Context) error {
 }
 
 func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Duration) error {
-	cleanupCtx := ctx
-	ctx, cancel := context.WithTimeout(ctx, duration+10*time.Second)
-	defer cancel()
-
+	// Scope the initial wait deadline separately so a slow video state change
+	// does not consume the budget for the subsequent stability sleep and check.
+	waitTimeout := duration + 10*time.Second
 	code := fmt.Sprintf("CcaTest.isVideoActive() === %t", active)
-	if err := a.conn.WaitForExpr(ctx, code); err != nil {
+	if err := a.conn.WaitForExprWithTimeout(ctx, code, waitTimeout); err != nil {
 		if a.cameraType != testutil.UseFakeVCDCamera {
-			if jobErr := upstart.CheckJob(cleanupCtx, "cros-camera"); jobErr != nil {
+			if jobErr := upstart.CheckJob(ctx, "cros-camera"); jobErr != nil {
 				return errors.Wrap(jobErr, err.Error())
 			}
 		}
-		return errors.Wrapf(err, "failed to wait for the video state to be %v within %v", active, duration.Round(time.Second))
+		return errors.Wrapf(err, "failed to wait for the video state to be %v within %v", active, waitTimeout.Round(time.Second))
 	}
 
 	// GoBigSleepLint: Due to the pipeline delay in camera stack, animation
