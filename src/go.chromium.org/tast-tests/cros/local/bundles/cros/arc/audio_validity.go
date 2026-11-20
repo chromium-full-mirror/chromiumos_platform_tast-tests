@@ -18,9 +18,9 @@ func init() {
 		Func: AudioValidity,
 		Desc: "Audio validity test for arc",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com", // Media team
-			"cychiang@chromium.org",          // Media team
-			"judyhsiao@chromium.org",         // Author
+			"lt-audio-tests@google.com", // Media team
+			"cychiang@chromium.org",     // Media team
+			"judyhsiao@chromium.org",    // Author
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",

@@ -63,8 +63,8 @@ func init() {
 		Func: AudioSynthmarkJitter,
 		Desc: "Runs Synthmark Jittermark test alongside with cyclic bench on the host to measure scheduling delay with various stress",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com", // Audio team
-			"pteerapong@chromium.org",        // Author
+			"lt-audio-tests@google.com", // Audio team
+			"pteerapong@chromium.org",   // Author
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",

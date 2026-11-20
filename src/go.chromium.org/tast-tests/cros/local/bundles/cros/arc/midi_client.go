@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     MIDIClient,
 		Desc:     "Checks MIDI Apps can send messages to devices",
-		Contacts: []string{"chromeos-audio-bugs@google.com", "arc-eng@google.com", "judyhsiao@chromium.org"},
+		Contacts: []string{"lt-audio-tests@google.com", "arc-eng@google.com", "judyhsiao@chromium.org"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},

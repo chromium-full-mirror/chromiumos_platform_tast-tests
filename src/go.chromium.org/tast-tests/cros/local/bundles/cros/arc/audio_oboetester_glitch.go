@@ -63,8 +63,8 @@ func init() {
 		Func: AudioOboetesterGlitch,
 		Desc: "Runs Oboetester glitch test for 60 seconds and stores the result",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com", // Media team
-			"pteerapong@chromium.org",        // Author
+			"lt-audio-tests@google.com", // Media team
+			"pteerapong@chromium.org",   // Author
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",

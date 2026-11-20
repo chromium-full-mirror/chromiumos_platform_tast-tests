@@ -26,9 +26,9 @@ func init() {
 		Func: PowerAudioPlaybackPerf,
 		Desc: "Measures the battery drain during audio playback with different performance flags",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com", // Media team
-			"judyhsiao@chromium.org",         // Author
-			"cychiang@chromium.org",          // Media team
+			"lt-audio-tests@google.com", // Media team
+			"judyhsiao@chromium.org",    // Author
+			"cychiang@chromium.org",     // Media team
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",

@@ -46,8 +46,8 @@ func init() {
 		Func: AudioLoopbackCorrectness,
 		Desc: "Plays sine wave with different config in ARC. Captures output audio via loopback and verifies the frequency of each channel",
 		Contacts: []string{
-			"chromeos-audio-bugs@google.com", // Media team
-			"pteerapong@chromium.org",        // Author
+			"lt-audio-tests@google.com", // Media team
+			"pteerapong@chromium.org",   // Author
 		},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
