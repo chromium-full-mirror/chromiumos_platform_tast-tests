@@ -109,9 +109,15 @@ func CheckCPURoutine(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Stress test process no longer running")
 
-	if err := uiauto.IfFailThen(ui.WaitUntilExists(
-		diagnosticsapp.DxPassedBadge.Ancestor(diagnosticsapp.DxRootNode).First()), ui.WaitUntilExists(
-		diagnosticsapp.DxFailedBadge.Ancestor(diagnosticsapp.DxRootNode).First()))(ctx); err != nil {
+	// The second CPU routine starts immediately after the first finishes and
+	// runs stressapptest for ~60s across all cores, which can starve Chrome's
+	// automation queries on slower DUTs or DCHECK builds, so allow 90s to
+	// outlast the CPU saturation window.
+	resultUI := ui.WithTimeout(90 * time.Second)
+	if err := uiauto.IfFailThen(
+		resultUI.WaitUntilExists(diagnosticsapp.DxPassedBadge.Ancestor(diagnosticsapp.DxRootNode).First()),
+		resultUI.WaitUntilExists(diagnosticsapp.DxFailedBadge.Ancestor(diagnosticsapp.DxRootNode).First()),
+	)(ctx); err != nil {
 		s.Fatal("Could not verify successful run of at least one CPU routine: ", err)
 	}
 
