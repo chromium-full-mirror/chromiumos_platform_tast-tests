@@ -79,8 +79,12 @@ func CheckCPURoutine(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Starting CPU test routine")
 
-	// Wait for UI to swap to "in progress" state to give time for diagnostics service to start routine.
-	if err := ui.WithPollOpts(pollOpts).WaitUntilExists(
+	// Wait for UI to swap to "in progress" state to give time for diagnostics
+	// service to start routine. The first CPU routine runs stressapptest for
+	// ~60s across all cores right after the button click, which can starve
+	// Chrome's automation queries on slower DUTs or DCHECK builds, so allow
+	// 90s to outlast the CPU saturation window.
+	if err := ui.WithTimeout(90 * time.Second).WaitUntilExists(
 		diagnosticsapp.DxProgressBadge.Ancestor(diagnosticsapp.DxRootNode).First())(
 		ctx); err != nil {
 		s.Fatal("Could not verify test routine has started: ", err)
