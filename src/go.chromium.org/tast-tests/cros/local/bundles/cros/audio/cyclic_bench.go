@@ -637,22 +637,8 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 
 	if param.Tracer {
 		testing.ContextLog(ctx, "Start trace-cmd")
-		traceArgs := []string{
-			"start",
-			"-e", "sched:sched_switch",
-			"-e", "sched:sched_waking",
-			"-e", "sched:sched_wakeup",
-			"-e", "sched:sched_wakeup_new",
-			"-e", "sched:sched_migrate_task",
-			"-e", "irq",
-			"-e", "ipi",
-			"-e", "power:cpu_idle",
-			"-e", "power:cpu_frequency",
-			"-e", "workqueue",
-			"-b", "4096",
-			"-C", "local",
-		}
-		if err := testexec.CommandContext(ctx, "trace-cmd", traceArgs...).Run(testexec.DumpLogOnError); err != nil {
+
+		if err := testexec.CommandContext(ctx, "trace-cmd", "start", "-e", "all", "-R", "stacktrace", "-b", "1500", "-C", "local").Run(testexec.DumpLogOnError); err != nil {
 			s.Error("Cannot run trace-cmd start: ", err)
 		}
 		defer func() {
