@@ -224,11 +224,13 @@ tast.promisify = function(f) {
 tast.bind = function(obj, name) {
   return obj[name].bind(obj);
 };
-tast.poll = async function(predicate, intervalMs, timeoutMs = 10000) {
+tast.poll = async function(
+    predicate, intervalMs, timeoutMs = 10000,
+    timeoutMsg = 'tast.poll timed out') {
   const startTime = Date.now();
   while (!(await predicate())) {
     if (Date.now() - startTime >= timeoutMs)
-      throw new Error('tast.poll timed out');
+      throw new Error(timeoutMsg);
     await new Promise(resolve => setTimeout(resolve, intervalMs));
   }
 };
@@ -308,9 +310,26 @@ tast.automation = (() => {
         await tast.poll(() => {
           return !pendingReleaseDesktop ||
               pendingReleaseDesktop.role === undefined;
-        }, 10);
+        }, 10, 10000, 'timed out waiting for automation tree release');
       } finally {
         pendingReleaseDesktop = undefined;
+      }
+    }
+  }
+
+  function clearStaleDesktop() {
+    if (!desktop || desktop.role !== undefined) {
+      return;
+    }
+
+    const staleDesktop = desktop;
+    desktop = undefined;
+    for (const {node, type, cb} of [...listeners]) {
+      if (node === staleDesktop || node.role === undefined) {
+        try {
+          // Hooked removeEventListener also removes from listeners.
+          node.removeEventListener(type, cb);
+        } catch {}
       }
     }
   }
@@ -323,15 +342,23 @@ tast.automation = (() => {
         timerId = undefined;
       }
 
-      while (!desktop) {
+      while (!desktop || desktop.role === undefined) {
         if (!gettingDesktop) {
           gettingDesktop = (async () => {
             try {
+              clearStaleDesktop();
+
               // Wait for previous automation tree to finish tearing down before
               // creating a new one.
               await waitPendingRelease();
 
               const d = await origGetDesktop();
+              // enableDesktop resolves before the initial accessibility event
+              // populates AutomationAXTreeWrapper in C++. Wait until the root
+              // node is populated so addEventListener registers in C++.
+              await tast.poll(
+                  () => d.role !== undefined, 10, 10000,
+                  'timed out waiting for desktop automation root');
               hookNodeProto(d);
 
               // Serves as an addRef to keep the automation tree. It is balanced
@@ -382,15 +409,43 @@ tast.automation = (() => {
 
   if (origGetDesktop) {
     chrome.automation.getDesktop = (cb) => {
+      if (cb != null && typeof cb !== 'function') {
+        throw new TypeError('Callback must be a function');
+      }
+      // In MV3, chrome.automation.getDesktop returns undefined when passed a
+      // callback (reporting errors via chrome.runtime.lastError) and returns a
+      // Promise that rejects on error when called without a callback.
+      if (typeof cb === 'function') {
+        automation.getDesktop().then((d) => {
+          try {
+            cb(d);
+          } finally {
+            automation.releaseDesktop();
+          }
+        }, (err) => {
+          const hadLastError = Object.hasOwn(chrome.runtime, 'lastError');
+          const prevLastError =
+              hadLastError ? chrome.runtime.lastError : undefined;
+          chrome.runtime.lastError = {
+            message: err?.message || String(err),
+          };
+          try {
+            cb();
+          } finally {
+            if (hadLastError) {
+              chrome.runtime.lastError = prevLastError;
+            } else {
+              delete chrome.runtime.lastError;
+            }
+          }
+        }).catch((err) => {
+          setTimeout(() => { throw err; }, 0);
+        });
+        return undefined;
+      }
       return automation.getDesktop().then((d) => {
-        try {
-          cb?.(d);
-          return d;
-        } finally {
-          automation.releaseDesktop();
-        }
-      }, () => {
-        cb?.();
+        automation.releaseDesktop();
+        return d;
       });
     };
   }
