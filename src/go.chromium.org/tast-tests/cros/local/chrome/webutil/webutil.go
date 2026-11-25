@@ -79,6 +79,13 @@ func WaitForRender(ctx context.Context, conn *chrome.Conn, timeout time.Duration
 	})()`, nil)
 }
 
+// WaitForRenderAction waits for the tab connected to the given chrome.Conn is rendered.
+func WaitForRenderAction(conn *chrome.Conn, timeout time.Duration) uiauto.Action {
+	return func(ctx context.Context) error {
+		return WaitForRender(ctx, conn, timeout)
+	}
+}
+
 // NavigateToURLInApp navigate to a particular sub page in app via changing URL in javascript.
 // It uses a condition check to make sure the function completes correctly.
 // It is high recommended to use UI validation in condition check.

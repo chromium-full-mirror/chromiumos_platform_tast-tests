@@ -984,6 +984,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 
 				// Add a small delay before typing again.
 				action.Sleep(5 * time.Second),
+
+				// Wait for the typed paragraph to finish rendering so buffered
+				// keystrokes do not accumulate unboundedly across cycles on
+				// CPU-saturated devices.
+				webutil.WaitForRenderAction(collaborationConn, 2*time.Minute),
 			}
 
 			// If tabSwitchDocs is true, Alt+Tab twice to switch to another window
