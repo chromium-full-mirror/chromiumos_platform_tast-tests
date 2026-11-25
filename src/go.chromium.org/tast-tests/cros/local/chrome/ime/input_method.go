@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -1426,17 +1425,6 @@ func (im InputMethod) WaitUntilActivated(tconn *chrome.TestConn) action.Action {
 	return im.actionWithFullyQualifiedID(tconn, f)
 }
 
-// WaitUntilReadyForTesting waits until the input method is active and its
-// native IME service decoder reports ready via isInputMethodReadyForTesting.
-// Only use this for physical keyboard tests backed by the native IME service
-// decoder when the virtual keyboard is disabled.
-func (im InputMethod) WaitUntilReadyForTesting(tconn *chrome.TestConn, timeout time.Duration) action.Action {
-	f := func(ctx context.Context, fullyQualifiedIMEID string) error {
-		return WaitForInputMethodReadyForTesting(ctx, tconn, fullyQualifiedIMEID, timeout)
-	}
-	return im.actionWithFullyQualifiedID(tconn, f)
-}
-
 // InstallAndActivate installs the input method and set it to active via Chrome API.
 func (im InputMethod) InstallAndActivate(tconn *chrome.TestConn) action.Action {
 	return uiauto.Combine(fmt.Sprintf("install and activate input method: %q", im),
@@ -1445,35 +1433,13 @@ func (im InputMethod) InstallAndActivate(tconn *chrome.TestConn) action.Action {
 	)
 }
 
-const decoderReadinessTimeout = 60 * time.Second
-
 // InstallAndActivateUserAction returns an user action installing the input method
 // and set it to active via Chrome API. It can be used to collect DUT environment information
 // and measure the perforamce of installing a certain input method.
 func (im InputMethod) InstallAndActivateUserAction(uc *useractions.UserContext) action.Action {
-	tconn := uc.TestAPIConn()
-	activateAction := func(ctx context.Context) error {
-		if cr := uc.Chrome(); cr != nil && im.supportsNativeMojoReadiness() {
-			// Check for the virtual keyboard target directly so all VK-enabled
-			// states (including touch-enabled detachables without an external
-			// keyboard) fall back to InstallAndActivate.
-			vkEnabled, err := cr.IsTargetAvailable(ctx, isVirtualKeyboardTarget)
-			if err != nil {
-				return errors.Wrap(err, "failed to check virtual keyboard state")
-			}
-			if !vkEnabled {
-				return uiauto.Combine(fmt.Sprintf("install and activate input method: %q", im),
-					im.Install(tconn),
-					im.SetCurrentInputMethod(tconn),
-					im.WaitUntilReadyForTesting(tconn, decoderReadinessTimeout),
-				)(ctx)
-			}
-		}
-		return im.InstallAndActivate(tconn)(ctx)
-	}
 	return uiauto.UserAction(
 		"Add and activate input method via Chromium API",
-		activateAction,
+		im.InstallAndActivate(uc.TestAPIConn()),
 		uc, &useractions.UserActionCfg{
 			Attributes: map[string]string{
 				useractions.AttributeFeature:     useractions.FeatureIMEManagement,
@@ -1481,43 +1447,6 @@ func (im InputMethod) InstallAndActivateUserAction(uc *useractions.UserContext) 
 			},
 		},
 	)
-}
-
-// supportsNativeMojoReadiness reports whether im unconditionally routes
-// IsReadyForTesting to the native Mojo IME service when the virtual keyboard is
-// disabled.
-//
-// The engine list mirrors CanRouteToNativeMojoEngine (Korean, Japanese,
-// Chinese, and native-routed transliteration engines), excluding FST-based
-// keyboard layouts which skip ConnectToImeService in OnActivate when both
-// autocorrect and predictive writing are disabled:
-// https://source.chromium.org/chromium/chromium/src/+/31f35ca29264dfdbe3fbbe476a915acd3da27adc:chrome/browser/ash/input_method/native_input_method_engine.cc;l=121-126
-// https://source.chromium.org/chromium/chromium/src/+/31f35ca29264dfdbe3fbbe476a915acd3da27adc:chrome/browser/ash/input_method/native_input_method_engine_observer.cc;l=79-110
-func (im InputMethod) supportsNativeMojoReadiness() bool {
-	switch im {
-	case Korean,
-		Japanese, JapaneseWithUSKeyboard,
-		ChinesePinyin, ChineseTraditionalPinyin,
-		ChineseCangjie, ChineseQuick,
-		Cantonese, ChineseWubi,
-		ChineseArray, ChineseDayi,
-		ChineseZhuyin,
-		ArabicTransliteration, GreekTransliteration, PersianTransliteration, Gujarati,
-		HebrewTransliteration, Hindi, Kannada, Malayalam,
-		Marathi, NepaliTransliteration, Odia, Punjabi,
-		Sanskrit, Tamil, Telugu, Urdu:
-		return true
-	default:
-		return false
-	}
-}
-
-func isVirtualKeyboardTarget(t *chrome.Target) bool {
-	if t == nil || t.Type != "other" {
-		return false
-	}
-	return (strings.HasPrefix(t.URL, "chrome-extension://") && strings.Contains(t.URL, "/inputview.html")) ||
-		strings.HasPrefix(t.URL, "chrome://keyboard")
 }
 
 // Remove uninstalls the input method via Chrome API.

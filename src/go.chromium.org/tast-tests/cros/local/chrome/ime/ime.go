@@ -99,31 +99,6 @@ func WaitForInputMethodActivatedWithSleep(ctx context.Context, tconn *chrome.Tes
 	return testing.Sleep(ctx, warmUpTime)
 }
 
-// WaitForInputMethodReadyForTesting waits until the current IME matches imeID
-// and reports readiness via chrome.autotestPrivate.isInputMethodReadyForTesting.
-// This is only supported for native Mojo IME service engines when the virtual
-// keyboard is disabled (excluding rule-based engines and FST-based keyboard
-// layouts when both autocorrect and predictive writing are disabled).
-func WaitForInputMethodReadyForTesting(ctx context.Context, tconn *chrome.TestConn, imeID string, timeout time.Duration) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		currentIME, err := CurrentInputMethod(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get current IME")
-		}
-		if currentIME != imeID {
-			return errors.Errorf("current IME is %q; want %q", currentIME, imeID)
-		}
-		var ready bool
-		if err := tconn.Call(ctx, &ready, `tast.promisify(chrome.autotestPrivate.isInputMethodReadyForTesting)`); err != nil {
-			return errors.Wrap(err, "failed to check input method readiness")
-		}
-		if !ready {
-			return errors.Errorf("input method %q is not ready yet", imeID)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: timeout, Interval: 200 * time.Millisecond})
-}
-
 // CurrentInputMethod returns the ID of current IME obtained
 // via chrome.inputMethodPrivate.getCurrentInputMethod API.
 func CurrentInputMethod(ctx context.Context, tconn *chrome.TestConn) (string, error) {
