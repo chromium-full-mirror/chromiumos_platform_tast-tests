@@ -197,7 +197,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	// screen to enterprise-enrollment when DeferLogin steps through OOBE.
 	options = append(options, chrome.ExtraArgs(
 		"--skip-multidevice-screen",
-		"--enterprise-enable-unified-state-determination=never",
+		"--enterprise-enable-state-determination=never",
 	))
 
 	cr, err := chrome.New(ctx, options...)
