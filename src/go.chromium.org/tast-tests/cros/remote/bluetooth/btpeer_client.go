@@ -263,9 +263,13 @@ func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 		return errors.Errorf("failed to connect to chameleond for %s: no active ssh connection to device", c)
 	}
 	// Create an ssh tunnel to the chameleond port.
+	// Only log forwarding errors without clearing c.chameleondClient: transient
+	// "Connection refused" errors are expected while chameleond restarts during
+	// ResetStack(), and the SSH forwarder continues serving once chameleond is
+	// listening again. Clearing c.chameleondClient from the forwarder goroutine
+	// also races with callers and breaks subsequent ChameleondClient() calls.
 	onFwdError := func(err error) {
-		testing.ContextLogf(ctx, "ERROR: ssh chameleond port forwarding error for %s: %v", c, err)
-		c.chameleondClient = nil
+		testing.ContextLogf(ctx, "WARNING: ssh chameleond port forwarding error for %s: %v", c, err)
 	}
 	remoteAddr := fmt.Sprintf("localhost:%d", btpeerChameleondPort)
 	chameleondPortForwarder, err := c.sshConn.ForwardLocalToRemote("tcp", "localhost:0", remoteAddr, onFwdError)
